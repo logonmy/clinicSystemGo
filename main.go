@@ -7,22 +7,29 @@ import (
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
-
 	_ "github.com/lib/pq"
 )
 
 var schema = `
-CREATE TABLE person (
-    first_name text,
-    last_name text,
-    email text
+CREATE TABLE clinic(
+	code 				varchar(20)			PRIMARY KEY     NOT NULL,
+	name        varchar(40)			NOT NULL,
+	responsible_person        varchar(40)			NOT NULL,
+	area        varchar(40),
+	status        boolean			NOT NULL		DEFAULT true,
+	create_time   timestamp				NOT NULL		DEFAULT LOCALTIMESTAMP
 );
 
-CREATE TABLE place (
-    country text,
-    city text NULL,
-    telcode integer
-)`
+CREATE TABLE admin(
+	username        varchar(20)			NOT NULL,
+ 	phone        varchar(11)			NOT NULL,
+	password        varchar(40)			NOT NULL,
+	clinic_code        varchar(40)		NOT NULL  references clinic(code),
+	status        boolean			NOT NULL		DEFAULT true,
+	create_time   timestamp				NOT NULL		DEFAULT LOCALTIMESTAMP,
+ 	update_time   timestamp				NOT NULL		DEFAULT LOCALTIMESTAMP,
+ 	PRIMARY KEY (username, clinic_code)
+);`
 
 // type Person struct {
 // 	FirstName string `db:"first_name"`
