@@ -1,3 +1,4 @@
+--诊所管理员
 CREATE TABLE admin(
 	username        varchar(20)			NOT NULL,
  	phone        varchar(11)			NOT NULL,

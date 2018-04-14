@@ -1,4 +1,4 @@
-
+--诊所
 CREATE TABLE clinic(
   code 				varchar(20)			PRIMARY KEY     NOT NULL,
   name        varchar(40)			NOT NULL,
