@@ -10,6 +10,6 @@ CREATE TABLE department
 	is_personnel boolean NOT NULL,--是否人事科室
 	created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-	deleted_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+	deleted_time timestamp,
 	UNIQUE (code, clinic_code)
 );
