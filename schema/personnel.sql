@@ -3,8 +3,8 @@ CREATE TABLE personnel
 (
   code varchar(10) NOT NULL,--编码
   name varchar(10) NOT NULL,--名称
-  clinic_code varchar(40) NOT NULL references clinic(code),--所属诊所
-  dept_code varchar(40) NOT NULL references department(code),--所属科室
+  clinic_code varchar(20) NOT NULL references clinic(code),--所属诊所
+  dept_code varchar(20) NOT NULL references department(code),--所属科室
   weight integer NOT NULL DEFAULT 1,--权重
   title varchar(10) NOT NULL,--职称
   account varchar(20) NOT NULL,--账号
