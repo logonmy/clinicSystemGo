@@ -1,6 +1,7 @@
 --人员
 CREATE TABLE personnel
 (
+  id serial PRIMARY KEY NOT NULL,--id
   code varchar(10) NOT NULL,--编码
   name varchar(10) NOT NULL,--名称
   clinic_code varchar(20) NOT NULL references clinic(code),--所属诊所
@@ -12,5 +13,5 @@ CREATE TABLE personnel
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
-  PRIMARY KEY (code, clinic_code)
+  UNIQUE (code, clinic_code)
 );
