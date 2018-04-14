@@ -1,5 +1,5 @@
 --就诊人来源
-CREATE TABLE patient_chanal
+CREATE TABLE patient_channel
 (
   id serial PRIMARY KEY NOT NULL,--id
   name varchar(40) NOT NULL,--名称
