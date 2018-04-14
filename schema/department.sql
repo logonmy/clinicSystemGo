@@ -1,6 +1,7 @@
 --科室
 CREATE TABLE department
 (
+	id serial PRIMARY KEY NOT NULL,--id
 	code varchar(20) NOT NULL,--科室编码
 	name varchar(20) NOT NULL,--科室名称
 	clinic_code varchar(40) NOT NULL references clinic(code),--所属诊所
@@ -10,5 +11,5 @@ CREATE TABLE department
 	created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	deleted_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-	PRIMARY KEY (dept_code, clinic_code)
+	UNIQUE (code, clinic_code)
 );
