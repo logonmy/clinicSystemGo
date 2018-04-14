@@ -1,0 +1,27 @@
+#
+# settings related to recompiling and reruning app when source changes
+#
+[hotreload]
+  # file suffixes to watch for changes
+  suffixes = [".go"]
+
+  # files/directories to ignore
+  ignore = []
+
+#
+# general application settings
+#
+[app]
+  # additional application arguments
+  args = []
+  port = ":3000"
+
+  [app.logger]
+    level = "INFO"
+    name = "application"
+
+# 运行参数
+[postgres]
+  connect = "user=kangcha dbname=mydb sslmode=disable password=123456"
+  MaxIdle = 10
+  MaxOpen = 100

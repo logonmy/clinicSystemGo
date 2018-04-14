@@ -1,47 +1,13 @@
 package main
 
 import (
-	"log"
+	"clinicSystemGo/controller"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
 	_ "github.com/lib/pq"
 )
-
-var schema = `
-CREATE TABLE clinic(
-	code 				varchar(20)			PRIMARY KEY     NOT NULL,
-	name        varchar(40)			NOT NULL,
-	responsible_person        varchar(40)			NOT NULL,
-	area        varchar(40),
-	status        boolean			NOT NULL		DEFAULT true,
-	create_time   timestamp				NOT NULL		DEFAULT LOCALTIMESTAMP
-);
-
-CREATE TABLE admin(
-	username        varchar(20)			NOT NULL,
- 	phone        varchar(11)			NOT NULL,
-	password        varchar(40)			NOT NULL,
-	clinic_code        varchar(40)		NOT NULL  references clinic(code),
-	status        boolean			NOT NULL		DEFAULT true,
-	create_time   timestamp				NOT NULL		DEFAULT LOCALTIMESTAMP,
- 	update_time   timestamp				NOT NULL		DEFAULT LOCALTIMESTAMP,
- 	PRIMARY KEY (username, clinic_code)
-);`
-
-// type Person struct {
-// 	FirstName string `db:"first_name"`
-// 	LastName  string `db:"last_name"`
-// 	Email     string
-// }
-
-// type Place struct {
-// 	Country string
-// 	City    sql.NullString
-// 	TelCode int
-// }
 
 func main() {
 	app := iris.New()
@@ -71,14 +37,7 @@ func main() {
 		ctx.JSON(iris.Map{"message": "Hello Iris!"})
 	})
 
-	app.Get("/initDb", func(ctx iris.Context) {
-		db, err := sqlx.Connect("postgres", "user=kangcha dbname=mydb sslmode=disable password=123456")
-		if err != nil {
-			log.Fatalln(err)
-		}
-		db.MustExec(schema)
-		ctx.Writef("ok %d")
-	})
+	app.Post("/test", controller.GetClinicByCode)
 
 	// http://localhost:8080
 	// http://localhost:8080/ping
