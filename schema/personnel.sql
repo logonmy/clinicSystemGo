@@ -14,5 +14,5 @@ CREATE TABLE personnel
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
-  UNIQUE (code, clinic_code, is_clinic_admin)
+  UNIQUE (code, clinic_code)
 );
