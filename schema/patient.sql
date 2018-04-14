@@ -6,6 +6,7 @@ CREATE TABLE patient
   birthday varchar(8) NOT NULL,--身份证号
   sex integer NOT NULL CHECK(sex = 0 OR sex = 1),--性别 0：女，1：男
   phone varchar(11) not Null,--手机号
+  patient_chanal_id INTEGER not Null,
   address varchar(40),--住址
   profession varchar(40),--职业
   remark varchar(200),--备注
