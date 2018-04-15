@@ -3,7 +3,7 @@ package model
 import "time"
 
 /**
- * 诊所
+ * 科室人员关联表
  */
 type DepartmentPersonnel struct {
 	ID           int       `db:"id"`
