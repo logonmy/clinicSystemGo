@@ -2,7 +2,6 @@ package main
 
 import (
 	"clinicSystemGo/controller"
-
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
@@ -24,20 +23,13 @@ func main() {
 		ctx.HTML("<h1>Welcome</h1>")
 	})
 
-	// same as app.Handle("GET", "/ping", [...])
-	// Method:   GET
-	// Resource: http://localhost:8080/ping
-	app.Get("/ping", func(ctx iris.Context) {
-		ctx.WriteString("pong")
-	})
+	clinic := app.Party("/clinic")
+	{
+		clinic.Post("/add", controller.ClinicAdd)
+		clinic.Post("/detailNByCode", controller.GetClinicByCode)
 
-	// Method:   GET
-	// Resource: http://localhost:8080/hello
-	app.Get("/hello", func(ctx iris.Context) {
-		ctx.JSON(iris.Map{"message": "Hello Iris!"})
-	})
-
-	app.Post("/test", controller.GetClinicByCode)
+	}
+	
 
 	// http://localhost:8080
 	// http://localhost:8080/ping

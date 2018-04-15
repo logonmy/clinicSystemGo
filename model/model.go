@@ -23,7 +23,7 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("No error should happen when connecting to  database, but got err=%+v", err))
 	}
-	fmt.Println("connet success")
+  fmt.Println(Config.Postgres.Connect + " connet success ! ! !")
 	DB.SetMaxIdleConns(Config.Postgres.MaxIdle)
 	DB.SetMaxOpenConns(Config.Postgres.MaxOpen)
 }
