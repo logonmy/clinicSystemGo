@@ -15,6 +15,7 @@ func GetClinicByCode(ctx iris.Context) {
 	code := ctx.PostValue("code")
 	if code == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
 	}
 
 	clinic := model.Clinic{}
@@ -22,10 +23,28 @@ func GetClinicByCode(ctx iris.Context) {
 
 	if err != nil {
 			fmt.Println("err ===", err)
-			ctx.JSON(iris.Map{"code": "-1", "msg": "error"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": clinic})
+}
+
+func ClinicList(ctx iris.Context) {
+
+	clinic := []model.Clinic{}
+	err := model.DB.Select(&clinic, "SELECT * FROM clinic ")
+
+	if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": clinic})
+}
+
+func ClinicUpdte(ctx iris.Context) {
+
+
+
 }
 
 /**

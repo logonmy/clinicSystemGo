@@ -26,9 +26,12 @@ func main() {
 	clinic := app.Party("/clinic")
 	{
 		clinic.Post("/add", controller.ClinicAdd)
-		clinic.Post("/detailNByCode", controller.GetClinicByCode)
-
+		clinic.Post("/detailByCode", controller.GetClinicByCode)
+		clinic.Post("/list", controller.ClinicList)
+		// clinic.Post("/update", controller.ClinicUpdte)
 	}
+
+	
 	
 
 	app.Post("/personnel/login", controller.PersonnelLogin)

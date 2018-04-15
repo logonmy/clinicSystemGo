@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"time"
+	"database/sql"
+)
 
 /**
  * 诊所
@@ -13,5 +16,5 @@ type Clinic struct {
 	Status            bool      `db:"status"`
 	CreateTime        time.Time `db:"created_time"`
 	UpdateTime        time.Time `db:"updated_time"`
-	DeleteTime        time.Time `db:"deleted_time"`
+	DeleteTime        sql.NullString `db:"deleted_time"`
 }
