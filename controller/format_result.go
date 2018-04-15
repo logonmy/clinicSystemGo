@@ -4,7 +4,7 @@ package controller
  * 返回结果
  */
 type APIJSON struct {
-	code string
+	code int
 	msg  string
 	data interface{}
 }
