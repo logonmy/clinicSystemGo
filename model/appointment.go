@@ -18,7 +18,7 @@ type Appointment struct {
 	VisitPlace      string    `db:"visit_place"`
 	SortNo          int       `db:"sort_no"`
 	OperationID     int       `db:"operation_id"`
-	CreateTime      time.Time `db:"create_time"`
-	UpdateTime      time.Time `db:"update_time"`
+	CreateTime      time.Time `db:"created_time"`
+	UpdateTime      time.Time `db:"updated_time"`
 	DeleteTime      time.Time `db:"deleted_time"`
 }

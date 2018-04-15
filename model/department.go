@@ -12,7 +12,7 @@ type Department struct {
 	ClinicCode    string    `db:"clinic_code"`
 	Status        bool      `db:"status"`
 	IsAppointment bool      `db:"is_appointment"`
-	CreateTime    time.Time `db:"create_time"`
-	UpdateTime    time.Time `db:"update_time"`
+	CreateTime    time.Time `db:"created_time"`
+	UpdateTime    time.Time `db:"updated_time"`
 	DeleteTime    time.Time `db:"deleted_time"`
 }
