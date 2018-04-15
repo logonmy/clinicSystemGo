@@ -12,19 +12,20 @@ import (
  */
 func PersonnelLogin(ctx iris.Context) {
 	apijson := APIJSON{}
-	apijson.code = -1
+	apijson.Code = -1
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
 	if username != "" && password != "" {
 		personnel := model.Personnel{}
 		err := model.DB.Get(&personnel, "SELECT * FROM personnel WHERE username=$1 AND password=$2 ", username, password)
 		if err != nil {
-			apijson.msg = "用户名或密码不正确"
-			ctx.JSON(apijson)
+			apijson.Msg = "用户名或密码不正确"
+			fmt.Println("apijson", apijson)
+			ctx.JSON(FormatResult(apijson))
 			return
 		}
-		apijson.code = 200
-		apijson.data = personnel
+		apijson.Code = 200
+		apijson.Data = personnel
 		ctx.JSON(apijson)
 		return
 	}
