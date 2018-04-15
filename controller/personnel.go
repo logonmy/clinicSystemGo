@@ -11,25 +11,17 @@ import (
  * 创建医院管理员
  */
 func PersonnelLogin(ctx iris.Context) {
-	apijson := APIJSON{}
-	apijson.Code = -1
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
 	if username != "" && password != "" {
-		personnel := model.Personnel{}
-		err := model.DB.Get(&personnel, "SELECT * FROM personnel WHERE username=$1 AND password=$2 ", username, password)
-		if err != nil {
-			apijson.Msg = "用户名或密码不正确"
-			fmt.Println("apijson", apijson)
-			ctx.JSON(FormatResult(apijson))
-			return
-		}
-		apijson.Code = 200
-		apijson.Data = personnel
-		ctx.JSON(FormatResult(apijson))
+		fmt.Println("aaa", username)
+		// err := model.DB.Get(&personnel, "SELECT * FROM personnel WHERE username=$1", username)
+		rows, _ := model.DB.Query("SELECT * FROM personnel")
+		results := FormatSQLRowToMapArray(rows)
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码", "data": results})
 		return
 	}
-	ctx.JSON(FormatResult(apijson))
+	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
 }
 
 /**
