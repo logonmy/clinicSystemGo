@@ -7,5 +7,5 @@ CREATE TABLE visit_type
   fee money NOT NULL DEFAULT 0.00,
   created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time TIMESTAMP,
+  deleted_time TIMESTAMP
 );

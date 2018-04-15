@@ -1,5 +1,5 @@
 --用户角色表
-CREATE TABLE role
+CREATE TABLE personnel_role
 (
   personnel_id INTEGER NOT NULL references personnel(id),--人员id
   role_id INTEGER NOT NULL references role(id),--角色id

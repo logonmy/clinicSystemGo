@@ -1,9 +1,9 @@
---医生出诊周排班末班
-CREATE TABLE doctor_visit_schedule
+--医生出诊周排班模板
+CREATE TABLE doctor_visit_schedule_modle
 (
   id integer PRIMARY KEY NOT NULL, --模板id
-  department_id VARCHAR(10) REFERENCES department_personnel(department_id),--医生编码
-  personnel_id VARCHAR(10) REFERENCES department_personnel(personnel_id),--科室编码
+  department_id integer REFERENCES department(id),--医生id
+  personnel_id integer REFERENCES personnel(id),--科室id
   weekday INTEGER NOT NULL CHECK(weekday BETWEEN -1 AND 7),--出诊 日期（周几，0 代表 周日，1 周一...）
   am_pm CHAR(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   tatal_num INT NOT NULL DEFAULT 20,--总的接诊数
