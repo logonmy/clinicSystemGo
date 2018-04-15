@@ -16,7 +16,7 @@
   args = []
   port = ":3000"
 
-  [app.logger]
+[app.logger]
     level = "INFO"
     name = "application"
 
