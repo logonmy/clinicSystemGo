@@ -26,10 +26,10 @@ func PersonnelLogin(ctx iris.Context) {
 		}
 		apijson.Code = 200
 		apijson.Data = personnel
-		ctx.JSON(apijson)
+		ctx.JSON(FormatResult(apijson))
 		return
 	}
-	ctx.JSON(apijson)
+	ctx.JSON(FormatResult(apijson))
 }
 
 /**
