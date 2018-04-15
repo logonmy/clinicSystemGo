@@ -2,6 +2,7 @@ package main
 
 import (
 	"clinicSystemGo/controller"
+
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
@@ -31,8 +32,11 @@ func main() {
 		// clinic.Post("/update", controller.ClinicUpdte)
 	}
 
-	
-	
+	department := app.Party("/department")
+	{
+		department.Post("/add", controller.DepartmentCreate)
+		department.Post("/list", controller.DepartmentGet)
+	}
 
 	app.Post("/personnel/login", controller.PersonnelLogin)
 
