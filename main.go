@@ -39,6 +39,8 @@ func main() {
 
 	app.Post("/test", controller.GetClinicByCode)
 
+	app.Post("/personnel/login", controller.PersonnelLogin)
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello

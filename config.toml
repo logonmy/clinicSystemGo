@@ -22,6 +22,6 @@
 
 # 运行参数
 [postgres]
-  connect = "user=kangcha dbname=mydb sslmode=disable password=123456"
+  connect = "user=clinicdb dbname=clinicdb sslmode=disable password=clinicdb_password host=47.104.206.95"
   MaxIdle = 10
   MaxOpen = 100
