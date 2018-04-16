@@ -1,9 +1,8 @@
 package controller
 
 import (
-	"database/sql"
-
 	"github.com/fatih/structs"
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/lib/pq"
 )
@@ -26,27 +25,23 @@ func FormatResult(apijson APIJSON) map[string]interface{} {
 }
 
 /**
- * 格式化数据库返回的数据
+ * 格式化数据库返回的数组数据
  */
-func FormatSQLRowToMapArray(rows *sql.Rows) []map[string]interface{} {
+func FormatSQLRowsToMapArray(rows *sqlx.Rows) []map[string]interface{} {
 	var results []map[string]interface{}
-	cols, _ := rows.Columns()
 	for rows.Next() {
-		columns := make([]interface{}, len(cols))
-		columnPointers := make([]interface{}, len(cols))
-		for i, _ := range columns {
-			columnPointers[i] = &columns[i]
-		}
-
-		if err := rows.Scan(columnPointers...); err != nil {
-		}
-
 		m := make(map[string]interface{})
-		for i, colName := range cols {
-			val := columnPointers[i].(*interface{})
-			m[colName] = *val
-		}
+		rows.MapScan(m)
 		results = append(results, m)
 	}
 	return results
+}
+
+/**
+ * 格式化数据库返回的数组数据
+ */
+func FormatSQLRowToMap(row *sqlx.Row) map[string]interface{} {
+	result := make(map[string]interface{})
+	row.MapScan(result)
+	return result
 }

@@ -2,6 +2,8 @@ package controller
 
 import (
 	"clinicSystemGo/model"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/kataras/iris"
@@ -14,11 +16,15 @@ func PersonnelLogin(ctx iris.Context) {
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
 	if username != "" && password != "" {
-		fmt.Println("aaa", username)
-		// err := model.DB.Get(&personnel, "SELECT * FROM personnel WHERE username=$1", username)
-		rows, _ := model.DB.Query("SELECT * FROM personnel")
-		results := FormatSQLRowToMapArray(rows)
-		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码", "data": results})
+		md5Ctx := md5.New()
+		md5Ctx.Write([]byte(password))
+		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
+		fmt.Println("aaa", username, passwordMd5)
+		// rows, _ := model.DB.Queryx("select * from personnel")
+		// result := FormatSQLRowsToMapArray(rows)
+		row := model.DB.QueryRowx("select * from personnel where  username = ？and password = ?", username, passwordMd5)
+		result := FormatSQLRowToMap(row)
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码", "data": result})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
