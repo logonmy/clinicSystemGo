@@ -20,11 +20,14 @@ func PersonnelLogin(ctx iris.Context) {
 		md5Ctx.Write([]byte(password))
 		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
 		fmt.Println("aaa", username, passwordMd5)
-		// rows, _ := model.DB.Queryx("select * from personnel")
-		// result := FormatSQLRowsToMapArray(rows)
-		row := model.DB.QueryRowx("select * from personnel where  username = ？and password = ?", username, passwordMd5)
+		row := model.DB.QueryRowx("select a.id, a.code, a.name, a.username, b.code as clinic_code, b.name as clinic_name from personnel a left join clinic b on a.clinic_code = b.code where  username = $1 and password = $2", username, passwordMd5)
+		fmt.Println("row ========", row)
+		if row == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
+			return
+		}
 		result := FormatSQLRowToMap(row)
-		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码", "data": result})
+		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
