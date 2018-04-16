@@ -4,14 +4,11 @@ import (
 	"clinicSystemGo/model"
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
 
 	"github.com/kataras/iris"
 )
 
-/**
- * 创建医院管理员
- */
+// PersonnelLogin 创建医院管理员
 func PersonnelLogin(ctx iris.Context) {
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
@@ -31,9 +28,7 @@ func PersonnelLogin(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
 }
 
-/**
- * 添加人员或医生
- */
+// PersonnelCreate 添加人员或医生
 func PersonnelCreate(ctx iris.Context) {
 	code := ctx.PostValue("code")
 	name := ctx.PostValue("name")
@@ -78,9 +73,7 @@ func PersonnelCreate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 }
 
-/**
- * 通过id获取人员（医生）
- */
+// PersonnelGetByID 通过id获取人员（医生）
 func PersonnelGetByID(ctx iris.Context) {
 	id := ctx.PostValue("id")
 	if id != "" {
@@ -92,7 +85,6 @@ func PersonnelGetByID(ctx iris.Context) {
 			left join department_personnel dp on p.id = dp.personnel_id
 			left join department d on dp.department_id = d.id
 			where dp.type = 2 and p.id = $1;`, id)
-		fmt.Println("row =======", row)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 			return
