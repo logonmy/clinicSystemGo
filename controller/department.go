@@ -78,21 +78,22 @@ func DepartmentDelete(ctx iris.Context) {
  * 修改科室
  */
 func DepartmentUpdate(ctx iris.Context) {
+	departmentID := ctx.PostValue("departmentID")
 	code := ctx.PostValue("code")
 	name := ctx.PostValue("name")
 	clinicCode := ctx.PostValue("clinicCode")
 	weight := ctx.PostValue("weight")
-	if code == "" || name == "" || clinicCode == "" || weight == "" {
+	if departmentID == "" || code == "" || name == "" || clinicCode == "" || weight == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	stmt, err := model.DB.Prepare("UPDATE department SET ")
+	stmt, err := model.DB.Prepare("UPDATE department SET code=$2, name=$3, clinic_code=$4, weight=$5 WHERE id=$1")
 	if err != nil {
 		fmt.Println("Perr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": "error"})
 		return
 	}
-	res, err := stmt.Exec(departmentID)
+	res, err := stmt.Exec(departmentID, code, name, clinicCode, weight)
 	if err != nil {
 		fmt.Println("Eerr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": "error"})
