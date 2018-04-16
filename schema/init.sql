@@ -49,7 +49,7 @@ CREATE TABLE personnel
 --人员科室关系表
 CREATE TABLE department_personnel
 (
-  id integer PRIMARY KEY NOT NULL, --id
+  id serial PRIMARY KEY NOT NULL, --id
   department_id INTEGER NOT NULL references department(id),--科室id
   personnel_id INTEGER NOT NULL references personnel(id),--人员id
   type INTEGER NOT NULL CHECK(type > 0 AND type < 3),-- 关系类型 1：人事科室， 2：出诊科室
@@ -75,7 +75,7 @@ CREATE TABLE visit_type
 --医生出诊排班
 CREATE TABLE doctor_visit_schedule
 (
-  id integer PRIMARY KEY NOT NULL, --排班编号
+  id serial PRIMARY KEY NOT NULL, --排班编号
   department_id integer REFERENCES department(id),--医生id
   personnel_id integer REFERENCES personnel(id),--科室id
   visit_date DATE NOT NULL,--出诊日期
@@ -94,7 +94,7 @@ CREATE TABLE doctor_visit_schedule
 --医生出诊周排班模板
 CREATE TABLE doctor_visit_schedule_model
 (
-  id integer PRIMARY KEY NOT NULL, --模板id
+  id serial PRIMARY KEY NOT NULL, --模板id
   department_id integer REFERENCES department(id),--医生id
   personnel_id integer REFERENCES personnel(id),--科室id
   weekday INTEGER NOT NULL CHECK(weekday BETWEEN -1 AND 7),--出诊 日期（周几，0 代表 周日，1 周一...）
@@ -139,7 +139,7 @@ CREATE TABLE patient
 --诊所就诊人
 CREATE TABLE clinic_patient
 (
-  id integer PRIMARY KEY NOT NULL, --排班编号
+  id serial PRIMARY KEY NOT NULL, --排班编号
   patient_cert_no varchar(18) NOT NULL references patient(cert_no),--患者身份证号
   clinic_code varchar(40) NOT NULL references clinic(code),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id

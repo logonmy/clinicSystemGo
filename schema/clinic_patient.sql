@@ -1,7 +1,7 @@
 --诊所就诊人
 CREATE TABLE clinic_patient
 (
-  id integer PRIMARY KEY NOT NULL, --排班编号
+  id serial PRIMARY KEY NOT NULL, --排班编号
   patient_cert_no varchar(18) NOT NULL references patient(cert_no),--患者身份证号
   clinic_code varchar(40) NOT NULL references clinic(code),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id

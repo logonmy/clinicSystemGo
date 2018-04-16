@@ -1,7 +1,7 @@
 --医生出诊周排班模板
 CREATE TABLE doctor_visit_schedule_model
 (
-  id integer PRIMARY KEY NOT NULL, --模板id
+  id serial PRIMARY KEY NOT NULL, --模板id
   department_id integer REFERENCES department(id),--医生id
   personnel_id integer REFERENCES personnel(id),--科室id
   weekday INTEGER NOT NULL CHECK(weekday BETWEEN -1 AND 7),--出诊 日期（周几，0 代表 周日，1 周一...）

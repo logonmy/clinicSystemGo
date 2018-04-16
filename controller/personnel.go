@@ -19,9 +19,7 @@ func PersonnelLogin(ctx iris.Context) {
 		md5Ctx := md5.New()
 		md5Ctx.Write([]byte(password))
 		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
-		fmt.Println("aaa", username, passwordMd5)
 		row := model.DB.QueryRowx("select a.id, a.code, a.name, a.username, b.code as clinic_code, b.name as clinic_name from personnel a left join clinic b on a.clinic_code = b.code where  username = $1 and password = $2", username, passwordMd5)
-		fmt.Println("row ========", row)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
 			return
@@ -34,20 +32,72 @@ func PersonnelLogin(ctx iris.Context) {
 }
 
 /**
- * 获取人员（医生）
+ * 添加人员或医生
+ */
+func PersonnelAdd(ctx iris.Context) {
+	code := ctx.PostValue("code")
+	name := ctx.PostValue("name")
+	clinicCode := ctx.PostValue("clinic_code")
+	departmentID := ctx.PostValue("department_id")
+	weight := ctx.PostValue("weight")
+	title := ctx.PostValue("title")
+	username := ctx.PostValue("username")
+	password := ctx.PostValue("password")
+	isClinicAdmin := false
+
+	if code != "" && name != "" && clinicCode != "" && departmentID != "" && weight != "" && title != "" && username != "" && password != "" {
+		tx, err := model.DB.Beginx()
+		if err != nil {
+			fmt.Println("err ===", err.Error())
+			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			return
+		}
+		var personnelID int
+		err = model.DB.QueryRow("insert into personnel(code, name, clinic_code, weight, title, username, password, is_clinic_admin) values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", code, name, clinicCode, weight, title, username, password, isClinicAdmin).Scan(&personnelID)
+		if err != nil {
+			fmt.Println("11err =======", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "插入失败"})
+			return
+		}
+		fmt.Println("personnelID ======", personnelID)
+
+		var resultID int
+		err = model.DB.QueryRow("insert into department_personnel(department_id, personnel_id) values ($1, $2) RETURNING id", departmentID, personnelID).Scan(&resultID)
+		fmt.Println("resultID =======", resultID)
+		if err != nil {
+			fmt.Println("err =======", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "插入失败"})
+			return
+		}
+
+		err = tx.Commit()
+		if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+		ctx.JSON(iris.Map{"code": "200", "data": ""})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+}
+
+/**
+ * 通过id获取人员（医生）
  */
 func PersonnelGetByID(ctx iris.Context) {
 	id := ctx.PostValue("id")
 	if id != "" {
-		personnel := model.Personnel{}
-		err := model.DB.Get(&personnel, "SELECT * FROM personnel WHERE id=$1 ", id)
-		if err != nil {
-			fmt.Println("err ===", err)
-			ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码不正确"})
+		row := model.DB.QueryRowx("SELECT * FROM personnel WHERE id=$1 ", id)
+		if row == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 			return
 		}
-		ctx.JSON(iris.Map{"code": "200", "data": personnel})
+		result := FormatSQLRowToMap(row)
+		ctx.JSON(iris.Map{"code": "200", "data": result})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
+	ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 }
