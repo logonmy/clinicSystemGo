@@ -35,7 +35,9 @@ func main() {
 	department := app.Party("/department")
 	{
 		department.Post("/add", controller.DepartmentCreate)
-		department.Post("/list", controller.DepartmentGet)
+		department.Post("/list", controller.DepartmentList)
+		department.Post("/delete", controller.DepartmentDelete)
+		department.Post("/update", controller.DepartmentUpdate)
 	}
 
 	personnel := app.Party("/personnel")
