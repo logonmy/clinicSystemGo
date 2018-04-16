@@ -41,7 +41,8 @@ func main() {
 	personnel := app.Party("/personnel")
 	{
 		personnel.Post("/login", controller.PersonnelLogin)
-		personnel.Post("/add", controller.PersonnelAdd)
+		personnel.Post("/create", controller.PersonnelCreate)
+		personnel.Post("/getById", controller.PersonnelGetByID)
 	}
 
 	// http://localhost:8080
