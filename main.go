@@ -38,7 +38,11 @@ func main() {
 		department.Post("/list", controller.DepartmentGet)
 	}
 
-	app.Post("/personnel/login", controller.PersonnelLogin)
+	personnel := app.Party("/personnel")
+	{
+		personnel.Post("/login", controller.PersonnelLogin)
+		personnel.Post("/add", controller.PersonnelAdd)
+	}
 
 	// http://localhost:8080
 	// http://localhost:8080/ping
