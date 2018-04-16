@@ -1,7 +1,7 @@
 --医生出诊排班
 CREATE TABLE doctor_visit_schedule
 (
-  id integer PRIMARY KEY NOT NULL, --排班编号
+  id serial PRIMARY KEY NOT NULL, --排班编号
   department_id integer REFERENCES department(id),--医生id
   personnel_id integer REFERENCES personnel(id),--科室id
   visit_date DATE NOT NULL,--出诊日期

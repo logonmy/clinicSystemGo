@@ -1,7 +1,7 @@
 --人员科室关系表
 CREATE TABLE department_personnel
 (
-  id integer PRIMARY KEY NOT NULL, --id
+  id serial PRIMARY KEY NOT NULL, --id
   department_id INTEGER NOT NULL references department(id),--科室id
   personnel_id INTEGER NOT NULL references personnel(id),--人员id
   type INTEGER NOT NULL CHECK(type > 0 AND type < 3),-- 关系类型 1：人事科室， 2：出诊科室

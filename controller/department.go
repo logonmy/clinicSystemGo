@@ -78,25 +78,25 @@ func DepartmentDelete(ctx iris.Context) {
  * 修改科室
  */
 func DepartmentUpdate(ctx iris.Context) {
-	code := ctx.PostValue("code")
-	name := ctx.PostValue("name")
-	clinicCode := ctx.PostValue("clinicCode")
-	weight := ctx.PostValue("weight")
-	if code == "" || name == "" || clinicCode == "" || weight == "" {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
-		return
-	}
-	stmt, err := model.DB.Prepare("UPDATE department SET ")
-	if err != nil {
-		fmt.Println("Perr ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": "error"})
-		return
-	}
-	res, err := stmt.Exec(departmentID)
-	if err != nil {
-		fmt.Println("Eerr ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": "error"})
-		return
-	}
-	ctx.JSON(iris.Map{"code": "200", "data": res})
+	// code := ctx.PostValue("code")
+	// name := ctx.PostValue("name")
+	// clinicCode := ctx.PostValue("clinicCode")
+	// weight := ctx.PostValue("weight")
+	// if code == "" || name == "" || clinicCode == "" || weight == "" {
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+	// 	return
+	// }
+	// stmt, err := model.DB.Prepare("UPDATE department SET ")
+	// if err != nil {
+	// 	fmt.Println("Perr ===", err)
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "error"})
+	// 	return
+	// }
+	// res, err := stmt.Exec(departmentID)
+	// if err != nil {
+	// 	fmt.Println("Eerr ===", err)
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "error"})
+	// 	return
+	// }
+	// ctx.JSON(iris.Map{"code": "200", "data": res})
 }
