@@ -84,7 +84,14 @@ func PersonnelCreate(ctx iris.Context) {
 func PersonnelGetByID(ctx iris.Context) {
 	id := ctx.PostValue("id")
 	if id != "" {
-		row := model.DB.QueryRowx("select p.id, p.name,p.weight,p.title,p.username,p.status,c.code as clinic_code, c.name as clinic_name,d.code as department_code, d.name as department_name, d.id as department_id from personnel p left join clinic c on p.clinic_code = c.code left join department_personnel dp on p.id = dp.personnel_id left join department d on dp.department_id = d.id where dp.type = 2 and p.id = 7;", id)
+		row := model.DB.QueryRowx(`select p.id, p.name,p.weight,p.title,p.username,p.status,
+			c.code as clinic_code, c.name as clinic_name,
+			d.code as department_code, d.name as department_name, d.id as department_id
+			from personnel p 
+			left join clinic c on p.clinic_code = c.code 
+			left join department_personnel dp on p.id = dp.personnel_id
+			left join department d on dp.department_id = d.id
+			where dp.type = 2 and p.id = $1;`, id)
 		fmt.Println("row =======", row)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
