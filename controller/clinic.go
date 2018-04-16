@@ -90,7 +90,7 @@ func ClinicAdd(ctx iris.Context) {
 
 	if err != nil {
 		fmt.Println("err ===", err.Error())
-		ctx.JSON(iris.Map{"code": "-1", "msg":err })
+		ctx.JSON(iris.Map{"code": "-1", "msg":err.Error() })
 		return
 	}
 
