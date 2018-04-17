@@ -30,9 +30,27 @@ func GetClinicByCode(ctx iris.Context) {
 
 //ClinicList 获取科室列表
 func ClinicList(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	startDate := ctx.PostValue("startDate")
+	endDate := ctx.PostValue("endDate")
+	status := ctx.PostValue("status")
 
+	if keyword == "" {
+		keyword = "%"
+	}
+
+	sql := "SELECT * FROM clinic where (code LIKE '%" + keyword + "%' or name LIKE '%" + keyword + "%')"
+
+	if status != "" {
+		sql = sql + " AND status = " + status
+	}
+
+	if startDate != "" && endDate != "" {
+		sql = sql + " AND created_time between " + startDate + " and " + endDate
+	}
+	fmt.Println(sql)
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx("SELECT * FROM clinic")
+	rows, _ := model.DB.Queryx(sql)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
