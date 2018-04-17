@@ -51,6 +51,7 @@ func main() {
 	patient := app.Party("/patient")
 	{
 		patient.Post("/create", controller.PatientAdd)
+		patient.Post("/list", controller.PatientList)
 	}
 
 	// http://localhost:8080
