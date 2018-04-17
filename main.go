@@ -45,6 +45,7 @@ func main() {
 		personnel.Post("/login", controller.PersonnelLogin)
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
+		personnel.Post("/list", controller.PersonnelList)
 	}
 
 	// http://localhost:8080

@@ -4,6 +4,8 @@ import (
 	"clinicSystemGo/model"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
+	"strconv"
 
 	"github.com/kataras/iris"
 )
@@ -77,7 +79,7 @@ func PersonnelCreate(ctx iris.Context) {
 func PersonnelGetByID(ctx iris.Context) {
 	id := ctx.PostValue("id")
 	if id != "" {
-		row := model.DB.QueryRowx(`select p.id, p.name,p.weight,p.title,p.username,p.status,
+		row := model.DB.QueryRowx(`select p.id, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
 			c.code as clinic_code, c.name as clinic_name,
 			d.code as department_code, d.name as department_name, d.id as department_id
 			from personnel p 
@@ -94,4 +96,67 @@ func PersonnelGetByID(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+}
+
+// PersonnelList 获取人员列表
+func PersonnelList(ctx iris.Context) {
+	clinicCode := ctx.PostValue("clinic_code")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	keyword := ctx.PostValue("keyword")
+	if clinicCode == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	total := model.DB.QueryRowx(`select count(p.id) as total
+		from personnel p 
+		left join clinic c on p.clinic_code = c.code 
+		left join department_personnel dp on p.id = dp.personnel_id
+		left join department d on dp.department_id = d.id
+		where dp.type = 2 and p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%')`, clinicCode, keyword)
+	fmt.Println("tatal ========", total)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err1 := model.DB.Queryx(`select p.id, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
+		c.code as clinic_code, c.name as clinic_name,
+		d.code as department_code, d.name as department_name, d.id as department_id
+		from personnel p 
+		left join clinic c on p.clinic_code = c.code 
+		left join department_personnel dp on p.id = dp.personnel_id
+		left join department d on dp.department_id = d.id
+		where dp.type = 2 and p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%') offset $3 limit $4;`, clinicCode, keyword, offset, limit)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
