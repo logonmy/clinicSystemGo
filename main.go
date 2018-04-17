@@ -34,7 +34,7 @@ func main() {
 
 	department := app.Party("/department")
 	{
-		department.Post("/add", controller.DepartmentCreate)
+		department.Post("/create", controller.DepartmentCreate)
 		department.Post("/list", controller.DepartmentList)
 		department.Post("/delete", controller.DepartmentDelete)
 		department.Post("/update", controller.DepartmentUpdate)
@@ -46,6 +46,11 @@ func main() {
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
+	}
+
+	patient := app.Party("/patient")
+	{
+		patient.Post("/create", controller.PatientAdd)
 	}
 
 	// http://localhost:8080
