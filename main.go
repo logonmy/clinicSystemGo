@@ -52,6 +52,7 @@ func main() {
 	{
 		patient.Post("/create", controller.PatientAdd)
 		patient.Post("/list", controller.PatientList)
+		patient.Post("/getById", controller.PatientGetByID)
 	}
 
 	// http://localhost:8080
