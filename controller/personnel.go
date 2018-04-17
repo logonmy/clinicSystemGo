@@ -4,7 +4,6 @@ import (
 	"clinicSystemGo/model"
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 
 	"github.com/kataras/iris"
@@ -134,7 +133,6 @@ func PersonnelList(ctx iris.Context) {
 		left join department_personnel dp on p.id = dp.personnel_id
 		left join department d on dp.department_id = d.id
 		where dp.type = 2 and p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%')`, clinicCode, keyword)
-	fmt.Println("tatal ========", total)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
