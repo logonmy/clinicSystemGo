@@ -5,6 +5,7 @@ CREATE TABLE clinic
   name varchar(40) NOT NULL,--名称
   responsible_person varchar(40) NOT NULL,--负责人
   area varchar(40),--地区
+  phone varchar(11),--手机号
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
