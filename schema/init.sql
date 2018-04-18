@@ -158,7 +158,9 @@ CREATE TABLE clinic_triage_patient
   id serial PRIMARY KEY NOT NULL,--id
   department_id INTEGER NOT NULL references department(id),--科室id
   clinic_patient_id INTEGER NOT NULL references clinic_patient(id),--科室就诊人id
-  personnel_id INTEGER NOT NULL references personnel(id),--录入人员id
+  register_personnel_id INTEGER NOT NULL references personnel(id),--录入人员id
+  doctor_id INTEGER references personnel(id),--接诊医生医生id
+  triage_personnel_id INTEGER references personnel(id),--分诊人员id
   treat_status boolean NOT NULL DEFAULT false,--是否分诊
   visit_date DATE NOT NULL DEFAULT CURRENT_DATE,--日期
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,

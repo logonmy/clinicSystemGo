@@ -31,7 +31,6 @@ func PersonnelLogin(ctx iris.Context) {
 			return
 		}
 		ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误"})
-
 		return
 	}
 	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})

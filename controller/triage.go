@@ -7,6 +7,7 @@ import (
 	"github.com/kataras/iris"
 )
 
+// TriageRegister 就诊患者登记
 func TriageRegister(ctx iris.Context) {
 	certNo := ctx.PostValue("cert_no")
 	name := ctx.PostValue("name")
@@ -19,7 +20,8 @@ func TriageRegister(ctx iris.Context) {
 	patientChannelID := ctx.PostValue("patient_channel_id")
 	clinicCode := ctx.PostValue("clinic_code")
 	personnelID := ctx.PostValue("personnel_id")
-	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicCode == "" || personnelID == "" {
+	departmentID := ctx.PostValue("department_id")
+	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicCode == "" || personnelID == "" || departmentID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -49,23 +51,43 @@ func TriageRegister(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "登记失败"})
 	}
 	clinicPatient := FormatSQLRowToMap(row)
+	fmt.Println("clinic_triage_patient ======", clinicPatient)
 	_, ok = clinicPatient["id"]
+	var clinicPatientID interface{}
 	if !ok {
-		var clinicPatientID int
 		err = tx.QueryRow("INSERT INTO clinic_patient (patient_cert_no, clinic_code, personnel_id) VALUES ($1, $2, $3) RETURNING id", certNo, clinicCode, personnelID).Scan(&clinicPatientID)
 		if err != nil {
+			fmt.Println("clinic_patient ======", err)
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
 			return
 		}
+	} else {
+		clinicPatientID = clinicPatient["id"]
 	}
 
 	var resultID int
-	err = tx.QueryRow("INSERT INTO clinic_patient (patient_cert_no, clinic_code, personnel_id) VALUES ($1, $2, $3) RETURNING id", certNo, clinicCode, personnelID).Scan(&resultID)
+	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id) VALUES ($1, $2, $3) RETURNING id", departmentID, clinicPatientID, personnelID).Scan(&resultID)
 	if err != nil {
+		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": nil})
+}
 
+// TriagePatientList 当日登记就诊人列表
+func TriagePatientList(ctx iris.Context) {
+	// clinicCode := ctx.PostValue("clinic_code")
+	// rows, err1 := model.DB.Queryx(rowSQL, clinicCode, keyword, personnelType, offset, limit)
+	// if err1 != nil {
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+	// 	return
+	// }
 }
