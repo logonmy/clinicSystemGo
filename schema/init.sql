@@ -123,7 +123,8 @@ CREATE TABLE patient_channel
 --就诊人
 CREATE TABLE patient
 (
-  cert_no varchar(18) PRIMARY KEY NOT NULL,--身份证号
+  id serial PRIMARY KEY NOT NULL,--id
+  cert_no varchar(18) NOT NULL,--身份证号
   name varchar(10) NOT NULL,--姓名
   birthday varchar(8) NOT NULL,--身份证号
   sex integer NOT NULL CHECK(sex = 0 OR sex = 1),--性别 0：女，1：男
@@ -135,21 +136,22 @@ CREATE TABLE patient
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  deleted_time timestamp,
+  UNIQUE (cert_no)
 );
 
 --诊所就诊人
 CREATE TABLE clinic_patient
 (
   id serial PRIMARY KEY NOT NULL, --排班编号
-  patient_cert_no varchar(18) NOT NULL references patient(cert_no),--患者身份证号
+  patient_id varchar(18) NOT NULL references patient(id),--患者身份证号
   clinic_code varchar(40) NOT NULL references clinic(code),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
-  UNIQUE (patient_cert_no, clinic_code)--联合主键，就诊人身份证号和诊所编码唯一
+  UNIQUE (patient_id, clinic_code)--联合主键，就诊人身份证号和诊所编码唯一
 );
 
 --分诊就诊人
