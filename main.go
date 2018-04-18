@@ -29,6 +29,7 @@ func main() {
 		clinic.Post("/add", controller.ClinicAdd)
 		clinic.Post("/detailByCode", controller.GetClinicByCode)
 		clinic.Post("/list", controller.ClinicList)
+		clinic.Post("/update", controller.ClinicUpdate)
 		// clinic.Post("/update", controller.ClinicUpdte)
 	}
 
