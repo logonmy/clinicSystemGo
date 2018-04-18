@@ -53,7 +53,7 @@ func main() {
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
-		personnel.Post("/PersonnelUpdate", controller.PersonnelUpdate)
+		personnel.Post("/update", controller.PersonnelUpdate)
 	}
 
 	patient := app.Party("/patient", crs).AllowMethods(iris.MethodOptions)
