@@ -19,7 +19,7 @@ CREATE TABLE department
 	id serial PRIMARY KEY NOT NULL,--id
 	code varchar(20) NOT NULL,--科室编码
 	name varchar(20) NOT NULL,--科室名称
-	clinic_id varchar(20) NOT NULL references clinic(id),--所属诊所
+	clinic_id integer NOT NULL references clinic(id),--所属诊所
 	status boolean NOT NULL DEFAULT true,--是否启用
 	weight integer NOT NULL DEFAULT 1,--权重
 	is_appointment boolean NOT NULL DEFAULT true,--是否开放预约/挂号
@@ -35,7 +35,7 @@ CREATE TABLE personnel
   id serial PRIMARY KEY NOT NULL,--id
   code varchar(10) NOT NULL,--编码
   name varchar(10) NOT NULL,--名称
-  clinic_id varchar(20) NOT NULL references clinic(id),--所属诊所
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
   weight integer NOT NULL DEFAULT 1,--权重
   title varchar(10),--职称
   username varchar(20) UNIQUE,--账号
@@ -144,8 +144,8 @@ CREATE TABLE patient
 CREATE TABLE clinic_patient
 (
   id serial PRIMARY KEY NOT NULL, --排班编号
-  patient_id varchar(18) NOT NULL references patient(id),--患者身份证号
-  clinic_id varchar(40) NOT NULL references clinic(id),--诊所编码
+  patient_id integer NOT NULL references patient(id),--患者身份证号
+  clinic_id integer NOT NULL references clinic(id),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
