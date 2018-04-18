@@ -1,7 +1,8 @@
 --诊所
 CREATE TABLE clinic
 (
-  code varchar(20) PRIMARY KEY NOT NULL,--编码
+  id serial PRIMARY KEY NOT NULL,--编码
+  code varchar(20) UNIQUE NOT NULL,--编码
   name varchar(40) NOT NULL,--名称
   responsible_person varchar(40) NOT NULL,--负责人
   area varchar(40),--地区
@@ -18,14 +19,14 @@ CREATE TABLE department
 	id serial PRIMARY KEY NOT NULL,--id
 	code varchar(20) NOT NULL,--科室编码
 	name varchar(20) NOT NULL,--科室名称
-	clinic_code varchar(20) NOT NULL references clinic(code),--所属诊所
+	clinic_id integer NOT NULL references clinic(id),--所属诊所
 	status boolean NOT NULL DEFAULT true,--是否启用
 	weight integer NOT NULL DEFAULT 1,--权重
 	is_appointment boolean NOT NULL DEFAULT true,--是否开放预约/挂号
 	created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
 	deleted_time timestamp,
-	UNIQUE (code, clinic_code)
+	UNIQUE (code, clinic_id)
 );
 
 --人员
@@ -34,7 +35,7 @@ CREATE TABLE personnel
   id serial PRIMARY KEY NOT NULL,--id
   code varchar(10) NOT NULL,--编码
   name varchar(10) NOT NULL,--名称
-  clinic_code varchar(20) NOT NULL references clinic(code),--所属诊所
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
   weight integer NOT NULL DEFAULT 1,--权重
   title varchar(10),--职称
   username varchar(20) UNIQUE,--账号
@@ -45,7 +46,7 @@ CREATE TABLE personnel
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
-  UNIQUE (code, clinic_code)
+  UNIQUE (code, clinic_id)
 );
 
 --人员科室关系表
@@ -123,7 +124,8 @@ CREATE TABLE patient_channel
 --就诊人
 CREATE TABLE patient
 (
-  cert_no varchar(18) PRIMARY KEY NOT NULL,--身份证号
+  id serial PRIMARY KEY NOT NULL,--id
+  cert_no varchar(18) UNIQUE NOT NULL,--身份证号
   name varchar(10) NOT NULL,--姓名
   birthday varchar(8) NOT NULL,--身份证号
   sex integer NOT NULL CHECK(sex = 0 OR sex = 1),--性别 0：女，1：男
@@ -142,14 +144,31 @@ CREATE TABLE patient
 CREATE TABLE clinic_patient
 (
   id serial PRIMARY KEY NOT NULL, --排班编号
-  patient_cert_no varchar(18) NOT NULL references patient(cert_no),--患者身份证号
-  clinic_code varchar(40) NOT NULL references clinic(code),--诊所编码
+  patient_id integer NOT NULL references patient(id),--患者身份证号
+  clinic_id integer NOT NULL references clinic(id),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
-  UNIQUE (patient_cert_no, clinic_code)--联合主键，就诊人身份证号和诊所编码唯一
+  UNIQUE (patient_id, clinic_id)--联合主键，就诊人身份证号和诊所编码唯一
+);
+
+--分诊就诊人
+CREATE TABLE clinic_triage_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  department_id INTEGER NOT NULL references department(id),--科室id
+  clinic_patient_id INTEGER NOT NULL references clinic_patient(id),--科室就诊人id
+  register_personnel_id INTEGER NOT NULL references personnel(id),--录入人员id
+  doctor_id INTEGER references personnel(id),--接诊医生医生id
+  triage_personnel_id INTEGER references personnel(id),--分诊人员id
+  treat_status boolean NOT NULL DEFAULT false,--是否分诊
+  visit_date DATE NOT NULL DEFAULT CURRENT_DATE,--日期
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp,
+  UNIQUE (department_id, clinic_patient_id,treat_status,visit_date)--联合主键，就诊人、科室、状态、日期唯一
 );
 
 --挂号记录

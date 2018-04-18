@@ -67,6 +67,14 @@ func main() {
 		patient.Post("/create", controller.PatientAdd)
 		patient.Post("/list", controller.PatientList)
 		patient.Post("/getById", controller.PatientGetByID)
+		patient.Post("/update", controller.PatientUpdate)
+	}
+
+	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
+	{
+		triage.Post("/register", controller.TriageRegister)
+		triage.Post("/list", controller.PatientList)
+		triage.Post("/getById", controller.PatientGetByID)
 	}
 
 	// http://localhost:8080
