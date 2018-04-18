@@ -11,6 +11,7 @@ CREATE TABLE personnel
   password varchar(40),--密码
   is_appointment boolean NOT NULL DEFAULT true,--是否开放预约/挂号
   is_clinic_admin boolean NOT NULL DEFAULT false,--是否是诊所超级管理员
+  phone varchar(11), --手机号
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,

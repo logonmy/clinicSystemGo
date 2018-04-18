@@ -9,9 +9,7 @@ import (
 	"github.com/kataras/iris"
 )
 
-/**
- * 获取诊所
- */
+// GetClinicByCode 更加code查询诊所
 func GetClinicByCode(ctx iris.Context) {
 	code := ctx.PostValue("code")
 	if code == "" {
@@ -30,36 +28,47 @@ func GetClinicByCode(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": clinic})
 }
 
+//ClinicList 获取科室列表
 func ClinicList(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	startDate := ctx.PostValue("startDate")
+	endDate := ctx.PostValue("endDate")
+	status := ctx.PostValue("status")
 
-	clinic := []model.Clinic{}
-	err := model.DB.Select(&clinic, "SELECT * FROM clinic ")
-
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-		return
+	if keyword == "" {
+		keyword = "%"
 	}
-	ctx.JSON(iris.Map{"code": "200", "data": clinic})
+
+	sql := "SELECT * FROM clinic where (code LIKE '%" + keyword + "%' or name LIKE '%" + keyword + "%')"
+
+	if status != "" {
+		sql = sql + " AND status = " + status
+	}
+
+	if startDate != "" && endDate != "" {
+		sql = sql + " AND created_time between " + startDate + " and " + endDate
+	}
+	fmt.Println(sql)
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(sql)
+	results = FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results})
 }
 
-func ClinicUpdte(ctx iris.Context) {
-
-}
-
-/**
-* 新建诊所
- */
+//ClinicAdd 获取
 func ClinicAdd(ctx iris.Context) {
 	code := ctx.PostValue("code")
 	name := ctx.PostValue("name")
-	responsible_person := ctx.PostValue("responsible_person")
+	responsiblePerson := ctx.PostValue("responsible_person")
 	area := ctx.PostValue("area")
 	status := ctx.PostValue("status")
 
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
+	phone := ctx.PostValue("phone")
 
-	if code == "" || name == "" || responsible_person == "" || area == "" || status == "" || username == "" || password == "" {
+	if code == "" || name == "" || responsiblePerson == "" || area == "" || status == "" || username == "" || password == "" || phone == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -71,7 +80,7 @@ func ClinicAdd(ctx iris.Context) {
 	cmap := map[string]interface{}{
 		"code":               code,
 		"name":               name,
-		"responsible_person": responsible_person,
+		"responsible_person": responsiblePerson,
 		"area":               area,
 		"status":             status,
 	}
@@ -82,6 +91,7 @@ func ClinicAdd(ctx iris.Context) {
 		"username":        username,
 		"password":        passwordMd5,
 		"clinic_code":     code,
+		"phone":           phone,
 		"is_clinic_admin": true,
 	}
 
@@ -105,8 +115,8 @@ func ClinicAdd(ctx iris.Context) {
 	}
 
 	_, err = tx.NamedExec(`INSERT INTO personnel(
-		code, name, username, password, clinic_code, is_clinic_admin)
-		VALUES (:code, :name, :username, :password, :clinic_code, :is_clinic_admin)`, amap)
+		code, name, username, password, clinic_code, phone,is_clinic_admin)
+		VALUES (:code, :name, :username, :password, :clinic_code, :phone, :is_clinic_admin)`, amap)
 	if err != nil {
 		fmt.Println("err ===", err.Error())
 		tx.Rollback()
