@@ -4,6 +4,7 @@ import (
 	"clinicSystemGo/model"
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"strconv"
 
 	"strings"
@@ -173,6 +174,7 @@ func PersonnelUpdate(ctx iris.Context) {
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
 	personnelType := ctx.PostValue("personnel_type")
+	isAppointment := ctx.PostValue("is_appointment")
 	status := ctx.PostValue("status")
 	if id == "" || personnelType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
@@ -183,23 +185,26 @@ func PersonnelUpdate(ctx iris.Context) {
 		sets = append(sets, "weight="+weight)
 	}
 	if title != "" {
-		sets = append(sets, "title="+title)
+		sets = append(sets, "title='"+title+"'")
 	}
 	if username != "" {
-		sets = append(sets, "username="+username)
+		sets = append(sets, "username='"+username+"'")
 	}
 	if status != "" {
 		sets = append(sets, "status="+status)
+	}
+	if isAppointment != "" {
+		sets = append(sets, "is_appointment="+isAppointment)
 	}
 	if password != "" {
 		md5Ctx := md5.New()
 		md5Ctx.Write([]byte(password))
 		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
-		sets = append(sets, "password="+passwordMd5)
+		sets = append(sets, "password='"+passwordMd5+"'")
 	}
 	setStr := strings.Join(sets, ",")
-	psql := "update personnel set" + setStr + "where id=" + id
-
+	psql := "update personnel set " + setStr + " where id=" + id
+	fmt.Println("===", psql)
 	tx, err := model.DB.Begin()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
