@@ -20,13 +20,18 @@ func PersonnelLogin(ctx iris.Context) {
 		md5Ctx := md5.New()
 		md5Ctx.Write([]byte(password))
 		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
-		row := model.DB.QueryRowx("select a.id, a.code, a.name, a.username, b.code as clinic_code, b.name as clinic_name from personnel a left join clinic b on a.clinic_code = b.code where  username = $1 and password = $2", username, passwordMd5)
+		row := model.DB.QueryRowx("select a.id, a.code, a.name, a.username, b.code as clinic_code, b.name as clinic_name from personnel a left join clinic b on a.clinic_code = b.code where a.username = $1 and a.password = $2", username, passwordMd5)
 		if row == nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误"})
 			return
 		}
 		result := FormatSQLRowToMap(row)
-		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+		if _, ok := result["id"]; ok {
+			ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+			return
+		}
+		ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误"})
+
 		return
 	}
 	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
@@ -51,8 +56,11 @@ func PersonnelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
 			return
 		}
+		md5Ctx := md5.New()
+		md5Ctx.Write([]byte(password))
+		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
 		var personnelID int
-		err = tx.QueryRow("insert into personnel(code, name, clinic_code, weight, title, username, password, is_clinic_admin) values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", code, name, clinicCode, weight, title, username, password, isClinicAdmin).Scan(&personnelID)
+		err = tx.QueryRow("insert into personnel(code, name, clinic_code, weight, title, username, password, is_clinic_admin) values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", code, name, clinicCode, weight, title, username, passwordMd5, isClinicAdmin).Scan(&personnelID)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
