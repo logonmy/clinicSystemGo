@@ -105,6 +105,7 @@ func PersonnelGetByID(ctx iris.Context) {
 func PersonnelList(ctx iris.Context) {
 	clinicCode := ctx.PostValue("clinic_code")
 	personnelType := ctx.PostValue("personnel_type")
+	deparmentID := ctx.PostValue("department_id")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	keyword := ctx.PostValue("keyword")
@@ -132,13 +133,16 @@ func PersonnelList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx(`select count(p.id) as total
-		from personnel p 
-		left join clinic c on p.clinic_code = c.code 
-		left join department_personnel dp on p.id = dp.personnel_id
-		left join department d on dp.department_id = d.id
-		where p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%') and dp.type = $3`, clinicCode, keyword, personnelType)
+	jionSQL := `from personnel p 
+	left join clinic c on p.clinic_code = c.code 
+	left join department_personnel dp on p.id = dp.personnel_id
+	left join department d on dp.department_id = d.id
+	where p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%') and dp.type = $3`
+	if deparmentID != "" {
+		jionSQL += " and d.id = " + deparmentID
+	}
 
+	total := model.DB.QueryRowx(`select count(p.id) as total `+jionSQL, clinicCode, keyword, personnelType)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -148,15 +152,12 @@ func PersonnelList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.Queryx(`select p.id, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
-		c.code as clinic_code, c.name as clinic_name,
-		dp.type as personnel_type,
-		d.code as department_code, d.name as department_name, d.id as department_id
-		from personnel p 
-		left join clinic c on p.clinic_code = c.code 
-		left join department_personnel dp on p.id = dp.personnel_id
-		left join department d on dp.department_id = d.id
-		where p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%') and dp.type = $3 offset $4 limit $5;`, clinicCode, keyword, personnelType, offset, limit)
+	rowSQL := `select p.id, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
+	c.code as clinic_code, c.name as clinic_name,
+	dp.type as personnel_type,
+	d.code as department_code, d.name as department_name, d.id as department_id ` + jionSQL + " offset $4 limit $5"
+
+	rows, err1 := model.DB.Queryx(rowSQL, clinicCode, keyword, personnelType, offset, limit)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return
