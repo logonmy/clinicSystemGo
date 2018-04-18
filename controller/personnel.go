@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"strconv"
 
+	"strings"
+
 	"github.com/kataras/iris"
 )
 
@@ -37,11 +39,12 @@ func PersonnelCreate(ctx iris.Context) {
 	departmentID := ctx.PostValue("department_id")
 	weight := ctx.PostValue("weight")
 	title := ctx.PostValue("title")
+	personnelType := ctx.PostValue("personnel_type")
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
 	isClinicAdmin := false
 
-	if code != "" && name != "" && clinicCode != "" && departmentID != "" && weight != "" && title != "" && username != "" && password != "" {
+	if code != "" && name != "" && clinicCode != "" && departmentID != "" && weight != "" && title != "" && username != "" && password != "" && personnelType != "" {
 		tx, err := model.DB.Begin()
 		if err != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -55,7 +58,7 @@ func PersonnelCreate(ctx iris.Context) {
 			return
 		}
 		var resultID int
-		err = tx.QueryRow("insert into department_personnel(department_id, personnel_id, type) values ($1, $2, 2) RETURNING id", departmentID, personnelID).Scan(&resultID)
+		err = tx.QueryRow("insert into department_personnel(department_id, personnel_id, type) values ($1, $2, $3) RETURNING id", departmentID, personnelID, personnelType).Scan(&resultID)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -100,10 +103,11 @@ func PersonnelGetByID(ctx iris.Context) {
 // PersonnelList 获取人员列表
 func PersonnelList(ctx iris.Context) {
 	clinicCode := ctx.PostValue("clinic_code")
+	personnelType := ctx.PostValue("personnel_type")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	keyword := ctx.PostValue("keyword")
-	if clinicCode == "" {
+	if clinicCode == "" || personnelType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 		return
 	}
@@ -132,7 +136,7 @@ func PersonnelList(ctx iris.Context) {
 		left join clinic c on p.clinic_code = c.code 
 		left join department_personnel dp on p.id = dp.personnel_id
 		left join department d on dp.department_id = d.id
-		where dp.type = 2 and p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%')`, clinicCode, keyword)
+		where p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%') and dp.type = $3`, clinicCode, keyword, personnelType)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -145,16 +149,81 @@ func PersonnelList(ctx iris.Context) {
 
 	rows, err1 := model.DB.Queryx(`select p.id, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
 		c.code as clinic_code, c.name as clinic_name,
+		dp.type as personnel_type,
 		d.code as department_code, d.name as department_name, d.id as department_id
 		from personnel p 
 		left join clinic c on p.clinic_code = c.code 
 		left join department_personnel dp on p.id = dp.personnel_id
 		left join department d on dp.department_id = d.id
-		where dp.type = 2 and p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%') offset $3 limit $4;`, clinicCode, keyword, offset, limit)
+		where p.clinic_code = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%') and dp.type = $3 offset $4 limit $5;`, clinicCode, keyword, personnelType, offset, limit)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return
 	}
 	result := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+}
+
+// PersonnelUpdate 修改人员
+func PersonnelUpdate(ctx iris.Context) {
+	id := ctx.PostValue("id")
+	departmentID := ctx.PostValue("department_id")
+	weight := ctx.PostValue("weight")
+	title := ctx.PostValue("title")
+	username := ctx.PostValue("username")
+	password := ctx.PostValue("password")
+	personnelType := ctx.PostValue("personnel_type")
+	status := ctx.PostValue("status")
+	if id == "" || personnelType == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+	var sets []string
+	if weight != "" {
+		sets = append(sets, "weight="+weight)
+	}
+	if title != "" {
+		sets = append(sets, "title="+title)
+	}
+	if username != "" {
+		sets = append(sets, "username="+username)
+	}
+	if status != "" {
+		sets = append(sets, "status="+status)
+	}
+	if password != "" {
+		md5Ctx := md5.New()
+		md5Ctx.Write([]byte(password))
+		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
+		sets = append(sets, "password="+passwordMd5)
+	}
+	setStr := strings.Join(sets, ",")
+	psql := "update personnel set" + setStr + "where id=" + id
+
+	tx, err := model.DB.Begin()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	if departmentID != "" {
+		_, err := tx.Exec("update department_personnel set department_id= $1 where personnel_id = $2 and type= $3", departmentID, id, personnelType)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			return
+		}
+	}
+	_, err = tx.Exec(psql)
+	if err != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }

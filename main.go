@@ -3,6 +3,7 @@ package main
 import (
 	"clinicSystemGo/controller"
 
+	"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
@@ -12,6 +13,12 @@ import (
 func main() {
 	app := iris.New()
 	app.Logger().SetLevel("debug")
+
+	crs := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"}, // allows everything, use that to change the hosts.
+		AllowCredentials: true,
+	})
+
 	// Optionally, add two built'n handlers
 	// that can recover from any http-relative panics
 	// and log the requests to the terminal.
@@ -24,7 +31,7 @@ func main() {
 		ctx.HTML("<h1>Welcome</h1>")
 	})
 
-	clinic := app.Party("/clinic")
+	clinic := app.Party("/clinic", crs).AllowMethods(iris.MethodOptions)
 	{
 		clinic.Post("/add", controller.ClinicAdd)
 		clinic.Post("/detailByCode", controller.GetClinicByCode)
@@ -32,7 +39,7 @@ func main() {
 		// clinic.Post("/update", controller.ClinicUpdte)
 	}
 
-	department := app.Party("/department")
+	department := app.Party("/department", crs).AllowMethods(iris.MethodOptions)
 	{
 		department.Post("/create", controller.DepartmentCreate)
 		department.Post("/list", controller.DepartmentList)
@@ -40,15 +47,16 @@ func main() {
 		department.Post("/update", controller.DepartmentUpdate)
 	}
 
-	personnel := app.Party("/personnel")
+	personnel := app.Party("/personnel", crs).AllowMethods(iris.MethodOptions)
 	{
 		personnel.Post("/login", controller.PersonnelLogin)
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
+		personnel.Post("/PersonnelUpdate", controller.PersonnelUpdate)
 	}
 
-	patient := app.Party("/patient")
+	patient := app.Party("/patient", crs).AllowMethods(iris.MethodOptions)
 	{
 		patient.Post("/create", controller.PatientAdd)
 	}
