@@ -35,14 +35,12 @@ func DepartmentList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
-	var results []map[string]interface{}
-	if keyword != "" {
-		rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_code=$2", keyword, clinicCode)
-		results = FormatSQLRowsToMapArray(rows)
-	} else {
-		rows, _ := model.DB.Queryx("SELECT * FROM department WHERE clinic_code=$1", clinicCode)
-		results = FormatSQLRowsToMapArray(rows)
+	if keyword == "" {
+		keyword = "%"
 	}
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_code=$2", keyword, clinicCode)
+	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }
 
