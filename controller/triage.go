@@ -18,10 +18,10 @@ func TriageRegister(ctx iris.Context) {
 	profession := ctx.PostValue("profession")
 	remark := ctx.PostValue("remark")
 	patientChannelID := ctx.PostValue("patient_channel_id")
-	clinicCode := ctx.PostValue("clinic_code")
+	clinicID := ctx.PostValue("clinic_id")
 	personnelID := ctx.PostValue("personnel_id")
 	departmentID := ctx.PostValue("department_id")
-	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicCode == "" || personnelID == "" || departmentID == "" {
+	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || departmentID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -31,12 +31,12 @@ func TriageRegister(ctx iris.Context) {
 	}
 	tx, err := model.DB.Begin()
 	patient := FormatSQLRowToMap(row)
-	_, ok := patient["cert_no"]
+	_, ok := patient["id"]
+	patientID := patient["id"]
 	if !ok {
-		var cardNo string
 		err = tx.QueryRow(`INSERT INTO patient (
 		cert_no, name, birthday, sex, phone, address, profession, remark, patient_channel_id) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING cert_no`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID).Scan(&cardNo)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID).Scan(&patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)
@@ -45,7 +45,7 @@ func TriageRegister(ctx iris.Context) {
 		}
 	}
 
-	row = model.DB.QueryRowx("select * from clinic_patient where patient_cert_no= $1 and clinic_code = $2", certNo, clinicCode)
+	row = model.DB.QueryRowx("select * from clinic_patient where patient_id= $1 and clinic_id = $2", patientID, clinicID)
 	if row == nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "1", "msg": "登记失败"})
@@ -55,7 +55,7 @@ func TriageRegister(ctx iris.Context) {
 	_, ok = clinicPatient["id"]
 	var clinicPatientID interface{}
 	if !ok {
-		err = tx.QueryRow("INSERT INTO clinic_patient (patient_cert_no, clinic_code, personnel_id) VALUES ($1, $2, $3) RETURNING id", certNo, clinicCode, personnelID).Scan(&clinicPatientID)
+		err = tx.QueryRow("INSERT INTO clinic_patient (patient_id, clinic_id, personnel_id) VALUES ($1, $2, $3) RETURNING id", patientID, clinicID, personnelID).Scan(&clinicPatientID)
 		if err != nil {
 			fmt.Println("clinic_patient ======", err)
 			tx.Rollback()
@@ -84,8 +84,8 @@ func TriageRegister(ctx iris.Context) {
 
 // TriagePatientList 当日登记就诊人列表
 func TriagePatientList(ctx iris.Context) {
-	// clinicCode := ctx.PostValue("clinic_code")
-	// rows, err1 := model.DB.Queryx(rowSQL, clinicCode, keyword, personnelType, offset, limit)
+	// clinicID := ctx.PostValue("clinic_id")
+	// rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, personnelType, offset, limit)
 	// if err1 != nil {
 	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 	// 	return
