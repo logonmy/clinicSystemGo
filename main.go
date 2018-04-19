@@ -34,7 +34,6 @@ func main() {
 	clinic := app.Party("/clinic", crs).AllowMethods(iris.MethodOptions)
 	{
 		clinic.Post("/add", controller.ClinicAdd)
-		clinic.Post("/detailByCode", controller.GetClinicByCode)
 		clinic.Post("/list", controller.ClinicList)
 		clinic.Post("/update", controller.ClinicUpdate)
 		// clinic.Post("/update", controller.ClinicUpdte)
@@ -55,6 +54,12 @@ func main() {
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
 		personnel.Post("/update", controller.PersonnelUpdate)
+	}
+
+	visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
+	{
+		visitType.Post("/create", controller.VisitTypeCreate)
+		visitType.Post("/list", controller.VisitTypeList)
 	}
 
 	doctorVisitScheduleMode := app.Party("/doctorVisitScheduleMode", crs).AllowMethods(iris.MethodOptions)
