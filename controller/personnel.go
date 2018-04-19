@@ -14,6 +14,7 @@ import (
 
 // PersonnelLogin 创建医院管理员
 func PersonnelLogin(ctx iris.Context) {
+	IP := ctx.RemoteAddr()
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
 	if username != "" && password != "" {
@@ -27,7 +28,11 @@ func PersonnelLogin(ctx iris.Context) {
 		}
 		result := FormatSQLRowToMap(row)
 		if _, ok := result["id"]; ok {
-			ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+			personnelID := result["id"]
+			_ = model.DB.MustExec("INSERT INTO personnel_login_record (personnel_id, ip) VALUES ($1, $2) RETURNING id", personnelID, IP)
+			countRow := model.DB.QueryRowx("select count(*) as count from personnel_login_record where personnel_id = $1", personnelID)
+			count := FormatSQLRowToMap(countRow)
+			ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result, "login_times": count["count"]})
 			return
 		}
 		ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误"})
