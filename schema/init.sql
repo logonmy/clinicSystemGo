@@ -223,7 +223,7 @@ CREATE TABLE personnel_login_record
   id serial PRIMARY KEY NOT NULL,--id
   personnel_id INTEGER NOT NULL references personnel(id),--人员id
   ip VARCHAR(20) NOT NULL,--角色id
-  remark VARCHAR(20),
+  remark VARCHAR(100),
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp
