@@ -79,12 +79,12 @@ func PatientList(ctx iris.Context) {
 	}
 	countSQL := `select count(p.cert_no) as total
 	from patient p 
-	left join clinic_patient cp on p.cert_no = cp.patient_cert_no 
+	left join clinic_patient cp on p.id = cp.patient_id 
 	left join clinic c on c.id = cp.clinic_id
 	where c.id = $1 and (p.name like '%' || $2 || '%' or p.cert_no like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
 
 	selectSQL := `select p.*,pc.name as channel_name from patient p 
-	left join clinic_patient cp on p.cert_no = cp.patient_cert_no 
+	left join clinic_patient cp on p.id = cp.patient_id 
 	left join clinic c on c.id = cp.clinic_id
 	left join patient_channel pc on p.patient_channel_id = pc.id
 	where c.id = $1 and (p.name like '%' || $2 || '%' or p.cert_no like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
@@ -134,14 +134,14 @@ func PatientList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
 
-//PatientGetByID 通过身份证获取就诊人
+//PatientGetByID 通过id就诊人
 func PatientGetByID(ctx iris.Context) {
-	certNo := ctx.PostValue("cert_no")
-	if certNo != "" {
+	id := ctx.PostValue("id")
+	if id != "" {
 		row := model.DB.QueryRowx(`select p.* from patient p 
-			left join clinic_patient cp on p.cert_no = cp.patient_cert_no 
+			left join clinic_patient cp on p.id = cp.patient_id 
 			left join clinic c on c.id = cp.clinic_id where
-			p.cert_no = $1;`, certNo)
+			p.id = $1;`, id)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 			return
@@ -175,7 +175,7 @@ func PatientUpdate(ctx iris.Context) {
 	var patientID string
 	err := model.DB.QueryRow(`UPDATE patient set  
 		cert_no=$1,name=$2, birthday=$3, sex=$4, phone=$5, address=$6, profession=$7, remark=$8, patient_channel_id=$9
-		where id=$10 RETURNING cert_no`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID, id).Scan(&patientID)
+		where id=$10 RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID, id).Scan(&patientID)
 	if err != nil {
 		// tx.Rollback()
 		fmt.Println("err2 ===", err)
