@@ -37,6 +37,7 @@ CREATE TABLE personnel
   name varchar(10) NOT NULL,--名称
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   weight integer NOT NULL DEFAULT 1,--权重
+  phone varchar(11),--手机号
   title varchar(10),--职称
   username varchar(20) UNIQUE,--账号
   password varchar(40),--密码

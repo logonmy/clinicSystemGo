@@ -19,9 +19,9 @@ func PatientAdd(ctx iris.Context) {
 	profession := ctx.PostValue("profession")
 	remark := ctx.PostValue("remark")
 	patientChannelID := ctx.PostValue("patient_channel_id")
-	clinicCode := ctx.PostValue("clinic_code")
+	clinicID := ctx.PostValue("clinic_id")
 	personnelID := ctx.PostValue("personnel_id")
-	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicCode == "" || personnelID == "" {
+	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -39,7 +39,7 @@ func PatientAdd(ctx iris.Context) {
 	}
 
 	var resultID int
-	err = tx.QueryRow("INSERT INTO clinic_patient (patient_id, clinic_code, personnel_id) VALUES ($1, $2, $3) RETURNING id", patientID, clinicCode, personnelID).Scan(&resultID)
+	err = tx.QueryRow("INSERT INTO clinic_patient (patient_id, clinic_id, personnel_id) VALUES ($1, $2, $3) RETURNING id", patientID, clinicID, personnelID).Scan(&resultID)
 	if err != nil {
 		tx.Rollback()
 		fmt.Println("err3 ===", err)
@@ -58,13 +58,13 @@ func PatientAdd(ctx iris.Context) {
 
 //PatientList 就诊人列表
 func PatientList(ctx iris.Context) {
-	clinicCode := ctx.PostValue("clinic_code")
+	clinicID := ctx.PostValue("clinic_id")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	keyword := ctx.PostValue("keyword")
 	startDate := ctx.PostValue("startDate")
 	endDate := ctx.PostValue("endDate")
-	if clinicCode == "" {
+	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 		return
 	}
@@ -80,14 +80,14 @@ func PatientList(ctx iris.Context) {
 	countSQL := `select count(p.cert_no) as total
 	from patient p 
 	left join clinic_patient cp on p.cert_no = cp.patient_cert_no 
-	left join clinic c on c.code = cp.clinic_code
-	where c.code = $1 and (p.name like '%' || $2 || '%' or p.cert_no like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
+	left join clinic c on c.id = cp.clinic_id
+	where c.id = $1 and (p.name like '%' || $2 || '%' or p.cert_no like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
 
 	selectSQL := `select p.*,pc.name as channel_name from patient p 
 	left join clinic_patient cp on p.cert_no = cp.patient_cert_no 
-	left join clinic c on c.code = cp.clinic_code
+	left join clinic c on c.id = cp.clinic_id
 	left join patient_channel pc on p.patient_channel_id = pc.id
-	where c.code = $1 and (p.name like '%' || $2 || '%' or p.cert_no like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
+	where c.id = $1 and (p.name like '%' || $2 || '%' or p.cert_no like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
 
 	sql := " ORDER BY p.created_time DESC offset $3 limit $4;"
 
@@ -114,7 +114,7 @@ func PatientList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-	total := model.DB.QueryRowx(countSQL, clinicCode, keyword)
+	total := model.DB.QueryRowx(countSQL, clinicID, keyword)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -125,7 +125,7 @@ func PatientList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.Queryx(selectSQL, clinicCode, keyword, offset, limit)
+	rows, err1 := model.DB.Queryx(selectSQL, clinicID, keyword, offset, limit)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return
@@ -140,7 +140,7 @@ func PatientGetByID(ctx iris.Context) {
 	if certNo != "" {
 		row := model.DB.QueryRowx(`select p.* from patient p 
 			left join clinic_patient cp on p.cert_no = cp.patient_cert_no 
-			left join clinic c on c.code = cp.clinic_code where
+			left join clinic c on c.id = cp.clinic_id where
 			p.cert_no = $1;`, certNo)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
@@ -165,9 +165,9 @@ func PatientUpdate(ctx iris.Context) {
 	profession := ctx.PostValue("profession")
 	remark := ctx.PostValue("remark")
 	patientChannelID := ctx.PostValue("patient_channel_id")
-	clinicCode := ctx.PostValue("clinic_code")
+	clinicID := ctx.PostValue("clinic_id")
 	personnelID := ctx.PostValue("personnel_id")
-	if id == "" || certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicCode == "" || personnelID == "" {
+	if id == "" || certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -184,7 +184,7 @@ func PatientUpdate(ctx iris.Context) {
 	}
 
 	// var resultID int
-	// err = tx.QueryRow("UPDATE clinic_patient set patient_id=$1, clinic_code=$2, personnel_id=$3 where patient_id=$4 RETURNING id", patientID, clinicCode, personnelID, patientID).Scan(&resultID)
+	// err = tx.QueryRow("UPDATE clinic_patient set patient_id=$1, clinic_id=$2, personnel_id=$3 where patient_id=$4 RETURNING id", patientID, clinicID, personnelID, patientID).Scan(&resultID)
 	// if err != nil {
 	// 	tx.Rollback()
 	// 	fmt.Println("err3 ===", err)
