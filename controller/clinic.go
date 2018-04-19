@@ -104,11 +104,12 @@ func ClinicAdd(ctx iris.Context) {
 		"clinic_id":       clinicID,
 		"phone":           phone,
 		"is_clinic_admin": true,
+		"is_appointment":  false,
 	}
 
 	_, err = tx.NamedExec(`INSERT INTO personnel(
-		code, name, username, password, clinic_id, phone,is_clinic_admin)
-		VALUES (:code, :name, :username, :password, :clinic_id, :phone, :is_clinic_admin)`, amap)
+		code, name, username, password, clinic_id, phone,is_clinic_admin, is_appointment)
+		VALUES (:code, :name, :username, :password, :clinic_id, :phone, :is_clinic_admin, :is_appointment)`, amap)
 	if err != nil {
 		fmt.Println("err3 ===", err)
 		tx.Rollback()
