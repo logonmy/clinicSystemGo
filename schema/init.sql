@@ -144,7 +144,7 @@ CREATE TABLE patient
 --诊所就诊人
 CREATE TABLE clinic_patient
 (
-  id serial PRIMARY KEY NOT NULL, --排班编号
+  id serial PRIMARY KEY NOT NULL, --编号
   patient_id integer NOT NULL references patient(id),--患者身份证号
   clinic_id integer NOT NULL references clinic(id),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id
@@ -184,7 +184,7 @@ CREATE TABLE appointment
   is_today boolean NOT NULL DEFAULT false,--是否当日号
   visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
   status VARCHAR(2) NOT NULL DEFAULT '01',--就诊状态
-  visit_place VARCHAR(20),--就诊未知
+  visit_place VARCHAR(20),--就诊地址
   sort_no SMALLINT,--就诊序号
   operation_id integer REFERENCES personnel(id),--操作人编码
   created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,

@@ -4,6 +4,7 @@ import (
 	"clinicSystemGo/model"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -174,8 +175,8 @@ func PatientUpdate(ctx iris.Context) {
 
 	var patientID string
 	err := model.DB.QueryRow(`UPDATE patient set  
-		cert_no=$1,name=$2, birthday=$3, sex=$4, phone=$5, address=$6, profession=$7, remark=$8, patient_channel_id=$9
-		where id=$10 RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID, id).Scan(&patientID)
+		cert_no=$1,name=$2, birthday=$3, sex=$4, phone=$5, address=$6, profession=$7, remark=$8, patient_channel_id=$9, updated_time=$10
+		where id=$10 RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID, id, time.Now()).Scan(&patientID)
 	if err != nil {
 		// tx.Rollback()
 		fmt.Println("err2 ===", err)
