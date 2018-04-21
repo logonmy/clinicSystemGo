@@ -175,7 +175,7 @@ CREATE TABLE clinic_triage_patient
   UNIQUE (department_id, clinic_patient_id,treat_status,visit_date)--联合主键，就诊人、科室、状态、日期唯一
 );
 
---挂号记录
+--预约记录
 CREATE TABLE appointment
 (
   id serial PRIMARY KEY NOT NULL, --编号
@@ -186,9 +186,27 @@ CREATE TABLE appointment
   am_pm CHAR(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   is_today boolean NOT NULL DEFAULT false,--是否当日号
   visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
+  visit_place VARCHAR(20),--就诊地址
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time TIMESTAMP
+);
+
+--挂号记录
+CREATE TABLE registration
+(
+  id serial PRIMARY KEY NOT NULL, --编号
+  clinic_patient_id integer NOT NULL references clinic_patient(id),--患者id
+  department_id integer NOT NULL REFERENCES department(id),--科室id
+  clinic_triage_patient_id integer,--分诊就诊人id
+  personnel_id integer NOT NULL REFERENCES personnel(id),--医生id
+  visit_date DATE NOT NULL,--出诊日期
+  am_pm CHAR(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
+  is_today boolean NOT NULL DEFAULT false,--是否当日号
+  visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
   status VARCHAR(2) NOT NULL DEFAULT '01',--就诊状态
   visit_place VARCHAR(20),--就诊地址
-  sort_no SMALLINT,--就诊序号
   operation_id integer REFERENCES personnel(id),--操作人编码
   created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -256,6 +274,17 @@ CREATE TABLE body_sign
   oxygen_saturation FLOAT,--氧饱和度(%)
   pain_score integer CHECK(pain_score>-1 AND pain_score<11),--疼痛评分
   remark VARCHAR(100),
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp
+)
+
+--费用项目类型
+CREATE TABLE charge_project_type
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) UNIQUE NOT NULL,--名称
+  status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp
