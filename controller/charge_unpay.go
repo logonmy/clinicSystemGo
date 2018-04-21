@@ -161,3 +161,8 @@ func ChargeUnPayList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 
 }
+
+// ChargePay 缴费
+func ChargePay(ctx iris.Context) {
+
+}

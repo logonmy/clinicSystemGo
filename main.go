@@ -95,12 +95,14 @@ func main() {
 		chargeProject.Post("/treatment/create", controller.ChargeProjectTreatmentCreate)
 	}
 
-	chargeUnPay := app.Party("/chargeUnPay", crs).AllowMethods(iris.MethodOptions)
+	chargeUnPay := app.Party("/charge", crs).AllowMethods(iris.MethodOptions)
 	{
 		// 创建代缴费项目
-		chargeUnPay.Post("/create", controller.ChargeUnPayCreate)
-		chargeUnPay.Post("/delete", controller.ChargeUnPayDelete)
-		chargeUnPay.Post("/list", controller.ChargeUnPayList)
+		chargeUnPay.Post("/unPay/create", controller.ChargeUnPayCreate)
+		chargeUnPay.Post("/unPay/delete", controller.ChargeUnPayDelete)
+		chargeUnPay.Post("/unPay/list", controller.ChargeUnPayList)
+
+		chargeUnPay.Post("/pay", controller.ChargePay)
 	}
 
 	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)

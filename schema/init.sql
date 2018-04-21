@@ -344,7 +344,7 @@ CREATE TABLE pre_diagnosis
   deleted_time timestamp
 );
 
---带缴费项目
+--待缴费项目
 CREATE TABLE unpaid_orders
 (
   id serial PRIMARY KEY NOT NULL,--id
@@ -360,6 +360,42 @@ CREATE TABLE unpaid_orders
   discount INTEGER NOT NULL DEFAULT 0,--打折金额
   fee INTEGER NOT NULL,--缴费金额
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp
+)
+
+--缴费记录
+CREATE TABLE paid_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  orders_ids varchar(30) NOT NULL,
+  order_sn varchar(13) NOT NULL,--单号
+  confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
+  status boolean NOT NULL DEFAULT true,--缴费情况
+  remark varchar(20),--备注
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp
+)
+
+--已缴费项目
+CREATE TABLE paid_orders
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  registration_id INTEGER NOT NULL references registration(id),--分诊记录id
+  charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
+  charge_project_id INTEGER NOT NULL,--收费项目id
+  order_sn varchar(13) NOT NULL,--单号
+  name varchar(20) NOT NULL,--收费名称
+  price INTEGER NOT NULL CHECK(price > 0),--单价
+  amount INTEGER NOT NULL CHECK(amount > 0),--数量
+  unit varchar(20),--单位
+  total INTEGER NOT NULL,--总价格
+  discount INTEGER NOT NULL DEFAULT 0,--打折金额
+  fee INTEGER NOT NULL,--缴费金额
+  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+  confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp
