@@ -97,6 +97,7 @@ func main() {
 	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)
 	{
 		appointment.Post("/create", controller.AppointmentCreate)
+		appointment.Post("/list", controller.AppointmentList)
 	}
 
 	// http://localhost:8080
