@@ -84,10 +84,32 @@ func TriageRegister(ctx iris.Context) {
 
 // TriagePatientList 当日登记就诊人列表
 func TriagePatientList(ctx iris.Context) {
-	// clinicID := ctx.PostValue("clinic_id")
-	// rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, personnelType, offset, limit)
-	// if err1 != nil {
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err1})
-	// 	return
-	// }
+	clinicID := ctx.PostValue("clinic_id")
+	keyword := ctx.PostValue("keyword")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+	rowSQL := `select 
+	ctp.id,ctp.visit_date, ctp.treat_status, cp.clinic_id, c.name as clinic_name,
+	p.id as patient_id, p.name as patient_name, p.birthday, p.sex, p.cert_no, p.phone,
+	ctp.created_time as register_time,
+	ctp.department_id, d.name as department_name,
+	ctp.register_personnel_id, rp.name as register_personnel_name,
+	ctp.triage_personnel_id, tp.name as triage_personnel_name
+	from clinic_triage_patient ctp left join clinic_patient cp  on ctp.clinic_patient_id = cp.id
+	left join clinic c on c.id = cp.clinic_id
+	left join department d on ctp.department_id = d.id
+	left join personnel rp on ctp.register_personnel_id = rp.id
+	left join personnel tp on ctp.triage_personnel_id = tp.id
+	left join patient p on cp.patient_id = p.id 
+	where cp.clinic_id = $1 and ctp.visit_date = CURRENT_DATE 
+	and (p.cert_no like '%' || $2 || '%' or p.name like '%' || $2 || '%' or p.phone like '%' || $2 || '%') `
+	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result})
 }
