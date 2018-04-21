@@ -39,7 +39,6 @@ func TriageRegister(ctx iris.Context) {
 		return
 	}
 	schedule := FormatSQLRowToMap(row)
-	fmt.Println("schedule========", schedule)
 	_, ok := schedule["id"]
 	if !ok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "号源不存在"})
