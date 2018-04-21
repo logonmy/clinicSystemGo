@@ -80,7 +80,6 @@ func TriageRegister(ctx iris.Context) {
 		return
 	}
 	clinicPatient := FormatSQLRowToMap(row)
-	fmt.Println("clinic_triage_patient ======", clinicPatient)
 	_, ok = clinicPatient["id"]
 	var clinicPatientID interface{}
 	if !ok {
@@ -96,7 +95,7 @@ func TriageRegister(ctx iris.Context) {
 	}
 
 	var resultID int
-	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id,register_type) VALUES ($1, $2, $3,1) RETURNING id", departmentID, clinicPatientID, personnelID).Scan(&resultID)
+	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id,register_type) VALUES ($1, $2, $3, 2) RETURNING id", departmentID, clinicPatientID, personnelID).Scan(&resultID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()

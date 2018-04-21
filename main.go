@@ -94,6 +94,11 @@ func main() {
 		charge.Post("/project/treatment/create", controller.ChargeProjectTreatmentCreate)
 	}
 
+	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)
+	{
+		appointment.Post("/create", controller.AppointmentCreate)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
