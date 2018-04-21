@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"fmt"
+	"strconv"
 
 	"github.com/kataras/iris"
 )
@@ -86,9 +87,22 @@ func AppointmentCreate(ctx iris.Context) {
 		clinicPatientID = clinicPatient["id"]
 	}
 
-	var resultID int
+	var appointmentID int
 	departmentID := schedule["department_id"]
-	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id,register_type) VALUES ($1, $2, $3,1) RETURNING id", departmentID, clinicPatientID, personnelID).Scan(&resultID)
+	visitDate := schedule["visit_date"]
+	amPm := schedule["am_pm"]
+	visitTypeCode := schedule["visit_type_code"]
+	doctorID := schedule["personnel_id"]
+	err = tx.QueryRow("INSERT INTO appointment (clinic_patient_id, department_id, personnel_id,visit_date,am_pm,visit_type_code,operation_id) VALUES ($1, $2, $3,$4,$5,$6,$7) RETURNING id", clinicPatientID, departmentID, doctorID, visitDate, amPm, visitTypeCode, personnelID).Scan(&appointmentID)
+	if err != nil {
+		fmt.Println("appointment ======", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	var resultID int
+	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id,register_type,visit_date) VALUES ($1, $2, $3,1,$4) RETURNING id", departmentID, clinicPatientID, personnelID, visitDate).Scan(&resultID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()
@@ -101,4 +115,95 @@ func AppointmentCreate(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": nil})
+}
+
+// AppointmentList 预约记录列表
+func AppointmentList(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	personnelID := ctx.PostValue("personnel_id")
+	deparmentID := ctx.PostValue("department_id")
+	keyword := ctx.PostValue("keyword")
+	startDate := ctx.PostValue("startDate")
+	endDate := ctx.PostValue("endDate")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
+		return
+	}
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	registartionSQL := `from appointment a 
+	left join department d on a.department_id = d.id 
+	left join personnel ps on a.personnel_id = ps.id 
+	left join clinic_patient cp on a.clinic_patient_id = cp.id 
+	left join patient p on cp.patient_id = p.id 
+	where ps.clinic_id = $1`
+
+	if deparmentID != "" {
+		registartionSQL += " and a.department_id=" + deparmentID
+	}
+	if personnelID != "" {
+		registartionSQL += " and a.department_id=" + personnelID
+	}
+	if keyword != "" {
+		registartionSQL += " and (p.cert_no like '%" + keyword + "%' or p.name like '%" + keyword + "%' or p.phone like '%" + keyword + "%')"
+	}
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		registartionSQL += " and a.created_time between date'" + startDate + "' - integer '1' and '" + endDate + "' + integer '1'"
+	}
+
+	total := model.DB.QueryRowx(`select count(a.id) as total `+registartionSQL, clinicID)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rowSQL := `select ps.name as doctor_name, p.sex, p.birthday, d.name as department_name, a.id ` + registartionSQL + " offset $2 limit $3"
+
+	rows, err1 := model.DB.Queryx(rowSQL, clinicID, offset, limit)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+
 }

@@ -69,8 +69,13 @@ func PatientList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 		return
 	}
-	if keyword == "" {
-		keyword = "%"
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
+		return
+	}
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
 	}
 	if offset == "" {
 		offset = "0"
@@ -93,14 +98,12 @@ func PatientList(ctx iris.Context) {
 	sql := " ORDER BY p.created_time DESC offset $3 limit $4;"
 
 	if startDate != "" && endDate != "" {
-		countSQL = countSQL + " AND p.created_time between '" + startDate + "' and '" + endDate + "'"
-		selectSQL = selectSQL + " AND p.created_time between '" + startDate + "' and '" + endDate + "'" + sql
-	} else if startDate != "" && endDate == "" {
-		countSQL = countSQL + " AND p.created_time > '" + startDate + "'"
-		selectSQL = selectSQL + " AND p.created_time > '" + startDate + "'" + sql
-	} else if endDate != "" && startDate == "" {
-		countSQL = countSQL + " AND p.created_time < '" + endDate + "'"
-		selectSQL = selectSQL + " AND p.created_time < '" + endDate + "'" + sql
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL = countSQL + " AND p.created_time between date'" + startDate + "' - integer '1' and date'" + endDate + "' + integer '1'"
+		selectSQL = selectSQL + " AND p.created_time between date'" + startDate + "' - integer '1' and date'" + endDate + "' + integer '1'" + sql
 	} else {
 		selectSQL = selectSQL + sql
 	}
