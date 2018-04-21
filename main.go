@@ -99,6 +99,8 @@ func main() {
 	{
 		// 创建代缴费项目
 		chargeUnPay.Post("/create", controller.ChargeUnPayCreate)
+		chargeUnPay.Post("/delete", controller.ChargeUnPayDelete)
+		chargeUnPay.Post("/list", controller.ChargeUnPayList)
 	}
 
 	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)
