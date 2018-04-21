@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/kataras/iris"
@@ -32,17 +33,46 @@ func DepartmentCreate(ctx iris.Context) {
 func DepartmentList(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	clinicID := ctx.PostValue("clinic_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
-	if keyword == "" {
-		keyword = "%"
+
+	if offset == "" {
+		offset = "0"
 	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	total := model.DB.QueryRowx("SELECT count(id) FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_id=$2", keyword, clinicID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_id=$2", keyword, clinicID)
+	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_id=$2 offset $3 limit $4", keyword, clinicID, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": results})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //DepartmentDelete 删除科室

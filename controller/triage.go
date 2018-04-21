@@ -226,6 +226,8 @@ func TriagePersonnelList(ctx iris.Context) {
 	}
 	result := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+}
+
 // TriageCompleteBodySign 完善体征信息
 func TriageCompleteBodySign(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
