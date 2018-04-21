@@ -83,7 +83,7 @@ CREATE TABLE doctor_visit_schedule
   department_id integer REFERENCES department(id),--医生id
   personnel_id integer REFERENCES personnel(id),--科室id
   visit_date DATE NOT NULL,--出诊日期
-  am_pm CHAR(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
+  am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   stop_flag boolean NOT NULL DEFAULT false,--停诊标识
   is_today boolean NOT NULL DEFAULT false,--是否当日号
   tatal_num integer NOT NULL DEFAULT 20,--总的接诊数
@@ -102,7 +102,7 @@ CREATE TABLE doctor_visit_schedule_model
   department_id integer REFERENCES department(id),--医生id
   personnel_id integer REFERENCES personnel(id),--科室id
   weekday INTEGER NOT NULL CHECK(weekday BETWEEN -1 AND 7),--出诊 日期（周几，0 代表 周日，1 周一...）
-  am_pm CHAR(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
+  am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   tatal_num INTEGER NOT NULL DEFAULT 20,--总的接诊数
   visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类别编码
   created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -166,9 +166,9 @@ CREATE TABLE clinic_triage_patient
   triage_personnel_id INTEGER references personnel(id),--分诊人员id
   treat_status boolean NOT NULL DEFAULT false,--是否分诊
   visit_date DATE NOT NULL DEFAULT CURRENT_DATE,--日期
-  register_type INTEGER NOT NULL  DEFAULT 1,--登记类型：1线下分诊，2预约
-  triage_time timestamp DEFAULT LOCALTIMESTAMP,--分诊完成时间 或 报道时间
-  reception_time timestamp DEFAULT LOCALTIMESTAMP,--接诊时间
+  register_type INTEGER NOT NULL,--登记类型：1线下分诊，2预约
+  triage_time timestamp,--分诊完成时间 或 报道时间
+  reception_time timestamp,--接诊时间
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
@@ -183,7 +183,7 @@ CREATE TABLE appointment
   department_id integer NOT NULL REFERENCES department(id),--医生编码
   personnel_id integer NOT NULL REFERENCES personnel(id),--科室编码
   visit_date DATE NOT NULL,--出诊日期
-  am_pm CHAR(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
+  am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   is_today boolean NOT NULL DEFAULT false,--是否当日号
   visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
   visit_place VARCHAR(20),--就诊地址
@@ -202,7 +202,7 @@ CREATE TABLE registration
   clinic_triage_patient_id integer,--分诊就诊人id
   personnel_id integer NOT NULL REFERENCES personnel(id),--医生id
   visit_date DATE NOT NULL,--出诊日期
-  am_pm CHAR(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
+  am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   is_today boolean NOT NULL DEFAULT false,--是否当日号
   visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
   status VARCHAR(2) NOT NULL DEFAULT '01',--就诊状态

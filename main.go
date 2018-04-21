@@ -80,6 +80,11 @@ func main() {
 		triage.Post("/register", controller.TriageRegister)
 		triage.Post("/patientlist", controller.TriagePatientList)
 		triage.Post("/getById", controller.PatientGetByID)
+		triage.Post("/personnelList", controller.TriagePersonnelList)
+		triage.Post("/completeBodySign", controller.TriageCompleteBodySign)
+		triage.Post("/completePreMedicalRecord", controller.TriageCompletePreMedicalRecord)
+		triage.Post("/completePreDiagnosis", controller.TriageCompletePreDiagnosis)
+		triage.Post("/chooseDoctor", controller.PersonnelChoose)
 	}
 
 	chargeProject := app.Party("/chargeProject", crs).AllowMethods(iris.MethodOptions)
@@ -94,6 +99,12 @@ func main() {
 	{
 		// 创建代缴费项目
 		chargeUnPay.Post("/create", controller.ChargeUnPayCreate)
+	}
+
+	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)
+	{
+		appointment.Post("/create", controller.AppointmentCreate)
+		appointment.Post("/list", controller.AppointmentList)
 	}
 
 	// http://localhost:8080
