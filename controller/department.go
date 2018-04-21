@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"fmt"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -76,13 +77,13 @@ func DepartmentUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
-	stmt, err := model.DB.Prepare("UPDATE department SET code=$2, name=$3, clinic_id=$4, weight=$5 WHERE id=$1")
+	stmt, err := model.DB.Prepare("UPDATE department SET code=$2, name=$3, clinic_id=$4, weight=$5,updated_time=$6 WHERE id=$1")
 	if err != nil {
 		fmt.Println("Perr ===", err)
 		ctx.JSON(iris.Map{"code": "1", "msg": err})
 		return
 	}
-	res, err := stmt.Exec(departmentID, code, name, clinicID, weight)
+	res, err := stmt.Exec(departmentID, code, name, clinicID, weight, time.Now())
 	if err != nil {
 		fmt.Println("Eerr ===", err)
 		ctx.JSON(iris.Map{"code": "1", "msg": err})
