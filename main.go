@@ -67,6 +67,12 @@ func main() {
 		doctorVisitScheduleMode.Post("/create", controller.DoctorVisitScheduleModeAdd)
 	}
 
+	doctorVisitSchedule := app.Party("/doctorVisitSchedule", crs).AllowMethods(iris.MethodOptions)
+	{
+		doctorVisitSchedule.Post("/create", controller.DoctorVistScheduleCreate)
+		doctorVisitSchedule.Post("/list", controller.DoctorVistScheduleList)
+	}
+
 	patient := app.Party("/patient", crs).AllowMethods(iris.MethodOptions)
 	{
 		patient.Post("/create", controller.PatientAdd)
@@ -99,6 +105,8 @@ func main() {
 	{
 		// 创建代缴费项目
 		chargeUnPay.Post("/create", controller.ChargeUnPayCreate)
+		chargeUnPay.Post("/delete", controller.ChargeUnPayDelete)
+		chargeUnPay.Post("/list", controller.ChargeUnPayList)
 	}
 
 	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)

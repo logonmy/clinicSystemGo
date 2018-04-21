@@ -3,7 +3,6 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -83,7 +82,6 @@ func ChargeUnPayCreate(ctx iris.Context) {
 
 	sql := "INSERT INTO unpaid_orders (registration_id, charge_project_type_id, charge_project_id, operation_id, order_sn, name, unit, price, amount, total, discount, fee ) VALUES " + setst
 
-	fmt.Println(sql)
 	_, err1 := model.DB.Query(sql)
 
 	if err1 != nil {
@@ -92,5 +90,74 @@ func ChargeUnPayCreate(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
+
+}
+
+// ChargeUnPayDelete 删除缴费项目
+func ChargeUnPayDelete(ctx iris.Context) {
+	id := ctx.PostValue("id")
+	if id == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	_, err := model.DB.Query("DELETE FROM unpaid_orders id=" + id)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+
+}
+
+// ChargeUnPayList 根据预约编码查询待缴费列表
+func ChargeUnPayList(ctx iris.Context) {
+	registrationid := ctx.PostValue("registration_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if registrationid == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	total := model.DB.QueryRowx(`select count(id) as total from unpaid_orders where registration_id=$1`, registrationid)
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rowSQL := `select * from unpaid_orders where registration_id=$1 offset $2 limit $3`
+
+	rows, err1 := model.DB.Queryx(rowSQL, registrationid, offset, limit)
+
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 
 }
