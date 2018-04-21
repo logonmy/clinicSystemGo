@@ -79,7 +79,9 @@ func main() {
 	{
 		triage.Post("/register", controller.TriageRegister)
 		triage.Post("/patientlist", controller.TriagePatientList)
-		triage.Post("/getById", controller.PatientGetByID)
+		triage.Post("/completeBodySign", controller.TriageCompleteBodySign)
+		triage.Post("/completePreMedicalRecord", controller.TriageCompletePreMedicalRecord)
+		triage.Post("/completePreDiagnosis", controller.TriageCompletePreDiagnosis)
 	}
 
 	// http://localhost:8080

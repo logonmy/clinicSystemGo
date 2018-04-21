@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"fmt"
+	"strings"
 
 	"github.com/kataras/iris"
 )
@@ -112,4 +113,292 @@ func TriagePatientList(ctx iris.Context) {
 	}
 	result := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": result})
+}
+
+// TriageCompleteBodySign 完善体征信息
+func TriageCompleteBodySign(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	weight := ctx.PostValue("weight")
+	height := ctx.PostValue("height")
+	bmi := ctx.PostValue("bmi")
+	bloodType := ctx.PostValue("blood_type")
+	rhBloodType := ctx.PostValue("rh_blood_type")
+	temperatureType := ctx.PostValue("temperature_type")
+	temperature := ctx.PostValue("temperature")
+	breathe := ctx.PostValue("breathe")
+	pulse := ctx.PostValue("pulse")
+	systolicBloodPressure := ctx.PostValue("systolic_blood_pressure")
+	diastolicBloodPressure := ctx.PostValue("diastolic_blood_pressure")
+	bloodSugarTime := ctx.PostValue("blood_sugar_time")
+	bloodSugarType := ctx.PostValue("blood_sugar_type")
+	leftVision := ctx.PostValue("left_vision")
+	rightVision := ctx.PostValue("right_vision")
+	oxygenSaturation := ctx.PostValue("oxygen_saturation")
+	painScore := ctx.PostValue("pain_score")
+
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+
+	var insertKeys []string
+	var insertValues []string
+
+	if clinicTriagePatientID != "" {
+		insertKeys = append(insertKeys, "clinic_triage_patient_id")
+		insertValues = append(insertValues, clinicTriagePatientID)
+	}
+	if weight != "" {
+		insertKeys = append(insertKeys, "weight")
+		insertValues = append(insertValues, weight)
+	}
+	if height != "" {
+		insertKeys = append(insertKeys, "height")
+		insertValues = append(insertValues, height)
+	}
+	if bmi != "" {
+		insertKeys = append(insertKeys, "bmi")
+		insertValues = append(insertValues, bmi)
+	}
+	if bloodType != "" {
+		insertKeys = append(insertKeys, "blood_type")
+		insertValues = append(insertValues, "'"+bloodType+"'")
+	}
+	if rhBloodType != "" {
+		insertKeys = append(insertKeys, "rh_blood_type")
+		insertValues = append(insertValues, "'"+rhBloodType+"'")
+	}
+	if temperatureType != "" {
+		insertKeys = append(insertKeys, "temperature_type")
+		insertValues = append(insertValues, temperatureType)
+	}
+	if temperature != "" {
+		insertKeys = append(insertKeys, "temperature")
+		insertValues = append(insertValues, temperature)
+	}
+	if breathe != "" {
+		insertKeys = append(insertKeys, "breathe")
+		insertValues = append(insertValues, breathe)
+	}
+	if pulse != "" {
+		insertKeys = append(insertKeys, "pulse")
+		insertValues = append(insertValues, pulse)
+	}
+	if systolicBloodPressure != "" {
+		insertKeys = append(insertKeys, "systolic_blood_pressure")
+		insertValues = append(insertValues, systolicBloodPressure)
+	}
+	if diastolicBloodPressure != "" {
+		insertKeys = append(insertKeys, "diastolic_blood_pressure")
+		insertValues = append(insertValues, diastolicBloodPressure)
+	}
+	if bloodSugarTime != "" {
+		insertKeys = append(insertKeys, "blood_sugar_time")
+		insertValues = append(insertValues, "'"+bloodSugarTime+"'")
+	}
+	if bloodSugarType != "" {
+		insertKeys = append(insertKeys, "blood_sugar_type")
+		insertValues = append(insertValues, bloodSugarType)
+	}
+	if leftVision != "" {
+		insertKeys = append(insertKeys, "left_vision")
+		insertValues = append(insertValues, "'"+leftVision+"'")
+	}
+	if rightVision != "" {
+		insertKeys = append(insertKeys, "right_vision")
+		insertValues = append(insertValues, "'"+rightVision+"'")
+	}
+	if oxygenSaturation != "" {
+		insertKeys = append(insertKeys, "oxygen_saturation")
+		insertValues = append(insertValues, oxygenSaturation)
+	}
+	if painScore != "" {
+		insertKeys = append(insertKeys, "pain_score")
+		insertValues = append(insertValues, painScore)
+	}
+
+	insertKeyStr := strings.Join(insertKeys, ",")
+	insertValueStr := strings.Join(insertValues, ",")
+
+	_, err1 := model.DB.Exec("delete from body_sign where clinicTriagePatientID=" + clinicTriagePatientID)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err1})
+		return
+	}
+
+	insertSQL := "insert into body_sign (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
+	_, err := model.DB.Exec(insertSQL)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// TriageCompletePreMedicalRecord 完善诊前病历
+func TriageCompletePreMedicalRecord(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	hasAllergicHistory := ctx.PostValue("has_allergic_history")
+	allergicHistory := ctx.PostValue("allergic_history")
+	personalMedicalHistory := ctx.PostValue("personal_medical_history")
+	familyMedicalHistory := ctx.PostValue("family_medical_history")
+	vaccination := ctx.PostValue("vaccination")
+	menarcheAge := ctx.PostValue("menarche_age")
+	menstrualPeriodStartDay := ctx.PostValue("menstrual_period_start_day")
+	menstrualPeriodEndDay := ctx.PostValue("menstrual_period_end_day")
+	menstrualCycleStartDay := ctx.PostValue("menstrual_cycle_start_day")
+	menstrualCycleEndDay := ctx.PostValue("menstrual_cycle_end_day")
+	menstrualLastDay := ctx.PostValue("menstrual_last_day")
+	gestationalWeeks := ctx.PostValue("gestational_weeks")
+	childbearingHistory := ctx.PostValue("childbearing_history")
+
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+
+	var insertKeys []string
+	var insertValues []string
+
+	if clinicTriagePatientID != "" {
+		insertKeys = append(insertKeys, "clinic_triage_patient_id")
+		insertValues = append(insertValues, clinicTriagePatientID)
+	}
+	if hasAllergicHistory != "" {
+		insertKeys = append(insertKeys, "has_allergic_history")
+		insertValues = append(insertValues, hasAllergicHistory)
+	}
+	if allergicHistory != "" {
+		insertKeys = append(insertKeys, "allergic_history")
+		insertValues = append(insertValues, "'"+allergicHistory+"'")
+	}
+	if personalMedicalHistory != "" {
+		insertKeys = append(insertKeys, "personal_medical_history")
+		insertValues = append(insertValues, "'"+personalMedicalHistory+"'")
+	}
+	if familyMedicalHistory != "" {
+		insertKeys = append(insertKeys, "family_medical_history")
+		insertValues = append(insertValues, "'"+familyMedicalHistory+"'")
+	}
+	if vaccination != "" {
+		insertKeys = append(insertKeys, "vaccination")
+		insertValues = append(insertValues, "'"+vaccination+"'")
+	}
+	if menarcheAge != "" {
+		insertKeys = append(insertKeys, "menarche_age")
+		insertValues = append(insertValues, menarcheAge)
+	}
+	if menstrualPeriodStartDay != "" {
+		insertKeys = append(insertKeys, "menstrual_period_start_day")
+		insertValues = append(insertValues, "'"+menstrualPeriodStartDay+"'")
+	}
+	if menstrualPeriodEndDay != "" {
+		insertKeys = append(insertKeys, "menstrual_period_end_day")
+		insertValues = append(insertValues, "'"+menstrualPeriodEndDay+"'")
+	}
+	if menstrualCycleStartDay != "" {
+		insertKeys = append(insertKeys, "menstrual_cycle_start_day")
+		insertValues = append(insertValues, "'"+menstrualCycleStartDay+"'")
+	}
+	if menstrualCycleEndDay != "" {
+		insertKeys = append(insertKeys, "menstrual_cycle_end_day")
+		insertValues = append(insertValues, "'"+menstrualCycleEndDay+"'")
+	}
+	if menstrualLastDay != "" {
+		insertKeys = append(insertKeys, "menstrual_last_day")
+		insertValues = append(insertValues, "'"+menstrualLastDay+"'")
+	}
+	if gestationalWeeks != "" {
+		insertKeys = append(insertKeys, "gestational_weeks")
+		insertValues = append(insertValues, gestationalWeeks)
+	}
+	if childbearingHistory != "" {
+		insertKeys = append(insertKeys, "childbearing_history")
+		insertValues = append(insertValues, "'"+childbearingHistory+"'")
+	}
+
+	insertKeyStr := strings.Join(insertKeys, ",")
+	insertValueStr := strings.Join(insertValues, ",")
+
+	insertSQL := "insert into pre_medical_record (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
+	_, err1 := model.DB.Exec("delete from pre_medical_record where clinicTriagePatientID=" + clinicTriagePatientID)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err1})
+		return
+	}
+	_, err := model.DB.Exec(insertSQL)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// TriageCompletePreDiagnosis 完善诊前欲诊
+func TriageCompletePreDiagnosis(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	chiefComplaint := ctx.PostValue("chief_complaint")
+	historyOfRresentIllness := ctx.PostValue("history_of_rresent_illness")
+	historyOfPastIllness := ctx.PostValue("history_of_past_illness")
+	physicalExamination := ctx.PostValue("physical_examination")
+	remark := ctx.PostValue("remark")
+
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+
+	var insertKeys []string
+	var insertValues []string
+
+	if clinicTriagePatientID != "" {
+		insertKeys = append(insertKeys, "clinic_triage_patient_id")
+		insertValues = append(insertValues, clinicTriagePatientID)
+	}
+
+	if chiefComplaint != "" {
+		insertKeys = append(insertKeys, "chief_complaint")
+		insertValues = append(insertValues, "'"+chiefComplaint+"'")
+	}
+
+	if historyOfRresentIllness != "" {
+		insertKeys = append(insertKeys, "history_of_rresent_illness")
+		insertValues = append(insertValues, "'"+historyOfRresentIllness+"'")
+	}
+
+	if historyOfPastIllness != "" {
+		insertKeys = append(insertKeys, "history_of_past_illness")
+		insertValues = append(insertValues, "'"+historyOfPastIllness+"'")
+	}
+
+	if physicalExamination != "" {
+		insertKeys = append(insertKeys, "physical_examination")
+		insertValues = append(insertValues, "'"+physicalExamination+"'")
+	}
+
+	if remark != "" {
+		insertKeys = append(insertKeys, "remark")
+		insertValues = append(insertValues, "'"+remark+"'")
+	}
+
+	insertKeyStr := strings.Join(insertKeys, ",")
+	insertValueStr := strings.Join(insertValues, ",")
+
+	insertSQL := "insert into pre_diagnosis (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
+
+	_, err1 := model.DB.Exec("delete from pre_diagnosis where clinicTriagePatientID=" + clinicTriagePatientID)
+	_, err := model.DB.Exec(insertSQL)
+
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err1})
+		return
+	}
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
 }
