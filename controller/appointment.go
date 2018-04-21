@@ -87,9 +87,22 @@ func AppointmentCreate(ctx iris.Context) {
 		clinicPatientID = clinicPatient["id"]
 	}
 
-	var resultID int
+	var appointmentID int
 	departmentID := schedule["department_id"]
-	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id,register_type) VALUES ($1, $2, $3,1) RETURNING id", departmentID, clinicPatientID, personnelID).Scan(&resultID)
+	visitDate := schedule["visit_date"]
+	amPm := schedule["am_pm"]
+	visitTypeCode := schedule["visit_type_code"]
+	doctorID := schedule["personnel_id"]
+	err = tx.QueryRow("INSERT INTO appointment (clinic_patient_id, department_id, personnel_id,visit_date,am_pm,visit_type_code,operation_id) VALUES ($1, $2, $3,$4,$5,$6,$7) RETURNING id", clinicPatientID, departmentID, doctorID, visitDate, amPm, visitTypeCode, personnelID).Scan(&appointmentID)
+	if err != nil {
+		fmt.Println("appointment ======", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	var resultID int
+	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id,register_type,visit_date) VALUES ($1, $2, $3,1,$4) RETURNING id", departmentID, clinicPatientID, personnelID, visitDate).Scan(&resultID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()
