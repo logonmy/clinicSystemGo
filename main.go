@@ -82,6 +82,13 @@ func main() {
 		triage.Post("/getById", controller.PatientGetByID)
 	}
 
+	charge := app.Party("/charge", crs).AllowMethods(iris.MethodOptions)
+	{
+		charge.Post("/type/init", controller.ChargeTypeInit)
+		charge.Post("/type/create", controller.ChargeTypeCreate)
+		charge.Post("/project/treatment/create", controller.ChargeProjectTreatmentCreate)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello

@@ -70,7 +70,7 @@ CREATE TABLE visit_type
   code integer PRIMARY KEY NOT NULL,--编码
   name VARCHAR(10) NOT NULL,--出诊类型名称
   open_flag boolean NOT NULL DEFAULT true,--启用状态
-  fee integer NOT NULL DEFAULT 0 CHECK(fee > 0),
+  fee integer NOT NULL CHECK(fee > 0),
   created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time TIMESTAMP
@@ -232,10 +232,26 @@ CREATE TABLE personnel_login_record
   deleted_time timestamp
 );
 
+--收费类型
 CREATE TABLE charge_project_type
 (
   id serial PRIMARY KEY NOT NULL,--id
   name varchar(20) UNIQUE NOT NULL,--名称
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp
+);
+
+--收费项目-诊疗
+CREATE TABLE charge_project_treatment
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
+  name varchar(20) UNIQUE NOT NULL,--名称
+  name_en varchar(20),--英文名称
+  cost integer CHECK(cost > 0), --成本价
+  fee integer NOT NULL CHECK(fee > 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
