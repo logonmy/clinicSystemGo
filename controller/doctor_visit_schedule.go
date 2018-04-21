@@ -97,7 +97,7 @@ func DoctorVistScheduleList(ctx iris.Context) {
 	left join department d on dvs.department_id = d.id
 	left join personnel p on dvs.personnel_id = p.id
 	left join clinic c on p.clinic_id = c.id
-	where dvs.visit_date > current_date and c.id = $1 and visit_date BETWEEN time $2 + integer '-1' and $3 + integer '1'`
+	where dvs.visit_date > current_date and c.id = $1 and dvs.visit_date BETWEEN date '` + startDate + `' and date '` + endDate + `'`
 
 	if departmentID != "" {
 		sql += " and dvs.department_id=" + departmentID
@@ -107,7 +107,9 @@ func DoctorVistScheduleList(ctx iris.Context) {
 		sql += " and dvs.personnel_id=" + personnelID
 	}
 
-	rows, err := model.DB.Queryx(sql, clinicID, startDate, endDate)
+	fmt.Println("sql =========", sql)
+
+	rows, err := model.DB.Queryx(sql, clinicID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
