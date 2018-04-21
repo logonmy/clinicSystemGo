@@ -232,4 +232,73 @@ CREATE TABLE personnel_login_record
   deleted_time timestamp
 );
 
+--体征
+CREATE TABLE body_sign
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL UNIQUE references clinic_triage_patient(id),--分诊记录id
+  weight FLOAT,--体重(kg)
+  height FLOAT,--升高（m）
+  bmi FLOAT,--体重（千克）/（身高（米）*身高（米））
+  blood_type VARCHAR(2) CHECK(blood_type = 'A' OR blood_type = 'B' OR blood_type = 'O' OR blood_type = 'AB' OR blood_type = 'UC' ),--血型 uc: 未查
+  rh_blood_type integer CHECK(rh_blood_type = 0 or rh_blood_type = 1),--RH血型 0: 阴性，1阳性
+  temperature_type integer CHECK(temperature_type >0 AND temperature_type <6),--RH血型 1: 口温，2：耳温，3：额温，4：腋温，5：肛温
+  temperature FLOAT,--温度
+  breathe integer,--呼吸(次/分钟)
+  pulse integer,--脉搏(次/分钟)
+  systolic_blood_pressure integer,--血压收缩压
+  diastolic_blood_pressure integer,--血压舒张压
+  blood_sugar_time varchar(20),--血糖时间
+  blood_sugar_type integer,--血糖时段类型 1：睡前，2，晚餐后，3晚餐前，4午餐后，5，午餐前，6，早餐后，7早餐前，8：凌晨，9空腹
+  blood_sugar_concentration FLOAT,--血糖浓度(mmol/I)
+  left_vision varchar(5),--左眼视力
+  right_vision varchar(5),--右眼视力
+  oxygen_saturation FLOAT,--氧饱和度(%)
+  pain_score integer CHECK(pain_score>-1 AND pain_score<11),--疼痛评分
+  remark VARCHAR(100),
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp
+);
+
+--诊前病历
+CREATE TABLE pre_medical_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL UNIQUE references clinic_triage_patient(id),--分诊记录id
+  has_allergic_history boolean,--是否有过敏
+  allergic_history text,--过敏史
+  personal_medical_history text,--个人病史
+  family_medical_history text,--家族病史
+  vaccination text,--接种疫苗
+  menarche_age integer,--月经初潮年龄
+  menstrual_period_start_day varchar(10),--月经经期开始时间
+  menstrual_period_end_day varchar(10),--月经经期结束时间
+  menstrual_cycle_start_day varchar(10),--月经周期结束时间
+  menstrual_cycle_end_day varchar(10),--月经周期结束时间
+  menstrual_last_day varchar(10),--末次月经时间
+  gestational_weeks integer,--孕周
+  childbearing_history text,--生育史
+  remark VARCHAR(100),
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp
+);
+
+--诊前欲诊
+CREATE TABLE pre_diagnosis
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL UNIQUE references clinic_triage_patient(id),--分诊记录id
+  chief_complaint text,--主诉
+  history_of_rresent_illness text,--现病史
+  history_of_past_illness text,--既往史
+  physical_examination text,--体格检查
+  remark text,--备注
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp
+);
+
+
 
