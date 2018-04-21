@@ -45,6 +45,14 @@ func TriageRegister(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
 			return
 		}
+	} else {
+		_, err = tx.Exec(`update patient set cert_no = $1, name= $2,birthday=$3,sex=$4, phone=$5, address=$6,profession = $7,remark= $8 ,patient_channel_id = $9  where id = $10`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID, patientID)
+		if err != nil {
+			tx.Rollback()
+			fmt.Println("err2 ===", err)
+			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			return
+		}
 	}
 
 	row = model.DB.QueryRowx("select * from clinic_patient where patient_id= $1 and clinic_id = $2", patientID, clinicID)
