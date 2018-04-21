@@ -167,8 +167,8 @@ CREATE TABLE clinic_triage_patient
   treat_status boolean NOT NULL DEFAULT false,--是否分诊
   visit_date DATE NOT NULL DEFAULT CURRENT_DATE,--日期
   register_type INTEGER NOT NULL  DEFAULT 1,--登记类型：1线下分诊，2预约
-  triage_time timestamp DEFAULT LOCALTIMESTAMP,--分诊完成时间 或 报道时间
-  reception_time timestamp DEFAULT LOCALTIMESTAMP,--接诊时间
+  triage_time timestamp,--分诊完成时间 或 报道时间
+  reception_time timestamp,--接诊时间
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
