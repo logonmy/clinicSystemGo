@@ -67,6 +67,11 @@ func main() {
 		doctorVisitScheduleMode.Post("/create", controller.DoctorVisitScheduleModeAdd)
 	}
 
+	doctorVisitSchedule := app.Party("/doctorVisitSchedule", crs).AllowMethods(iris.MethodOptions)
+	{
+		doctorVisitSchedule.Post("/create", controller.DoctorVistScheduleCreate)
+	}
+
 	patient := app.Party("/patient", crs).AllowMethods(iris.MethodOptions)
 	{
 		patient.Post("/create", controller.PatientAdd)
