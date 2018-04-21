@@ -32,7 +32,7 @@ func DoctorVisitScheduleModeAdd(ctx iris.Context) {
 
 	for _, v := range results {
 		departmentID = v["department_id"]
-		personnelID = v["department_id"]
+		personnelID = v["personnel_id"]
 		s := "(" + v["department_id"] + "," + v["personnel_id"] + "," + v["weekday"] + ",'" + v["am_pm"] + "'," + v["tatal_num"] + "," + v["visit_type_code"] + ")"
 		sets = append(sets, s)
 	}

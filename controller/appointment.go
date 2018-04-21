@@ -182,7 +182,7 @@ func AppointmentList(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
 			return
 		}
-		registartionSQL += " and a.created_time between date'" + startDate + "' - integer '1' and '" + endDate + "' + integer '1'"
+		registartionSQL += " and a.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
 	}
 
 	total := model.DB.QueryRowx(`select count(a.id) as total `+registartionSQL, clinicID)
@@ -196,7 +196,7 @@ func AppointmentList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select ps.name as doctor_name, p.sex, p.birthday, d.name as department_name, a.id ` + registartionSQL + " offset $2 limit $3"
+	rowSQL := `select ps.name as doctor_name, p.sex, p.birthday, d.name as department_name, a.id, a.created_time, a.updated_time ` + registartionSQL + " offset $2 limit $3"
 
 	rows, err1 := model.DB.Queryx(rowSQL, clinicID, offset, limit)
 	if err1 != nil {
