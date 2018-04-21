@@ -82,6 +82,14 @@ func main() {
 		triage.Post("/completeBodySign", controller.TriageCompleteBodySign)
 		triage.Post("/completePreMedicalRecord", controller.TriageCompletePreMedicalRecord)
 		triage.Post("/completePreDiagnosis", controller.TriageCompletePreDiagnosis)
+		triage.Post("/chooseDoctor", controller.PersonnelChoose)
+	}
+
+	charge := app.Party("/charge", crs).AllowMethods(iris.MethodOptions)
+	{
+		charge.Post("/type/init", controller.ChargeTypeInit)
+		charge.Post("/type/create", controller.ChargeTypeCreate)
+		charge.Post("/project/treatment/create", controller.ChargeProjectTreatmentCreate)
 	}
 
 	// http://localhost:8080
