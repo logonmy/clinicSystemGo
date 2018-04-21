@@ -277,7 +277,7 @@ CREATE TABLE body_sign
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp
-)
+);
 
 --费用项目类型
 CREATE TABLE charge_project_type
