@@ -21,7 +21,7 @@ func PersonnelLogin(ctx iris.Context) {
 		md5Ctx := md5.New()
 		md5Ctx.Write([]byte(password))
 		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
-		row := model.DB.QueryRowx("select a.id, a.code, a.name, a.username, b.code as clinic_id, b.name as clinic_name from personnel a left join clinic b on a.clinic_id = b.id where a.username = $1 and a.password = $2", username, passwordMd5)
+		row := model.DB.QueryRowx("select a.id, a.code, a.name, a.username, b.id as clinic_id, b.name as clinic_name from personnel a left join clinic b on a.clinic_id = b.id where a.username = $1 and a.password = $2", username, passwordMd5)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误"})
 			return
@@ -164,7 +164,7 @@ func PersonnelList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select p.id, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
+	rowSQL := `select p.id, p.code, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
 	c.id as clinic_id, c.name as clinic_name,
 	dp.type as personnel_type,
 	d.code as department_code, d.name as department_name, d.id as department_id ` + jionSQL + " offset $4 limit $5"

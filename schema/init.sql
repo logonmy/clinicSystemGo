@@ -169,6 +169,7 @@ CREATE TABLE clinic_triage_patient
   register_type INTEGER NOT NULL,--登记类型：1线下分诊，2预约
   triage_time timestamp,--分诊完成时间 或 报道时间
   reception_time timestamp,--接诊时间
+  complete_time timestamp,--完成时间
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
@@ -199,7 +200,7 @@ CREATE TABLE registration
   id serial PRIMARY KEY NOT NULL, --编号
   clinic_patient_id integer NOT NULL references clinic_patient(id),--患者id
   department_id integer NOT NULL REFERENCES department(id),--科室id
-  clinic_triage_patient_id integer,--分诊就诊人id
+  clinic_triage_patient_id integer UNIQUE NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   personnel_id integer NOT NULL REFERENCES personnel(id),--医生id
   visit_date DATE NOT NULL,--出诊日期
   am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午

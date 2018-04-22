@@ -87,13 +87,13 @@ func PatientList(ctx iris.Context) {
 	from patient p 
 	left join clinic_patient cp on p.id = cp.patient_id 
 	left join clinic c on c.id = cp.clinic_id
-	where c.id = $1 and (p.name like '%' || $2 || '%' or p.cert_no like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
+	where c.id = $1 and (p.name ~ $2 or p.cert_no ~ $2 or p.phone ~ $2)`
 
 	selectSQL := `select p.*,pc.name as channel_name from patient p 
 	left join clinic_patient cp on p.id = cp.patient_id 
 	left join clinic c on c.id = cp.clinic_id
 	left join patient_channel pc on p.patient_channel_id = pc.id
-	where c.id = $1 and (p.name like '%' || $2 || '%' or p.cert_no like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
+	where c.id = $1 and (p.name ~ $2 or p.cert_no ~ $2 or p.phone ~ $2)`
 
 	sql := " ORDER BY p.created_time DESC offset $3 limit $4;"
 
