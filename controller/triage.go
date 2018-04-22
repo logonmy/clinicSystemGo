@@ -161,8 +161,9 @@ func TriagePatientList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	rowSQL := `select 
-	ctp.id,ctp.clinic_patient_id,ctp.visit_date, ctp.treat_status, cp.clinic_id, c.name as clinic_name,
+	ctp.id as clinic_triage_patient_id,ctp.clinic_patient_id,ctp.visit_date, ctp.treat_status, cp.clinic_id, c.name as clinic_name,
 	p.id as patient_id, p.name as patient_name, p.birthday, p.sex, p.cert_no, p.phone,
+	doc.id as doctor_id, doc.name as doctor_name,
 	ctp.created_time as register_time,
 	ctp.department_id, d.name as department_name,
 	ctp.register_personnel_id, rp.name as register_personnel_name,
@@ -172,9 +173,10 @@ func TriagePatientList(ctx iris.Context) {
 	left join department d on ctp.department_id = d.id
 	left join personnel rp on ctp.register_personnel_id = rp.id
 	left join personnel tp on ctp.triage_personnel_id = tp.id
+	left join personnel doc on ctp.doctor_id = doc.id
 	left join patient p on cp.patient_id = p.id 
 	where cp.clinic_id = $1 and ctp.visit_date = CURRENT_DATE 
-	and (p.cert_no like '%' || $2 || '%' or p.name like '%' || $2 || '%' or p.phone like '%' || $2 || '%') offset $3 limit $4`
+	and (p.cert_no like '%' || $2 || '%' or p.name like '%' || $2 || '%' or p.phone like '%' || $2 || '%') order by ctp.id DESC offset $3 limit $4`
 	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, offset, limit)
 	if err1 != nil {
 		fmt.Println("err1 =======", err1)
