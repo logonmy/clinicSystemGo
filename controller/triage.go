@@ -296,9 +296,9 @@ func TriagePersonnelList(ctx iris.Context) {
 	where p.clinic_id = $1 and (p.name like '%' || $2 || '%') and dvs.am_pm=$3 and dvs.visit_date=current_date`
 
 	selectSQL := `(select count(ctp.id) from clinic_triage_patient ctp 
-		where treat_status=false and visit_date=current_date and doctor_id=dvs.personnel_id) as waitTotal,
+		where treat_status=false and visit_date=current_date and doctor_id=dvs.personnel_id) as wait_total,
 	(select count(ctped.id)from clinic_triage_patient ctped where 
-		treat_status=true and visit_date=current_date and doctor_id=dvs.personnel_id) as triagedTotal
+		treat_status=true and visit_date=current_date and doctor_id=dvs.personnel_id) as triaged_total
 	from doctor_visit_schedule dvs 
 	left join department d on dvs.department_id = d.id 
 	left join personnel p on dvs.personnel_id = p.id
@@ -617,4 +617,67 @@ func TriageCompletePreDiagnosis(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+//TriageRecordList 分诊记录
+func TriageRecordList(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	keyword := ctx.PostValue("keyword")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `from registration r 
+	left join clinic_patient cp on r.clinic_patient_id = cp.id
+	left join patient p on cp.patient_id = p.id
+	where cp.clinic_id = $1 and (p.name ~ $2 or p.cert_no ~ $2 or p.phone ~ $2)`
+
+	selectSQL := `(select name as department_name from department d where id=r.department_id),
+	(select name as doctor_name from personnel d where id=r.personnel_id),
+	(select name as operation_name from personnel d where id=r.operation_id)
+	from registration r 
+	left join clinic_patient cp on r.clinic_patient_id = cp.id
+	left join patient p on cp.patient_id = p.id
+	where cp.clinic_id = $1 and (p.name ~ $2 or p.cert_no ~ $2 or p.phone ~ $2)`
+
+	total := model.DB.QueryRowx(`select count(r.id) as total `+countSQL, clinicID, keyword)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rowSQL := `select p.name as patient_name, p.sex, p.birthday, r.id as registration_id, ` + selectSQL + " offset $3 limit $4"
+
+	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, offset, limit)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }

@@ -169,6 +169,7 @@ CREATE TABLE clinic_triage_patient
   register_type INTEGER NOT NULL,--登记类型：1线下分诊，2预约
   triage_time timestamp,--分诊完成时间 或 报道时间
   reception_time timestamp,--接诊时间
+  complete_time timestamp,--完成时间
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp,
