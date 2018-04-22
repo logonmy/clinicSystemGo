@@ -672,7 +672,7 @@ func TriageRecordList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select p.name as patient_name, p.sex, p.birthday, r.id as registration_id, ctp.reception_time, ctp.complete_time,` + selectSQL + " offset $3 limit $4"
+	rowSQL := `select p.name as patient_name, p.sex, p.birthday, r.id as registration_id, ctp.reception_time, ctp.complete_time, ctp.triage_time,` + selectSQL + " offset $3 limit $4"
 
 	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, offset, limit)
 	if err1 != nil {
