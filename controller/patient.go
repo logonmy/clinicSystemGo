@@ -26,6 +26,19 @@ func PatientAdd(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
+
+	row := model.DB.QueryRowx("select id from patient where cert_no = $1 limit 1", certNo)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		return
+	}
+	patient := FormatSQLRowToMap(row)
+	_, ok := patient["id"]
+	if ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人身份证已存在"})
+		return
+	}
+
 	tx, err := model.DB.Begin()
 
 	var patientID string

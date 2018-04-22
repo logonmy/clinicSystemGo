@@ -19,6 +19,19 @@ func DepartmentCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
+
+	row := model.DB.QueryRowx("select id from department where clinic_id = $1 and code=$2 limit 1", clinicID, code)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		return
+	}
+	department := FormatSQLRowToMap(row)
+	_, ok := department["id"]
+	if ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "科室编码已存在"})
+		return
+	}
+
 	var departmentID int
 	err := model.DB.QueryRow("INSERT INTO department (code, name, clinic_id, weight) VALUES ($1, $2, $3, $4) RETURNING id", code, name, clinicID, weight).Scan(&departmentID)
 	if err != nil {
