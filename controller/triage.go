@@ -146,9 +146,9 @@ func TriagePatientList(ctx iris.Context) {
 func PersonnelChoose(ctx iris.Context) {
 	clinicPatientID := ctx.PostValue("clinic_patient_id")
 	deparmentID := ctx.PostValue("department_id")
-	clinicTriagePatientID := ctx.PostValue("id")
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	doctorID := ctx.PostValue("doctor_id")
-	triagePersonnelID := ctx.PostValue("personnel_id")
+	triagePersonnelID := ctx.PostValue("triage_personnel_id")
 	amPm := ctx.PostValue("am_pm")
 	visitTypeCode := ctx.PostValue("visit_type_code")
 
