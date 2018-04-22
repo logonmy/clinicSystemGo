@@ -164,7 +164,7 @@ func PersonnelList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select p.id as personnel_id, p.code as personnel_code, p.name as personnel_name,p.weight,p.title,p.username,p.status,p.is_appointment,
+	rowSQL := `select p.id, p.code, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
 	c.id as clinic_id, c.name as clinic_name,
 	dp.type as personnel_type,
 	d.code as department_code, d.name as department_name, d.id as department_id ` + jionSQL + " offset $4 limit $5"
