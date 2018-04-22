@@ -107,8 +107,6 @@ func DoctorVistScheduleList(ctx iris.Context) {
 		sql += " and dvs.personnel_id=" + personnelID
 	}
 
-	fmt.Println("sql =========", sql)
-
 	rows, err := model.DB.Queryx(sql, clinicID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
