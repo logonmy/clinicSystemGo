@@ -302,7 +302,7 @@ CREATE TABLE charge_project_treatment
   cost integer CHECK(cost > 0), --成本价
   fee integer NOT NULL CHECK(fee > 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
-    created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
+  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp
 )
@@ -354,6 +354,7 @@ CREATE TABLE unpaid_orders
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   charge_project_id INTEGER NOT NULL,--收费项目id
   order_sn varchar(13) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
   price INTEGER NOT NULL CHECK(price > 0),--单价
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
@@ -364,16 +365,27 @@ CREATE TABLE unpaid_orders
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  deleted_time timestamp,
+  UNIQUE (order_sn, soft_sn)
 )
 
 --缴费记录
 CREATE TABLE paid_record
 (
   id serial PRIMARY KEY NOT NULL,--id
-  orders_ids varchar(30) NOT NULL,
+  soft_sns varchar(30) NOT NULL,--序号
   order_sn varchar(13) NOT NULL,--单号
   confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
+  pay_type_code varchar(2) NOT NULL,--支付类型编码 01-医保支付，02-挂账金额，03-抵金券，04-积分
+  pay_method_code varchar(2) NOT NULL,--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
+  discount_rate INTEGER NOT NULL DEFAULT 100 check (discount_rate >= 0 AND discount_rate <= 100),--折扣率
+  derate_money INTEGER NOT NULL DEFAULT 0 check (derate_money >= 0 ),--减免金额
+  medical_money INTEGER NOT NULL DEFAULT 0 check (medical_money >= 0 ),--医保金额
+  on_credit_money INTEGER NOT NULL DEFAULT 0 check (on_credit_money >= 0 ),--挂账金额
+  voucher_money INTEGER NOT NULL DEFAULT 0 check (voucher_money >= 0 ),--抵金券金额
+  bonus_points_money INTEGER NOT NULL DEFAULT 0 check (bonus_points_money >= 0 ),--积分兑换金额
+  total_money  INTEGER NOT NULL check (total_money >= 0 ),--应收金额
+  balance_money INTEGER NOT NULL check (bonus_points_money >= 0 ),--实收金额
   status boolean NOT NULL DEFAULT true,--缴费情况
   remark varchar(20),--备注
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -389,6 +401,7 @@ CREATE TABLE paid_orders
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   charge_project_id INTEGER NOT NULL,--收费项目id
   order_sn varchar(13) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
   price INTEGER NOT NULL CHECK(price > 0),--单价
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
@@ -400,5 +413,6 @@ CREATE TABLE paid_orders
   confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
   created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  deleted_time timestamp,
+  UNIQUE (order_sn, soft_sn)
 )
