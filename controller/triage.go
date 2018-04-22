@@ -33,7 +33,7 @@ func TriageRegister(ctx iris.Context) {
 	if todayHour < 12 {
 		amPm = "a"
 	}
-	row := model.DB.QueryRowx("select * from doctor_visit_schedule where visit_date = CURRENT_DATE and am_pm = $1 and department_id = $2 and personnel_id = $3", amPm, departmentID, personnelID)
+	row := model.DB.QueryRowx("select * from doctor_visit_schedule where visit_date = CURRENT_DATE and am_pm = $1 and department_id = $2 limit 1", amPm, departmentID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "登记失败"})
 		return
@@ -114,10 +114,52 @@ func TriageRegister(ctx iris.Context) {
 func TriagePatientList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(ctp.id) as total
+	from clinic_triage_patient ctp left join clinic_patient cp  on ctp.clinic_patient_id = cp.id
+	left join clinic c on c.id = cp.clinic_id
+	left join department d on ctp.department_id = d.id
+	left join personnel rp on ctp.register_personnel_id = rp.id
+	left join personnel tp on ctp.triage_personnel_id = tp.id
+	left join patient p on cp.patient_id = p.id 
+	where cp.clinic_id = $1 and ctp.visit_date = CURRENT_DATE 
+	and (p.cert_no like '%' || $2 || '%' or p.name like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
+
+	total := model.DB.QueryRowx(countSQL, clinicID, keyword)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
 	rowSQL := `select 
 	ctp.id,ctp.clinic_patient_id,ctp.visit_date, ctp.treat_status, cp.clinic_id, c.name as clinic_name,
 	p.id as patient_id, p.name as patient_name, p.birthday, p.sex, p.cert_no, p.phone,
@@ -132,14 +174,15 @@ func TriagePatientList(ctx iris.Context) {
 	left join personnel tp on ctp.triage_personnel_id = tp.id
 	left join patient p on cp.patient_id = p.id 
 	where cp.clinic_id = $1 and ctp.visit_date = CURRENT_DATE 
-	and (p.cert_no like '%' || $2 || '%' or p.name like '%' || $2 || '%' or p.phone like '%' || $2 || '%') `
-	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword)
+	and (p.cert_no like '%' || $2 || '%' or p.name like '%' || $2 || '%' or p.phone like '%' || $2 || '%') offset $3 limit $4`
+	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, offset, limit)
 	if err1 != nil {
+		fmt.Println("err1 =======", err1)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return
 	}
 	result := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": result})
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
 
 //PersonnelChoose 线下分诊选择医生
