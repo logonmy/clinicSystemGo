@@ -237,7 +237,7 @@ func TriagePersonnelList(ctx iris.Context) {
 		selectSQL += " and dvs.department_id=" + deparmentID
 	}
 
-	total := model.DB.QueryRowx(`select count(distinct(dvs.personnel_id,dvs.department_id)) as total `+countSQL, clinicID, keyword, ampm)
+	total := model.DB.QueryRowx(`select count(dvs.id) as total `+countSQL, clinicID, keyword, ampm)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -248,7 +248,7 @@ func TriagePersonnelList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select distinct(p.name, d.name), p.name as doctor_name, d.name as department_name, dvs.id, dvs.am_pm, dvs.visit_date, ` + selectSQL + " offset $4 limit $5"
+	rowSQL := `select p.name as doctor_name, d.name as department_name, dvs.personnel_id as doctor_id, dvs.am_pm, dvs.visit_date, ` + selectSQL + " offset $4 limit $5"
 
 	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, ampm, offset, limit)
 	if err1 != nil {
