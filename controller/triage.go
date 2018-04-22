@@ -217,7 +217,7 @@ func PersonnelChoose(ctx iris.Context) {
 	doctorVisitSchedule := FormatSQLRowToMap(dvsrow)
 	_, dvsok := doctorVisitSchedule["id"]
 	if !dvsok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "预约号源不存在"})
+		ctx.JSON(iris.Map{"code": "1", "msg": "分诊医生号源不存在"})
 		return
 	}
 
@@ -680,4 +680,82 @@ func TriageRecordList(ctx iris.Context) {
 	}
 	result := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+}
+
+//TriageExchange 换诊
+func TriageExchange(ctx iris.Context) {
+	doctorVisitScheduleID := ctx.PostValue("doctor_visit_schedule_id")
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	triagePersonnelID := ctx.PostValue("triage_personnel_id")
+	registrationID := ctx.PostValue("registration_id")
+
+	if doctorVisitScheduleID == "" || clinicTriagePatientID == "" || triagePersonnelID == "" || registrationID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+
+	ctprow := model.DB.QueryRowx("select id,reception_time,clinic_patient_id from clinic_triage_patient where id=$1", clinicTriagePatientID)
+	clinicTriagePatient := FormatSQLRowToMap(ctprow)
+	_, ctpok := clinicTriagePatient["id"]
+	if !ctpok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人不存在"})
+		return
+	}
+
+	receptionTime, ok := clinicTriagePatient["reception_time"]
+	if ok && receptionTime != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "该就诊人已接诊"})
+		return
+	}
+
+	rrow := model.DB.QueryRowx("select id,clinic_patient_id from registration where id=$1", registrationID)
+	registration := FormatSQLRowToMap(rrow)
+	_, rok := registration["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "分诊记录不存在"})
+		return
+	}
+
+	dvsrow := model.DB.QueryRowx("select id,department_id,personnel_id,am_pm,visit_type_code,visit_date from doctor_visit_schedule where id=$1", doctorVisitScheduleID)
+	doctorVisitSchedule := FormatSQLRowToMap(dvsrow)
+	_, dvsok := doctorVisitSchedule["id"]
+	if !dvsok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "分诊医生号源不存在"})
+		return
+	}
+
+	clinicPatientIDWithCTP := clinicTriagePatient["clinic_patient_id"]
+	clinicPatientIDWithR := registration["clinic_patient_id"]
+	if clinicPatientIDWithCTP != clinicPatientIDWithR {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊就诊人与分诊记录就诊人不匹配"})
+		return
+	}
+	deparmentID := doctorVisitSchedule["department_id"]
+	doctorID := doctorVisitSchedule["personnel_id"]
+	amPm := doctorVisitSchedule["am_pm"]
+	visitTypeCode := doctorVisitSchedule["visit_type_code"]
+	visitDate := doctorVisitSchedule["visit_date"]
+
+	tx, err := model.DB.Begin()
+	_, err = tx.Exec(`update clinic_triage_patient set 
+		doctor_id=$1,triage_personnel_id=$2,department_id=$3,treat_status=true,triage_time=LOCALTIMESTAMP where id=$4`, doctorID, triagePersonnelID, deparmentID, clinicTriagePatientID)
+	if err != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	_, err = tx.Exec(`update registration set
+		department_id=$1,personnel_id=$2,visit_date=$3,am_pm=$4,visit_type_code=$5,operation_id=$6 where id=$7`, deparmentID, doctorID, visitDate, amPm, visitTypeCode, triagePersonnelID, registrationID)
+	if err != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": registrationID})
 }
