@@ -286,3 +286,53 @@ func ChargePay(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": ID})
 
 }
+
+// ChargePaidList 根据预约编码查询已缴费缴费列表
+func ChargePaidList(ctx iris.Context) {
+	registrationid := ctx.PostValue("registration_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if registrationid == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	total := model.DB.QueryRowx(`select count(id) as total from paid_orders where registration_id=$1`, registrationid)
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rowSQL := `select * from paid_orders where registration_id=$1 offset $2 limit $3`
+
+	rows, err1 := model.DB.Queryx(rowSQL, registrationid, offset, limit)
+
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+
+}

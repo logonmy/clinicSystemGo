@@ -109,6 +109,8 @@ func main() {
 		chargeUnPay.Post("/unPay/list", controller.ChargeUnPayList)
 
 		chargeUnPay.Post("/pay", controller.ChargePay)
+
+		chargeUnPay.Post("/paid/list", controller.ChargePaidList)
 	}
 
 	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)
