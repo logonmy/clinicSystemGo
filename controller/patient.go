@@ -170,6 +170,25 @@ func PatientGetByID(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 }
 
+// PatientGetByCertNo 通过身份号查就诊人
+func PatientGetByCertNo(ctx iris.Context) {
+	certNo := ctx.PostValue("cert_no")
+	if certNo != "" {
+		row := model.DB.QueryRowx(`select p.* from patient p 
+			left join clinic_patient cp on p.id = cp.patient_id 
+			left join clinic c on c.id = cp.clinic_id where
+			p.cert_no = $1;`, certNo)
+		if row == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
+			return
+		}
+		result := FormatSQLRowToMap(row)
+		ctx.JSON(iris.Map{"code": "200", "data": result})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+}
+
 //PatientUpdate 编辑就诊人
 func PatientUpdate(ctx iris.Context) {
 	id := ctx.PostValue("id")
