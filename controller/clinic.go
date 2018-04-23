@@ -60,14 +60,6 @@ func ClinicAdd(ctx iris.Context) {
 	md5Ctx.Write([]byte(password))
 	passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
 
-	cmap := map[string]interface{}{
-		"code":               code,
-		"name":               name,
-		"responsible_person": responsiblePerson,
-		"area":               area,
-		"status":             status,
-	}
-
 	tx, err := model.DB.Beginx()
 
 	if err != nil {
@@ -79,7 +71,7 @@ func ClinicAdd(ctx iris.Context) {
 	var clinicID int
 	err = tx.QueryRow(`INSERT INTO clinic(
 			code, name, responsible_person, area, status)
-			VALUES ($1, $2, $3, $4, $5) RETURNING id`, code, name, responsiblePerson, area, status).Scan(&resultID)
+			VALUES ($1, $2, $3, $4, $5) RETURNING id`, code, name, responsiblePerson, area, status).Scan(&clinicID)
 	if err != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
