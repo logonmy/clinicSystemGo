@@ -335,7 +335,7 @@ CREATE TABLE mz_unpaid_orders
   registration_id INTEGER NOT NULL references registration(id),--分诊记录id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   charge_project_id INTEGER NOT NULL,--收费项目id
-  order_sn varchar(13) NOT NULL,--单号
+  order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
   price INTEGER NOT NULL CHECK(price > 0),--单价
@@ -358,7 +358,7 @@ CREATE TABLE mz_paid_record
   trade_no varchar(20) NOT NULL,--系统交易号
   out_trade_no varchar(20),--第三方交易号
   soft_sns varchar(30) NOT NULL,--序号
-  order_sn varchar(13) NOT NULL,--单号
+  order_sn varchar(20) NOT NULL,--单号
   confrim_id INTEGER NOT NULL references personnel(id),--操作员id
   pay_type_code varchar(2) NOT NULL,--支付类型编码 01-医保支付，02-挂账金额，03-抵金券，04-积分
   pay_method_code varchar(2) NOT NULL,--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
@@ -396,7 +396,7 @@ CREATE TABLE mz_paid_record_detail
   out_trade_no varchar(20) UNIQUE,--第三方交易号
   refund_status boolean NOT NULL DEFAULT false,--退费标识
   soft_sns varchar(30) NOT NULL,--序号
-  order_sn varchar(13) NOT NULL,--单号
+  order_sn varchar(20) NOT NULL,--单号
   confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
 
   derate_money INTEGER NOT NULL DEFAULT 0 ,--减免金额
@@ -421,7 +421,7 @@ CREATE TABLE mz_paid_orders
   registration_id INTEGER NOT NULL references registration(id),--分诊记录id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   charge_project_id INTEGER NOT NULL,--收费项目id
-  order_sn varchar(13) NOT NULL,--单号
+  order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
   price INTEGER NOT NULL CHECK(price > 0),--单价
@@ -446,7 +446,7 @@ CREATE TABLE charge_detail
   trade_no varchar(20) NOT NULL,--系统交易号
   out_trade_no varchar(20),--第三方交易号
   out_refund_no varchar(20) UNIQUE,--第三方退费交易号
-  in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'outcome'),--收入或支出
+  in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'out'),--收入或支出
   patient_id INTEGER references personnel(id),--关联的患者
   department_id INTEGER references department(id),--关联的科室
   doctor_id INTEGER references personnel(id),--关联的医生信息
