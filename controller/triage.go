@@ -131,7 +131,7 @@ func TriagePatientList(ctx iris.Context) {
 	registerType := ctx.PostValue("register_type")
 	personnelID := ctx.PostValue("personnel_id")
 	deparmentID := ctx.PostValue("department_id")
-	visitDate := ctx.PostValue("visit_date")
+	isToday := ctx.PostValue("is_today")
 	startDate := ctx.PostValue("startDate")
 	endDate := ctx.PostValue("endDate")
 	offset := ctx.PostValue("offset")
@@ -203,9 +203,9 @@ func TriagePatientList(ctx iris.Context) {
 		rowSQL += " and ctp.treat_status=" + treatStatus
 	}
 
-	if visitDate != "" {
-		countSQL += " and ctp.visit_date= '" + visitDate + "'"
-		rowSQL += " and ctp.visit_date= '" + visitDate + "'"
+	if isToday == "true" {
+		countSQL += " and ctp.visit_date= current_date "
+		rowSQL += " and ctp.visit_date= current_date "
 	}
 
 	if registerType != "" {
@@ -386,9 +386,9 @@ func TriagePersonnelList(ctx iris.Context) {
 	where p.clinic_id = $1 and (p.name like '%' || $2 || '%') and dvs.am_pm=$3 and dvs.visit_date=current_date`
 
 	selectSQL := `(select count(ctp.id) from clinic_triage_patient ctp 
-		where treat_status=false and visit_date=current_date and doctor_id=dvs.personnel_id) as wait_total,
+		where treat_status=true and reception_time is null and visit_date=current_date and doctor_id=dvs.personnel_id) as wait_total,
 	(select count(ctped.id)from clinic_triage_patient ctped where 
-		treat_status=true and visit_date=current_date and doctor_id=dvs.personnel_id) as triaged_total
+		treat_status=true and reception_time is not null and visit_date=current_date and doctor_id=dvs.personnel_id) as triaged_total
 	from doctor_visit_schedule dvs 
 	left join department d on dvs.department_id = d.id 
 	left join personnel p on dvs.personnel_id = p.id
