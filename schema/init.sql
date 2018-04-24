@@ -159,7 +159,7 @@ CREATE TABLE clinic_patient
 CREATE TABLE clinic_triage_patient
 (
   id serial PRIMARY KEY NOT NULL,--id
-  department_id INTEGER NOT NULL references department(id),--科室id
+  department_id INTEGER references department(id),--科室id
   clinic_patient_id INTEGER NOT NULL references clinic_patient(id),--科室就诊人id
   register_personnel_id INTEGER NOT NULL references personnel(id),--录入人员id
   doctor_id INTEGER references personnel(id),--接诊医生医生id
