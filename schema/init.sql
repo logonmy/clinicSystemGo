@@ -8,9 +8,9 @@ CREATE TABLE clinic
   area varchar(40),--地区
   phone varchar(11),--手机号
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --科室
@@ -23,9 +23,9 @@ CREATE TABLE department
 	status boolean NOT NULL DEFAULT true,--是否启用
 	weight integer NOT NULL DEFAULT 1,--权重
 	is_appointment boolean NOT NULL DEFAULT true,--是否开放预约/挂号
-	created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-	updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-	deleted_time timestamp,
+	created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+	updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+	deleted_time timestamp with time zone,
 	UNIQUE (code, clinic_id)
 );
 
@@ -44,9 +44,9 @@ CREATE TABLE personnel
   is_appointment boolean NOT NULL DEFAULT true,--是否开放预约/挂号
   is_clinic_admin boolean NOT NULL DEFAULT false,--是否是诊所超级管理员
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp,
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
   UNIQUE (code, clinic_id)
 );
 
@@ -58,9 +58,9 @@ CREATE TABLE department_personnel
   personnel_id INTEGER NOT NULL references personnel(id),--人员id
   type INTEGER NOT NULL CHECK(type > 0 AND type < 3),-- 关系类型 1：人事科室， 2：出诊科室
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp,
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
   UNIQUE (department_id, personnel_id, type)--人员id、科室id、 类别唯一
 );
 
@@ -71,9 +71,9 @@ CREATE TABLE visit_type
   name VARCHAR(10) NOT NULL,--出诊类型名称
   open_flag boolean NOT NULL DEFAULT true,--启用状态
   fee integer NOT NULL CHECK(fee > 0),
-  created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time TIMESTAMP
+  created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time TIMESTAMP with time zone
 );
 
 --医生出诊排班
@@ -89,9 +89,9 @@ CREATE TABLE doctor_visit_schedule
   tatal_num integer NOT NULL DEFAULT 20,--总的接诊数
   left_num integer NOT NULL DEFAULT 20 CHECK(left_num <= tatal_num),--剩余接诊数
   visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
-  created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time TIMESTAMP,
+  created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time TIMESTAMP with time zone,
   UNIQUE (personnel_id,department_id,visit_date,am_pm,visit_type_code,is_today)
 );
 
@@ -105,9 +105,9 @@ CREATE TABLE doctor_visit_schedule_model
   am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   tatal_num INTEGER NOT NULL DEFAULT 20,--总的接诊数
   visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类别编码
-  created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time TIMESTAMP,
+  created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time TIMESTAMP with time zone,
   UNIQUE (department_id,personnel_id,weekday,am_pm,visit_type_code)
 );
 
@@ -117,9 +117,9 @@ CREATE TABLE patient_channel
   id serial PRIMARY KEY NOT NULL,--id
   name varchar(40) NOT NULL,--名称
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --就诊人
@@ -136,9 +136,9 @@ CREATE TABLE patient
   profession varchar(40),--职业
   remark varchar(200),--备注
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --诊所就诊人
@@ -149,9 +149,9 @@ CREATE TABLE clinic_patient
   clinic_id integer NOT NULL references clinic(id),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp,
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
   UNIQUE (patient_id, clinic_id)--联合主键，就诊人身份证号和诊所编码唯一
 );
 
@@ -166,32 +166,15 @@ CREATE TABLE clinic_triage_patient
   triage_personnel_id INTEGER references personnel(id),--分诊人员id
   treat_status boolean NOT NULL DEFAULT false,--是否分诊
   visit_date DATE NOT NULL DEFAULT CURRENT_DATE,--日期
-  register_type INTEGER NOT NULL,--登记类型：1线下分诊，2预约
-  triage_time timestamp,--分诊完成时间 或 报道时间
-  reception_time timestamp,--接诊时间
-  complete_time timestamp,--完成时间
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp,
+  register_type INTEGER NOT NULL,--登记类型：1预约，2线下分诊
+  triage_time timestamp with time zone,--分诊完成时间 或 报道时间
+  reception_time timestamp with time zone,--接诊时间
+  complete_time timestamp with time zone,--完成时间
+  cancelled boolean NOT NULL DEFAULT false,--取消标识
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
   UNIQUE (department_id, clinic_patient_id,treat_status,visit_date)--联合主键，就诊人、科室、状态、日期唯一
-);
-
---预约记录
-CREATE TABLE appointment
-(
-  id serial PRIMARY KEY NOT NULL, --编号
-  clinic_patient_id integer NOT NULL references clinic_patient(id),--患者id
-  department_id integer NOT NULL REFERENCES department(id),--医生编码
-  personnel_id integer NOT NULL REFERENCES personnel(id),--科室编码
-  visit_date DATE NOT NULL,--出诊日期
-  am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
-  is_today boolean NOT NULL DEFAULT false,--是否当日号
-  visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
-  visit_place VARCHAR(20),--就诊地址
-  operation_id integer REFERENCES personnel(id),--操作人编码
-  created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time TIMESTAMP
 );
 
 --挂号记录
@@ -209,9 +192,9 @@ CREATE TABLE registration
   status VARCHAR(2) NOT NULL DEFAULT '01',--就诊状态
   visit_place VARCHAR(20),--就诊地址
   operation_id integer REFERENCES personnel(id),--操作人编码
-  created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time TIMESTAMP
+  created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time TIMESTAMP with time zone
 );
 
 
@@ -221,9 +204,9 @@ CREATE TABLE role
   id serial PRIMARY KEY NOT NULL,--id
   name varchar(20) UNIQUE NOT NULL,--名称
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 
@@ -233,9 +216,9 @@ CREATE TABLE personnel_role
   personnel_id INTEGER NOT NULL references personnel(id),--人员id
   role_id INTEGER NOT NULL references role(id),--角色id
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp,
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
   PRIMARY KEY (personnel_id, role_id)--联合主键，人员编码、角色编码唯一
 );
 
@@ -246,9 +229,9 @@ CREATE TABLE personnel_login_record
   personnel_id INTEGER NOT NULL references personnel(id),--人员id
   ip VARCHAR(20) NOT NULL,--角色id
   remark VARCHAR(100),
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --体征
@@ -275,9 +258,9 @@ CREATE TABLE body_sign
   oxygen_saturation FLOAT,--氧饱和度(%)
   pain_score integer CHECK(pain_score>-1 AND pain_score<11),--疼痛评分
   remark VARCHAR(100),
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --费用项目类型
@@ -286,9 +269,9 @@ CREATE TABLE charge_project_type
   id serial PRIMARY KEY NOT NULL,--id
   name varchar(20) UNIQUE NOT NULL,--名称
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --收费项目-诊疗
@@ -301,9 +284,9 @@ CREATE TABLE charge_project_treatment
   cost integer CHECK(cost > 0), --成本价
   fee integer NOT NULL CHECK(fee > 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --诊前病历
@@ -325,9 +308,9 @@ CREATE TABLE pre_medical_record
   gestational_weeks integer,--孕周
   childbearing_history text,--生育史
   remark VARCHAR(100),
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --诊前欲诊
@@ -340,9 +323,9 @@ CREATE TABLE pre_diagnosis
   history_of_past_illness text,--既往史
   physical_examination text,--体格检查
   remark text,--备注
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --门诊待缴费缴费
@@ -362,9 +345,9 @@ CREATE TABLE mz_unpaid_orders
   discount INTEGER NOT NULL DEFAULT 0,--打折金额
   fee INTEGER NOT NULL,--缴费金额
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp,
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
   UNIQUE (order_sn, soft_sn)
 );
 
@@ -381,7 +364,7 @@ CREATE TABLE mz_paid_record
   pay_method_code varchar(2) NOT NULL,--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
 
   status varchar(30) NOT NULL,--订单状态  --SUCCESS 缴费成功 --HALF-REFUND 半退费  --REFUND-SUCCESS 全退
-
+  
   derate_money INTEGER NOT NULL DEFAULT 0 CHECK(derate_money >= 0),--减免金额
   voucher_money INTEGER NOT NULL DEFAULT 0 CHECK(voucher_money >= 0) ,--抵金券金额
   discount_money INTEGER NOT NULL DEFAULT 0 CHECK(discount_money >= 0),--折扣金额
@@ -400,9 +383,9 @@ CREATE TABLE mz_paid_record
   total_money_refund  INTEGER NOT NULL DEFAULT 0  CHECK(total_money_refund <= 0),--应退金额（退）
   balance_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(balance_money_refund <= 0),--实退金额（退）
 
-  created_time TIMESTAMP NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --门诊缴费记录子表
@@ -425,9 +408,9 @@ CREATE TABLE mz_paid_record_detail
   total_money  INTEGER NOT NULL  ,--应收金额
   balance_money INTEGER NOT NULL ,--实收金额
 
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --门诊已缴费缴费
@@ -450,9 +433,9 @@ CREATE TABLE mz_paid_orders
   operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
   confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
   refund_id INTEGER references personnel(id), --退费操作员
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp,
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
   UNIQUE (order_sn, soft_sn)
 );
 
@@ -463,7 +446,7 @@ CREATE TABLE charge_detail
   trade_no varchar(20) NOT NULL,--系统交易号
   out_trade_no varchar(20),--第三方交易号
   out_refund_no varchar(20) UNIQUE,--第三方退费交易号
-  in_out varchar(3) NOT NULL CHECK(in_out = "in" OR in_out = "out"),--收入或支出
+  in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'outcome'),--收入或支出
   patient_id INTEGER references personnel(id),--关联的患者
   department_id INTEGER references department(id),--关联的科室
   doctor_id INTEGER references personnel(id),--关联的医生信息
@@ -479,8 +462,8 @@ CREATE TABLE charge_detail
   on_credit_money INTEGER NOT NULL,--挂账金额
   total_money  INTEGER NOT NULL ,--应收金额
   balance_money INTEGER NOT NULL,--实收金额
-  created_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp,
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
   
 );

@@ -115,10 +115,24 @@ func TriagePatientList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 	treatStatus := ctx.PostValue("treat_status")
+	registerType := ctx.PostValue("register_type")
+	personnelID := ctx.PostValue("personnel_id")
+	deparmentID := ctx.PostValue("department_id")
+	visitDate := ctx.PostValue("visit_date")
+	startDate := ctx.PostValue("startDate")
+	endDate := ctx.PostValue("endDate")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
+		return
+	}
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
 		return
 	}
 
@@ -148,8 +162,7 @@ func TriagePatientList(ctx iris.Context) {
 	left join personnel rp on ctp.register_personnel_id = rp.id
 	left join personnel tp on ctp.triage_personnel_id = tp.id
 	left join patient p on cp.patient_id = p.id 
-	where cp.clinic_id = $1 and ctp.visit_date = CURRENT_DATE 
-	and (p.cert_no like '%' || $2 || '%' or p.name like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
+	where cp.clinic_id = $1 and (p.cert_no ~ $2 or p.name ~ $2 or p.phone ~ $2)`
 
 	rowSQL := `select 
 	ctp.id as clinic_triage_patient_id,ctp.clinic_patient_id,ctp.visit_date, ctp.treat_status, cp.clinic_id, c.name as clinic_name,
@@ -169,12 +182,40 @@ func TriagePatientList(ctx iris.Context) {
 	left join personnel tp on ctp.triage_personnel_id = tp.id
 	left join personnel doc on ctp.doctor_id = doc.id
 	left join patient p on cp.patient_id = p.id 
-	where cp.clinic_id = $1 and ctp.visit_date = CURRENT_DATE 
-	and (p.cert_no like '%' || $2 || '%' or p.name like '%' || $2 || '%' or p.phone like '%' || $2 || '%')`
+	where cp.clinic_id = $1 and (p.cert_no ~ $2 or p.name ~ $2 or p.phone ~ $2)`
 
 	if treatStatus != "" {
 		countSQL += " and ctp.treat_status=" + treatStatus
 		rowSQL += " and ctp.treat_status=" + treatStatus
+	}
+
+	if visitDate != "" {
+		countSQL += " and ctp.visit_date=" + visitDate
+		rowSQL += " and ctp.visit_date=" + visitDate
+	}
+
+	if registerType != "" {
+		countSQL += " and ctp.register_type=" + registerType
+		rowSQL += " and ctp.register_type=" + registerType
+	}
+
+	if personnelID != "" {
+		countSQL += " and ctp.doctor_id=" + personnelID
+		rowSQL += " and ctp.doctor_id=" + personnelID
+	}
+
+	if deparmentID != "" {
+		countSQL += " and ctp.department_id=" + deparmentID
+		rowSQL += " and ctp.department_id=" + deparmentID
+	}
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and ctp.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
+		rowSQL += " and ctp.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
 	}
 
 	total := model.DB.QueryRowx(countSQL, clinicID, keyword)

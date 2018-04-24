@@ -79,6 +79,7 @@ func main() {
 		patient.Post("/list", controller.PatientList)
 		patient.Post("/getById", controller.PatientGetByID)
 		patient.Post("/update", controller.PatientUpdate)
+		patient.Post("/getByCertNo", controller.PatientGetByCertNo)
 	}
 
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
@@ -116,7 +117,6 @@ func main() {
 	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)
 	{
 		appointment.Post("/create", controller.AppointmentCreate)
-		appointment.Post("/list", controller.AppointmentList)
 	}
 
 	// http://localhost:8080
