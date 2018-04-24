@@ -468,3 +468,81 @@ CREATE TABLE charge_detail
   deleted_time timestamp with time zone
   
 );
+
+--平台管理人员
+CREATE TABLE admin
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(10) NOT NULL,--名称
+  phone varchar(11),--手机号
+  title varchar(10),--职称
+  username varchar(20) UNIQUE,--账号
+  password varchar(40),--密码
+  is_clinic_admin boolean NOT NULL DEFAULT false,--是否是诊所超级管理员
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--一级菜单功能项
+CREATE TABLE parent_functionMenu
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  url varchar(20) NOT NULL,--功能路由
+  name varchar(20),--菜单名
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--二级菜单功能项
+CREATE TABLE children_functionMenu
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  parent_functionMenu_id INTEGER references parent_functionMenu(id),--上级菜单id
+  url varchar(20) NOT NULL,--功能路由
+  name varchar(20),--菜单名
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--诊所菜单项
+CREATE TABLE clinic_children_functionMenu
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  children_functionMenu_id INTEGER NOT NULL references children_functionMenu(id),--菜单id
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (children_functionMenu_id, clinic_id)
+);
+
+--诊所角色菜单项
+CREATE TABLE role_clinic_functionMenu
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_children_functionMenu_id INTEGER NOT NULL references clinic_children_functionMenu(id),--诊所菜单id
+  role_id integer NOT NULL references role(id),--所属角色
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (clinic_children_functionMenu_id, role_id)
+);
+
+--平台管理员菜单项
+CREATE TABLE admin_functionMenu
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  children_functionMenu_id INTEGER NOT NULL references children_functionMenu(id),--平台菜单id
+  admin_id integer NOT NULL references role(id),--所属平台管理员
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (children_functionMenu_id, admin_id)
+);
+
