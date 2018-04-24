@@ -131,7 +131,7 @@ func TriagePatientList(ctx iris.Context) {
 	registerType := ctx.PostValue("register_type")
 	personnelID := ctx.PostValue("personnel_id")
 	deparmentID := ctx.PostValue("department_id")
-	visitDate := ctx.PostValue("visit_date")
+	isToday := ctx.PostValue("is_today")
 	startDate := ctx.PostValue("startDate")
 	endDate := ctx.PostValue("endDate")
 	offset := ctx.PostValue("offset")
@@ -203,9 +203,9 @@ func TriagePatientList(ctx iris.Context) {
 		rowSQL += " and ctp.treat_status=" + treatStatus
 	}
 
-	if visitDate != "" {
-		countSQL += " and ctp.visit_date= '" + visitDate + "'"
-		rowSQL += " and ctp.visit_date= '" + visitDate + "'"
+	if isToday == "true" {
+		countSQL += " and ctp.visit_date= current_date "
+		rowSQL += " and ctp.visit_date= current_date "
 	}
 
 	if registerType != "" {
