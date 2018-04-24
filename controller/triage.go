@@ -102,12 +102,16 @@ func TriageRegister(ctx iris.Context) {
 		insertValues = `(` + departmentID + `, $1, $2, $3, 2)`
 	}
 
+	insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
+
+	fmt.Println("insertSQL ======", insertSQL)
+
 	var resultID int
-	err = tx.QueryRow("INSERT INTO clinic_triage_patient "+insertKeys+" VALUES "+insertValues+" RETURNING id", departmentID, clinicPatientID, personnelID, visitType).Scan(&resultID)
+	err = tx.QueryRow("INSERT INTO clinic_triage_patient "+insertKeys+" VALUES "+insertValues+" RETURNING id", clinicPatientID, personnelID, visitType).Scan(&resultID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	err = tx.Commit()
