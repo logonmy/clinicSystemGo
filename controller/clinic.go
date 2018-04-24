@@ -60,24 +60,6 @@ func ClinicAdd(ctx iris.Context) {
 	md5Ctx.Write([]byte(password))
 	passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
 
-	cmap := map[string]interface{}{
-		"code":               code,
-		"name":               name,
-		"responsible_person": responsiblePerson,
-		"area":               area,
-		"status":             status,
-	}
-
-	amap := map[string]interface{}{
-		"code":            "10000",
-		"name":            "超级管理员",
-		"username":        username,
-		"password":        passwordMd5,
-		"clinic_code":     code,
-		"phone":           phone,
-		"is_clinic_admin": true,
-	}
-
 	tx, err := model.DB.Beginx()
 
 	if err != nil {
@@ -86,9 +68,15 @@ func ClinicAdd(ctx iris.Context) {
 		return
 	}
 
-	_, err = tx.NamedExec(`INSERT INTO clinic(
-		code, name, responsible_person, area, status)
-		VALUES (:code, :name, :responsible_person, :area, :status)`, cmap)
+	var clinicID int
+	err = tx.QueryRow(`INSERT INTO clinic(
+			code, name, responsible_person, area, status)
+			VALUES ($1, $2, $3, $4, $5) RETURNING id`, code, name, responsiblePerson, area, status).Scan(&clinicID)
+	if err != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
 
 	if err != nil {
 		fmt.Println("err ===", err.Error())
@@ -97,9 +85,19 @@ func ClinicAdd(ctx iris.Context) {
 		return
 	}
 
+	amap := map[string]interface{}{
+		"code":            "10000",
+		"name":            "超级管理员",
+		"username":        username,
+		"password":        passwordMd5,
+		"clinic_id":       clinicID,
+		"phone":           phone,
+		"is_clinic_admin": true,
+	}
+
 	_, err = tx.NamedExec(`INSERT INTO personnel(
-		code, name, username, password, clinic_code, phone,is_clinic_admin)
-		VALUES (:code, :name, :username, :password, :clinic_code, :phone, :is_clinic_admin)`, amap)
+		code, name, username, password, clinic_id, phone,is_clinic_admin)
+		VALUES (:code, :name, :username, :password, :clinic_id, :phone, :is_clinic_admin)`, amap)
 	if err != nil {
 		fmt.Println("err ===", err.Error())
 		tx.Rollback()

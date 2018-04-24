@@ -159,7 +159,7 @@ CREATE TABLE clinic_patient
 CREATE TABLE clinic_triage_patient
 (
   id serial PRIMARY KEY NOT NULL,--id
-  department_id INTEGER NOT NULL references department(id),--科室id
+  department_id INTEGER references department(id),--科室id
   clinic_patient_id INTEGER NOT NULL references clinic_patient(id),--科室就诊人id
   register_personnel_id INTEGER NOT NULL references personnel(id),--录入人员id
   doctor_id INTEGER references personnel(id),--接诊医生医生id
@@ -167,6 +167,7 @@ CREATE TABLE clinic_triage_patient
   treat_status boolean NOT NULL DEFAULT false,--是否分诊
   visit_date DATE NOT NULL DEFAULT CURRENT_DATE,--日期
   register_type INTEGER NOT NULL,--登记类型：1预约，2线下分诊
+  visit_type integer,--出诊类型 1: 首诊， 2复诊，3：术后复诊
   triage_time timestamp with time zone,--分诊完成时间 或 报道时间
   reception_time timestamp with time zone,--接诊时间
   complete_time timestamp with time zone,--完成时间
@@ -328,14 +329,14 @@ CREATE TABLE pre_diagnosis
   deleted_time timestamp with time zone
 );
 
---待缴费项目
-CREATE TABLE unpaid_orders
+--门诊待缴费缴费
+CREATE TABLE mz_unpaid_orders
 (
   id serial PRIMARY KEY NOT NULL,--id
   registration_id INTEGER NOT NULL references registration(id),--分诊记录id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   charge_project_id INTEGER NOT NULL,--收费项目id
-  order_sn varchar(13) NOT NULL,--单号
+  order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
   price INTEGER NOT NULL CHECK(price > 0),--单价
@@ -351,38 +352,77 @@ CREATE TABLE unpaid_orders
   UNIQUE (order_sn, soft_sn)
 );
 
---缴费记录
-CREATE TABLE paid_record
+--门诊缴费记录
+CREATE TABLE mz_paid_record
 (
   id serial PRIMARY KEY NOT NULL,--id
+  trade_no varchar(20) NOT NULL,--系统交易号
+  out_trade_no varchar(20),--第三方交易号
   soft_sns varchar(30) NOT NULL,--序号
-  order_sn varchar(13) NOT NULL,--单号
-  confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
+  order_sn varchar(20) NOT NULL,--单号
+  confrim_id INTEGER NOT NULL references personnel(id),--操作员id
   pay_type_code varchar(2) NOT NULL,--支付类型编码 01-医保支付，02-挂账金额，03-抵金券，04-积分
   pay_method_code varchar(2) NOT NULL,--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
-  discount_rate INTEGER NOT NULL DEFAULT 100 check (discount_rate >= 0 AND discount_rate <= 100),--折扣率
-  derate_money INTEGER NOT NULL DEFAULT 0 check (derate_money >= 0 ),--减免金额
-  medical_money INTEGER NOT NULL DEFAULT 0 check (medical_money >= 0 ),--医保金额
-  on_credit_money INTEGER NOT NULL DEFAULT 0 check (on_credit_money >= 0 ),--挂账金额
-  voucher_money INTEGER NOT NULL DEFAULT 0 check (voucher_money >= 0 ),--抵金券金额
-  bonus_points_money INTEGER NOT NULL DEFAULT 0 check (bonus_points_money >= 0 ),--积分兑换金额
-  total_money  INTEGER NOT NULL check (total_money >= 0 ),--应收金额
-  balance_money INTEGER NOT NULL check (bonus_points_money >= 0 ),--实收金额
-  status boolean NOT NULL DEFAULT true,--缴费情况
-  remark varchar(20),--备注
+
+  status varchar(30) NOT NULL,--订单状态  --SUCCESS 缴费成功 --HALF-REFUND 半退费  --REFUND-SUCCESS 全退
+  
+  derate_money INTEGER NOT NULL DEFAULT 0 CHECK(derate_money >= 0),--减免金额
+  voucher_money INTEGER NOT NULL DEFAULT 0 CHECK(voucher_money >= 0) ,--抵金券金额
+  discount_money INTEGER NOT NULL DEFAULT 0 CHECK(discount_money >= 0),--折扣金额
+  bonus_points_money INTEGER NOT NULL DEFAULT 0 CHECK(bonus_points_money >= 0) ,--积分兑换金额
+  on_credit_money INTEGER NOT NULL DEFAULT 0 CHECK(on_credit_money >= 0) ,--挂账金额
+  medical_money INTEGER NOT NULL DEFAULT 0 CHECK(medical_money >= 0),--医保金额
+  total_money  INTEGER NOT NULL  ,--应收金额
+  balance_money INTEGER NOT NULL ,--实收金额
+
+  derate_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(derate_money_refund <= 0),--减免金额（退）
+  voucher_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(voucher_money_refund <= 0),--抵金券金额（退）
+  discount_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(discount_money_refund <= 0),--折扣金额（退）
+  bonus_points_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(bonus_points_money_refund <= 0),--积分兑换金额（退）
+  on_credit_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(on_credit_money_refund <= 0),--挂账金额（退）
+  medical_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(medical_money_refund <= 0),--医保金额（退）
+  total_money_refund  INTEGER NOT NULL DEFAULT 0  CHECK(total_money_refund <= 0),--应退金额（退）
+  balance_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(balance_money_refund <= 0),--实退金额（退）
+
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
 
---已缴费项目
-CREATE TABLE paid_orders
+--门诊缴费记录子表
+CREATE TABLE mz_paid_record_detail
 (
   id serial PRIMARY KEY NOT NULL,--id
+  mz_paid_record_id INTEGER NOT NULL references mz_paid_record(id),
+  out_trade_no varchar(20) UNIQUE,--第三方交易号
+  refund_status boolean NOT NULL DEFAULT false,--退费标识
+  soft_sns varchar(30) NOT NULL,--序号
+  order_sn varchar(20) NOT NULL,--单号
+  confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
+
+  derate_money INTEGER NOT NULL DEFAULT 0 ,--减免金额
+  voucher_money INTEGER NOT NULL DEFAULT 0 ,--抵金券金额
+  discount_money INTEGER NOT NULL DEFAULT 0,--折扣金额
+  bonus_points_money INTEGER NOT NULL DEFAULT 0 ,--积分兑换金额
+  on_credit_money INTEGER NOT NULL DEFAULT 0 ,--挂账金额
+  medical_money INTEGER NOT NULL DEFAULT 0 ,--医保金额
+  total_money  INTEGER NOT NULL  ,--应收金额
+  balance_money INTEGER NOT NULL ,--实收金额
+
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--门诊已缴费缴费
+CREATE TABLE mz_paid_orders
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  mz_paid_record_id INTEGER NOT NULL references mz_paid_record(id),
   registration_id INTEGER NOT NULL references registration(id),--分诊记录id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   charge_project_id INTEGER NOT NULL,--收费项目id
-  order_sn varchar(13) NOT NULL,--单号
+  order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
   price INTEGER NOT NULL CHECK(price > 0),--单价
@@ -393,8 +433,38 @@ CREATE TABLE paid_orders
   fee INTEGER NOT NULL,--缴费金额
   operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
   confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
+  refund_id INTEGER references personnel(id), --退费操作员
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
   UNIQUE (order_sn, soft_sn)
+);
+
+--记录盈利详情，产生的支付和退费都得插入这个表
+CREATE TABLE charge_detail
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  trade_no varchar(20) NOT NULL,--系统交易号
+  out_trade_no varchar(20),--第三方交易号
+  out_refund_no varchar(20) UNIQUE,--第三方退费交易号
+  in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'out'),--收入或支出
+  patient_id INTEGER references personnel(id),--关联的患者
+  department_id INTEGER references department(id),--关联的科室
+  doctor_id INTEGER references personnel(id),--关联的医生信息
+  pay_type_code varchar(2) NOT NULL,--支付类型编码 01-门诊缴费，02-挂号费，03-挂账还款，04-住院缴费
+  pay_type_code_name varchar(10) NOT NULL,--支付类型名称
+  pay_method_code varchar(2) NOT NULL,--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
+  pay_method_code_name varchar(10) NOT NULL,--支付方式名称
+  discount_money INTEGER NOT NULL DEFAULT 0 ,--折扣金额
+  derate_money INTEGER NOT NULL DEFAULT 0 ,--减免金额
+  medical_money INTEGER NOT NULL DEFAULT 0 ,--医保金额
+  voucher_money INTEGER NOT NULL DEFAULT 0 ,--抵金券金额
+  bonus_points_money INTEGER NOT NULL DEFAULT 0,--积分兑换金额
+  on_credit_money INTEGER NOT NULL,--挂账金额
+  total_money  INTEGER NOT NULL ,--应收金额
+  balance_money INTEGER NOT NULL,--实收金额
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+  
 );
