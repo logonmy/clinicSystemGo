@@ -92,6 +92,7 @@ func main() {
 		triage.Post("/completePreMedicalRecord", controller.TriageCompletePreMedicalRecord)
 		triage.Post("/completePreDiagnosis", controller.TriageCompletePreDiagnosis)
 		triage.Post("/chooseDoctor", controller.PersonnelChoose)
+		triage.Post("/reception", controller.TriageReception)
 	}
 
 	chargeProject := app.Party("/chargeProject", crs).AllowMethods(iris.MethodOptions)
