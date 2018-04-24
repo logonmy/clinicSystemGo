@@ -373,9 +373,9 @@ func TriagePersonnelList(ctx iris.Context) {
 	where p.clinic_id = $1 and (p.name like '%' || $2 || '%') and dvs.am_pm=$3 and dvs.visit_date=current_date`
 
 	selectSQL := `(select count(ctp.id) from clinic_triage_patient ctp 
-		where treat_status=false and visit_date=current_date and doctor_id=dvs.personnel_id) as wait_total,
+		where treat_status=true and reception_time is null and visit_date=current_date and doctor_id=dvs.personnel_id) as wait_total,
 	(select count(ctped.id)from clinic_triage_patient ctped where 
-		treat_status=true and visit_date=current_date and doctor_id=dvs.personnel_id) as triaged_total
+		treat_status=true and reception_time is null null and visit_date=current_date and doctor_id=dvs.personnel_id) as triaged_total
 	from doctor_visit_schedule dvs 
 	left join department d on dvs.department_id = d.id 
 	left join personnel p on dvs.personnel_id = p.id
