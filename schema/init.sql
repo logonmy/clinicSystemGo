@@ -355,8 +355,8 @@ CREATE TABLE mz_unpaid_orders
 CREATE TABLE mz_paid_record
 (
   id serial PRIMARY KEY NOT NULL,--id
-  trade_no varchar(20) NOT NULL,--系统交易号
-  out_trade_no varchar(20),--第三方交易号
+  registration_id INTEGER NOT NULL references registration(id),--分诊记录id
+  out_trade_no varchar(20) UNIQUE,--第三方交易号
   soft_sns varchar(30) NOT NULL,--序号
   order_sn varchar(20) NOT NULL,--单号
   confrim_id INTEGER NOT NULL references personnel(id),--操作员id
@@ -443,7 +443,7 @@ CREATE TABLE mz_paid_orders
 CREATE TABLE charge_detail
 (
   id serial PRIMARY KEY NOT NULL,--id
-  trade_no varchar(20) NOT NULL,--系统交易号
+  pay_record_id INTEGER NOT NULL,--缴费记录
   out_trade_no varchar(20),--第三方交易号
   out_refund_no varchar(20) UNIQUE,--第三方退费交易号
   in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'out'),--收入或支出
@@ -467,3 +467,4 @@ CREATE TABLE charge_detail
   deleted_time timestamp with time zone
   
 );
+
