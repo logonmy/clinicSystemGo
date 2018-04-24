@@ -115,6 +115,7 @@ func TriagePatientList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 	treatStatus := ctx.PostValue("treat_status")
+	receptionStatus := ctx.PostValue("reception_status")
 	registerType := ctx.PostValue("register_type")
 	personnelID := ctx.PostValue("personnel_id")
 	deparmentID := ctx.PostValue("department_id")
@@ -123,6 +124,7 @@ func TriagePatientList(ctx iris.Context) {
 	endDate := ctx.PostValue("endDate")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
+
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
@@ -190,8 +192,8 @@ func TriagePatientList(ctx iris.Context) {
 	}
 
 	if visitDate != "" {
-		countSQL += " and ctp.visit_date=" + visitDate
-		rowSQL += " and ctp.visit_date=" + visitDate
+		countSQL += " and ctp.visit_date= '" + visitDate + "'"
+		rowSQL += " and ctp.visit_date= '" + visitDate + "'"
 	}
 
 	if registerType != "" {
@@ -207,6 +209,17 @@ func TriagePatientList(ctx iris.Context) {
 	if deparmentID != "" {
 		countSQL += " and ctp.department_id=" + deparmentID
 		rowSQL += " and ctp.department_id=" + deparmentID
+	}
+
+	if receptionStatus != "" {
+		fmt.Println("====", receptionStatus)
+		if receptionStatus == "true" {
+			countSQL += " and ctp.reception_time is not null"
+			rowSQL += " and ctp.reception_time is not null"
+		} else {
+			countSQL += " and ctp.reception_time is null"
+			rowSQL += " and ctp.reception_time is null"
+		}
 	}
 
 	if startDate != "" && endDate != "" {
@@ -682,4 +695,28 @@ func TriageCompletePreDiagnosis(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+//TriageReception 医生接诊病人
+func TriageReception(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+	row := model.DB.QueryRowx("select id from clinic_triage_patient where id=$1", clinicTriagePatientID)
+	clinicTriagePatient := FormatSQLRowToMap(row)
+	_, ok := clinicTriagePatient["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人不存在"})
+		return
+	}
+	_, err := model.DB.Exec("update clinic_triage_patient set reception_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
+	if err != nil {
+		fmt.Println("接诊错误", err)
+		ctx.JSON(iris.Map{"code": "1", "msg": "就诊失败"})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
 }
