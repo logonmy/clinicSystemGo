@@ -148,7 +148,6 @@ CREATE TABLE clinic_patient
   patient_id integer NOT NULL references patient(id),--患者身份证号
   clinic_id integer NOT NULL references clinic(id),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id
-  visit_type integer,--出诊类型 1: 首诊， 2复诊，3：术后复诊
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -168,6 +167,7 @@ CREATE TABLE clinic_triage_patient
   treat_status boolean NOT NULL DEFAULT false,--是否分诊
   visit_date DATE NOT NULL DEFAULT CURRENT_DATE,--日期
   register_type INTEGER NOT NULL,--登记类型：1预约，2线下分诊
+  visit_type integer,--出诊类型 1: 首诊， 2复诊，3：术后复诊
   triage_time timestamp with time zone,--分诊完成时间 或 报道时间
   reception_time timestamp with time zone,--接诊时间
   complete_time timestamp with time zone,--完成时间
