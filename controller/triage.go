@@ -22,9 +22,10 @@ func TriageRegister(ctx iris.Context) {
 	remark := ctx.PostValue("remark")
 	patientChannelID := ctx.PostValue("patient_channel_id")
 	clinicID := ctx.PostValue("clinic_id")
+	visitType := ctx.PostValue("visit_type")
 	personnelID := ctx.PostValue("personnel_id")
 	departmentID := ctx.PostValue("department_id")
-	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || departmentID == "" {
+	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || visitType == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -94,8 +95,15 @@ func TriageRegister(ctx iris.Context) {
 		clinicPatientID = clinicPatient["id"]
 	}
 
+	insertKeys := `(clinic_patient_id, register_personnel_id,register_type, visit_type)`
+	insertValues := `($1, $2, $3, 2)`
+	if departmentID != "" {
+		insertKeys = `(department_id, clinic_patient_id, register_personnel_id,register_type, visit_type)`
+		insertValues = `(` + departmentID + `, $1, $2, $3, 2)`
+	}
+
 	var resultID int
-	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id,register_type) VALUES ($1, $2, $3, 2) RETURNING id", departmentID, clinicPatientID, personnelID).Scan(&resultID)
+	err = tx.QueryRow("INSERT INTO clinic_triage_patient "+insertKeys+" VALUES "+insertValues+" RETURNING id", departmentID, clinicPatientID, personnelID, visitType).Scan(&resultID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()

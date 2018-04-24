@@ -148,6 +148,7 @@ CREATE TABLE clinic_patient
   patient_id integer NOT NULL references patient(id),--患者身份证号
   clinic_id integer NOT NULL references clinic(id),--诊所编码
   personnel_id integer NOT NULL references personnel(id),--录入人员id
+  visit_type integer,--出诊类型 1: 首诊， 2复诊，3：术后复诊
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
