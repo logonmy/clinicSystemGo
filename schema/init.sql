@@ -490,6 +490,7 @@ CREATE TABLE parent_functionMenu
 (
   id serial PRIMARY KEY NOT NULL,--id
   url varchar(20) NOT NULL,--功能路由
+  ascription VARCHAR(2) NOT NULL DEFAULT '01',--菜单所属类型 01 诊所 02 平台
   name varchar(20),--菜单名
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
