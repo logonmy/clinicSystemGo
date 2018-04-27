@@ -455,13 +455,9 @@ func AdminGetByID(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	arows, err1 := model.DB.Queryx("select id as admin_id,created_time,name,username,phone,status from admin where id=$1", adminID)
-	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
-		return
-	}
+	arows := model.DB.QueryRowx("select id as admin_id,created_time,name,username,phone,status from admin where id=$1", adminID)
 
-	selectSQL := `select pf.url as parent_url,pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from admin_functionMenu af
+	selectSQL := `select cf.id as functionMenu_id,pf.id as parent_id,pf.url as parent_url,pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from admin_functionMenu af
 	left join children_functionMenu cf on cf.id = af.children_functionMenu_id
 	left join parent_functionMenu pf on pf.id = cf.parent_functionMenu_id
 	where af.admin_id=$1`
@@ -470,7 +466,53 @@ func AdminGetByID(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
 		return
 	}
-	admin := FormatSQLRowsToMapArray(arows)
+	admin := FormatSQLRowToMap(arows)
 	adminFunctionMenu := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "msg": adminFunctionMenu, "data": admin})
+	ctx.JSON(iris.Map{"code": "200", "msg": admin, "data": adminFunctionMenu})
+}
+
+//MenuGetByClinicID 获取诊所业务信息
+func MenuGetByClinicID(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	selectSQL := `select cf.id as functionMenu_id,pf.id as parent_id,pf.url as parent_url,pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from clinic_children_functionMenu ccf
+	left join children_functionMenu cf on cf.id = ccf.children_functionMenu_id
+	left join parent_functionMenu pf on pf.id = cf.parent_functionMenu_id
+	where ccf.clinic_id=$1`
+	rows, err2 := model.DB.Queryx(selectSQL, clinicID)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+		return
+	}
+	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": clinicFunctionMenu})
+}
+
+//MenuGetByRoleID 获取诊所业务信息
+func MenuGetByRoleID(ctx iris.Context) {
+	roleID := ctx.PostValue("role_id")
+	if roleID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	arows := model.DB.QueryRowx("select id as role_id,name,status from role where id=$1", roleID)
+
+	selectSQL := `select cf.id as functionMenu_id,pf.id as parent_id,pf.url as parent_url,pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from role_clinic_functionMenu rcf
+	left join clinic_children_functionMenu ccf on ccf.id = rcf.clinic_children_functionMenu_id
+	left join children_functionMenu cf on cf.id = ccf.children_functionMenu_id
+	left join parent_functionMenu pf on pf.id = cf.parent_functionMenu_id
+	where rcf.role_id=$1`
+	rows, err2 := model.DB.Queryx(selectSQL, roleID)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+		return
+	}
+	role := FormatSQLRowToMap(arows)
+	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "msg": role, "data": clinicFunctionMenu})
 }

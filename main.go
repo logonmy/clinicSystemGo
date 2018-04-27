@@ -131,6 +131,8 @@ func main() {
 		business.Post("/admin/update", controller.AdminUpdate)
 		business.Post("/role/assign", controller.RoleAssign)
 		business.Post("/admin/getByID", controller.AdminGetByID)
+		business.Post("/menu/getByClinicID", controller.MenuGetByClinicID)
+		business.Post("/menu/getByRoleID", controller.MenuGetByRoleID)
 	}
 
 	// http://localhost:8080
