@@ -72,6 +72,7 @@ func ChargeUnPayCreate(ctx iris.Context) {
 			price = int(result["fee"].(int64))
 			total = price * amount
 			fee = total - discount
+			orderSn = "F8-" + orderSn
 			break
 		default:
 			ctx.JSON(iris.Map{"code": "-1", "msg": "charge_project_type_id 无效"})
@@ -98,7 +99,7 @@ func ChargeUnPayCreate(ctx iris.Context) {
 
 	setst := strings.Join(sets, ",")
 
-	sql := "INSERT INTO unpaid_orders (registration_id, charge_project_type_id, charge_project_id, operation_id, order_sn, soft_sn, name, unit, price, amount, total, discount, fee ) VALUES " + setst
+	sql := "INSERT INTO mz_unpaid_orders (registration_id, charge_project_type_id, charge_project_id, operation_id, order_sn, soft_sn, name, unit, price, amount, total, discount, fee ) VALUES " + setst
 
 	_, err1 := model.DB.Query(sql)
 
@@ -119,7 +120,7 @@ func ChargeUnPayDelete(ctx iris.Context) {
 		return
 	}
 
-	_, err := model.DB.Query("DELETE FROM unpaid_orders id=" + id)
+	_, err := model.DB.Query("DELETE FROM mz_unpaid_orders id=" + id)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -160,13 +161,13 @@ func ChargeUnPayList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx(`select count(id) as total from unpaid_orders where registration_id=$1`, registrationid)
+	total := model.DB.QueryRowx(`select count(id) as total from mz_unpaid_orders where registration_id=$1`, registrationid)
 
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select * from unpaid_orders where registration_id=$1 offset $2 limit $3`
+	rowSQL := `select * from mz_unpaid_orders where registration_id=$1 offset $2 limit $3`
 
 	rows, err1 := model.DB.Queryx(rowSQL, registrationid, offset, limit)
 
@@ -183,6 +184,7 @@ func ChargeUnPayList(ctx iris.Context) {
 // ChargePay 缴费
 func ChargePay(ctx iris.Context) {
 
+	registrationID := ctx.PostValue("registration_id")
 	orderSn := ctx.PostValue("order_sn")
 	softSn := ctx.PostValue("soft_sn")
 	confrimID := ctx.PostValue("confrim_id")
@@ -190,6 +192,7 @@ func ChargePay(ctx iris.Context) {
 	payMethodCode := ctx.PostValue("pay_method_code")
 	balanceMoney := ctx.PostValue("balance_money")
 	totalMoney := ctx.PostValue("total_money")
+	outTradeNo := ctx.PostValue("out_trade_no")
 
 	discountRate := ctx.PostValue("discount_rate")
 
@@ -199,8 +202,16 @@ func ChargePay(ctx iris.Context) {
 	voucherMoney, _ := strconv.Atoi(ctx.PostValue("voucher_money"))
 	bonusPointsMoney, _ := strconv.Atoi(ctx.PostValue("bonus_points_money"))
 
-	if orderSn == "" || softSn == "" || balanceMoney == "" || totalMoney == "" || confrimID == "" || payTypeCode == "" || payMethodCode == "" {
+	if registrationID == "" || orderSn == "" || softSn == "" || balanceMoney == "" || totalMoney == "" || confrimID == "" || payTypeCode == "" || payMethodCode == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	//查询分诊就录是否存在
+	registrationRows := model.DB.QueryRowx("select * from registration where id=" + registrationID)
+	registration := FormatSQLRowToMap(registrationRows)
+	if registration["id"] == nil {
+		ctx.JSON(iris.Map{"code": "-1", "data": nil, "msg": "未找到指定问诊记录"})
 		return
 	}
 
@@ -212,7 +223,10 @@ func ChargePay(ctx iris.Context) {
 
 	discountRateInt, _ := strconv.Atoi(discountRate)
 
+	//判断实收金额
 	sBalance := totalMoneyInt*(discountRateInt/100) - (derateMoney + medicalMoney + onCreditMoney + voucherMoney + bonusPointsMoney)
+
+	discountMoney := totalMoneyInt * ((100 - discountRateInt) / 100)
 
 	if sBalance != balanceMoneyInt {
 		cmap := map[string]interface{}{
@@ -223,15 +237,18 @@ func ChargePay(ctx iris.Context) {
 		return
 	}
 
-	rows := model.DB.QueryRowx("select SUM(fee) from unpaid_orders where order_sn='" + orderSn + "' AND soft_sn in (" + softSn + ")")
+	//判断应收金额是否正确
+	rows := model.DB.QueryRowx("select SUM(fee) from mz_unpaid_orders where order_sn='" + orderSn + "' AND soft_sn in (" + softSn + ")")
 	result := FormatSQLRowToMap(rows)
 	var total int
-	sum, exsist := result["sum"]
-	if !exsist {
-		total = 0
-	} else {
-		total = int(sum.(int64))
+	sum := result["sum"]
+
+	if sum == nil {
+		ctx.JSON(iris.Map{"code": "-1", "data": nil, "msg": "未找到指定收费项"})
+		return
 	}
+
+	total = int(sum.(int64))
 
 	if total != totalMoneyInt {
 		tmap := map[string]interface{}{
@@ -249,41 +266,70 @@ func ChargePay(ctx iris.Context) {
 		return
 	}
 
-	sql1 := "insert into paid_orders (id,registration_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
-		" select id,registration_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id," + confrimID + " from unpaid_orders where order_sn='" + orderSn + "' AND soft_sn in (" + softSn + ")"
-
-	_, errtx := tx.Query(sql1)
-	if errtx != nil {
+	//插入门诊缴费记录
+	var recordID int
+	insertPaid := "insert into mz_paid_record (registration_id,out_trade_no,soft_sns,order_sn,confrim_id,pay_type_code,pay_method_code,status,discount_money,derate_money,medical_money,on_credit_money,voucher_money,bonus_points_money,total_money,balance_money) " +
+		"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id"
+	insertPaidErr := tx.QueryRow(insertPaid, registrationID, outTradeNo, softSn, orderSn, confrimID, payTypeCode, payMethodCode, "SUCCESS", discountMoney, derateMoney, medicalMoney, onCreditMoney, voucherMoney, bonusPointsMoney, totalMoneyInt, balanceMoneyInt).Scan(&recordID)
+	if insertPaidErr != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errtx.Error()})
+		ctx.JSON(iris.Map{"code": "2", "msg": insertPaidErr.Error()})
 		return
 	}
 
-	sql2 := "insert into paid_record (soft_sns,order_sn,confrim_id,pay_type_code,pay_method_code,discount_rate,derate_money,medical_money,on_credit_money,voucher_money,bonus_points_money,total_money,balance_money) " +
-		"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id"
+	//如果有挂账金额，添加挂账记录
+	if onCreditMoney > 0 {
+
+	}
+
+	//插入门诊缴费流水表
 	var ID int
-	errtx2 := tx.QueryRow(sql2, softSn, orderSn, confrimID, payTypeCode, payMethodCode, discountRateInt, derateMoney, medicalMoney, onCreditMoney, voucherMoney, bonusPointsMoney, totalMoneyInt, balanceMoneyInt).Scan(&ID)
-	if errtx2 != nil {
+	insertPaidDetail := "insert into mz_paid_record_detail (mz_paid_record_id,out_trade_no,soft_sns,order_sn,confrim_id,discount_money,derate_money,medical_money,on_credit_money,voucher_money,bonus_points_money,total_money,balance_money) " +
+		"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING id"
+	insertPaidDetailErr := tx.QueryRow(insertPaidDetail, recordID, outTradeNo, softSn, orderSn, confrimID, discountMoney, derateMoney, medicalMoney, onCreditMoney, voucherMoney, bonusPointsMoney, totalMoneyInt, balanceMoneyInt).Scan(&ID)
+	if insertPaidDetailErr != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errtx2.Error()})
+		ctx.JSON(iris.Map{"code": "3", "msg": insertPaidDetailErr.Error()})
 		return
 	}
 
-	sql3 := "DELETE from unpaid_orders where order_sn='" + orderSn + "' AND soft_sn in (" + softSn + ")"
-	_, errtx3 := tx.Query(sql3)
-	if errtx != nil {
+	//插入交易流水表
+	var sID int
+	insertPaidCharge := "insert into charge_detail (pay_record_id,out_trade_no,in_out,patient_id,department_id,doctor_id,pay_type_code,pay_type_code_name,pay_method_code,pay_method_code_name,discount_money,derate_money,medical_money,on_credit_money,voucher_money,bonus_points_money,total_money,balance_money) " +
+		"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING id"
+	insertPaidChargeErr := tx.QueryRow(insertPaidCharge, recordID, outTradeNo, "in", registration["clinic_patient_id"], registration["department_id"], registration["personnel_id"], "01", "门诊缴费", payMethodCode, "", discountMoney, derateMoney, medicalMoney, onCreditMoney, voucherMoney, bonusPointsMoney, totalMoneyInt, balanceMoneyInt).Scan(&sID)
+	if insertPaidChargeErr != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errtx3.Error()})
+		ctx.JSON(iris.Map{"code": "4", "msg": insertPaidChargeErr.Error()})
+		return
+	}
+
+	//插入已缴费
+	insertPaidOrders := "insert into mz_paid_orders (id,mz_paid_record_id,registration_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
+		" select id," + strconv.Itoa(recordID) + ",registration_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id," + confrimID + " from mz_unpaid_orders where order_sn='" + orderSn + "' AND soft_sn in (" + softSn + ")"
+	_, insertPaidOrdersErr := tx.Query(insertPaidOrders)
+	if insertPaidOrdersErr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "5", "msg": insertPaidOrdersErr.Error()})
+		return
+	}
+
+	//删除未交费
+	deleteUnPaid := "DELETE from mz_unpaid_orders where order_sn='" + orderSn + "' AND soft_sn in (" + softSn + ")"
+	_, deleteUnPaidErr := tx.Query(deleteUnPaid)
+	if deleteUnPaidErr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "6", "msg": deleteUnPaidErr.Error()})
 		return
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		ctx.JSON(iris.Map{"code": "7", "msg": err.Error()})
 		return
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": ID})
+	ctx.JSON(iris.Map{"code": "200", "data": recordID})
 
 }
 
@@ -317,13 +363,13 @@ func ChargePaidList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx(`select count(id) as total from paid_orders where registration_id=$1`, registrationid)
+	total := model.DB.QueryRowx(`select count(id) as total from mz_paid_orders where registration_id=$1`, registrationid)
 
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select * from paid_orders where registration_id=$1 offset $2 limit $3`
+	rowSQL := `select * from mz_paid_orders where registration_id=$1 offset $2 limit $3`
 
 	rows, err1 := model.DB.Queryx(rowSQL, registrationid, offset, limit)
 

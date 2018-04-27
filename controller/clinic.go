@@ -10,18 +10,14 @@ import (
 	"github.com/kataras/iris"
 )
 
-//ClinicList 获取科室列表
+//ClinicList 获取诊所列表
 func ClinicList(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	startDate := ctx.PostValue("startDate")
 	endDate := ctx.PostValue("endDate")
 	status := ctx.PostValue("status")
 
-	if keyword == "" {
-		keyword = "%"
-	}
-
-	sql := "SELECT * FROM clinic, where (code LIKE '%" + keyword + "%' or name LIKE '%" + keyword + "%')"
+	sql := "SELECT * FROM clinic, where (code ~" + keyword + " or name ~" + keyword + ")"
 
 	if status != "" {
 		sql = sql + " AND status = " + status
@@ -39,7 +35,7 @@ func ClinicList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }
 
-//ClinicAdd 获取
+//ClinicAdd 添加诊所
 func ClinicAdd(ctx iris.Context) {
 	code := ctx.PostValue("code")
 	name := ctx.PostValue("name")
@@ -185,4 +181,25 @@ func ClinicUpdate(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+//ClinicGetByID 获取诊所详情
+func ClinicGetByID(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	row := model.DB.QueryRowx("select id as clinic_id,code,name,phone,area,responsible_person,status,created_time from clinic where id=$1", clinicID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		return
+	}
+	clinic := FormatSQLRowToMap(row)
+	_, ok := clinic["clinic_id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "诊所不存在"})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": clinic})
 }

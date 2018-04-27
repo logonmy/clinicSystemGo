@@ -36,6 +36,7 @@ func main() {
 		clinic.Post("/add", controller.ClinicAdd)
 		clinic.Post("/list", controller.ClinicList)
 		clinic.Post("/update", controller.ClinicUpdate)
+		clinic.Post("/getByID", controller.ClinicGetByID)
 		// clinic.Post("/update", controller.ClinicUpdte)
 	}
 
@@ -120,6 +121,18 @@ func main() {
 	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)
 	{
 		appointment.Post("/create", controller.AppointmentCreate)
+	}
+
+	business := app.Party("/business", crs).AllowMethods(iris.MethodOptions)
+	{
+		business.Post("/menubar/create", controller.MenubarCreate)
+		business.Post("/menubar/list", controller.MenubarList)
+		business.Post("/menubar/assign", controller.BusinessAssign)
+		business.Post("/admin/create", controller.AdminCreate)
+		business.Post("/admin/list", controller.AdminList)
+		business.Post("/admin/update", controller.AdminUpdate)
+		business.Post("/role/assign", controller.RoleAssign)
+		business.Post("/admin/getByID", controller.AdminGetByID)
 	}
 
 	// http://localhost:8080
