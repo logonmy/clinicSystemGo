@@ -540,7 +540,7 @@ CREATE TABLE admin_functionMenu
 (
   id serial PRIMARY KEY NOT NULL,--id
   children_functionMenu_id INTEGER NOT NULL references children_functionMenu(id),--平台菜单id
-  admin_id integer NOT NULL references role(id),--所属平台管理员
+  admin_id integer NOT NULL references admin(id),--所属平台管理员
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
