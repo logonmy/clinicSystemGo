@@ -117,3 +117,44 @@ func DoctorVistScheduleList(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "data": schedules})
 }
+
+// SchelueDepartments 号源科室列表
+func SchelueDepartments(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	sql := `select id as department_id, name 
+	from department 
+	where id in (select distinct department_id from doctor_visit_schedule 
+	where clinic_id = $1 and visit_date > current_date and is_today = false and stop_flag = false);`
+	rows, err := model.DB.Queryx(sql, clinicID)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+	}
+
+	departments := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": departments})
+}
+
+// SchelueDoctors 号源科室列表
+func SchelueDoctors(ctx iris.Context) {
+	departmentID := ctx.PostValue("department_id")
+	if departmentID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	sql := `select id as personnel_id, name from personnel
+	where id in (select distinct personnel_id from doctor_visit_schedule 
+				where department_id = $1 and visit_date > current_date and is_today = false and stop_flag = false);`
+	rows, err := model.DB.Queryx(sql, departmentID)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+	}
+
+	doctors := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": doctors})
+}
