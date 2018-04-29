@@ -5,7 +5,10 @@ CREATE TABLE clinic
   code varchar(20) UNIQUE NOT NULL,--编码
   name varchar(40) NOT NULL,--名称
   responsible_person varchar(40) NOT NULL,--负责人
-  area varchar(40),--地区
+  province varchar(30),--省
+  city varchar(30),--市
+  district varchar(30),--区
+  area varchar(40),--详细地区
   phone varchar(11),--手机号
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -132,7 +135,10 @@ CREATE TABLE patient
   sex integer NOT NULL CHECK(sex = 0 OR sex = 1),--性别 0：女，1：男
   phone varchar(11) not NULL,--手机号
   patient_channel_id INTEGER NOT Null references patient_channel(id),
-  address varchar(40),--住址
+  province varchar(30),--省
+  city varchar(30),--市
+  district varchar(30),--区
+  address varchar(40),--详细住址
   profession varchar(40),--职业
   remark varchar(200),--备注
   status boolean NOT NULL DEFAULT true,--是否启用
@@ -205,6 +211,7 @@ CREATE TABLE role
 (
   id serial PRIMARY KEY NOT NULL,--id
   name varchar(20) UNIQUE NOT NULL,--名称
+  clinic_id integer NOT NULL references clinic(id),--诊所编码
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

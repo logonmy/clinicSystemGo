@@ -17,7 +17,7 @@ func ClinicList(ctx iris.Context) {
 	endDate := ctx.PostValue("endDate")
 	status := ctx.PostValue("status")
 
-	sql := "SELECT * FROM clinic, where (code ~" + keyword + " or name ~" + keyword + ")"
+	sql := "SELECT * FROM clinic where (code ~" + keyword + " or name ~" + keyword + ")"
 
 	if status != "" {
 		sql = sql + " AND status = " + status
@@ -25,8 +25,6 @@ func ClinicList(ctx iris.Context) {
 	if startDate != "" && endDate != "" {
 		sql = sql + " AND created_time between '" + startDate + "' and '" + endDate + "'"
 	}
-
-	// sql = "select * from (" + sql + ") a left join (select clinic_code,username,phone from personnel where is_clinic_admin=true) b on a.code = b.clinic_code"
 
 	var results []map[string]interface{}
 	rows, _ := model.DB.Queryx(sql)
