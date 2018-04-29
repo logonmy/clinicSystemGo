@@ -9,6 +9,7 @@ import (
 
 // AppointmentCreate 预约预约
 func AppointmentCreate(ctx iris.Context) {
+	qPatientID := ctx.PostValue("paient_id")
 	certNo := ctx.PostValue("cert_no")
 	name := ctx.PostValue("name")
 	birthday := ctx.PostValue("birthday")
@@ -21,7 +22,7 @@ func AppointmentCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	doctorVisitScheduleID := ctx.PostValue("doctor_visit_schedule_id")
 	personnelID := ctx.PostValue("personnel_id")
-	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || doctorVisitScheduleID == "" {
+	if name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || doctorVisitScheduleID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -36,9 +37,18 @@ func AppointmentCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "号源不存在"})
 		return
 	}
-	row = model.DB.QueryRowx("select * from patient where cert_no = $1", certNo)
+
+	// 查询就诊人 begin
+	if qPatientID != "" {
+		row = model.DB.QueryRowx("select * from patient where id = $1", qPatientID)
+	} else if certNo != "" {
+		row = model.DB.QueryRowx("select * from patient where cert_no = $1", certNo)
+	} else {
+		row = model.DB.QueryRowx("select * from patient where name = $1 and birthday = $2 and phone = $3", name, birthday, phone)
+	}
+
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "预约失败"})
+		ctx.JSON(iris.Map{"code": "1", "msg": "登记失败"})
 		return
 	}
 	tx, err := model.DB.Begin()
@@ -46,9 +56,14 @@ func AppointmentCreate(ctx iris.Context) {
 	_, ok = patient["id"]
 	patientID := patient["id"]
 	if !ok {
-		err = tx.QueryRow(`INSERT INTO patient (
-		cert_no, name, birthday, sex, phone, address, profession, remark, patient_channel_id) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID).Scan(&patientID)
+		insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id`
+		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8`
+		if certNo != "" {
+			insertKeys += ", cert_no"
+			insertValues += ", " + certNo
+		}
+		err = tx.QueryRow(`INSERT INTO patient (insertKeys) 
+		VALUES (insertValues) RETURNING id`, name, birthday, sex, phone, address, profession, remark, patientChannelID).Scan(&patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)
@@ -56,7 +71,11 @@ func AppointmentCreate(ctx iris.Context) {
 			return
 		}
 	} else {
-		_, err = tx.Exec(`update patient set cert_no = $1, name= $2,birthday=$3,sex=$4, phone=$5, address=$6,profession = $7,remark= $8 ,patient_channel_id = $9  where id = $10`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID, patientID)
+		updateSQL := `update patient set name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
+		if certNo != "" {
+			updateSQL = `update patient set cert_no = ` + certNo + `, name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
+		}
+		_, err = tx.Exec(updateSQL, name, birthday, sex, phone, address, profession, remark, patientChannelID, patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)
@@ -64,6 +83,8 @@ func AppointmentCreate(ctx iris.Context) {
 			return
 		}
 	}
+
+	// 查询就诊人 end
 
 	row = model.DB.QueryRowx("select * from clinic_patient where patient_id= $1 and clinic_id = $2", patientID, clinicID)
 	if row == nil {
