@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/kataras/iris"
 )
 
 // TriageRegister 就诊患者登记
 func TriageRegister(ctx iris.Context) {
+	qPatientID := ctx.PostValue("patient_id")
 	certNo := ctx.PostValue("cert_no")
 	name := ctx.PostValue("name")
 	birthday := ctx.PostValue("birthday")
@@ -25,27 +27,21 @@ func TriageRegister(ctx iris.Context) {
 	visitType := ctx.PostValue("visit_type")
 	personnelID := ctx.PostValue("personnel_id")
 	departmentID := ctx.PostValue("department_id")
-	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || visitType == "" {
+	if name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || visitType == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
-	// todayHour := time.Now().Hour()
-	// amPm := "p"
-	// if todayHour < 12 {
-	// 	amPm = "a"
-	// }
-	// row := model.DB.QueryRowx("select * from doctor_visit_schedule where visit_date = CURRENT_DATE and am_pm = $1 and department_id = $2 limit 1", amPm, departmentID)
-	// if row == nil {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "登记失败"})
-	// 	return
-	// }
-	// schedule := FormatSQLRowToMap(row)
-	// _, ok := schedule["id"]
-	// if !ok {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "号源不存在"})
-	// 	return
-	// }
-	row := model.DB.QueryRowx("select * from patient where cert_no = $1", certNo)
+
+	var row *sqlx.Row
+
+	if qPatientID != "" {
+		row = model.DB.QueryRowx("select * from patient where id = $1", qPatientID)
+	} else if certNo != "" {
+		row = model.DB.QueryRowx("select * from patient where cert_no = $1", certNo)
+	} else {
+		row = model.DB.QueryRowx("select * from patient where name = $1 and birthday = $2 and phone = $3", name, birthday, phone)
+	}
+
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "登记失败"})
 		return
@@ -55,9 +51,14 @@ func TriageRegister(ctx iris.Context) {
 	_, ok := patient["id"]
 	patientID := patient["id"]
 	if !ok {
-		err = tx.QueryRow(`INSERT INTO patient (
-		cert_no, name, birthday, sex, phone, address, profession, remark, patient_channel_id) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID).Scan(&patientID)
+		insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id`
+		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8`
+		if certNo != "" {
+			insertKeys += ", cert_no"
+			insertValues += ", " + certNo
+		}
+		err = tx.QueryRow(`INSERT INTO patient (insertKeys) 
+		VALUES (insertValues) RETURNING id`, name, birthday, sex, phone, address, profession, remark, patientChannelID).Scan(&patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)
@@ -65,7 +66,11 @@ func TriageRegister(ctx iris.Context) {
 			return
 		}
 	} else {
-		_, err = tx.Exec(`update patient set cert_no = $1, name= $2,birthday=$3,sex=$4, phone=$5, address=$6,profession = $7,remark= $8 ,patient_channel_id = $9  where id = $10`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID, patientID)
+		updateSQL := `update patient set name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
+		if certNo != "" {
+			updateSQL = `update patient set cert_no = ` + certNo + `, name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
+		}
+		_, err = tx.Exec(updateSQL, name, birthday, sex, phone, address, profession, remark, patientChannelID, patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)

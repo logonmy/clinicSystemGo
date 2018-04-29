@@ -40,6 +40,8 @@ CREATE TABLE personnel
   name varchar(10) NOT NULL,--名称
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   weight integer NOT NULL DEFAULT 1,--权重
+  image varchar(50),--头像
+  detail text,--描述
   phone varchar(11),--手机号
   title varchar(10),--职称
   username varchar(20) UNIQUE,--账号
@@ -129,11 +131,12 @@ CREATE TABLE patient_channel
 CREATE TABLE patient
 (
   id serial PRIMARY KEY NOT NULL,--id
-  cert_no varchar(18) UNIQUE NOT NULL,--身份证号
+  image varchar(50),
+  cert_no varchar(18) UNIQUE,--身份证号
   name varchar(10) NOT NULL,--姓名
   birthday varchar(8) NOT NULL,--身份证号
   sex integer NOT NULL CHECK(sex = 0 OR sex = 1),--性别 0：女，1：男
-  phone varchar(11) not Null,--手机号
+  phone varchar(11) not NULL,--手机号
   patient_channel_id INTEGER NOT Null references patient_channel(id),
   province varchar(30),--省
   city varchar(30),--市
@@ -144,7 +147,8 @@ CREATE TABLE patient
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE (name, birthday, phone)--唯一
 );
 
 --诊所就诊人
