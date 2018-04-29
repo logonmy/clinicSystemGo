@@ -12,6 +12,21 @@ import (
 	"github.com/kataras/iris"
 )
 
+//Menu 子菜单
+type Menu struct {
+	FunctionmenuID string `json:"functionmenu_id"`
+	MenuName       string `json:"menu_name"`
+	MenuURL        string `json:"menu_url"`
+}
+
+//Funtionmenus 菜单
+type Funtionmenus struct {
+	ParentID       string `json:"parent_id"`
+	ParentName     string `json:"parent_name"`
+	ParentURL      string `json:"parent_url"`
+	ChildrensMenus []Menu `json:"childrens_menus"`
+}
+
 //MenubarCreate 添加功能菜单栏
 func MenubarCreate(ctx iris.Context) {
 	url := ctx.PostValue("url")
@@ -70,28 +85,63 @@ func MenubarList(ctx iris.Context) {
 		return
 	}
 	parentFunctionMenu := FormatSQLRowsToMapArray(rows)
-	fmt.Println("====", parentFunctionMenu)
-	// var menus []map[string]interface{}
-	// for _, v := range parentFunctionMenu {
-	// 	childenURL := v["childenUrl"]
-	// 	parentID := v["id"]
-	// 	parentURL := v["parentUrl"]
-	// 	has := false
-	// 	for _, menu := range menus {
-	// 		parentMenuID := menu["parenturl"]
-	// 		childrenMenus := menu["url"]
-	// 		if parentID == parentMenuID {
 
-	// 		}
-	// 	}
-	// 	if !has {
-	// 		var childrens []map[string]interface{}
-	// 		childrens["childreUrls"] = ""
-	// 		childrens = append(childrens, url, name)
-	// 		menus = append(menus, parentID, parentName, parentURL, childrens)
-	// 	}
-	// }
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": parentFunctionMenu})
+	var menus []Funtionmenus
+	for _, v := range parentFunctionMenu {
+		childenURL := v["menu_url"]
+		childenName := v["menu_name"]
+		functionmenuID := v["functionmenu_id"]
+		parentID := v["parent_id"]
+		parentURL := v["parent_url"]
+		parentName := v["parent_name"]
+		has := false
+		for k, menu := range menus {
+			// parentMenuID := menu["parent_id"]
+			// childrenMenus := menu["childrens_menus"]
+			parentMenuID := menu.ParentID
+			childrenMenus := menu.ChildrensMenus
+			if strconv.FormatInt(parentID.(int64), 10) == parentMenuID {
+				childrens := Menu{
+					FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+					MenuName:       childenName.(string),
+					MenuURL:        childenURL.(string),
+				}
+				menus[k].ChildrensMenus = append(childrenMenus, childrens)
+				has = true
+			}
+		}
+		if !has {
+			var childrens []Menu
+			children := Menu{
+				FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+				MenuName:       childenName.(string),
+				MenuURL:        childenURL.(string),
+			}
+			childrens = append(childrens, children)
+
+			functionMenu := Funtionmenus{
+				ParentID:       strconv.FormatInt(parentID.(int64), 10),
+				ParentName:     parentName.(string),
+				ParentURL:      parentURL.(string),
+				ChildrensMenus: childrens,
+			}
+			menus = append(menus, functionMenu)
+			// childrens := map[string]interface{}{
+			// 	"functionmenu_id": functionmenuID,
+			// 	"menu_name":       childenName,
+			// 	"menu_url":        childenURL,
+			// }
+			// functionMenu := map[string]interface{}{
+			// 	"parent_id":       parentID,
+			// 	"parent_name":     parentName,
+			// 	"parent_url":      parentURL,
+			// 	"childrens_menus": childrens,
+			// }
+			// menus = append(menus, functionMenu)
+		}
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
 }
 
 //BusinessAssign 诊所分配业务
@@ -489,7 +539,49 @@ func MenuGetByClinicID(ctx iris.Context) {
 		return
 	}
 	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": clinicFunctionMenu})
+
+	var menus []Funtionmenus
+	for _, v := range clinicFunctionMenu {
+		childenURL := v["menu_url"]
+		childenName := v["menu_name"]
+		functionmenuID := v["functionmenu_id"]
+		parentID := v["parent_id"]
+		parentURL := v["parent_url"]
+		parentName := v["parent_name"]
+		has := false
+		for k, menu := range menus {
+			parentMenuID := menu.ParentID
+			childrenMenus := menu.ChildrensMenus
+			if strconv.FormatInt(parentID.(int64), 10) == parentMenuID {
+				childrens := Menu{
+					FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+					MenuName:       childenName.(string),
+					MenuURL:        childenURL.(string),
+				}
+				menus[k].ChildrensMenus = append(childrenMenus, childrens)
+				has = true
+			}
+		}
+		if !has {
+			var childrens []Menu
+			children := Menu{
+				FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+				MenuName:       childenName.(string),
+				MenuURL:        childenURL.(string),
+			}
+			childrens = append(childrens, children)
+
+			functionMenu := Funtionmenus{
+				ParentID:       strconv.FormatInt(parentID.(int64), 10),
+				ParentName:     parentName.(string),
+				ParentURL:      parentURL.(string),
+				ChildrensMenus: childrens,
+			}
+			menus = append(menus, functionMenu)
+		}
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
 }
 
 //MenuGetByRoleID 获取诊所业务信息
@@ -514,5 +606,45 @@ func MenuGetByRoleID(ctx iris.Context) {
 	}
 	role := FormatSQLRowToMap(arows)
 	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "msg": role, "data": clinicFunctionMenu})
+	var menus []Funtionmenus
+	for _, v := range clinicFunctionMenu {
+		childenURL := v["menu_url"]
+		childenName := v["menu_name"]
+		functionmenuID := v["functionmenu_id"]
+		parentID := v["parent_id"]
+		parentURL := v["parent_url"]
+		parentName := v["parent_name"]
+		has := false
+		for k, menu := range menus {
+			parentMenuID := menu.ParentID
+			childrenMenus := menu.ChildrensMenus
+			if strconv.FormatInt(parentID.(int64), 10) == parentMenuID {
+				childrens := Menu{
+					FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+					MenuName:       childenName.(string),
+					MenuURL:        childenURL.(string),
+				}
+				menus[k].ChildrensMenus = append(childrenMenus, childrens)
+				has = true
+			}
+		}
+		if !has {
+			var childrens []Menu
+			children := Menu{
+				FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+				MenuName:       childenName.(string),
+				MenuURL:        childenURL.(string),
+			}
+			childrens = append(childrens, children)
+
+			functionMenu := Funtionmenus{
+				ParentID:       strconv.FormatInt(parentID.(int64), 10),
+				ParentName:     parentName.(string),
+				ParentURL:      parentURL.(string),
+				ChildrensMenus: childrens,
+			}
+			menus = append(menus, functionMenu)
+		}
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": role, "data": menus})
 }
