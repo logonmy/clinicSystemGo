@@ -558,3 +558,157 @@ CREATE TABLE admin_functionMenu
   UNIQUE (children_functionMenu_id, admin_id)
 );
 
+--用药频率
+CREATE TABLE frequency
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20) UNIQUE NOT NULL,--频率码
+  name varchar(20),--名称
+  py_code varchar(10),--拼音码
+  define_code varchar(10),--自定义码
+  print_code varchar(10),--打印名称
+  week_day_flag integer,--周日标志
+  update_flag integer,--允许修改标志
+  delete_flag integer,--删除标志
+  weight integer,--排序码/权重
+  in_out_flag integer,--门诊住院标记
+  medical_bill_code integer,--医保账单码
+  doctor_flag integer,--医生标记
+  input_frequency varchar(20),--护士录入频率
+  times integer,--次数
+  days integer,--天数
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
+
+--药品包装单位表
+CREATE TABLE dose_unit
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20) UNIQUE NOT NULL,--编码
+  name varchar(20),--名称
+  py_code varchar(10),--拼音码
+  d_code varchar(10),--简码
+  deleted_flag integer,--删除标志
+  change_flag integer,--修改标志
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
+
+--药物类型
+CREATE TABLE drug_class
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20) UNIQUE NOT NULL,--编码
+  name varchar(30),--药品名称
+  py_code varchar(20),--拼音码
+  d_code varchar(20),--简码
+  drug_kind integer,--什么？
+  extend_code varchar(10),--什么？
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
+
+--药品类别
+CREATE TABLE drug_type
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20) UNIQUE NOT NULL,--编码
+  name varchar(30),--药品名称
+  py_code varchar(20),--拼音码
+  d_code varchar(20),--简码
+  deleted_flag integer,--删除标志
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
+
+--药品剂型
+CREATE TABLE dose_form
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20) UNIQUE NOT NULL,--编码
+  name varchar(30),--药品名称
+  py_code varchar(20),--拼音码
+  d_code varchar(20),--简码
+  deleted_flag integer,--删除标志
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
+
+--药品生产厂商
+CREATE TABLE manu_factory
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20) UNIQUE NOT NULL,--编码
+  name varchar(20),--厂商名称
+  abbr_name varchar(30),--
+  zip_code varchar(10),--
+  address varchar(40),--地址
+  tel varchar(20),--电话
+  py_code varchar(20),--拼音码
+  d_code varchar(20),--简码
+  product_range varchar(20),--
+  comment varchar(40),--
+  deleted_flag integer,--删除标志
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
+
+--用药途径
+CREATE TABLE route_administration
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20) UNIQUE NOT NULL,--编码
+  name varchar(20),--名称
+  print_name varchar(20),--打印名称
+  py_code varchar(20),--拼音码
+  d_code varchar(20),--五笔
+  type_code varchar(20),--分类编码
+  is_print integer,--是否打印
+  input_type integer,--护士录入类别
+  deleted_flag integer,--删除标志
+  weight integer,--排序码/权重
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
+
+
+--药品
+CREATE TABLE drug
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20) NOT NULL,--编码
+  name varchar(30),--药品名称
+  py_code varchar(20),--拼音码
+  d_code varchar(20),--简码
+  print_name varchar(30),--打印名称
+  serial varchar(20),--包装序号
+  flag integer,--标志
+  name_type varchar(10),--类型
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
+
+--药品别名
+CREATE TABLE drug_print
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  drug_id INTEGER NOT NULL references drug(id),--药品id
+  name varchar(30),--药品名称
+  py_code varchar(20),--拼音码
+  d_code varchar(20),--简码
+  flag integer,--什么标志
+  print_name varchar(30),--药品别名
+  name_type varchar(10),--类型
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+);
