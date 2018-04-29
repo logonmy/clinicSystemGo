@@ -40,6 +40,8 @@ CREATE TABLE personnel
   name varchar(10) NOT NULL,--名称
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   weight integer NOT NULL DEFAULT 1,--权重
+  image varchar(50),--头像
+  detail text,--描述
   phone varchar(11),--手机号
   title varchar(10),--职称
   username varchar(20) UNIQUE,--账号
@@ -129,6 +131,7 @@ CREATE TABLE patient_channel
 CREATE TABLE patient
 (
   id serial PRIMARY KEY NOT NULL,--id
+  image varchar(50),
   cert_no varchar(18) UNIQUE,--身份证号
   name varchar(10) NOT NULL,--姓名
   birthday varchar(8) NOT NULL,--身份证号

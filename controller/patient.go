@@ -174,10 +174,8 @@ func PatientGetByID(ctx iris.Context) {
 func PatientGetByCertNo(ctx iris.Context) {
 	certNo := ctx.PostValue("cert_no")
 	if certNo != "" {
-		row := model.DB.QueryRowx(`select p.* from patient p 
-			left join clinic_patient cp on p.id = cp.patient_id 
-			left join clinic c on c.id = cp.clinic_id where
-			p.cert_no = $1;`, certNo)
+		row := model.DB.QueryRowx(`select * from patient 
+			cert_no = $1;`, certNo)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 			return
@@ -218,21 +216,23 @@ func PatientUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-
-	// var resultID int
-	// err = tx.QueryRow("UPDATE clinic_patient set patient_id=$1, clinic_id=$2, personnel_id=$3 where patient_id=$4 RETURNING id", patientID, clinicID, personnelID, patientID).Scan(&resultID)
-	// if err != nil {
-	// 	tx.Rollback()
-	// 	fmt.Println("err3 ===", err)
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err})
-	// 	return
-	// }
-	// err = tx.Commit()
-	// if err != nil {
-	// 	fmt.Println("err4 ===", err)
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err})
-	// 	return
-	// }
 	ctx.JSON(iris.Map{"code": "200", "data": patientID})
+	return
+}
+
+// PatientsGetByKeyword 通过关键字搜索就诊人
+func PatientsGetByKeyword(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	if keyword == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+	row := model.DB.QueryRowx(`select * from patient where name like '%' || $1 || '%' or cert_no like '%' || $1 || '%' or phone like '%' || $1 || '%' limit 20`, keyword)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
+		return
+	}
+	result := FormatSQLRowToMap(row)
+	ctx.JSON(iris.Map{"code": "200", "data": result})
 	return
 }
