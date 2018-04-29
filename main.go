@@ -57,11 +57,11 @@ func main() {
 		personnel.Post("/update", controller.PersonnelUpdate)
 	}
 
-	visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
-	{
-		visitType.Post("/create", controller.VisitTypeCreate)
-		visitType.Post("/list", controller.VisitTypeList)
-	}
+	// visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
+	// {
+	// 	visitType.Post("/create", controller.VisitTypeCreate)
+	// 	visitType.Post("/list", controller.VisitTypeList)
+	// }
 
 	doctorVisitScheduleMode := app.Party("/doctorVisitScheduleMode", crs).AllowMethods(iris.MethodOptions)
 	{

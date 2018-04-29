@@ -84,7 +84,7 @@ CREATE TABLE doctor_visit_schedule
   created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time TIMESTAMP with time zone,
-  UNIQUE (personnel_id,department_id,visit_date,am_pm,visit_type_code,is_today)
+  UNIQUE (personnel_id,department_id,visit_date,am_pm,is_today)
 );
 
 --医生出诊周排班模板
@@ -99,7 +99,7 @@ CREATE TABLE doctor_visit_schedule_model
   created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time TIMESTAMP with time zone,
-  UNIQUE (department_id,personnel_id,weekday,am_pm,visit_type_code)
+  UNIQUE (department_id,personnel_id,weekday,am_pm)
 );
 
 --就诊人来源
