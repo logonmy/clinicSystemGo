@@ -123,18 +123,24 @@ func main() {
 		appointment.Post("/create", controller.AppointmentCreate)
 	}
 
+	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
+	{
+		role.Post("/create", controller.RoleCreate)
+		role.Post("/update", controller.RoleUpdate)
+		role.Post("/listByClinicID", controller.RoleList)
+		role.Post("/roleDetail", controller.RoleDetail)
+	}
+
 	business := app.Party("/business", crs).AllowMethods(iris.MethodOptions)
 	{
 		business.Post("/menubar/create", controller.MenubarCreate)
 		business.Post("/menubar/list", controller.MenubarList)
-		business.Post("/menubar/assign", controller.BusinessAssign)
+		business.Post("/clinic/assign", controller.BusinessAssign)
+		business.Post("/clinic/menubar", controller.MenuGetByClinicID)
 		business.Post("/admin/create", controller.AdminCreate)
 		business.Post("/admin/list", controller.AdminList)
 		business.Post("/admin/update", controller.AdminUpdate)
-		business.Post("/role/assign", controller.RoleAssign)
 		business.Post("/admin/getByID", controller.AdminGetByID)
-		business.Post("/menu/getByClinicID", controller.MenuGetByClinicID)
-		business.Post("/menu/getByRoleID", controller.MenuGetByRoleID)
 	}
 
 	// http://localhost:8080
