@@ -19,6 +19,9 @@ func TriageRegister(ctx iris.Context) {
 	birthday := ctx.PostValue("birthday")
 	sex := ctx.PostValue("sex")
 	phone := ctx.PostValue("phone")
+	province := ctx.PostValue("province")
+	city := ctx.PostValue("city")
+	district := ctx.PostValue("district")
 	address := ctx.PostValue("address")
 	profession := ctx.PostValue("profession")
 	remark := ctx.PostValue("remark")
@@ -51,14 +54,14 @@ func TriageRegister(ctx iris.Context) {
 	_, ok := patient["id"]
 	patientID := patient["id"]
 	if !ok {
-		insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id`
-		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8`
+		insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id, province, city, district`
+		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`
 		if certNo != "" {
 			insertKeys += ", cert_no"
 			insertValues += ", " + certNo
 		}
-		err = tx.QueryRow(`INSERT INTO patient (insertKeys) 
-		VALUES (insertValues) RETURNING id`, name, birthday, sex, phone, address, profession, remark, patientChannelID).Scan(&patientID)
+		err = tx.QueryRow(`INSERT INTO patient (`+insertKeys+`) 
+		VALUES (`+insertValues+`) RETURNING id`, name, birthday, sex, phone, address, profession, remark, patientChannelID, province, city, district).Scan(&patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)
@@ -66,18 +69,20 @@ func TriageRegister(ctx iris.Context) {
 			return
 		}
 	} else {
-		updateSQL := `update patient set name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
+		updateSQL := `update patient set name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8 , province = $9, city = $10, district = $11 where id = $12`
 		if certNo != "" {
-			updateSQL = `update patient set cert_no = ` + certNo + `, name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
+			updateSQL = `update patient set cert_no = ` + certNo + `, name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8, province = $9, city = $10, district = $11  where id = $12`
 		}
-		_, err = tx.Exec(updateSQL, name, birthday, sex, phone, address, profession, remark, patientChannelID, patientID)
+		_, err = tx.Exec(updateSQL, name, birthday, sex, phone, address, profession, remark, patientChannelID, province, city, district, patientID)
 		if err != nil {
 			tx.Rollback()
-			fmt.Println("err2 ===", err)
+			fmt.Println("err3 ===", err)
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
 			return
 		}
 	}
+
+	fmt.Println("' ======= '", patientID)
 
 	row = model.DB.QueryRowx("select * from clinic_patient where patient_id= $1 and clinic_id = $2", patientID, clinicID)
 	if row == nil {
@@ -293,7 +298,7 @@ func PersonnelChoose(ctx iris.Context) {
 		return
 	}
 
-	dvsrow := model.DB.QueryRowx("select id,department_id,personnel_id,am_pm,visit_type_code,visit_date from doctor_visit_schedule where id=$1", doctorVisitScheduleID)
+	dvsrow := model.DB.QueryRowx("select id,department_id,personnel_id,am_pm,visit_date from doctor_visit_schedule where id=$1", doctorVisitScheduleID)
 	doctorVisitSchedule := FormatSQLRowToMap(dvsrow)
 	_, dvsok := doctorVisitSchedule["id"]
 	if !dvsok {
@@ -305,7 +310,6 @@ func PersonnelChoose(ctx iris.Context) {
 	deparmentID := doctorVisitSchedule["department_id"]
 	doctorID := doctorVisitSchedule["personnel_id"]
 	amPm := doctorVisitSchedule["am_pm"]
-	visitTypeCode := doctorVisitSchedule["visit_type_code"]
 	visitDate := doctorVisitSchedule["visit_date"]
 
 	tx, err := model.DB.Begin()
@@ -323,8 +327,8 @@ func PersonnelChoose(ctx iris.Context) {
 	_, rok := registration["id"]
 	if !rok {
 		err = tx.QueryRow(`INSERT INTO registration (
-			clinic_patient_id, department_id, clinic_triage_patient_id,personnel_id,visit_date,am_pm,visit_type_code,operation_id) 
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`, clinicPatientID, deparmentID, clinicTriagePatientID, doctorID, visitDate, amPm, visitTypeCode, triagePersonnelID).Scan(&registrationID)
+			clinic_patient_id, department_id, clinic_triage_patient_id,personnel_id,visit_date,am_pm,operation_id) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, clinicPatientID, deparmentID, clinicTriagePatientID, doctorID, visitDate, amPm, triagePersonnelID).Scan(&registrationID)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -333,7 +337,7 @@ func PersonnelChoose(ctx iris.Context) {
 	} else {
 		registrationID = registration["id"]
 		_, err = tx.Exec(`update registration set
-			department_id=$1,personnel_id=$2,visit_date=$3,am_pm=$4,visit_type_code=$5,operation_id=$6,updated_time=LOCALTIMESTAMP where id=$7`, deparmentID, doctorID, visitDate, amPm, visitTypeCode, triagePersonnelID, registrationID)
+			department_id=$1,personnel_id=$2,visit_date=$3,am_pm=$4,operation_id=$5,updated_time=LOCALTIMESTAMP where id=$6`, deparmentID, doctorID, visitDate, amPm, triagePersonnelID, registrationID)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})

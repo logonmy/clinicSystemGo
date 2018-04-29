@@ -69,18 +69,6 @@ CREATE TABLE department_personnel
   UNIQUE (department_id, personnel_id, type)--人员id、科室id、 类别唯一
 );
 
---出诊类型
-CREATE TABLE visit_type
-(
-  code integer PRIMARY KEY NOT NULL,--编码
-  name VARCHAR(10) NOT NULL,--出诊类型名称
-  open_flag boolean NOT NULL DEFAULT true,--启用状态
-  fee integer NOT NULL CHECK(fee > 0),
-  created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time TIMESTAMP with time zone
-);
-
 --医生出诊排班
 CREATE TABLE doctor_visit_schedule
 (
@@ -93,11 +81,10 @@ CREATE TABLE doctor_visit_schedule
   is_today boolean NOT NULL DEFAULT false,--是否当日号
   tatal_num integer NOT NULL DEFAULT 20,--总的接诊数
   left_num integer NOT NULL DEFAULT 20 CHECK(left_num <= tatal_num),--剩余接诊数
-  visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
   created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time TIMESTAMP with time zone,
-  UNIQUE (personnel_id,department_id,visit_date,am_pm,visit_type_code,is_today)
+  UNIQUE (personnel_id,department_id,visit_date,am_pm,is_today)
 );
 
 --医生出诊周排班模板
@@ -109,11 +96,10 @@ CREATE TABLE doctor_visit_schedule_model
   weekday INTEGER NOT NULL CHECK(weekday BETWEEN -1 AND 7),--出诊 日期（周几，0 代表 周日，1 周一...）
   am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   tatal_num INTEGER NOT NULL DEFAULT 20,--总的接诊数
-  visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类别编码
   created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time TIMESTAMP with time zone,
-  UNIQUE (department_id,personnel_id,weekday,am_pm,visit_type_code)
+  UNIQUE (department_id,personnel_id,weekday,am_pm)
 );
 
 --就诊人来源
@@ -199,7 +185,6 @@ CREATE TABLE registration
   visit_date DATE NOT NULL,--出诊日期
   am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   is_today boolean NOT NULL DEFAULT false,--是否当日号
-  visit_type_code integer NOT NULL REFERENCES visit_type(code),--出诊类型编码
   status VARCHAR(2) NOT NULL DEFAULT '01',--就诊状态
   visit_place VARCHAR(20),--就诊地址
   operation_id integer REFERENCES personnel(id),--操作人编码

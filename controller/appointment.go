@@ -15,6 +15,9 @@ func AppointmentCreate(ctx iris.Context) {
 	birthday := ctx.PostValue("birthday")
 	sex := ctx.PostValue("sex")
 	phone := ctx.PostValue("phone")
+	province := ctx.PostValue("province")
+	city := ctx.PostValue("city")
+	district := ctx.PostValue("district")
 	address := ctx.PostValue("address")
 	profession := ctx.PostValue("profession")
 	remark := ctx.PostValue("remark")
@@ -56,14 +59,14 @@ func AppointmentCreate(ctx iris.Context) {
 	_, ok = patient["id"]
 	patientID := patient["id"]
 	if !ok {
-		insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id`
-		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8`
+		insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id, province, city, district`
+		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`
 		if certNo != "" {
 			insertKeys += ", cert_no"
 			insertValues += ", " + certNo
 		}
-		err = tx.QueryRow(`INSERT INTO patient (insertKeys) 
-		VALUES (insertValues) RETURNING id`, name, birthday, sex, phone, address, profession, remark, patientChannelID).Scan(&patientID)
+		err = tx.QueryRow(`INSERT INTO patient (`+insertKeys+`) 
+		VALUES (`+insertValues+`) RETURNING id`, name, birthday, sex, phone, address, profession, remark, patientChannelID, province, city, district).Scan(&patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)

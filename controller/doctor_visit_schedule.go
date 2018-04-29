@@ -32,14 +32,13 @@ func DoctorVistScheduleCreate(ctx iris.Context) {
 	for _, v := range results {
 		s := "(" + departmentID + "," + personnelID + ", date '" + v["visit_date"].(string) + "' ,'" + v["am_pm"].(string) + "'," +
 			strconv.Itoa(int(v["tatal_num"].(float64))) + "," +
-			strconv.Itoa(int(v["tatal_num"].(float64))) + "," +
-			strconv.Itoa(int(v["visit_type_code"].(float64))) + ")"
+			strconv.Itoa(int(v["tatal_num"].(float64))) + ")"
 		sets = append(sets, s)
 	}
 
 	setStr := strings.Join(sets, ",")
 
-	sql := "INSERT INTO doctor_visit_schedule( department_id, personnel_id, visit_date, am_pm, tatal_num, left_num, visit_type_code ) VALUES " + setStr
+	sql := "INSERT INTO doctor_visit_schedule( department_id, personnel_id, visit_date, am_pm, tatal_num, left_num ) VALUES " + setStr
 
 	row := model.DB.QueryRowx("select * FROM department_personnel WHERE type=2 and department_id=" + departmentID + " AND personnel_id=" + personnelID)
 	if row == nil {
