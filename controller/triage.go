@@ -106,10 +106,10 @@ func TriageRegister(ctx iris.Context) {
 	}
 
 	insertKeys := `(clinic_patient_id, register_personnel_id,register_type, visit_type)`
-	insertValues := `($1, $2, $3, 2)`
+	insertValues := `($1, $2, 2, $3, )`
 	if departmentID != "" {
 		insertKeys = `(department_id, clinic_patient_id, register_personnel_id,register_type, visit_type)`
-		insertValues = `(` + departmentID + `, $1, $2, $3, 2)`
+		insertValues = `(` + departmentID + `, $1, $2, 2, $3)`
 	}
 
 	insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
