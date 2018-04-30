@@ -72,7 +72,7 @@ func DepartmentList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx("SELECT count(id) as total FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_id=$2", keyword, clinicID)
+	total := model.DB.QueryRowx("SELECT count(id) as total FROM department WHERE (code LIKE '%' || $1 || '%' OR name LIKE '%' || $1 || '%') AND clinic_id=$2", keyword, clinicID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -83,7 +83,7 @@ func DepartmentList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_id=$2 offset $3 limit $4", keyword, clinicID, offset, limit)
+	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code LIKE '%' || $1 || '%' OR name LIKE '%' || $1 || '%') AND clinic_id=$2 offset $3 limit $4", keyword, clinicID, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
