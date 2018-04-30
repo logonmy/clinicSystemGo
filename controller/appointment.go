@@ -24,8 +24,9 @@ func AppointmentCreate(ctx iris.Context) {
 	patientChannelID := ctx.PostValue("patient_channel_id")
 	clinicID := ctx.PostValue("clinic_id")
 	doctorVisitScheduleID := ctx.PostValue("doctor_visit_schedule_id")
+	visitType := ctx.PostValue("visit_type")
 	personnelID := ctx.PostValue("personnel_id")
-	if name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || doctorVisitScheduleID == "" {
+	if name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || doctorVisitScheduleID == "" || visitType == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -113,15 +114,33 @@ func AppointmentCreate(ctx iris.Context) {
 	departmentID := schedule["department_id"]
 	visitDate := schedule["visit_date"]
 	doctorID := schedule["personnel_id"]
+	ampm := schedule["am_pm"]
 
-	var resultID int
-	err = tx.QueryRow("INSERT INTO clinic_triage_patient (department_id, clinic_patient_id, register_personnel_id, register_type, visit_date, doctor_id) VALUES ($1, $2, $3,1,$4,$5) RETURNING id", departmentID, clinicPatientID, personnelID, visitDate, doctorID).Scan(&resultID)
+	insertKeys := `(clinic_patient_id, register_type, visit_type, department_id, doctor_id, visit_date, am_pm, status)`
+	insertValues := `($1, 1, $2, $3, $4, $5, $6, 10)`
+
+	insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
+
+	fmt.Println("insertSQL ======", insertSQL)
+
+	var clinicTriagePatientID int
+	err = tx.QueryRow(insertSQL, clinicPatientID, visitType, departmentID, doctorID, visitDate, ampm).Scan(&clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
+
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 10, 1, personnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})

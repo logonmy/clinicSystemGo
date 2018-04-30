@@ -8,6 +8,19 @@ import (
 	"github.com/kataras/iris"
 )
 
+// ChargeProjectTreatmentInit 初始化诊疗项目
+func ChargeProjectTreatmentInit(ctx iris.Context) {
+
+	sql := "INSERT INTO charge_project_treatment (project_type_id, name, name_en, cost, fee) VALUES (8,'专家挂号费','ZJGHF',1000,10000),(8,'普通门诊挂号费','PTMZGHF',500,1000)"
+
+	_, err := model.DB.Query(sql)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
 // ChargeProjectTreatmentCreate 收费项目创建
 func ChargeProjectTreatmentCreate(ctx iris.Context) {
 

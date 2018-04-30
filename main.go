@@ -104,6 +104,7 @@ func main() {
 		chargeProject.Post("/type/init", controller.ChargeTypeInit)
 		chargeProject.Post("/type/create", controller.ChargeTypeCreate)
 
+		chargeProject.Post("/treatment/init", controller.ChargeProjectTreatmentInit)
 		chargeProject.Post("/treatment/create", controller.ChargeProjectTreatmentCreate)
 	}
 
