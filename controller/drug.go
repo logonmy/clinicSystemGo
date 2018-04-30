@@ -2,6 +2,7 @@ package controller
 
 import (
 	"clinicSystemGo/model"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -445,4 +446,46 @@ func DrugDetail(ctx iris.Context) {
 	}
 	result := FormatSQLRowToMap(arows)
 	ctx.JSON(iris.Map{"code": "200", "data": result})
+}
+
+//BatchSetting 批量设置药品
+func BatchSetting(ctx iris.Context) {
+	effDay := ctx.PostValue("eff_day")
+	isDiscount := ctx.PostValue("is_discount")
+	items := ctx.PostValue("items")
+	if items == "" || (effDay == "" && isDiscount == "") {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	sql := "update drug set"
+
+	var sets []string
+	for _, v := range results {
+		s := "(" + v["drug_id"] + ")"
+		sets = append(sets, s)
+	}
+	setStr := strings.Join(sets, ",")
+
+	if effDay != "" {
+		sql += " eff_day=" + effDay + " from (values " + setStr + ") as tmp(id) where drug.id = tmp.id"
+	}
+
+	if isDiscount != "" {
+		sql += " is_discount=" + isDiscount + " from (values " + setStr + ") as tmp(id) where drug.id = tmp.id"
+	}
+	fmt.Println("sql===", sql)
+
+	_, erre := model.DB.Exec(sql)
+	if erre != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": erre.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
 }
