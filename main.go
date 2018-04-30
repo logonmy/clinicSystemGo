@@ -120,6 +120,15 @@ func main() {
 		chargeUnPay.Post("/paid/list", controller.ChargePaidList)
 	}
 
+	//挂账
+	onCredit := app.Party("/onCredit", crs).AllowMethods(iris.MethodOptions)
+	{
+		onCredit.Post("/create", controller.OnCreditCreate)
+		onCredit.Post("/registtion/list", controller.OnCreditRegisttionList)
+		onCredit.Post("/registtion/detail", controller.OnCreditRegisttionDetail)
+		onCredit.Post("/repay", controller.OnCreditRepay)
+	}
+
 	appointment := app.Party("/appointment", crs).AllowMethods(iris.MethodOptions)
 	{
 		appointment.Post("/create", controller.AppointmentCreate)

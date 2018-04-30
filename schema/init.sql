@@ -766,11 +766,14 @@ CREATE TABLE on_credit_record
 );
 
 --挂账还款记录
-CREATE TABLE on_credit_repay_record
+CREATE TABLE on_credit_record_detail
 (
   on_credit_record_id INTEGER NOT NULL references on_credit_record(id),--分诊记录id
+  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-挂账 1-还账 
+  pay_method_code varchar(2),--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
   should_repay_moeny INTEGER NOT NULL, --应还金额
   repay_moeny INTEGER NOT NULL, --实还金额
+  remain_repay_moeny INTEGER NOT NULL, --剩余挂账金额
   operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
