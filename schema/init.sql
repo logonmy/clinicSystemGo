@@ -165,6 +165,7 @@ CREATE TABLE clinic_triage_patient
   register_type INTEGER NOT NULL,--登记类型：1预约，2线下分诊
   visit_type integer NOT NULL,--出诊类型 1: 首诊， 2复诊，3：术后复诊
   status integer NOT NULL,--状态，对应 分诊就诊人操作记录表 type
+  doctor_visit_schedule_id integer,--排版id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
