@@ -155,23 +155,33 @@ CREATE TABLE clinic_patient
 CREATE TABLE clinic_triage_patient
 (
   id serial PRIMARY KEY NOT NULL,--id
-  department_id INTEGER references department(id),--科室id
   clinic_patient_id INTEGER NOT NULL references clinic_patient(id),--科室就诊人id
-  register_personnel_id INTEGER NOT NULL references personnel(id),--录入人员id
+  department_id INTEGER references department(id),--科室id
   doctor_id INTEGER references personnel(id),--接诊医生医生id
-  triage_personnel_id INTEGER references personnel(id),--分诊人员id
-  treat_status boolean NOT NULL DEFAULT false,--是否分诊
   visit_date DATE NOT NULL DEFAULT CURRENT_DATE,--日期
+  am_pm varchar(1) CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
+  start_time varchar(10),--开始时间
+  end_time varchar(10),--结束时间
   register_type INTEGER NOT NULL,--登记类型：1预约，2线下分诊
-  visit_type integer,--出诊类型 1: 首诊， 2复诊，3：术后复诊
-  triage_time timestamp with time zone,--分诊完成时间 或 报道时间
-  reception_time timestamp with time zone,--接诊时间
-  complete_time timestamp with time zone,--完成时间
-  cancelled boolean NOT NULL DEFAULT false,--取消标识
+  visit_type integer NOT NULL,--出诊类型 1: 首诊， 2复诊，3：术后复诊
+  status integer NOT NULL,--状态，对应 分诊就诊人操作记录表 type
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--分诊就诊人操作记录表
+CREATE TABLE clinic_triage_patient_operation
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id integer NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  type INTEGER NOT NULL,--操作类型 10:登记，20：分诊， 30：换诊，40：接诊，50：已就诊， 100：取消
+  times INTEGER NOT NULL,--操作次数
+  personnel_id INTEGER references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (department_id, clinic_patient_id,treat_status,visit_date)--联合主键，就诊人、科室、状态、日期唯一
+  UNIQUE (clinic_triage_patient_id, type, times)--联合主键，就诊人、科室、状态、日期唯一
 );
 
 --挂号记录
