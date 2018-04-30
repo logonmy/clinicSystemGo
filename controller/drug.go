@@ -12,7 +12,6 @@ import (
 
 //DrugAdd 添加药品
 func DrugAdd(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
 	pyCode := ctx.PostValue("py_code")
@@ -52,7 +51,7 @@ func DrugAdd(ctx iris.Context) {
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from drug where name=$1 and barcode=$2 limit 1", name, barcode)
+	row := model.DB.QueryRowx("select id from drug where barcode=$1 limit 1", barcode)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 		return
@@ -66,10 +65,6 @@ func DrugAdd(ctx iris.Context) {
 
 	sets := []string{"name", "barcode", "ret_price", "packing_unit_id"}
 	values := []string{"'" + name + "'", "'" + barcode + "'", retPrice, packingUnitID}
-	if clinicID != "" {
-		sets = append(sets, "clinic_id")
-		values = append(values, clinicID)
-	}
 	if pyCode != "" {
 		sets = append(sets, "py_code")
 		values = append(values, "'"+pyCode+"'")
@@ -193,17 +188,11 @@ func DrugAdd(ctx iris.Context) {
 
 //DrugList 药品列表
 func DrugList(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 	drugClassID := ctx.PostValue("drug_class_id")
 	status := ctx.PostValue("status")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
-
-	if clinicID == "" {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
-		return
-	}
 
 	if offset == "" {
 		offset = "0"
@@ -224,24 +213,33 @@ func DrugList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from drug where clinic_id=$1`
+	countSQL := `select count(id) as total from drug`
 	selectSQL := `select d.name as drug_name,d.specification,du.name as packing_unit_name,d.ret_price,d.py_code,d.is_discount,d.default_remark,d.status from drug d
-		left join dose_unit du on du.id = d.packing_unit_id
-		where clinic_id=$1`
+		left join dose_unit du on du.id = d.packing_unit_id`
+
+	var countSet []string
+	var selectSet []string
 	if keyword != "" {
-		countSQL += " and (barcode ~'" + keyword + "' or name ~'" + keyword + "')"
-		selectSQL += " and (d.barcode ~'" + keyword + "' or d.name ~'" + keyword + "')"
+		countSet = append(countSet, "(barcode ~'"+keyword+"' or name ~'"+keyword+"')")
+		selectSet = append(selectSet, "(d.barcode ~'"+keyword+"' or d.name ~'"+keyword+"')")
 	}
 	if status != "" {
-		countSQL += " and status=" + status
-		selectSQL += " and d.status=" + status
+		countSet = append(countSet, "status="+status)
+		selectSet = append(selectSet, "d.status="+status)
 	}
 	if drugClassID != "" {
-		countSQL += " and drug_class_id=" + drugClassID
-		selectSQL += " and d.drug_class_id=" + drugClassID
+		countSet = append(countSet, "drug_class_id="+status)
+		selectSet = append(selectSet, "d.drug_class_id="+status)
 	}
 
-	total := model.DB.QueryRowx(countSQL, clinicID)
+	if len(countSet) > 0 {
+		countStr := strings.Join(countSet, " and ")
+		selectStr := strings.Join(selectSet, " and ")
+		countSQL = countSQL + " where " + countStr
+		selectSQL = selectSQL + " where " + selectStr
+	}
+
+	total := model.DB.QueryRowx(countSQL)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -252,7 +250,7 @@ func DrugList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", clinicID, offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $1 limit $2", offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -311,7 +309,7 @@ func DrugUpdate(ctx iris.Context) {
 		return
 	}
 
-	drow := model.DB.QueryRowx("select id from drug where name=$1 and barcode=$2 and id!=$3 limit 1", name, barcode, drugID)
+	drow := model.DB.QueryRowx("select id from drug where barcode=$1 and id!=$2 limit 1", barcode, drugID)
 	if drow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return

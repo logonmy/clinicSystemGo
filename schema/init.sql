@@ -679,7 +679,6 @@ CREATE TABLE route_administration
 CREATE TABLE drug
 (
   id serial PRIMARY KEY NOT NULL,--id
-  clinic_id integer references clinic(id),--诊所id
   code varchar(20),--编码
   name varchar(30) NOT NULL,--药品名称
   py_code varchar(20),--拼音码
@@ -790,6 +789,26 @@ CREATE TABLE on_credit_repay_record
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
-)
+);
+
+--供应商
+CREATE TABLE supplier
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(30) NOT NULL,--供应商名称
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--入库方式
+CREATE TABLE warehousing_way
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--入库方式名称
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
 
 
