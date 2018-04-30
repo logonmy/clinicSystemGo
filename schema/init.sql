@@ -175,7 +175,7 @@ CREATE TABLE clinic_triage_patient_operation
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id integer NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  type INTEGER NOT NULL,--操作类型 10:登记，20：分诊， 30：换诊，40：接诊，50：已就诊， 100：取消
+  type INTEGER NOT NULL,--操作类型 10:登记，20：分诊(换诊)，30：接诊，40：已就诊， 100：取消
   times INTEGER NOT NULL,--操作次数
   personnel_id INTEGER references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
