@@ -105,25 +105,35 @@ func TriageRegister(ctx iris.Context) {
 		clinicPatientID = clinicPatient["id"]
 	}
 
-	insertKeys := `(clinic_patient_id, register_personnel_id,register_type, visit_type)`
-	insertValues := `($1, $2, 2, $3, )`
+	insertKeys := `(clinic_patient_id, register_type, visit_type)`
+	insertValues := `($1, 2, $2, )`
 	if departmentID != "" {
-		insertKeys = `(department_id, clinic_patient_id, register_personnel_id,register_type, visit_type)`
-		insertValues = `(` + departmentID + `, $1, $2, 2, $3)`
+		insertKeys = `(department_id, clinic_patient_id, register_type, visit_type)`
+		insertValues = `(` + departmentID + `, $1, 2, $2)`
 	}
 
 	insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
 
 	fmt.Println("insertSQL ======", insertSQL)
 
-	var resultID int
-	err = tx.QueryRow("INSERT INTO clinic_triage_patient "+insertKeys+" VALUES "+insertValues+" RETURNING id", clinicPatientID, personnelID, visitType).Scan(&resultID)
+	var clinicTriagePatientID int
+	err = tx.QueryRow(insertSQL, clinicPatientID, visitType).Scan(&clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
+
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 10, 1, personnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
