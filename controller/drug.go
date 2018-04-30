@@ -159,7 +159,7 @@ func DrugAdd(ctx iris.Context) {
 	}
 	if stockWarning != "" {
 		sets = append(sets, "stock_warning")
-		values = append(values, "'"+stockWarning+"'")
+		values = append(values, stockWarning)
 	}
 	if englishName != "" {
 		sets = append(sets, "english_name")
@@ -218,7 +218,7 @@ func DrugList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) from drug where clinic_id=$1`
+	countSQL := `select count(id) as total from drug where clinic_id=$1`
 	selectSQL := `select d.name as drug_name,d.specification,du.name as packing_unit_name,d.ret_price,d.py_code,d.is_discount,d.default_remark,d.status from drug d
 		left join dose_unit du on du.id = d.packing_unit_id
 		where clinic_id=$1`
@@ -256,6 +256,7 @@ func DrugList(ctx iris.Context) {
 
 //DrugUpdate 修改药品
 func DrugUpdate(ctx iris.Context) {
+	drugID := ctx.PostValue("drug_id")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
 	pyCode := ctx.PostValue("py_code")
@@ -290,138 +291,121 @@ func DrugUpdate(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if barcode == "" || name == "" || retPrice == "" || packingUnitID == "" {
+	if drugID == "" || barcode == "" || name == "" || retPrice == "" || packingUnitID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from drug where name=$1 and barcode=$2 limit 1", name, barcode)
+	row := model.DB.QueryRowx("select id from drug where id=$1", drugID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
 	drug := FormatSQLRowToMap(row)
 	_, ok := drug["id"]
-	if ok {
+	if !ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "修改的药品不存在"})
+		return
+	}
+
+	drow := model.DB.QueryRowx("select id from drug where name=$1 and barcode=$2 and id!=$3 limit 1", name, barcode, drugID)
+	if drow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		return
+	}
+	ddrug := FormatSQLRowToMap(drow)
+	_, dok := ddrug["id"]
+	if dok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "药品已存在"})
 		return
 	}
 
-	sets := []string{"name", "barcode", "ret_price", "packing_unit_id"}
-	values := []string{"'" + name + "'", "'" + barcode + "'", retPrice, packingUnitID}
+	sets := []string{"name=" + "'" + name + "'", "barcode=" + "'" + barcode + "'", "ret_price=" + retPrice, "packing_unit_id=" + packingUnitID}
 	if pyCode != "" {
-		sets = append(sets, "py_code")
-		values = append(values, "'"+pyCode+"'")
+		sets = append(sets, "py_code="+"'"+pyCode+"'")
 	}
 	if printName != "" {
-		sets = append(sets, "print_name")
-		values = append(values, "'"+printName+"'")
+		sets = append(sets, "print_name="+"'"+printName+"'")
 	}
 	if specification != "" {
-		sets = append(sets, "specification")
-		values = append(values, "'"+specification+"'")
+		sets = append(sets, "specification="+"'"+specification+"'")
 	}
 	if manuFactory != "" {
-		sets = append(sets, "manu_factory")
-		values = append(values, "'"+manuFactory+"'")
+		sets = append(sets, "manu_factory="+"'"+manuFactory+"'")
 	}
 	if status != "" {
-		sets = append(sets, "status")
-		values = append(values, status)
+		sets = append(sets, "status="+status)
 	}
 	if licenseNo != "" {
-		sets = append(sets, "license_no")
-		values = append(values, "'"+licenseNo+"'")
+		sets = append(sets, "license_no="+"'"+licenseNo+"'")
 	}
 	if doseFormID != "" {
-		sets = append(sets, "dose_form_id")
-		values = append(values, doseFormID)
+		sets = append(sets, "dose_form_id="+doseFormID)
 	}
 	if drugClassID != "" {
-		sets = append(sets, "drug_class_id")
-		values = append(values, drugClassID)
+		sets = append(sets, "drug_class_id="+drugClassID)
 	}
 	if miniDose != "" {
-		sets = append(sets, "mini_dose")
-		values = append(values, miniDose)
+		sets = append(sets, "mini_dose="+miniDose)
 	}
 	if miniUnitID != "" {
-		sets = append(sets, "mini_unit_id")
-		values = append(values, miniUnitID)
+		sets = append(sets, "mini_unit_id="+miniUnitID)
 	}
 	if doseCount != "" {
-		sets = append(sets, "dose_count")
-		values = append(values, doseCount)
+		sets = append(sets, "dose_count="+doseCount)
 	}
 	if doseCountID != "" {
-		sets = append(sets, "dose_count_id")
-		values = append(values, doseCountID)
+		sets = append(sets, "dose_count_id="+doseCountID)
 	}
 	if buyPrice != "" {
-		sets = append(sets, "buy_price")
-		values = append(values, buyPrice)
+		sets = append(sets, "buy_price="+buyPrice)
 	}
 	if isDiscount != "" {
-		sets = append(sets, "is_discount")
-		values = append(values, isDiscount)
+		sets = append(sets, "is_discount="+isDiscount)
 	}
 	if isBulkSales != "" {
-		sets = append(sets, "is_bulk_sales")
-		values = append(values, isBulkSales)
+		sets = append(sets, "is_bulk_sales="+isBulkSales)
 	}
 	if bulkSalesPrice != "" {
-		sets = append(sets, "bulk_sales_price")
-		values = append(values, bulkSalesPrice)
+		sets = append(sets, "bulk_sales_price="+bulkSalesPrice)
 	}
 	if fetchAddress != "" {
-		sets = append(sets, "fetch_address")
-		values = append(values, "'"+fetchAddress+"'")
+		sets = append(sets, "fetch_address="+"'"+fetchAddress+"'")
 	}
 	if onceDose != "" {
-		sets = append(sets, "once_dose")
-		values = append(values, onceDose)
+		sets = append(sets, "once_dose="+onceDose)
 	}
 	if onceDoseUnitID != "" {
-		sets = append(sets, "once_dose_unit_id")
-		values = append(values, onceDoseUnitID)
+		sets = append(sets, "once_dose_unit_id="+onceDoseUnitID)
 	}
 	if routeAdministrationID != "" {
-		sets = append(sets, "route_administration_id")
-		values = append(values, routeAdministrationID)
+		sets = append(sets, "route_administration_id="+routeAdministrationID)
 	}
 	if frequencyID != "" {
-		sets = append(sets, "frequency_id")
-		values = append(values, frequencyID)
+		sets = append(sets, "frequency_id="+frequencyID)
 	}
 	if defaultRemark != "" {
-		sets = append(sets, "default_remark")
-		values = append(values, "'"+defaultRemark+"'")
+		sets = append(sets, "default_remark="+"'"+defaultRemark+"'")
 	}
 
 	if effDay != "" {
-		sets = append(sets, "eff_day")
-		values = append(values, effDay)
+		sets = append(sets, "eff_day="+effDay)
 	}
 	if stockWarning != "" {
-		sets = append(sets, "stock_warning")
-		values = append(values, "'"+stockWarning+"'")
+		sets = append(sets, "stock_warning="+stockWarning)
 	}
 	if englishName != "" {
-		sets = append(sets, "english_name")
-		values = append(values, "'"+englishName+"'")
+		sets = append(sets, "english_name="+"'"+englishName+"'")
 	}
 	if syCode != "" {
-		sets = append(sets, "sy_code")
-		values = append(values, "'"+syCode+"'")
+		sets = append(sets, "sy_code="+"'"+syCode+"'")
 	}
 
 	setStr := strings.Join(sets, ",")
-	valueStr := strings.Join(values, ",")
-	insertSQL := "insert into drug (" + setStr + ") values (" + valueStr + ") RETURNING id;"
-	fmt.Println("insertSQL===", insertSQL)
+	updateSQL := "update drug set " + setStr + "where id=$1"
+	fmt.Println("updateSQL===", updateSQL)
 
-	var drugID int
-	err := model.DB.QueryRow(insertSQL).Scan(&drugID)
+	_, err := model.DB.Exec(updateSQL, drugID)
 	if err != nil {
 		fmt.Println("err ===", err)
 		ctx.JSON(iris.Map{"code": "1", "msg": err})
