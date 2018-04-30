@@ -273,7 +273,6 @@ func AdminCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	fmt.Println("到这来儿了")
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": adminID})
 }
 
@@ -429,6 +428,19 @@ func AdminGetByID(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
+
+	row := model.DB.QueryRowx("select id from admin where id=$1 limit 1", adminID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		return
+	}
+	adminByID := FormatSQLRowToMap(row)
+	_, ok := adminByID["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "查询的账号不存在"})
+		return
+	}
+
 	arows := model.DB.QueryRowx("select id as admin_id,created_time,name,username,phone,status from admin where id=$1", adminID)
 
 	selectSQL := `select cf.id as functionMenu_id,pf.id as parent_id,pf.url as parent_url,pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from admin_functionMenu af
@@ -442,7 +454,48 @@ func AdminGetByID(ctx iris.Context) {
 	}
 	admin := FormatSQLRowToMap(arows)
 	adminFunctionMenu := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "msg": admin, "data": adminFunctionMenu})
+	var menus []Funtionmenus
+	for _, v := range adminFunctionMenu {
+		childenURL := v["menu_url"]
+		childenName := v["menu_name"]
+		functionmenuID := v["functionmenu_id"]
+		parentID := v["parent_id"]
+		parentURL := v["parent_url"]
+		parentName := v["parent_name"]
+		has := false
+		for k, menu := range menus {
+			parentMenuID := menu.ParentID
+			childrenMenus := menu.ChildrensMenus
+			if strconv.FormatInt(parentID.(int64), 10) == parentMenuID {
+				childrens := Menu{
+					FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+					MenuName:       childenName.(string),
+					MenuURL:        childenURL.(string),
+				}
+				menus[k].ChildrensMenus = append(childrenMenus, childrens)
+				has = true
+			}
+		}
+		if !has {
+			var childrens []Menu
+			children := Menu{
+				FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+				MenuName:       childenName.(string),
+				MenuURL:        childenURL.(string),
+			}
+			childrens = append(childrens, children)
+
+			functionMenu := Funtionmenus{
+				ParentID:       strconv.FormatInt(parentID.(int64), 10),
+				ParentName:     parentName.(string),
+				ParentURL:      parentURL.(string),
+				ChildrensMenus: childrens,
+			}
+			menus = append(menus, functionMenu)
+		}
+	}
+	admin["funtionMenus"] = menus
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": admin})
 }
 
 //MenuGetByClinicID 获取诊所业务信息
