@@ -132,7 +132,7 @@ func AppointmentCreate(ctx iris.Context) {
 		return
 	}
 
-	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times) VALUES ($1, $2, $3)", clinicTriagePatientID, 10, 1)
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 10, 1, personnelID)
 
 	if err != nil {
 		fmt.Println("clinic_triage_patient_operation ======", err)
