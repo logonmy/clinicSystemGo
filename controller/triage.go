@@ -298,7 +298,7 @@ func PersonnelChoose(ctx iris.Context) {
 	if ok {
 		fmt.Println("status.(string) ======", int(clinicTriagePatient["status"].(int64)))
 		status := int(clinicTriagePatient["status"].(int64))
-		if status >= 20 {
+		if status >= 30 {
 			ctx.JSON(iris.Map{"code": "1", "msg": "该就诊人已接诊"})
 			return
 		}
