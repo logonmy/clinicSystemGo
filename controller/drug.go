@@ -218,7 +218,7 @@ func DrugList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) from drug where clinic_id=$1`
+	countSQL := `select count(id) as total from drug where clinic_id=$1`
 	selectSQL := `select d.name as drug_name,d.specification,du.name as packing_unit_name,d.ret_price,d.py_code,d.is_discount,d.default_remark,d.status from drug d
 		left join dose_unit du on du.id = d.packing_unit_id
 		where clinic_id=$1`
