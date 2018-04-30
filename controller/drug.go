@@ -241,9 +241,6 @@ func DrugList(ctx iris.Context) {
 		selectSQL += " and d.drug_class_id=" + drugClassID
 	}
 
-	fmt.Println("countSQL", countSQL)
-	fmt.Println("selectSQL", selectSQL)
-
 	total := model.DB.QueryRowx(countSQL, clinicID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
