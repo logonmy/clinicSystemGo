@@ -175,7 +175,7 @@ CREATE TABLE clinic_triage_patient_operation
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id integer NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  type INTEGER NOT NULL,--操作类型 10:登记，20：分诊， 30：换诊，40：接诊，50：已就诊， 100：取消
+  type INTEGER NOT NULL,--操作类型 10:登记，20：分诊(换诊)，30：接诊，40：已就诊， 100：取消
   times INTEGER NOT NULL,--操作次数
   personnel_id INTEGER references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -600,7 +600,7 @@ CREATE TABLE drug_class
   name varchar(30) NOT NULL,--药品名称
   py_code varchar(20),--拼音码
   d_code varchar(20),--简码
-  drug_kind integer,--什么？
+  drug_kind integer,--药品类型
   extend_code varchar(10),--什么？
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -679,22 +679,51 @@ CREATE TABLE route_administration
 CREATE TABLE drug
 (
   id serial PRIMARY KEY NOT NULL,--id
+  clinic_id integer references clinic(id),--诊所id
   code varchar(20),--编码
   name varchar(30) NOT NULL,--药品名称
-  english_name varchar(30),--英文名称
-  sy_code varchar(30),--上药编码
   py_code varchar(20),--拼音码
   barcode varchar(20),--条形码
   d_code varchar(20),--简码
   print_name varchar(30),--打印名称
-  serial varchar(20),--包装序号
-  concentration varchar(10),--浓度
   specification varchar(30),--规格
   spe_comment varchar(40),--规格备注
+  manu_factory varchar(20),--生产厂商
+  drug_class_id integer references drug_class(id),--药品类型id
+  drug_type_id integer references drug_type(id),--药品类别id
+  dose_form_id integer references dose_form(id),--药品剂型id
+  status boolean NOT NULL DEFAULT true,--是否启用
+  license_no varchar(20),--国药准字、文号
+
   fix_price integer,--批发价
   ret_price integer,--零售价
   buy_price integer,--购入价
-  manu_factory varchar(20),--生产厂商
+  mini_dose integer,--最小剂量
+  mini_unit_id integer references dose_unit(id),--最小剂量单位id
+  is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
+  bulk_sales_price integer,--拆零售价/最小剂量售价
+  dose_count integer,--制剂数量
+  dose_count_id integer references dose_unit(id),--制剂数量单位id
+  packing_unit_id integer references dose_unit(id),--药品包装id
+  is_discount boolean DEFAULT false,--是否允许折扣
+  fetch_address varchar(10),--取药地点
+
+  weight integer,--重量
+  weight_unit_id integer references dose_unit(id),--重量单位id
+  volum integer,--体积
+  vol_unit_id integer references dose_unit(id),--体积单位id
+  once_dose integer,--常用剂量
+  once_dose_unit_id integer references dose_unit(id),--用量单位 常用剂量单位id
+  route_administration_id integer references route_administration(id),--用药途径id/默认用法
+  frequency_id integer references frequency(id),--用药频率id/默认频次
+  default_remark varchar(20),--默认用量用法说明
+
+  eff_month varchar(2),--有效月份
+  eff_day integer,--有效天数
+  stock_warning integer,--库存预警数
+
+  serial varchar(20),--包装序号
+  concentration varchar(10),--浓度
   self_flag integer,--自费标识
   separate_flag integer,--单列标志
   suprice_flag integer,--贵重标志
@@ -709,30 +738,16 @@ CREATE TABLE drug
   zy_charge_group varchar(20),--住院用药品分组
   mz_charge_group varchar(20),--门诊用药品分组
   extend_code varchar(20),--药品与外界衔接码
-  license_no varchar(20),--国药准字、文号
   low_dosage_flag integer,--大规格小剂量标志
-  eff_month varchar(2),--有效月份
-  eff_day integer,--有效天数
-  stock_warning integer,--库存预警数
-  weight integer,--重量
-  volum integer,--体积
-  once_dose integer,--常用剂量
   stock_amount integer,--库存量
   virtual_stock_amount integer,--虚拟库存量
-  is_discount boolean DEFAULT false,--是否允许折扣
-  is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
-  bulk_sales_price integer,--拆零售价
-  status boolean NOT NULL DEFAULT true,--是否启用
-  drug_class_id integer references drug_class(id),--药物类型id
-  drug_type_id integer references drug_type(id),--药品分类id
-  dose_form_id integer references dose_form(id),--药品剂型id
-  dose_unit_id integer references dose_unit(id),--药品包装id
-  frequency_id integer references frequency(id),--用药频率id
-  route_administration_id integer references route_administration(id),--用药途径id
+  english_name varchar(30),--英文名称
+  sy_code varchar(30),--上药编码
   manu_factory_id integer references manu_factory(id),--生产厂商id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE (barcode, name)
 );
 
 --药品别名

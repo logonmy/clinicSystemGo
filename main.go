@@ -134,6 +134,15 @@ func main() {
 		appointment.Post("/create", controller.AppointmentCreate)
 	}
 
+	drug := app.Party("/drug", crs).AllowMethods(iris.MethodOptions)
+	{
+		drug.Post("/create", controller.DrugAdd)
+		drug.Post("/update", controller.DrugUpdate)
+		drug.Post("/list", controller.DrugList)
+		drug.Post("/detail", controller.DrugDetail)
+		drug.Post("/batchSetting", controller.BatchSetting)
+	}
+
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
 	{
 		role.Post("/create", controller.RoleCreate)

@@ -105,11 +105,11 @@ func TriageRegister(ctx iris.Context) {
 		clinicPatientID = clinicPatient["id"]
 	}
 
-	insertKeys := `(clinic_patient_id, register_type, visit_type)`
-	insertValues := `($1, 2, $2, )`
+	insertKeys := `(clinic_patient_id, register_type, visit_type, status)`
+	insertValues := `($1, 2, $2, 10)`
 	if departmentID != "" {
-		insertKeys = `(department_id, clinic_patient_id, register_type, visit_type)`
-		insertValues = `(` + departmentID + `, $1, 2, $2)`
+		insertKeys = `(department_id, clinic_patient_id, register_type, visit_type, status)`
+		insertValues = `(` + departmentID + `, $1, 2, $2, 10)`
 	}
 
 	insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
@@ -146,8 +146,9 @@ func TriageRegister(ctx iris.Context) {
 func TriagePatientList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
-	treatStatus := ctx.PostValue("treat_status")
-	receptionStatus := ctx.PostValue("reception_status")
+	// status := ctx.PostValue("status")
+	statusStart := ctx.PostValue("status_start")
+	statusEnd := ctx.PostValue("status_end")
 	registerType := ctx.PostValue("register_type")
 	personnelID := ctx.PostValue("personnel_id")
 	deparmentID := ctx.PostValue("department_id")
@@ -189,38 +190,39 @@ func TriagePatientList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(ctp.id) as total
+	countSQL := `select count(ctp.id) as total 
 	from clinic_triage_patient ctp left join clinic_patient cp  on ctp.clinic_patient_id = cp.id
-	left join clinic c on c.id = cp.clinic_id
 	left join department d on ctp.department_id = d.id
-	left join personnel rp on ctp.register_personnel_id = rp.id
-	left join personnel tp on ctp.triage_personnel_id = tp.id
-	left join patient p on cp.patient_id = p.id 
+	left join personnel doc on ctp.doctor_id = doc.id
+	left join patient p on cp.patient_id = p.id
+	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
+	left join personnel triage_personnel on triage_personnel.id = register.personnel_id;
 	where cp.clinic_id = $1 and (p.cert_no ~ $2 or p.name ~ $2 or p.phone ~ $2)`
 
 	rowSQL := `select 
-	ctp.id as clinic_triage_patient_id,ctp.clinic_patient_id,ctp.visit_date, ctp.treat_status, cp.clinic_id, c.name as clinic_name,
-	p.id as patient_id, p.name as patient_name, p.birthday, p.sex, p.cert_no, p.phone,
-	doc.id as doctor_id, doc.name as doctor_name,
-	ctp.reception_time as reception_time,
-	ctp.created_time as register_time,
-	ctp.triage_time,
-	ctp.complete_time,
-	ctp.department_id, d.name as department_name,
-	ctp.register_personnel_id, rp.name as register_personnel_name,
-	ctp.triage_personnel_id, tp.name as triage_personnel_name
+	ctp.id as clinic_triage_patient_id, 
+	ctp.updated_time, 
+	ctp.created_time as register_time, 
+	triage_personnel.name as register_personnel_name, 
+	ctp.status, 
+	ctp.visit_date,
+	p.name as patient_name, 
+	p.birthday,
+	p.sex, 
+	p.phone,
+	doc.name as doctor_name,
+	d.name as department_name
 	from clinic_triage_patient ctp left join clinic_patient cp  on ctp.clinic_patient_id = cp.id
-	left join clinic c on c.id = cp.clinic_id
 	left join department d on ctp.department_id = d.id
-	left join personnel rp on ctp.register_personnel_id = rp.id
-	left join personnel tp on ctp.triage_personnel_id = tp.id
 	left join personnel doc on ctp.doctor_id = doc.id
-	left join patient p on cp.patient_id = p.id 
+	left join patient p on cp.patient_id = p.id
+	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
+	left join personnel triage_personnel on triage_personnel.id = register.personnel_id
 	where cp.clinic_id = $1 and (p.cert_no ~ $2 or p.name ~ $2 or p.phone ~ $2)`
 
-	if treatStatus != "" {
-		countSQL += " and ctp.treat_status=" + treatStatus
-		rowSQL += " and ctp.treat_status=" + treatStatus
+	if statusStart != "" && statusEnd != "" {
+		countSQL += " and ctp.status BETWEEN " + statusStart + " AND " + statusEnd
+		rowSQL += " and ctp.status BETWEEN " + statusStart + " AND " + statusEnd
 	}
 
 	if isToday == "true" {
@@ -241,17 +243,6 @@ func TriagePatientList(ctx iris.Context) {
 	if deparmentID != "" {
 		countSQL += " and ctp.department_id=" + deparmentID
 		rowSQL += " and ctp.department_id=" + deparmentID
-	}
-
-	if receptionStatus != "" {
-		fmt.Println("====", receptionStatus)
-		if receptionStatus == "true" {
-			countSQL += " and ctp.reception_time is not null"
-			rowSQL += " and ctp.reception_time is not null"
-		} else {
-			countSQL += " and ctp.reception_time is null"
-			rowSQL += " and ctp.reception_time is null"
-		}
 	}
 
 	if startDate != "" && endDate != "" {
@@ -283,7 +274,7 @@ func TriagePatientList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
 
-//PersonnelChoose 线下分诊选择医生 换诊
+//PersonnelChoose 分诊、换诊
 func PersonnelChoose(ctx iris.Context) {
 	doctorVisitScheduleID := ctx.PostValue("doctor_visit_schedule_id")
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
@@ -294,7 +285,8 @@ func PersonnelChoose(ctx iris.Context) {
 		return
 	}
 
-	ctprow := model.DB.QueryRowx("select id,reception_time,clinic_patient_id from clinic_triage_patient where id=$1", clinicTriagePatientID)
+	fmt.Println("clinicTriagePatientID =========", clinicTriagePatientID)
+	ctprow := model.DB.QueryRowx("select id, status, clinic_patient_id from clinic_triage_patient where id=$1", clinicTriagePatientID)
 	clinicTriagePatient := FormatSQLRowToMap(ctprow)
 	_, ctpok := clinicTriagePatient["id"]
 	if !ctpok {
@@ -302,9 +294,16 @@ func PersonnelChoose(ctx iris.Context) {
 		return
 	}
 
-	receptionTime, ok := clinicTriagePatient["reception_time"]
-	if ok && receptionTime != nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "该就诊人已接诊"})
+	_, ok := clinicTriagePatient["status"]
+	if ok {
+		fmt.Println("status.(string) ======", int(clinicTriagePatient["status"].(int64)))
+		status := int(clinicTriagePatient["status"].(int64))
+		if status >= 30 {
+			ctx.JSON(iris.Map{"code": "1", "msg": "该就诊人已接诊"})
+			return
+		}
+	} else {
+		ctx.JSON(iris.Map{"code": "1", "msg": "状态错误，请重试"})
 		return
 	}
 
@@ -324,10 +323,22 @@ func PersonnelChoose(ctx iris.Context) {
 
 	tx, err := model.DB.Begin()
 	var resultID int
-	err = tx.QueryRow("update clinic_triage_patient set doctor_id=$1,triage_personnel_id=$2,department_id=$3,treat_status=true,triage_time=LOCALTIMESTAMP,updated_time=LOCALTIMESTAMP where id=$4 RETURNING id", doctorID, triagePersonnelID, deparmentID, clinicTriagePatientID).Scan(&resultID)
+	err = tx.QueryRow("update clinic_triage_patient set doctor_id=$1, department_id=$2,status=20,updated_time=LOCALTIMESTAMP where id=$3 RETURNING id", doctorID, deparmentID, clinicTriagePatientID).Scan(&resultID)
 	if err != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	opRow := model.DB.QueryRowx("select count(*) + 1 as times from clinic_triage_patient_operation where type = 2 and clinic_triage_patient_id = $1", clinicTriagePatientID)
+	operation := FormatSQLRowToMap(opRow)
+	times := operation["times"]
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 20, times, triagePersonnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -405,9 +416,9 @@ func TriagePersonnelList(ctx iris.Context) {
 	where p.clinic_id = $1 and (p.name like '%' || $2 || '%') and dvs.am_pm=$3 and dvs.visit_date=current_date`
 
 	selectSQL := `(select count(ctp.id) from clinic_triage_patient ctp 
-		where treat_status=true and reception_time is null and visit_date=current_date and doctor_id=dvs.personnel_id) as wait_total,
+		where status=20 and visit_date=current_date and doctor_id=dvs.personnel_id) as wait_total,
 	(select count(ctped.id)from clinic_triage_patient ctped where 
-		treat_status=true and reception_time is not null and visit_date=current_date and doctor_id=dvs.personnel_id) as triaged_total
+	status >=30 and visit_date=current_date and doctor_id=dvs.personnel_id) as triaged_total
 	from doctor_visit_schedule dvs 
 	left join department d on dvs.department_id = d.id 
 	left join personnel p on dvs.personnel_id = p.id
