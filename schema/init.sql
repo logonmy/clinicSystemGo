@@ -750,3 +750,31 @@ CREATE TABLE drug_print
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
+
+--挂账记录表总表
+CREATE TABLE on_credit_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  registration_id INTEGER NOT NULL references registration(id),--分诊记录id
+  on_credit_money INTEGER NOT NULL, --挂账总金额金额
+  remain_pay_money INTEGER NOT NULL, --剩余还款金额
+  already_pay_money INTEGER NOT NULL DEFAULT 0, --已还款金额
+  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--挂账还款记录
+CREATE TABLE on_credit_repay_record
+(
+  on_credit_record_id INTEGER NOT NULL references on_credit_record(id),--分诊记录id
+  should_repay_moeny INTEGER NOT NULL, --应还金额
+  repay_moeny INTEGER NOT NULL, --实还金额
+  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+)
+
+
