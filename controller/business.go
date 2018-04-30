@@ -429,20 +429,11 @@ func AdminGetByID(ctx iris.Context) {
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from admin where id=$1 limit 1", adminID)
-	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
-		return
-	}
-	adminByID := FormatSQLRowToMap(row)
-	_, ok := adminByID["id"]
-	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询的账号不存在"})
-		return
-	}
-
 	arows := model.DB.QueryRowx("select id as admin_id,created_time,name,username,phone,status from admin where id=$1", adminID)
-
+	if arows == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
+		return
+	}
 	selectSQL := `select cf.id as functionMenu_id,pf.id as parent_id,pf.url as parent_url,pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from admin_functionMenu af
 	left join children_functionMenu cf on cf.id = af.children_functionMenu_id
 	left join parent_functionMenu pf on pf.id = cf.parent_functionMenu_id

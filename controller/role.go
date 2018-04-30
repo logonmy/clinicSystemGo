@@ -197,20 +197,11 @@ func RoleDetail(ctx iris.Context) {
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from role where id=$1 limit 1", roleID)
-	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询权限角色失败"})
-		return
-	}
-	roleByID := FormatSQLRowToMap(row)
-	_, ok := roleByID["id"]
-	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询的权限组不存在"})
-		return
-	}
-
 	arows := model.DB.QueryRowx("select id as role_id,name,status from role where id=$1", roleID)
-
+	if arows == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
+		return
+	}
 	selectSQL := `select rcf.clinic_children_functionMenu_id as functionMenu_id,pf.id as parent_id,pf.url as parent_url,
 	pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from role_clinic_functionMenu rcf
 	left join clinic_children_functionMenu ccf on ccf.id = rcf.clinic_children_functionMenu_id

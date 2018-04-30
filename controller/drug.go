@@ -11,6 +11,7 @@ import (
 
 //DrugAdd 添加药品
 func DrugAdd(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
 	pyCode := ctx.PostValue("py_code")
@@ -64,6 +65,10 @@ func DrugAdd(ctx iris.Context) {
 
 	sets := []string{"name", "barcode", "ret_price", "packing_unit_id"}
 	values := []string{"'" + name + "'", "'" + barcode + "'", retPrice, packingUnitID}
+	if clinicID != "" {
+		sets = append(sets, "clinic_id")
+		values = append(values, clinicID)
+	}
 	if pyCode != "" {
 		sets = append(sets, "py_code")
 		values = append(values, "'"+pyCode+"'")
@@ -412,4 +417,32 @@ func DrugUpdate(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": drugID})
+}
+
+//DrugDetail 药品详情
+func DrugDetail(ctx iris.Context) {
+	drugID := ctx.PostValue("drug_id")
+	sql := `select d.name,d.specification,d.manu_factory,df.name as dose_form_name,d.dose_form_id,
+		d.print_name,d.license_no,dc.name as drug_class_name,d.drug_class_id,d.py_code,d.barcode,d.status,
+		d.mini_dose,mdu.name as mini_unit_name,d.mini_unit_id,d.dose_count,d.dose_count_id,cdu.name as dose_count_name,
+		d.packing_unit_id,pdu.name as packing_unit_name,d.ret_price,d.buy_price,d.is_discount,d.is_bulk_sales,d.bulk_sales_price,d.fetch_address,
+		d.once_dose,d.once_dose_unit_id,odu.name as once_dose_unit_name,d.route_administration_id,ra.name as route_administration_name,
+		d.frequency_id,f.name as frequency_name,d.default_remark,d.eff_day,d.stock_warning,d.english_name,d.sy_code
+		from drug d
+		left join dose_form df on d.dose_form_id = df.id
+		left join drug_class dc on d.drug_class_id = dc.id
+		left join dose_unit mdu on d.mini_unit_id = mdu.id
+		left join dose_unit cdu on d.dose_count_id = cdu.id
+		left join dose_unit pdu on d.packing_unit_id = pdu.id
+		left join dose_unit odu on d.once_dose_unit_id = odu.id
+		left join route_administration ra on d.route_administration_id = ra.id
+		left join frequency f on d.frequency_id = f.id
+		where d.id=$1`
+	arows := model.DB.QueryRowx(sql, drugID)
+	if arows == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
+		return
+	}
+	result := FormatSQLRowToMap(arows)
+	ctx.JSON(iris.Map{"code": "200", "data": result})
 }

@@ -130,6 +130,7 @@ func main() {
 		drug.Post("/create", controller.DrugAdd)
 		drug.Post("/update", controller.DrugUpdate)
 		drug.Post("/list", controller.DrugList)
+		drug.Post("/detail", controller.DrugDetail)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
