@@ -146,7 +146,9 @@ func TriageRegister(ctx iris.Context) {
 func TriagePatientList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
-	status := ctx.PostValue("status")
+	// status := ctx.PostValue("status")
+	statusStart := ctx.PostValue("status_start")
+	statusEnd := ctx.PostValue("status_end")
 	registerType := ctx.PostValue("register_type")
 	personnelID := ctx.PostValue("personnel_id")
 	deparmentID := ctx.PostValue("department_id")
@@ -218,9 +220,9 @@ func TriagePatientList(ctx iris.Context) {
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id
 	where cp.clinic_id = $1 and (p.cert_no ~ $2 or p.name ~ $2 or p.phone ~ $2)`
 
-	if status != "" {
-		countSQL += " and ctp.status=" + status
-		rowSQL += " and ctp.status=" + status
+	if statusStart != "" && statusEnd != "" {
+		countSQL += " and ctp.status BETWEEN " + statusStart + " AND " + statusEnd
+		rowSQL += " and ctp.status BETWEEN " + statusStart + " AND " + statusEnd
 	}
 
 	if isToday == "true" {
@@ -296,7 +298,7 @@ func PersonnelChoose(ctx iris.Context) {
 	if ok {
 		fmt.Println("status.(string) ======", int(clinicTriagePatient["status"].(int64)))
 		status := int(clinicTriagePatient["status"].(int64))
-		if status >= 20 {
+		if status >= 30 {
 			ctx.JSON(iris.Map{"code": "1", "msg": "该就诊人已接诊"})
 			return
 		}
