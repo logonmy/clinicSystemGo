@@ -116,8 +116,8 @@ func AppointmentCreate(ctx iris.Context) {
 	doctorID := schedule["personnel_id"]
 	ampm := schedule["am_pm"]
 
-	insertKeys := `(clinic_patient_id, register_type, visit_type, department_id, doctor_id, visit_date, am_pm,)`
-	insertValues := `($1, 1, $2, $3, $4, $5, $6)`
+	insertKeys := `(clinic_patient_id, register_type, visit_type, department_id, doctor_id, visit_date, am_pm, status)`
+	insertValues := `($1, 1, $2, $3, $4, $5, $6, 10)`
 
 	insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
 
