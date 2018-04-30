@@ -72,7 +72,7 @@ func DepartmentList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx("SELECT count(id) FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_id=$2", keyword, clinicID)
+	total := model.DB.QueryRowx("SELECT count(id) as total FROM department WHERE (code=$1 OR (name LIKE '%' || $1 || '%')) AND clinic_id=$2", keyword, clinicID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
