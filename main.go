@@ -74,6 +74,7 @@ func main() {
 		doctorVisitSchedule.Post("/list", controller.DoctorVistScheduleList)
 		doctorVisitSchedule.Post("/departments", controller.SchelueDepartments)
 		doctorVisitSchedule.Post("/doctors", controller.SchelueDoctors)
+		doctorVisitSchedule.Post("/DoctorsWithSchedule", controller.DoctorsWithSchedule)
 	}
 
 	patient := app.Party("/patient", crs).AllowMethods(iris.MethodOptions)
