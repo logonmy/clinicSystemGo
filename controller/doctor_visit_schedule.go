@@ -230,11 +230,12 @@ func DoctorsWithSchedule(ctx iris.Context) {
 		lastDate := ""
 		var DateSchedules []DateSchedule
 		var dateSchedule DateSchedule
+		has := false
 		for _, s := range schedules {
 			if int(s["personnel_id"].(int64)) != PersonnelID && int(s["department_id"].(int64)) != DepartmentID {
 				continue
 			}
-			VisitDate := s["visit_date"].(time.Time).Format("2006-01-02 15:04:05")
+			VisitDate := s["visit_date"].(time.Time).Format("2006-01-02")
 			schedule := Schedule{
 				DoctorVisitScheduleID: int(s["doctor_visit_schedule_id"].(int64)),
 				AmPm: s["am_pm"].(string),
@@ -242,18 +243,25 @@ func DoctorsWithSchedule(ctx iris.Context) {
 
 			if lastDate == VisitDate {
 				dateSchedule.Schedules = append(dateSchedule.Schedules, schedule)
+				has = true
 			} else {
+				has = false
 				if lastDate != "" {
 					DateSchedules = append(DateSchedules, dateSchedule)
 				}
-				fmt.Println("VisitDate ======", VisitDate)
-				dateSchedule.VisitDate = VisitDate
 				Ss := []Schedule{schedule}
-				dateSchedule.Schedules = Ss
+				dateSchedule = DateSchedule{
+					VisitDate: VisitDate,
+					Schedules: Ss,
+				}
 				lastDate = VisitDate
-				fmt.Println("lastDate ======", lastDate)
 			}
 		}
+
+		if has {
+			DateSchedules = append(DateSchedules, dateSchedule)
+		}
+
 		doctor := Doctor{
 			PersonnelID:    PersonnelID,
 			DepartmentID:   DepartmentID,
