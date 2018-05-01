@@ -141,8 +141,8 @@ func OnCreditRepay(ctx iris.Context) {
 	recordID := ctx.PostValue("on_credit_record_id")
 	money, e := ctx.PostValueInt64("money")
 	operation := ctx.PostValue("operation_id")
+	outTradeNo := ctx.PostValue("out_trade_no")
 	payCode := ctx.PostValue("pay_method_code")
-
 
 	if e != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "输入金额无效，请修改后重新提交"})
@@ -162,8 +162,11 @@ func OnCreditRepay(ctx iris.Context) {
 		return
 	}
 
+	registrationRow := model.DB.QueryRowx(`select r.*,cp.patient_id from registration r left join clinic_patient cp on r.clinic_patient_id = cp.id where r.id = $1`, record["registration_id"])
+	registration := FormatSQLRowToMap(registrationRow)
+
 	if record["remain_pay_money"].(int64) == 0 {
-		ctx.JSON(iris.Map{"code": "2", "msg": "该挂费记录已还清"})
+		ctx.JSON(iris.Map{"code": "2", "msg": "该挂账记录已还清"})
 		return
 	}
 
@@ -179,12 +182,23 @@ func OnCreditRepay(ctx iris.Context) {
 		return
 	}
 
-	detailSQL := "INSERT INTO on_credit_record_detail (on_credit_record_id, type, should_repay_moeny,repay_moeny,remain_repay_moeny,operation_id,pay_method_code) VALUES ($1,$2,$3,$4,$5,$6,$7)"
+	detailSQL := "INSERT INTO on_credit_record_detail (on_credit_record_id, type, should_repay_moeny,repay_moeny,remain_repay_moeny,operation_id,pay_method_code) VALUES ($1,$2,$3,$4,$5,$6,$7) returning id"
 
-	_, err2 := tx.Exec(detailSQL, record["id"], 1, record["remain_pay_money"], money, record["remain_pay_money"].(int64)-money, operation,payCode)
+	var recordDetailID int
+	err2 := tx.QueryRow(detailSQL, record["id"], 1, record["remain_pay_money"], money, record["remain_pay_money"].(int64)-money, operation, payCode).Scan(&recordDetailID)
 	if err2 != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "2", "msg": err2.Error()})
+		return
+	}
+
+	chargeSQL := `INSERT INTO charge_detail(
+		pay_record_id, out_trade_no, in_out, patient_id, department_id, doctor_id, pay_type_code, pay_type_code_name, pay_method_code, pay_method_code_name,on_credit_money, total_money, balance_money)
+	 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+	_, chargeDetialErr := tx.Exec(chargeSQL, recordDetailID, outTradeNo, "in", registration["patient_id"], registration["department_id"], registration["personnel_id"], "03", "挂账还款", payCode, "", money*-1, 0, money)
+	if chargeDetialErr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "2", "msg": chargeDetialErr.Error()})
 		return
 	}
 

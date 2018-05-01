@@ -454,7 +454,7 @@ CREATE TABLE charge_detail
   out_trade_no varchar(20),--第三方交易号
   out_refund_no varchar(20) UNIQUE,--第三方退费交易号
   in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'out'),--收入或支出
-  patient_id INTEGER references personnel(id),--关联的患者
+  patient_id INTEGER references patient(id),--关联的患者
   department_id INTEGER references department(id),--关联的科室
   doctor_id INTEGER references personnel(id),--关联的医生信息
   pay_type_code varchar(2) NOT NULL,--支付类型编码 01-门诊缴费，02-挂号费，03-挂账还款，04-住院缴费
@@ -783,6 +783,7 @@ CREATE TABLE on_credit_record
 --挂账还款记录
 CREATE TABLE on_credit_record_detail
 (
+  id serial PRIMARY KEY NOT NULL,--id
   on_credit_record_id INTEGER NOT NULL references on_credit_record(id),--分诊记录id
   type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-挂账 1-还账 
   pay_method_code varchar(2),--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
