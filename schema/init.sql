@@ -823,7 +823,7 @@ CREATE TABLE drug_stock
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   drug_id INTEGER NOT NULL references drug(id),--药品id
   status boolean NOT NULL DEFAULT true,--是否启用
-  stock_amount INTEGER,--库存数量
+  stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
   fix_price integer,--批发价
   ret_price integer,--零售价
   buy_price integer,--成本价

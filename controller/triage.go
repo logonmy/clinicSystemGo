@@ -756,7 +756,7 @@ func TriageReception(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人不存在"})
 		return
 	}
-	_, err := model.DB.Exec("update clinic_triage_patient set reception_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
+	_, err := model.DB.Exec("update clinic_triage_patient set reception_time=LOCALTIMESTAMP,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("接诊错误", err)
 		ctx.JSON(iris.Map{"code": "1", "msg": "就诊失败"})

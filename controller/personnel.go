@@ -225,7 +225,7 @@ func PersonnelUpdate(ctx iris.Context) {
 	}
 
 	if departmentID != "" {
-		_, err := tx.Exec("update department_personnel set department_id= $1 where personnel_id = $2 and type= $3", departmentID, id, personnelType)
+		_, err := tx.Exec("update department_personnel set department_id= $1,updated_time=LOCALTIMESTAMP where personnel_id = $2 and type= $3", departmentID, id, personnelType)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
