@@ -162,6 +162,8 @@ func SchelueDoctors(ctx iris.Context) {
 // DoctorsWithSchedule 获取所有医生的号源信息
 func DoctorsWithSchedule(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
+	departmentID := ctx.PostValue("department_id")
+	personnelID := ctx.PostValue("personnel_id")
 	startDate := ctx.PostValue("start_date")
 	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
@@ -171,6 +173,12 @@ func DoctorsWithSchedule(ctx iris.Context) {
 		return
 	}
 	countSQL := `select count (dp.id) as total from department_personnel dp left join personnel p on p.id = dp.personnel_id where type = 2 and p.clinic_id = $1`
+	if departmentID != "" {
+		countSQL += " and dp.department_id = " + departmentID
+	}
+	if personnelID != "" {
+		countSQL += " and dp.personnel_id = " + personnelID
+	}
 	total := model.DB.QueryRowx(countSQL, clinicID)
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
@@ -181,7 +189,12 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	left join department d on dp.department_id = d.id
 	left join personnel p on dp.personnel_id = p.id
 	where dp.type = 2 and p.clinic_id = $1 offset $2 limit $3;`
-
+	if departmentID != "" {
+		doctorsSQL += " and dp.department_id = " + departmentID
+	}
+	if personnelID != "" {
+		doctorsSQL += " and dp.personnel_id = " + personnelID
+	}
 	rows, err := model.DB.Queryx(doctorsSQL, clinicID, offset, limit)
 
 	if err != nil {
@@ -190,6 +203,14 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	}
 	doctors := FormatSQLRowsToMapArray(rows)
 
+	existSQL := `select * from department_personnel idp left join personnel ip  on idp.personnel_id = ip.id where ip.clinic_id = $3 `
+
+	if departmentID != "" {
+		existSQL += " and idp.department_id = " + departmentID
+	}
+	if personnelID != "" {
+		existSQL += " and idp.personnel_id = " + personnelID
+	}
 	scheduleSQL := `select dvs.id as doctor_visit_schedule_id, 
 	dvs.visit_date, 
 	dvs.am_pm, 
@@ -197,7 +218,7 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	dvs.department_id from department_personnel dp, doctor_visit_schedule dvs 
 	where dp.personnel_id = dvs.personnel_id and dp.department_id = dvs.department_id 
 	and dvs.visit_date BETWEEN $1 AND $2
-	and exists(select 1 from (select * from department_personnel idp left join personnel ip  on idp.personnel_id = ip.id where ip.clinic_id = $3 offset $4 limit $5) ldp 
+	and exists(select 1 from (` + existSQL + ` offset $4 limit $5) ldp 
 			 where ldp.personnel_id = dp.personnel_id and ldp.department_id = dp.department_id )
 			 order by dp.id, dvs.visit_date, dvs.am_pm asc; `
 
