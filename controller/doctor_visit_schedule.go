@@ -161,11 +161,12 @@ func SchelueDoctors(ctx iris.Context) {
 
 // DoctorsWithSchedule 获取所有医生的号源信息
 func DoctorsWithSchedule(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
 	startDate := ctx.PostValue("start_date")
 	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
-	if startDate == "" || endDate == "" || offset == "" || limit == "" {
+	if clinicID == "" || startDate == "" || endDate == "" || offset == "" || limit == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -179,9 +180,9 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	from department_personnel dp
 	left join department d on dp.department_id = d.id
 	left join personnel p on dp.personnel_id = p.id
-	where dp.type = 2 offset $1 limit $2;`
+	where dp.type = 2 and p.clinic_id = $1 offset $2 limit $3;`
 
-	rows, err := model.DB.Queryx(doctorsSQL, offset, limit)
+	rows, err := model.DB.Queryx(doctorsSQL, clinicID, offset, limit)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败，请重试"})
@@ -196,11 +197,11 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	dvs.department_id from department_personnel dp, doctor_visit_schedule dvs 
 	where dp.personnel_id = dvs.personnel_id and dp.department_id = dvs.department_id 
 	and dvs.visit_date BETWEEN $1 AND $2
-	and exists(select 1 from (select * from department_personnel offset $3 limit $4) ldp 
+	and exists(select 1 from (select * from department_personnel idp left join personnel ip  on idp.personnel_id = ip.id where ip.clinic_id = $3 offset $4 limit $5) ldp 
 			 where ldp.personnel_id = dp.personnel_id and ldp.department_id = dp.department_id )
 			 order by dp.id, dvs.visit_date, dvs.am_pm asc; `
 
-	rows, err = model.DB.Queryx(scheduleSQL, startDate, endDate, offset, limit)
+	rows, err = model.DB.Queryx(scheduleSQL, startDate, endDate, clinicID, offset, limit)
 
 	schedules := FormatSQLRowsToMapArray(rows)
 
