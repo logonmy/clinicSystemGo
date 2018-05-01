@@ -188,14 +188,14 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	from department_personnel dp
 	left join department d on dp.department_id = d.id
 	left join personnel p on dp.personnel_id = p.id
-	where dp.type = 2 and p.clinic_id = $1 offset $2 limit $3;`
+	where dp.type = 2 and p.clinic_id = $1 `
 	if departmentID != "" {
 		doctorsSQL += " and dp.department_id = " + departmentID
 	}
 	if personnelID != "" {
 		doctorsSQL += " and dp.personnel_id = " + personnelID
 	}
-	rows, err := model.DB.Queryx(doctorsSQL, clinicID, offset, limit)
+	rows, err := model.DB.Queryx(doctorsSQL+" offset $2 limit $3;", clinicID, offset, limit)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败，请重试"})
