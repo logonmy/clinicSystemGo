@@ -196,7 +196,7 @@ func TriagePatientList(ctx iris.Context) {
 	left join personnel doc on ctp.doctor_id = doc.id
 	left join patient p on cp.patient_id = p.id
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
-	left join personnel triage_personnel on triage_personnel.id = register.personnel_id;
+	left join personnel triage_personnel on triage_personnel.id = register.personnel_id
 	where cp.clinic_id = $1 and (p.cert_no ~ $2 or p.name ~ $2 or p.phone ~ $2)`
 
 	rowSQL := `select 
@@ -254,6 +254,8 @@ func TriagePatientList(ctx iris.Context) {
 		rowSQL += " and ctp.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
 	}
 
+	fmt.Println("countSQL ========", countSQL)
+
 	total := model.DB.QueryRowx(countSQL, clinicID, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -261,6 +263,7 @@ func TriagePatientList(ctx iris.Context) {
 	}
 
 	pageInfo := FormatSQLRowToMap(total)
+	fmt.Println("pageInfo ====", pageInfo)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
@@ -330,13 +333,13 @@ func PersonnelChoose(ctx iris.Context) {
 		return
 	}
 
-	opRow := model.DB.QueryRowx("select count(*) + 1 as times from clinic_triage_patient_operation where type = 2 and clinic_triage_patient_id = $1", clinicTriagePatientID)
+	opRow := model.DB.QueryRowx("select count(*) + 1 as times from clinic_triage_patient_operation where type = 20 and clinic_triage_patient_id = $1", clinicTriagePatientID)
 	operation := FormatSQLRowToMap(opRow)
 	times := operation["times"]
 	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 20, times, triagePersonnelID)
 
 	if err != nil {
-		fmt.Println("clinic_triage_patient_operation ======", err)
+		fmt.Println("clinic_triage_patient_operation ======", err, times, clinicTriagePatientID)
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
@@ -753,7 +756,7 @@ func TriageReception(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人不存在"})
 		return
 	}
-	_, err := model.DB.Exec("update clinic_triage_patient set reception_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
+	_, err := model.DB.Exec("update clinic_triage_patient set reception_time=LOCALTIMESTAMP,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("接诊错误", err)
 		ctx.JSON(iris.Map{"code": "1", "msg": "就诊失败"})

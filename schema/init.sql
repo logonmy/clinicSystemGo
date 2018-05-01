@@ -165,6 +165,7 @@ CREATE TABLE clinic_triage_patient
   register_type INTEGER NOT NULL,--登记类型：1预约，2线下分诊
   visit_type integer NOT NULL,--出诊类型 1: 首诊， 2复诊，3：术后复诊
   status integer NOT NULL,--状态，对应 分诊就诊人操作记录表 type
+  doctor_visit_schedule_id integer,--排版id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -679,7 +680,6 @@ CREATE TABLE route_administration
 CREATE TABLE drug
 (
   id serial PRIMARY KEY NOT NULL,--id
-  clinic_id integer references clinic(id),--诊所id
   code varchar(20),--编码
   name varchar(30) NOT NULL,--药品名称
   py_code varchar(20),--拼音码
@@ -692,21 +692,7 @@ CREATE TABLE drug
   drug_class_id integer references drug_class(id),--药品类型id
   drug_type_id integer references drug_type(id),--药品类别id
   dose_form_id integer references dose_form(id),--药品剂型id
-  status boolean NOT NULL DEFAULT true,--是否启用
   license_no varchar(20),--国药准字、文号
-
-  fix_price integer,--批发价
-  ret_price integer,--零售价
-  buy_price integer,--购入价
-  mini_dose integer,--最小剂量
-  mini_unit_id integer references dose_unit(id),--最小剂量单位id
-  is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
-  bulk_sales_price integer,--拆零售价/最小剂量售价
-  dose_count integer,--制剂数量
-  dose_count_id integer references dose_unit(id),--制剂数量单位id
-  packing_unit_id integer references dose_unit(id),--药品包装id
-  is_discount boolean DEFAULT false,--是否允许折扣
-  fetch_address varchar(10),--取药地点
 
   weight integer,--重量
   weight_unit_id integer references dose_unit(id),--重量单位id
@@ -717,10 +703,6 @@ CREATE TABLE drug
   route_administration_id integer references route_administration(id),--用药途径id/默认用法
   frequency_id integer references frequency(id),--用药频率id/默认频次
   default_remark varchar(20),--默认用量用法说明
-
-  eff_month varchar(2),--有效月份
-  eff_day integer,--有效天数
-  stock_warning integer,--库存预警数
 
   serial varchar(20),--包装序号
   concentration varchar(10),--浓度
@@ -739,8 +721,6 @@ CREATE TABLE drug
   mz_charge_group varchar(20),--门诊用药品分组
   extend_code varchar(20),--药品与外界衔接码
   low_dosage_flag integer,--大规格小剂量标志
-  stock_amount integer,--库存量
-  virtual_stock_amount integer,--虚拟库存量
   english_name varchar(30),--英文名称
   sy_code varchar(30),--上药编码
   manu_factory_id integer references manu_factory(id),--生产厂商id
@@ -794,6 +774,126 @@ CREATE TABLE on_credit_record_detail
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
-)
+);
+
+--供应商
+CREATE TABLE supplier
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(30) NOT NULL,--供应商名称
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--入库方式
+CREATE TABLE instock_way
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--入库方式名称
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--出库方式
+CREATE TABLE outstock_way
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--出库方式名称
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--库房
+CREATE TABLE storehouse
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--库房名称
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--库存
+CREATE TABLE drug_stock
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  drug_id INTEGER NOT NULL references drug(id),--药品id
+  status boolean NOT NULL DEFAULT true,--是否启用
+  stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
+  fix_price integer,--批发价
+  ret_price integer,--零售价
+  buy_price integer,--成本价
+  mini_dose integer,--最小剂量
+  mini_unit_id integer references dose_unit(id),--最小剂量单位id
+  is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
+  bulk_sales_price integer,--拆零售价/最小剂量售价
+  dose_count integer,--制剂数量
+  dose_count_id integer references dose_unit(id),--制剂数量单位id
+  packing_unit_id integer references dose_unit(id),--药品包装id
+  is_discount boolean DEFAULT false,--是否允许折扣
+  fetch_address varchar(10),--取药地点
+  eff_day integer,--有效天数
+  stock_warning integer,--库存预警数
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--入库记录
+CREATE TABLE instock_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  drug_id INTEGER NOT NULL references drug(id),--药品id
+  instock_amount INTEGER NOT NULL,--入库数量
+  serial varchar(20),--批号
+  instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
+  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  ret_price integer,--零售价
+  buy_price integer,--成本价
+  manu_factory varchar(20),--生产厂商
+  packing_unit varchar(20),--包装单位
+  eff_day integer,--有效天数
+  instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
+  remark varchar(30),--备注
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--出库记录
+CREATE TABLE outstock_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  drug_id INTEGER NOT NULL references drug(id),--药品id
+  department_id INTEGER NOT NULL references department(id),--领用科室id
+  personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
+  outstock_amount INTEGER NOT NULL,--出库数量
+  serial varchar(20),--批号
+  outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
+  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  ret_price integer,--零售价
+  buy_price integer,--成本价
+  manu_factory varchar(20),--生产厂商
+  packing_unit varchar(20),--包装单位
+  eff_day integer,--有效天数
+  outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
+  remark varchar(30),--备注
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+
 
 

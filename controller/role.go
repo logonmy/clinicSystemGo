@@ -118,7 +118,7 @@ func RoleUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-	_, erra := tx.Exec("update role set name=$1 where id=$2", name, roleID)
+	_, erra := tx.Exec("update role set name=$1,updated_time=LOCALTIMESTAMP where id=$2", name, roleID)
 	if erra != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": erra})

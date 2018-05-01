@@ -227,12 +227,12 @@ func PatientsGetByKeyword(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 		return
 	}
-	row := model.DB.QueryRowx(`select * from patient where name like '%' || $1 || '%' or cert_no like '%' || $1 || '%' or phone like '%' || $1 || '%' limit 20`, keyword)
-	if row == nil {
+	rows, err := model.DB.Queryx(`select * from patient where name like '%' || $1 || '%' or cert_no like '%' || $1 || '%' or phone like '%' || $1 || '%' limit 20`, keyword)
+	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 		return
 	}
-	result := FormatSQLRowToMap(row)
+	result := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": result})
 	return
 }
