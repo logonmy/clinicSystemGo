@@ -170,8 +170,8 @@ func DoctorsWithSchedule(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	countSQL := `select count (id) as total from department_personnel where type = $1`
-	total := model.DB.QueryRowx(countSQL, 2)
+	countSQL := `select count (id) as total from department_personnel where type = 2 and p.clinic_id = $1`
+	total := model.DB.QueryRowx(countSQL, clinicID)
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
