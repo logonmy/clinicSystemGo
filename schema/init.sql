@@ -455,7 +455,7 @@ CREATE TABLE charge_detail
   out_trade_no varchar(20),--第三方交易号
   out_refund_no varchar(20) UNIQUE,--第三方退费交易号
   in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'out'),--收入或支出
-  patient_id INTEGER references personnel(id),--关联的患者
+  patient_id INTEGER references patient(id),--关联的患者
   department_id INTEGER references department(id),--关联的科室
   doctor_id INTEGER references personnel(id),--关联的医生信息
   pay_type_code varchar(2) NOT NULL,--支付类型编码 01-门诊缴费，02-挂号费，03-挂账还款，04-住院缴费
@@ -763,6 +763,7 @@ CREATE TABLE on_credit_record
 --挂账还款记录
 CREATE TABLE on_credit_record_detail
 (
+  id serial PRIMARY KEY NOT NULL,--id
   on_credit_record_id INTEGER NOT NULL references on_credit_record(id),--分诊记录id
   type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-挂账 1-还账 
   pay_method_code varchar(2),--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
@@ -898,6 +899,82 @@ CREATE TABLE outstock_record
   deleted_time timestamp with time zone
 );
 
+--诊断字典
+CREATE TABLE diagnosis
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  py_code varchar(10) NOT NULL,--拼音码
+  name varchar(20) NOT NULL,--诊断名称
+  icd_code varchar(10) ,--国际疾病分类
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
 
+--病历
+CREATE TABLE medical_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL references patient(id),--关联的患者
+  registration_id INTEGER,--预约编号
+  morbidity_date varchar(10), --发病日期
+  chief_complaint text NOT NULL, --主诉
+  history_of_present_illness text,-- 现病史
+  history_of_past_illness text, --既往史
+  family_medical_history text, --家族史
+  allergic_history text,--过敏史
+  allergic_reaction text,--过敏反应
+  immunizations text,--疫苗接种史
+  body_examination text,--体格检查
+  diagnosis text,--诊断
+  cure_suggestion text, --治疗建议
+  remark text,--备注
+  files text,--上传的文件
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
 
+--病历模板
+CREATE TABLE medical_record_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  chief_complaint text NOT NULL, --主诉
+  history_of_present_illness text,-- 现病史
+  history_of_past_illness text, --既往史
+  family_medical_history text, --家族史
+  allergic_history text,--过敏史
+  allergic_reaction text,--过敏反应
+  immunizations text,--疫苗接种史
+  body_examination text,--体格检查
+  diagnosis text,--诊断
+  cure_suggestion text, --治疗建议
+  remark text,--备注
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
 
+--检查项目
+CREATE TABLE examination_project
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--检查名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  unit varchar(5),--单位
+  cost integer, --成本价
+  price integer NOT NULL,--销售价
+  status boolean NOT NULL DEFAULT true,--是否启用
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  organ varchar(20),--检查部位
+  remark text,--备注
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);

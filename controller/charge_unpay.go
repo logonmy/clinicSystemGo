@@ -208,7 +208,7 @@ func ChargePay(ctx iris.Context) {
 	}
 
 	//查询分诊就录是否存在
-	registrationRows := model.DB.QueryRowx("select * from registration where id=" + registrationID)
+	registrationRows := model.DB.QueryRowx("select r.*,cp.patient_id from registration r left join clinic_patient cp on r.clinic_patient_id = cp.id where r.id =" + registrationID)
 	registration := FormatSQLRowToMap(registrationRows)
 	if registration["id"] == nil {
 		ctx.JSON(iris.Map{"code": "-1", "data": nil, "msg": "未找到指定问诊记录"})
@@ -297,7 +297,7 @@ func ChargePay(ctx iris.Context) {
 	var sID int
 	insertPaidCharge := "insert into charge_detail (pay_record_id,out_trade_no,in_out,patient_id,department_id,doctor_id,pay_type_code,pay_type_code_name,pay_method_code,pay_method_code_name,discount_money,derate_money,medical_money,on_credit_money,voucher_money,bonus_points_money,total_money,balance_money) " +
 		"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING id"
-	insertPaidChargeErr := tx.QueryRow(insertPaidCharge, recordID, outTradeNo, "in", registration["clinic_patient_id"], registration["department_id"], registration["personnel_id"], "01", "门诊缴费", payMethodCode, "", discountMoney, derateMoney, medicalMoney, onCreditMoney, voucherMoney, bonusPointsMoney, totalMoneyInt, balanceMoneyInt).Scan(&sID)
+	insertPaidChargeErr := tx.QueryRow(insertPaidCharge, recordID, outTradeNo, "in", registration["patient_id"], registration["department_id"], registration["personnel_id"], "01", "门诊缴费", payMethodCode, "", discountMoney, derateMoney, medicalMoney, onCreditMoney, voucherMoney, bonusPointsMoney, totalMoneyInt, balanceMoneyInt).Scan(&sID)
 	if insertPaidChargeErr != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "4", "msg": insertPaidChargeErr.Error()})

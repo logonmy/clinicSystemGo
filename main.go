@@ -74,6 +74,7 @@ func main() {
 		doctorVisitSchedule.Post("/list", controller.DoctorVistScheduleList)
 		doctorVisitSchedule.Post("/departments", controller.SchelueDepartments)
 		doctorVisitSchedule.Post("/doctors", controller.SchelueDoctors)
+		doctorVisitSchedule.Post("/DoctorsWithSchedule", controller.DoctorsWithSchedule)
 	}
 
 	patient := app.Party("/patient", crs).AllowMethods(iris.MethodOptions)
@@ -166,6 +167,27 @@ func main() {
 		business.Post("/admin/list", controller.AdminList)
 		business.Post("/admin/update", controller.AdminUpdate)
 		business.Post("/admin/getByID", controller.AdminGetByID)
+	}
+
+	diagnosis := app.Party("/diagnosis", crs).AllowMethods(iris.MethodOptions)
+	{
+		diagnosis.Post("/create", controller.DiagnosisCreate)
+	}
+
+	medicalRecord := app.Party("/medicalRecord", crs).AllowMethods(iris.MethodOptions)
+	{
+		medicalRecord.Post("/create", controller.MedicalRecordCreate)
+		medicalRecord.Post("/model/create", controller.MedicalRecordModelCreate)
+		medicalRecord.Post("/listByPid", controller.MedicalRecordListByPID)
+		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
+	}
+
+	examinationProject := app.Party("/examinationProject", crs).AllowMethods(iris.MethodOptions)
+	{
+		examinationProject.Post("/create", controller.ExaminationProjectCreate)
+		examinationProject.Post("/update", controller.ExaminationProjectUpdate)
+		examinationProject.Post("/onOff", controller.ExaminationProjectOnOff)
+		examinationProject.Post("/list", controller.ExaminationProjectList)
 	}
 
 	// http://localhost:8080
