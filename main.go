@@ -177,6 +177,14 @@ func main() {
 		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
 	}
 
+	examinationProject := app.Party("/examinationProject", crs).AllowMethods(iris.MethodOptions)
+	{
+		examinationProject.Post("/create", controller.ExaminationProjectCreate)
+		examinationProject.Post("/update", controller.ExaminationProjectUpdate)
+		examinationProject.Post("/onOff", controller.ExaminationProjectOnOff)
+		examinationProject.Post("/list", controller.ExaminationProjectList)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello

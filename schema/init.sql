@@ -953,3 +953,23 @@ CREATE TABLE medical_record_model
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
+
+--检查项目
+CREATE TABLE examination_project
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--检查名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  unit varchar(5),--单位
+  cost integer, --成本价
+  price integer NOT NULL,--销售价
+  status boolean NOT NULL DEFAULT true,--是否启用
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  organ varchar(20),--检查部位
+  remark text,--备注
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
