@@ -321,7 +321,7 @@ func AdminUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-	_, erra := tx.Exec("update admin set name=$1, title=$2, phone=$3, username=$4, password=$5, is_clinic_admin=true where id=$6", name, title, phone, username, passwordMd5, adminID)
+	_, erra := tx.Exec("update admin set name=$1, title=$2, phone=$3, username=$4, password=$5, is_clinic_admin=true, updated_time=LOCALTIMESTAMP where id=$6", name, title, phone, username, passwordMd5, adminID)
 	if erra != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": erra})
