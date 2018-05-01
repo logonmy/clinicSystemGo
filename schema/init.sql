@@ -894,6 +894,62 @@ CREATE TABLE outstock_record
   deleted_time timestamp with time zone
 );
 
+--诊断字典
+CREATE TABLE diagnosis
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  py_code varchar(10) NOT NULL,--拼音码
+  name varchar(20) NOT NULL,--诊断名称
+  icd_code varchar(10) ,--国际疾病分类
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
 
+--病历
+CREATE TABLE medical_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL references patient(id),--关联的患者
+  registration_id INTEGER,--预约编号
+  morbidity_date varchar(10), --发病日期
+  chief_complaint text NOT NULL, --主诉
+  history_of_present_illness text,-- 现病史
+  history_of_past_illness text, --既往史
+  family_medical_history text, --家族史
+  allergic_history text,--过敏史
+  allergic_reaction text,--过敏反应
+  immunizations text,--疫苗接种史
+  body_examination text,--体格检查
+  diagnosis text,--诊断
+  cure_suggestion text, --治疗建议
+  remark text,--备注
+  files text,--上传的文件
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
 
-
+--病历模板
+CREATE TABLE medical_record_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  chief_complaint text NOT NULL, --主诉
+  history_of_present_illness text,-- 现病史
+  history_of_past_illness text, --既往史
+  family_medical_history text, --家族史
+  allergic_history text,--过敏史
+  allergic_reaction text,--过敏反应
+  immunizations text,--疫苗接种史
+  body_examination text,--体格检查
+  diagnosis text,--诊断
+  cure_suggestion text, --治疗建议
+  remark text,--备注
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
