@@ -78,6 +78,7 @@ CREATE TABLE doctor_visit_schedule
   visit_date DATE NOT NULL,--出诊日期
   am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   stop_flag boolean NOT NULL DEFAULT false,--停诊标识
+  open_flag boolean NOT NULL DEFAULT false,--是否开放
   is_today boolean NOT NULL DEFAULT false,--是否当日号
   tatal_num integer NOT NULL DEFAULT 20,--总的接诊数
   left_num integer NOT NULL DEFAULT 20 CHECK(left_num <= tatal_num),--剩余接诊数

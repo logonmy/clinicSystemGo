@@ -30,7 +30,7 @@ func AppointmentCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
-	row := model.DB.QueryRowx("select * from doctor_visit_schedule where id=$1 and visit_date > CURRENT_DATE", doctorVisitScheduleID)
+	row := model.DB.QueryRowx("select * from doctor_visit_schedule where id=$1 and open_flag = true and stop_flag = false and visit_date > CURRENT_DATE", doctorVisitScheduleID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "预约失败"})
 		return
