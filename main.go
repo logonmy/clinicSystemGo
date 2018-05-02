@@ -146,7 +146,14 @@ func main() {
 		drug.Post("/instock", controller.DrugInstock)
 		drug.Post("/instockRecord", controller.InstockRecord)
 		drug.Post("/instockRecordDetail", controller.InstockRecordDetail)
+		// drug.Post("/instockUpdate", controller.InstockUpdate)
 		drug.Post("/instockCheck", controller.InstockCheck)
+		drug.Post("/instockDelete", controller.InstockRecordDelete)
+		drug.Post("/outstock", controller.DrugOutstock)
+		drug.Post("/outstockRecord", controller.OutstockRecord)
+		drug.Post("/outstockRecordDetail", controller.OutstockRecordDetail)
+		drug.Post("/outstockCheck", controller.OutstockCheck)
+		drug.Post("/outstockDelete", controller.OutstockRecordDelete)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
