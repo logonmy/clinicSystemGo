@@ -842,7 +842,8 @@ CREATE TABLE drug_stock
   stock_warning integer,--库存预警数
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE (storehouse_id, drug_id)
 );
 
 --入库记录
@@ -853,16 +854,18 @@ CREATE TABLE instock_record
   drug_id INTEGER NOT NULL references drug(id),--药品id
   instock_amount INTEGER NOT NULL,--入库数量
   serial varchar(20),--批号
+  order_number varchar(20) NOT NULL,--入库单号
   instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
   supplier_id INTEGER NOT NULL references supplier(id),--供应商id
   ret_price integer,--零售价
   buy_price integer,--成本价
   manu_factory varchar(20),--生产厂商
-  packing_unit varchar(20),--包装单位
+  packing_unit_id integer references dose_unit(id),--药品包装id
   eff_day integer,--有效天数
   instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
   remark varchar(30),--备注
-  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  instock_operation_id INTEGER NOT NULL references personnel(id),--入库人id
+  verify_operation_id INTEGER references personnel(id),--审核人id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -878,17 +881,19 @@ CREATE TABLE outstock_record
   department_id INTEGER NOT NULL references department(id),--领用科室id
   personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
   outstock_amount INTEGER NOT NULL,--出库数量
+  order_number varchar(20) NOT NULL,--出库单号
   serial varchar(20),--批号
   outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
   supplier_id INTEGER NOT NULL references supplier(id),--供应商id
   ret_price integer,--零售价
   buy_price integer,--成本价
   manu_factory varchar(20),--生产厂商
-  packing_unit varchar(20),--包装单位
+  packing_unit_id integer references dose_unit(id),--药品包装id
   eff_day integer,--有效天数
   outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
   remark varchar(30),--备注
-  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人id
+  verify_operation_id INTEGER references personnel(id),--审核id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -950,6 +955,26 @@ CREATE TABLE medical_record_model
   cure_suggestion text, --治疗建议
   remark text,--备注
   operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检查项目
+CREATE TABLE examination_project
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--检查名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  unit varchar(5),--单位
+  cost integer, --成本价
+  price integer NOT NULL,--销售价
+  status boolean NOT NULL DEFAULT true,--是否启用
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  organ varchar(20),--检查部位
+  remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

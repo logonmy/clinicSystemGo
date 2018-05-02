@@ -146,7 +146,12 @@ func main() {
 		drug.Post("/update", controller.DrugUpdate)
 		drug.Post("/list", controller.DrugList)
 		drug.Post("/detail", controller.DrugDetail)
+		drug.Post("/search", controller.DrugSearch)
 		drug.Post("/batchSetting", controller.BatchSetting)
+		drug.Post("/instock", controller.DrugInstock)
+		drug.Post("/instockRecord", controller.InstockRecord)
+		drug.Post("/instockRecordDetail", controller.InstockRecordDetail)
+		drug.Post("/instockCheck", controller.InstockCheck)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
@@ -180,6 +185,14 @@ func main() {
 		medicalRecord.Post("/model/create", controller.MedicalRecordModelCreate)
 		medicalRecord.Post("/listByPid", controller.MedicalRecordListByPID)
 		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
+	}
+
+	examinationProject := app.Party("/examinationProject", crs).AllowMethods(iris.MethodOptions)
+	{
+		examinationProject.Post("/create", controller.ExaminationProjectCreate)
+		examinationProject.Post("/update", controller.ExaminationProjectUpdate)
+		examinationProject.Post("/onOff", controller.ExaminationProjectOnOff)
+		examinationProject.Post("/list", controller.ExaminationProjectList)
 	}
 
 	// http://localhost:8080
