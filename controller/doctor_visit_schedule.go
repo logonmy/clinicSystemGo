@@ -324,7 +324,7 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	_, ok = hasNeedOpenCountMap["count"]
 
 	needOpen := false
-	if ok && int(hasOpenCountMap["count"].(int64)) > 0 {
+	if ok && int(hasNeedOpenCountMap["count"].(int64)) > 0 {
 		needOpen = true
 	}
 
