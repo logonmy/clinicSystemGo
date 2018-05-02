@@ -911,20 +911,47 @@ func InstockCheck(ctx iris.Context) {
 	}
 	valueStr := strings.Join(values, ",")
 
-	sets = append(sets, " storehouse_id=tmp.storehouse_id", " drug_id=tmp.drug_id", " instock_amount=tmp.instock_amount", " ret_price=tmp.ret_price",
-		" buy_price=tmp.buy_price", " packing_unit_id=tmp.packing_unit_id", " eff_day=tmp.eff_day")
+	sets = append(sets, " stock_amount=tmp.instock_amount", " ret_price=tmp.ret_price",
+		" buy_price=tmp.buy_price", " packing_unit_id=tmp.packing_unit_id", " eff_day=tmp.eff_day", " updated_time=LOCALTIMESTAMP")
 
 	asValues = append(asValues, "storehouse_id", "drug_id", "instock_amount", "ret_price", "buy_price", "packing_unit_id", "eff_day")
 
 	setStr := strings.Join(sets, ",")
 	asStr := strings.Join(asValues, ",")
-	sql += setStr + " from (values " + valueStr + ") as tmp(" + asStr + ") where storehouse_id = tmp.storehouse_id and drug_id = tmp.drug_id"
+	sql += setStr + " from (values " + valueStr + ") as tmp(" + asStr + ") where drug_stock.storehouse_id = tmp.storehouse_id and drug_stock.drug_id = tmp.drug_id"
 	fmt.Println("sql===", sql)
 
-	// _, err := model.DB.Exec(sql)
-	// if err != nil {
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-	// 	return
-	// }
+	tx, err := model.DB.Begin()
+
+	if err != nil {
+		fmt.Println("err ===", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		return
+	}
+
+	_, err1 := tx.Exec(sql)
+	if err1 != nil {
+		fmt.Println("err1 ===", err1)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": err1.Error()})
+		return
+	}
+
+	_, err2 := tx.Exec("update instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP", "02", operationID)
+	if err2 != nil {
+		fmt.Println("err2 ===", err2)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": err2.Error()})
+		return
+	}
+
+	err3 := tx.Commit()
+	if err3 != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+		return
+	}
+
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
 }
