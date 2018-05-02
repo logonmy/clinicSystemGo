@@ -314,7 +314,21 @@ func DoctorsWithSchedule(ctx iris.Context) {
 		canOverride = true
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo, "canOverride": canOverride})
+	hasNeedOpenCountSQL := `select count(*) as count from doctor_visit_schedule dvs left join department d on dvs.department_id = d.id
+	where d.clinic_id = $1 and dvs.open_flag = false and dvs.visit_date between $2 and $3`
+
+	hasNeedOpenCountRow := model.DB.QueryRowx(hasNeedOpenCountSQL, clinicID, startDate, endDate)
+
+	hasNeedOpenCountMap := FormatSQLRowToMap(hasNeedOpenCountRow)
+
+	_, ok = hasNeedOpenCountMap["count"]
+
+	needOpen := false
+	if ok && int(hasOpenCountMap["count"].(int64)) > 0 {
+		needOpen = true
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo, "canOverride": canOverride, "needOpen": needOpen})
 }
 
 // CopyScheduleByDate 复制排版
