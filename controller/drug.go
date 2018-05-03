@@ -14,6 +14,7 @@ import (
 //DrugAdd 添加药品
 func DrugAdd(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
+	DrugType := ctx.PostValue("type")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
 	pyCode := ctx.PostValue("py_code")
@@ -48,7 +49,7 @@ func DrugAdd(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if clinicID == "" || barcode == "" || name == "" || retPrice == "" {
+	if clinicID == "" || barcode == "" || name == "" || retPrice == "" || DrugType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -73,8 +74,8 @@ func DrugAdd(ctx iris.Context) {
 	}
 	fmt.Println("storehouseID==", storehouseID)
 
-	sets := []string{"name", "barcode"}
-	values := []string{"'" + name + "'", "'" + barcode + "'"}
+	sets := []string{"name", "barcode", "type"}
+	values := []string{"'" + name + "'", "'" + barcode + "'", DrugType}
 	stockSets := []string{"storehouse_id", "ret_price"}
 	stockValues := []string{storehouseID, retPrice}
 	if pyCode != "" {
@@ -227,6 +228,7 @@ func DrugAdd(ctx iris.Context) {
 //DrugList 药品列表
 func DrugList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
+	DrugType := ctx.PostValue("type")
 	keyword := ctx.PostValue("keyword")
 	drugClassID := ctx.PostValue("drug_class_id")
 	status := ctx.PostValue("status")
@@ -273,6 +275,10 @@ func DrugList(ctx iris.Context) {
 
 	// var countSet []string
 	// var selectSet []string
+	if DrugType != "" {
+		countSQL += " and type=" + DrugType
+		selectSQL += " and d.type=" + DrugType
+	}
 	if keyword != "" {
 		countSQL += " and (barcode ~'" + keyword + "' or name ~'" + keyword + "')"
 		selectSQL += " and (d.barcode ~'" + keyword + "' or d.name ~'" + keyword + "')"
@@ -317,6 +323,7 @@ func DrugList(ctx iris.Context) {
 //DrugUpdate 修改药品
 func DrugUpdate(ctx iris.Context) {
 	drugStockID := ctx.PostValue("drug_stock_id")
+	DrugType := ctx.PostValue("type")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
 	pyCode := ctx.PostValue("py_code")
@@ -351,7 +358,7 @@ func DrugUpdate(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if drugStockID == "" || barcode == "" || name == "" || retPrice == "" || packingUnitID == "" {
+	if drugStockID == "" || barcode == "" || name == "" || retPrice == "" || packingUnitID == "" || DrugType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -376,7 +383,7 @@ func DrugUpdate(ctx iris.Context) {
 		return
 	}
 
-	sets := []string{"name=" + "'" + name + "'", "barcode=" + "'" + barcode + "'", "updated_time=LOCALTIMESTAMP"}
+	sets := []string{"name=" + "'" + name + "'", "type=" + DrugType, "barcode=" + "'" + barcode + "'", "updated_time=LOCALTIMESTAMP"}
 	stockSets := []string{"ret_price=" + retPrice, "updated_time=LOCALTIMESTAMP"}
 	if pyCode != "" {
 		sets = append(sets, "py_code="+"'"+pyCode+"'")
@@ -505,6 +512,7 @@ func DrugUpdate(ctx iris.Context) {
 func DrugSearch(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	clinicID := ctx.PostValue("clinic_id")
+	DrugType := ctx.PostValue("type")
 
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
@@ -527,6 +535,10 @@ func DrugSearch(ctx iris.Context) {
 
 	if keyword != "" {
 		selectSQL += " and (d.barcode ~'" + keyword + "' or d.name ~'" + keyword + "')"
+	}
+
+	if DrugType != "" {
+		selectSQL += " and d.type=" + DrugType
 	}
 
 	var results []map[string]interface{}
