@@ -745,23 +745,167 @@ func TriageCompletePreDiagnosis(ctx iris.Context) {
 //TriageReception 医生接诊病人
 func TriageReception(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
-	if clinicTriagePatientID == "" {
+	triagePersonnelID := ctx.PostValue("recept_personnel_id")
+	if clinicTriagePatientID == "" || triagePersonnelID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
-	row := model.DB.QueryRowx("select id from clinic_triage_patient where id=$1", clinicTriagePatientID)
+	row := model.DB.QueryRowx("select id,status from clinic_triage_patient where id=$1", clinicTriagePatientID)
 	clinicTriagePatient := FormatSQLRowToMap(row)
 	_, ok := clinicTriagePatient["id"]
 	if !ok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人不存在"})
 		return
 	}
-	_, err := model.DB.Exec("update clinic_triage_patient set reception_time=LOCALTIMESTAMP,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
+	fmt.Println("clinicTriagePatient", clinicTriagePatient)
+	status := clinicTriagePatient["status"]
+	fmt.Println("ssss", status)
+	if status.(int64) != 20 {
+		ctx.JSON(iris.Map{"code": "1", "msg": "当前状态不能接诊"})
+		return
+	}
+	tx, err := model.DB.Begin()
+	_, err = tx.Exec("update clinic_triage_patient set status=30,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("接诊错误", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": "就诊失败"})
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": "接诊失败"})
 		return
 	}
 
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 30, 1, triagePersonnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err, clinicTriagePatientID)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
+}
+
+//AppointmentsByDate 按日期统计挂号记录
+func AppointmentsByDate(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	departmentID := ctx.PostValue("department_id")
+	personnelID := ctx.PostValue("personnel_id")
+	startDateStr := ctx.PostValue("start_date")
+	offsetStr := ctx.PostValue("offset")
+	limitStr := ctx.PostValue("limit")
+	dayLong := ctx.PostValue("day_long")
+	if clinicID == "" || startDateStr == "" || dayLong == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+
+	if offsetStr == "" {
+		offsetStr = "0"
+	}
+
+	if limitStr == "" {
+		limitStr = "10"
+	}
+
+	long, err1 := strconv.Atoi(dayLong)
+	offset, err01 := strconv.Atoi(offsetStr)
+	limit, err02 := strconv.Atoi(limitStr)
+
+	if err1 != nil || long < 1 {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "day_long 必须为大于0 的数字"})
+		return
+	}
+
+	if err01 != nil || offset < 0 {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为大于-1 的数字"})
+		return
+	}
+
+	if err02 != nil || limit < 0 {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为大于-1 的数字"})
+		return
+	}
+
+	startDate, err := time.Parse("2006-01-02", startDateStr)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+		return
+	}
+
+	endDate := startDate.AddDate(0, 0, long-1)
+
+	countClinicSQL := `select count(ctp.clinic_patient_id) as count, ctp.visit_date, ctp.am_pm from clinic_triage_patient ctp 
+	left join department d on ctp.department_id = d.id
+	where ctp.register_type = 1 and d.clinic_id = $1 and ctp.visit_date between $2 and $3 `
+
+	if departmentID != "" {
+		countClinicSQL += ` and ctp.department_id = ` + departmentID
+	}
+
+	if personnelID != "" {
+		countClinicSQL += ` and ctp.doctor_id = ` + personnelID
+	}
+
+	countClinicRows, err1 := model.DB.Queryx(countClinicSQL+` group by (ctp.visit_date, ctp.am_pm)`, clinicID, startDate, endDate)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	clinicArray := FormatSQLRowsToMapArray(countClinicRows)
+
+	countSQL := `select count(dp.id) as total from department_personnel dp 
+	left join department d on dp.department_id = d.id
+	left join personnel p on dp.personnel_id = p.id
+	where dp.type = 2 and d.clinic_id = $1 `
+
+	doctorListSQL := `select dp.department_id, dp.personnel_id, d.name as department_name, p.name as personnel_name from department_personnel dp 
+	left join department d on dp.department_id = d.id
+	left join personnel p on dp.personnel_id = p.id
+	where dp.type = 2 and d.clinic_id = $1 `
+
+	doctorCountSQL := `select count(clinic_patient_id) as count, ctp.visit_date, ctp.am_pm, ctp.department_id, ctp.doctor_id from clinic_triage_patient ctp 
+	left join department d on ctp.department_id = d.id 
+	where d.clinic_id = $1 and ctp.register_type = 1 and ctp.visit_date between $2 and $3 `
+
+	if departmentID != "" {
+		countSQL += ` and dp.department_id = ` + departmentID
+		doctorListSQL += ` and dp.department_id = ` + departmentID
+		doctorCountSQL += ` and ctp.department_id = ` + departmentID
+	}
+
+	if personnelID != "" {
+		countSQL += ` and dp.doctor_id = ` + personnelID
+		doctorListSQL += ` and dp.doctor_id = ` + personnelID
+		doctorCountSQL += ` and ctp.doctor_id = ` + personnelID
+	}
+
+	doctorDataSQL := `select dp.department_id, dp.department_name,
+	dp.personnel_id, dp.personnel_name,
+	 dpc.count, dpc.visit_date, dpc.am_pm
+	 from 
+	 (` + doctorListSQL + ` offset $4 limit $5) dp left join (` + doctorCountSQL + ` group by (ctp.visit_date, ctp.am_pm, ctp.department_id, ctp.doctor_id)) dpc 
+	 on dp.department_id = dpc.department_id and dpc.doctor_id = dp.personnel_id;`
+
+	doctorDataRows, err2 := model.DB.Queryx(doctorDataSQL, clinicID, startDate, endDate, offset, limit)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		return
+	}
+
+	doctorArray := FormatSQLRowsToMapArray(doctorDataRows)
+
+	pageInfoRow := model.DB.QueryRowx(countSQL, clinicID)
+
+	pageInfo := FormatSQLRowToMap(pageInfoRow)
+
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "clinic_array": clinicArray, "doctor_array": doctorArray, "page_info": pageInfo})
 }

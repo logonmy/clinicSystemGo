@@ -103,6 +103,7 @@ func main() {
 		triage.Post("/completePreDiagnosis", controller.TriageCompletePreDiagnosis)
 		triage.Post("/chooseDoctor", controller.PersonnelChoose)
 		triage.Post("/reception", controller.TriageReception)
+		triage.Post("/AppointmentsByDate", controller.AppointmentsByDate)
 	}
 
 	chargeProject := app.Party("/chargeProject", crs).AllowMethods(iris.MethodOptions)
@@ -151,12 +152,13 @@ func main() {
 		drug.Post("/instock", controller.DrugInstock)
 		drug.Post("/instockRecord", controller.InstockRecord)
 		drug.Post("/instockRecordDetail", controller.InstockRecordDetail)
-		// drug.Post("/instockUpdate", controller.InstockUpdate)
+		drug.Post("/instockUpdate", controller.InstockUpdate)
 		drug.Post("/instockCheck", controller.InstockCheck)
 		drug.Post("/instockDelete", controller.InstockRecordDelete)
 		drug.Post("/outstock", controller.DrugOutstock)
 		drug.Post("/outstockRecord", controller.OutstockRecord)
 		drug.Post("/outstockRecordDetail", controller.OutstockRecordDetail)
+		drug.Post("/outstockUpdate", controller.OutstockUpdate)
 		drug.Post("/outstockCheck", controller.OutstockCheck)
 		drug.Post("/outstockDelete", controller.OutstockRecordDelete)
 	}
@@ -200,6 +202,12 @@ func main() {
 		examinationProject.Post("/update", controller.ExaminationProjectUpdate)
 		examinationProject.Post("/onOff", controller.ExaminationProjectOnOff)
 		examinationProject.Post("/list", controller.ExaminationProjectList)
+	}
+
+	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
+	{
+		laboratory.Post("/create", controller.LaboratoryCreate)
+		laboratory.Post("/item/create", controller.LaboratoryItemCreate)
 	}
 
 	// http://localhost:8080
