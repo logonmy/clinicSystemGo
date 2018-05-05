@@ -773,13 +773,10 @@ func TriageReception(ctx iris.Context) {
 		return
 	}
 
-	opRow := model.DB.QueryRowx("select count(*) + 1 as times from clinic_triage_patient_operation where type = 30 and clinic_triage_patient_id = $1", clinicTriagePatientID)
-	operation := FormatSQLRowToMap(opRow)
-	times := operation["times"]
-	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 30, times, triagePersonnelID)
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 30, 1, triagePersonnelID)
 
 	if err != nil {
-		fmt.Println("clinic_triage_patient_operation ======", err, times, clinicTriagePatientID)
+		fmt.Println("clinic_triage_patient_operation ======", err, clinicTriagePatientID)
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
