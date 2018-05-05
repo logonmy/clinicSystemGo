@@ -81,8 +81,6 @@ func MenubarList(ctx iris.Context) {
 		parentName := v["parent_name"]
 		has := false
 		for k, menu := range menus {
-			// parentMenuID := menu["parent_id"]
-			// childrenMenus := menu["childrens_menus"]
 			parentMenuID := menu.ParentID
 			childrenMenus := menu.ChildrensMenus
 			if strconv.FormatInt(parentID.(int64), 10) == parentMenuID {
@@ -111,18 +109,6 @@ func MenubarList(ctx iris.Context) {
 				ChildrensMenus: childrens,
 			}
 			menus = append(menus, functionMenu)
-			// childrens := map[string]interface{}{
-			// 	"functionmenu_id": functionmenuID,
-			// 	"menu_name":       childenName,
-			// 	"menu_url":        childenURL,
-			// }
-			// functionMenu := map[string]interface{}{
-			// 	"parent_id":       parentID,
-			// 	"parent_name":     parentName,
-			// 	"parent_url":      parentURL,
-			// 	"childrens_menus": childrens,
-			// }
-			// menus = append(menus, functionMenu)
 		}
 	}
 

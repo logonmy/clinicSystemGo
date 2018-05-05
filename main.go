@@ -208,6 +208,7 @@ func main() {
 	{
 		laboratory.Post("/create", controller.LaboratoryCreate)
 		laboratory.Post("/item/create", controller.LaboratoryItemCreate)
+		laboratory.Post("/item/list", controller.LaboratoryItemList)
 	}
 
 	// http://localhost:8080
