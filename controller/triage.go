@@ -247,14 +247,14 @@ func TriagePatientList(ctx iris.Context) {
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须小于结束日期"})
 			return
 		}
 		countSQL += " and ctp.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
 		rowSQL += " and ctp.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
 	}
 
-	fmt.Println("countSQL ========", countSQL)
+	// fmt.Println("countSQL ========", countSQL)
 
 	total := model.DB.QueryRowx(countSQL, clinicID, keyword)
 	if err != nil {
