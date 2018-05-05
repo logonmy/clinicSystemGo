@@ -203,6 +203,12 @@ func main() {
 		examinationProject.Post("/list", controller.ExaminationProjectList)
 	}
 
+	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
+	{
+		laboratory.Post("/create", controller.LaboratoryCreate)
+		laboratory.Post("/item/create", controller.LaboratoryItemCreate)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello

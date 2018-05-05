@@ -745,23 +745,50 @@ func TriageCompletePreDiagnosis(ctx iris.Context) {
 //TriageReception 医生接诊病人
 func TriageReception(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
-	if clinicTriagePatientID == "" {
+	triagePersonnelID := ctx.PostValue("recept_personnel_id")
+	if clinicTriagePatientID == "" || triagePersonnelID == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
-	row := model.DB.QueryRowx("select id from clinic_triage_patient where id=$1", clinicTriagePatientID)
+	row := model.DB.QueryRowx("select id,status from clinic_triage_patient where id=$1", clinicTriagePatientID)
 	clinicTriagePatient := FormatSQLRowToMap(row)
 	_, ok := clinicTriagePatient["id"]
 	if !ok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人不存在"})
 		return
 	}
-	_, err := model.DB.Exec("update clinic_triage_patient set reception_time=LOCALTIMESTAMP,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
+	fmt.Println("clinicTriagePatient", clinicTriagePatient)
+	status := clinicTriagePatient["status"]
+	fmt.Println("ssss", status)
+	if status.(int64) != 20 {
+		ctx.JSON(iris.Map{"code": "1", "msg": "当前状态不能接诊"})
+		return
+	}
+	tx, err := model.DB.Begin()
+	_, err = tx.Exec("update clinic_triage_patient set status=30,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("接诊错误", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": "就诊失败"})
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": "接诊失败"})
 		return
 	}
 
+	opRow := model.DB.QueryRowx("select count(*) + 1 as times from clinic_triage_patient_operation where type = 30 and clinic_triage_patient_id = $1", clinicTriagePatientID)
+	operation := FormatSQLRowToMap(opRow)
+	times := operation["times"]
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 30, times, triagePersonnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err, times, clinicTriagePatientID)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
 }
