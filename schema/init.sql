@@ -681,6 +681,7 @@ CREATE TABLE route_administration
 CREATE TABLE drug
 (
   id serial PRIMARY KEY NOT NULL,--id
+  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-西药 1-中药
   code varchar(20),--编码
   name varchar(30) NOT NULL,--药品名称
   py_code varchar(20),--拼音码
@@ -852,7 +853,7 @@ CREATE TABLE instock_record
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   drug_id INTEGER NOT NULL references drug(id),--药品id
-  instock_amount INTEGER NOT NULL,--入库数量
+  instock_amount INTEGER NOT NULL CHECK(instock_amount > 0),--入库数量
   serial varchar(20),--批号
   order_number varchar(20) NOT NULL,--入库单号
   instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
@@ -861,11 +862,11 @@ CREATE TABLE instock_record
   buy_price integer,--成本价
   manu_factory varchar(20),--生产厂商
   packing_unit_id integer references dose_unit(id),--药品包装id
-  eff_day integer,--有效天数
+  eff_day integer CHECK(eff_day > 0),--有效天数
   instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
   remark varchar(30),--备注
-  instock_operation_id INTEGER NOT NULL references personnel(id),--入库人id
-  verify_operation_id INTEGER references personnel(id),--审核人id
+  instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
+  verify_operation_id INTEGER references personnel(id),--审核人员id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -880,20 +881,19 @@ CREATE TABLE outstock_record
   drug_id INTEGER NOT NULL references drug(id),--药品id
   department_id INTEGER NOT NULL references department(id),--领用科室id
   personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
-  outstock_amount INTEGER NOT NULL,--出库数量
+  outstock_amount INTEGER NOT NULL CHECK(outstock_amount > 0),--出库数量
   order_number varchar(20) NOT NULL,--出库单号
   serial varchar(20),--批号
   outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
   ret_price integer,--零售价
   buy_price integer,--成本价
   manu_factory varchar(20),--生产厂商
   packing_unit_id integer references dose_unit(id),--药品包装id
-  eff_day integer,--有效天数
+  eff_day integer CHECK(eff_day > 0),--有效天数
   outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
   remark varchar(30),--备注
-  outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人id
-  verify_operation_id INTEGER references personnel(id),--审核id
+  outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
+  verify_operation_id INTEGER references personnel(id),--审核人员id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -975,6 +975,125 @@ CREATE TABLE examination_project
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
   organ varchar(20),--检查部位
   remark text,--备注
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检验医嘱标本种类
+CREATE TABLE laboratory_sample
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  code varchar(20),--编码
+  name varchar(20) NOT NULL,--标本名称
+  py_code varchar(20),--拼音码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--试管颜色
+CREATE TABLE cuvette_color
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) UNIQUE NOT NULL,--颜色名称
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检验医嘱
+CREATE TABLE laboratory
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) UNIQUE NOT NULL,--检验医嘱名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  unit varchar(5),--单位
+  time_report varchar(10),--报告所需时间
+  clinical_significance text,--临床意义
+  remark text,--备注
+  laboratory_sample_id integer REFERENCES laboratory_sample(id),--标本种类
+  cuvette_color_id integer REFERENCES cuvette_color(id),--试管颜色
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--诊所检验医嘱
+CREATE TABLE clinic_laboratory
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  laboratory_id INTEGER NOT NULL references laboratory(id),--检验医嘱id
+  merge_flag integer,--合并标记
+  cost integer, --成本价
+  price integer NOT NULL,--销售价
+  status boolean NOT NULL DEFAULT true,--是否启用
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检验项目
+CREATE TABLE laboratory_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) UNIQUE NOT NULL,--检验名称
+  en_name varchar(20),--英文名称
+  instrument_code varchar(20),--仪器编码
+  unit varchar(5),--单位
+  clinical_significance text,--临床意义
+  data_type integer,--数据类型 1 定量 2 定性
+  is_special boolean,--参考值是否特殊
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检验项目参考值
+CREATE TABLE laboratory_item_reference
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  laboratory_item_id integer NOT NULL references laboratory_item(id),--检验项目id
+  reference_max varchar(20), --定量参考值最大值
+  reference_min varchar(20), --定量参考值最小值
+  reference_value varchar(20),--定性参考值
+
+  age_max integer, --参考值年龄段最大值
+  age_min integer, --参考值年龄段最小值
+  reference_sex varchar(5),--参考值性别 男、女、通用
+  stomach_status varchar(5),--空腹、餐后 1h、餐后 2h
+  is_pregnancy boolean,--是否妊娠期
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--诊所检验项目
+CREATE TABLE clinic_laboratory_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  laboratory_item_id INTEGER references laboratory_item(id),--检验项目id
+  status boolean NOT NULL DEFAULT true,--是否启用
+  is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--诊所检验医嘱关联的检验项
+CREATE TABLE clinic_laboratory_association
+(
+  clinic_laboratory_id integer NOT NULL references clinic_laboratory(id),--诊所医嘱id
+  laboratory_item_id INTEGER references laboratory_item(id),--检验项目id
+  status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
