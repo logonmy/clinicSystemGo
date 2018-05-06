@@ -550,6 +550,11 @@ func DrugSearch(ctx iris.Context) {
 //DrugDetail 药品详情
 func DrugDetail(ctx iris.Context) {
 	drugStockID := ctx.PostValue("drug_stock_id")
+
+	if drugStockID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
 	sql := `select d.name,d.specification,d.manu_factory,df.name as dose_form_name,d.dose_form_id,
 		d.print_name,d.license_no,dc.name as drug_class_name,d.drug_class_id,d.py_code,d.barcode,ds.status,
 		ds.mini_dose,mdu.name as mini_unit_name,ds.mini_unit_id,ds.dose_count,ds.dose_count_id,cdu.name as dose_count_name,

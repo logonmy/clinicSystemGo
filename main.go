@@ -207,8 +207,16 @@ func main() {
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
 	{
 		laboratory.Post("/create", controller.LaboratoryCreate)
+		laboratory.Post("/list", controller.LaboratoryList)
+		laboratory.Post("/detail", controller.LaboratoryDetail)
+		laboratory.Post("/association", controller.LaboratoryAssociation)
+		laboratory.Post("/associationList", controller.AssociationList)
 		laboratory.Post("/item/create", controller.LaboratoryItemCreate)
+		laboratory.Post("/item/detail", controller.LaboratoryItemDetail)
+		laboratory.Post("/item/update", controller.LaboratoryItemUpdate)
+		laboratory.Post("/item/updateStatus", controller.LaboratoryItemStatus)
 		laboratory.Post("/item/list", controller.LaboratoryItemList)
+		laboratory.Post("/item/searchByName", controller.LaboratoryItemSearch)
 	}
 
 	// http://localhost:8080
