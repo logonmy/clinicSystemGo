@@ -960,6 +960,16 @@ CREATE TABLE medical_record_model
   deleted_time timestamp with time zone
 );
 
+--检查部位
+CREATE TABLE examination_organ
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(10) NOT NULL,--部位名称
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
 --检查项目
 CREATE TABLE examination_project
 (
@@ -969,12 +979,23 @@ CREATE TABLE examination_project
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
   unit varchar(5),--单位
+  organ varchar(20),--检查部位
+  remark text,--备注
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--诊所检查项目
+CREATE TABLE clinic_examination_project
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  examination_project_id integer NOT NULL references examination_project(id),--检查项目id
   cost integer, --成本价
   price integer NOT NULL,--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
-  organ varchar(20),--检查部位
-  remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

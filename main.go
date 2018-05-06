@@ -202,6 +202,7 @@ func main() {
 		examinationProject.Post("/update", controller.ExaminationProjectUpdate)
 		examinationProject.Post("/onOff", controller.ExaminationProjectOnOff)
 		examinationProject.Post("/list", controller.ExaminationProjectList)
+		examinationProject.Post("/detail", controller.ExaminationProjectDetail)
 	}
 
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
@@ -214,7 +215,7 @@ func main() {
 		laboratory.Post("/item/create", controller.LaboratoryItemCreate)
 		laboratory.Post("/item/detail", controller.LaboratoryItemDetail)
 		laboratory.Post("/item/update", controller.LaboratoryItemUpdate)
-		laboratory.Post("/item/updateStatus", controller.LaboratoryItemStatus)
+		laboratory.Post("/item/onOff", controller.LaboratoryItemStatus)
 		laboratory.Post("/item/list", controller.LaboratoryItemList)
 		laboratory.Post("/item/searchByName", controller.LaboratoryItemSearch)
 	}

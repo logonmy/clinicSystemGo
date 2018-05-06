@@ -672,8 +672,8 @@ func LaboratoryItemList(ctx iris.Context) {
 	countSQL := `select count(cli.id) as total from clinic_laboratory_item cli
 		left join laboratory_item li on cli.laboratory_item_id = li.id
 		where cli.clinic_id=$1`
-	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit,li.is_special,
-		li.data_type,lir.reference_value,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status
+	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit,li.is_special,li.instrument_code,
+		li.data_type,lir.reference_value,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,cli.is_delivery
 		from clinic_laboratory_item cli
 		left join laboratory_item li on cli.laboratory_item_id = li.id
 		left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
@@ -971,7 +971,7 @@ func LaboratoryItemStatus(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id,clinic_id,laboratory_item_id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -1019,8 +1019,8 @@ func LaboratoryItemSearch(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit,li.is_special,
-		li.data_type,lir.reference_value,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status
+	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit,li.is_special,li.instrument_code,
+		li.data_type,lir.reference_value,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,cli.is_delivery
 		from clinic_laboratory_item cli
 		left join laboratory_item li on cli.laboratory_item_id = li.id
 		left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
