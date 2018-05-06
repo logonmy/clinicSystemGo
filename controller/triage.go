@@ -790,6 +790,53 @@ func TriageReception(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
 }
 
+// TriageComplete 医生完成接诊
+func TriageComplete(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	triagePersonnelID := ctx.PostValue("recept_personnel_id")
+	if clinicTriagePatientID == "" || triagePersonnelID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+	row := model.DB.QueryRowx("select id,status from clinic_triage_patient where id=$1", clinicTriagePatientID)
+	clinicTriagePatient := FormatSQLRowToMap(row)
+	_, ok := clinicTriagePatient["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人不存在"})
+		return
+	}
+	status := clinicTriagePatient["status"]
+	if status.(int64) != 30 {
+		ctx.JSON(iris.Map{"code": "1", "msg": "当前状态不能完成接诊"})
+		return
+	}
+	tx, err := model.DB.Begin()
+	_, err = tx.Exec("update clinic_triage_patient set status=40,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
+	if err != nil {
+		fmt.Println("完成接诊错误", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": "完成接诊失败"})
+		return
+	}
+
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 40, 1, triagePersonnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err, clinicTriagePatientID)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
+
+}
+
 //AppointmentsByDate 按日期统计挂号记录
 func AppointmentsByDate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
