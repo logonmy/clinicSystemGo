@@ -206,6 +206,7 @@ func TriagePatientList(ctx iris.Context) {
 	triage_personnel.name as register_personnel_name, 
 	ctp.status, 
 	ctp.visit_date,
+	ctp.register_type,
 	p.name as patient_name, 
 	p.birthday,
 	p.sex, 
