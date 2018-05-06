@@ -258,7 +258,7 @@ func DoctorsWithSchedule(ctx iris.Context) {
 		var dateSchedule DateSchedule
 		has := false
 		for _, s := range schedules {
-			if int(s["personnel_id"].(int64)) != PersonnelID && int(s["department_id"].(int64)) != DepartmentID {
+			if int(s["personnel_id"].(int64)) != PersonnelID || int(s["department_id"].(int64)) != DepartmentID {
 				continue
 			}
 			VisitDate := s["visit_date"].(time.Time).Format("2006-01-02")
