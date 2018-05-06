@@ -206,6 +206,7 @@ func TriagePatientList(ctx iris.Context) {
 	triage_personnel.name as register_personnel_name, 
 	ctp.status, 
 	ctp.visit_date,
+	ctp.register_type,
 	p.name as patient_name, 
 	p.birthday,
 	p.sex, 
@@ -247,14 +248,12 @@ func TriagePatientList(ctx iris.Context) {
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须小于结束日期"})
 			return
 		}
 		countSQL += " and ctp.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
 		rowSQL += " and ctp.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
 	}
-
-	fmt.Println("countSQL ========", countSQL)
 
 	total := model.DB.QueryRowx(countSQL, clinicID, keyword)
 	if err != nil {
@@ -559,13 +558,14 @@ func TriageCompleteBodySign(ctx iris.Context) {
 	insertKeyStr := strings.Join(insertKeys, ",")
 	insertValueStr := strings.Join(insertValues, ",")
 
-	_, err1 := model.DB.Exec("delete from body_sign where clinicTriagePatientID=" + clinicTriagePatientID)
+	_, err1 := model.DB.Exec("delete from body_sign where clinic_triage_patient_id=" + clinicTriagePatientID)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": err1})
 		return
 	}
 
 	insertSQL := "insert into body_sign (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
+	fmt.Println("insertSQL ========", insertSQL)
 	_, err := model.DB.Exec(insertSQL)
 
 	if err != nil {
@@ -661,7 +661,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 	insertValueStr := strings.Join(insertValues, ",")
 
 	insertSQL := "insert into pre_medical_record (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
-	_, err1 := model.DB.Exec("delete from pre_medical_record where clinicTriagePatientID=" + clinicTriagePatientID)
+	_, err1 := model.DB.Exec("delete from pre_medical_record where clinic_triage_patient_id=" + clinicTriagePatientID)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": err1})
 		return
@@ -727,7 +727,7 @@ func TriageCompletePreDiagnosis(ctx iris.Context) {
 
 	insertSQL := "insert into pre_diagnosis (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
 
-	_, err1 := model.DB.Exec("delete from pre_diagnosis where clinicTriagePatientID=" + clinicTriagePatientID)
+	_, err1 := model.DB.Exec("delete from pre_diagnosis where clinic_triage_patient_id=" + clinicTriagePatientID)
 	_, err := model.DB.Exec(insertSQL)
 
 	if err1 != nil {
@@ -788,6 +788,53 @@ func TriageReception(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
+}
+
+// TriageComplete 医生完成接诊
+func TriageComplete(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	triagePersonnelID := ctx.PostValue("recept_personnel_id")
+	if clinicTriagePatientID == "" || triagePersonnelID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+	row := model.DB.QueryRowx("select id,status from clinic_triage_patient where id=$1", clinicTriagePatientID)
+	clinicTriagePatient := FormatSQLRowToMap(row)
+	_, ok := clinicTriagePatient["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人不存在"})
+		return
+	}
+	status := clinicTriagePatient["status"]
+	if status.(int64) != 30 {
+		ctx.JSON(iris.Map{"code": "1", "msg": "当前状态不能完成接诊"})
+		return
+	}
+	tx, err := model.DB.Begin()
+	_, err = tx.Exec("update clinic_triage_patient set status=40,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
+	if err != nil {
+		fmt.Println("完成接诊错误", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": "完成接诊失败"})
+		return
+	}
+
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 40, 1, triagePersonnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err, clinicTriagePatientID)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
+
 }
 
 //AppointmentsByDate 按日期统计挂号记录
@@ -880,8 +927,8 @@ func AppointmentsByDate(ctx iris.Context) {
 	}
 
 	if personnelID != "" {
-		countSQL += ` and dp.doctor_id = ` + personnelID
-		doctorListSQL += ` and dp.doctor_id = ` + personnelID
+		countSQL += ` and dp.personnel_id = ` + personnelID
+		doctorListSQL += ` and dp.personnel_id = ` + personnelID
 		doctorCountSQL += ` and ctp.doctor_id = ` + personnelID
 	}
 
