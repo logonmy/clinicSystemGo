@@ -879,8 +879,8 @@ func AppointmentsByDate(ctx iris.Context) {
 	}
 
 	if personnelID != "" {
-		countSQL += ` and dp.doctor_id = ` + personnelID
-		doctorListSQL += ` and dp.doctor_id = ` + personnelID
+		countSQL += ` and dp.personnel_id = ` + personnelID
+		doctorListSQL += ` and dp.personnel_id = ` + personnelID
 		doctorCountSQL += ` and ctp.doctor_id = ` + personnelID
 	}
 
