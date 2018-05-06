@@ -254,8 +254,6 @@ func TriagePatientList(ctx iris.Context) {
 		rowSQL += " and ctp.created_time between date'" + startDate + "' - integer '1' and date '" + endDate + "' + integer '1'"
 	}
 
-	fmt.Println("countSQL ========", countSQL)
-
 	total := model.DB.QueryRowx(countSQL, clinicID, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -559,13 +557,14 @@ func TriageCompleteBodySign(ctx iris.Context) {
 	insertKeyStr := strings.Join(insertKeys, ",")
 	insertValueStr := strings.Join(insertValues, ",")
 
-	_, err1 := model.DB.Exec("delete from body_sign where clinicTriagePatientID=" + clinicTriagePatientID)
+	_, err1 := model.DB.Exec("delete from body_sign where clinic_triage_patient_id=" + clinicTriagePatientID)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": err1})
 		return
 	}
 
 	insertSQL := "insert into body_sign (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
+	fmt.Println("insertSQL ========", insertSQL)
 	_, err := model.DB.Exec(insertSQL)
 
 	if err != nil {
@@ -661,7 +660,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 	insertValueStr := strings.Join(insertValues, ",")
 
 	insertSQL := "insert into pre_medical_record (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
-	_, err1 := model.DB.Exec("delete from pre_medical_record where clinicTriagePatientID=" + clinicTriagePatientID)
+	_, err1 := model.DB.Exec("delete from pre_medical_record where clinic_triage_patient_id=" + clinicTriagePatientID)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": err1})
 		return
@@ -727,7 +726,7 @@ func TriageCompletePreDiagnosis(ctx iris.Context) {
 
 	insertSQL := "insert into pre_diagnosis (" + insertKeyStr + ") values (" + insertValueStr + ") RETURNING id;"
 
-	_, err1 := model.DB.Exec("delete from pre_diagnosis where clinicTriagePatientID=" + clinicTriagePatientID)
+	_, err1 := model.DB.Exec("delete from pre_diagnosis where clinic_triage_patient_id=" + clinicTriagePatientID)
 	_, err := model.DB.Exec(insertSQL)
 
 	if err1 != nil {
