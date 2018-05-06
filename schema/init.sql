@@ -1049,7 +1049,7 @@ CREATE TABLE laboratory_item
   instrument_code varchar(20),--仪器编码
   unit varchar(5),--单位
   clinical_significance text,--临床意义
-  data_type integer,--数据类型 1 定量 2 定性
+  data_type integer,--数据类型 1 定性 2 定量
   is_special boolean,--参考值是否特殊
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1092,7 +1092,8 @@ CREATE TABLE clinic_laboratory_item
 CREATE TABLE clinic_laboratory_association
 (
   clinic_laboratory_id integer NOT NULL references clinic_laboratory(id),--诊所医嘱id
-  laboratory_item_id INTEGER references laboratory_item(id),--检验项目id
+  clinic_laboratory_item_id INTEGER references clinic_laboratory_item(id),--诊所检验项目id
+  default_result varchar(10),--默认结果
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
