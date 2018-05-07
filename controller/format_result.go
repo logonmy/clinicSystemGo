@@ -37,7 +37,8 @@ type LaboratoryItem struct {
 	LaboratoryItemID       int64        `json:"laboratory_item_id"`
 	Name                   string       `json:"name"`
 	EnName                 interface{}  `json:"en_name"`
-	Unit                   interface{}  `json:"unit"`
+	UnitName               interface{}  `json:"unit_name"`
+	UnitID                 interface{}  `json:"unit_id"`
 	Status                 bool         `json:"status"`
 	IsSpecial              bool         `json:"is_special"`
 	DataType               int64        `json:"data_type"`
@@ -75,7 +76,8 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 		instrumentCode := v["instrument_code"]
 		isDelivery := v["is_delivery"]
 		enName := v["en_name"]
-		unit := v["unit"]
+		unitID := v["unit_id"]
+		unitName := v["unit_name"]
 		status := v["status"]
 		isSpecial := v["is_special"]
 		dataType := v["data_type"]
@@ -120,7 +122,8 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 				LaboratoryItemID:       laboratoryItemID.(int64),
 				Name:                   name.(string),
 				EnName:                 enName,
-				Unit:                   unit,
+				UnitID:                 unitID,
+				UnitName:               unitName,
 				Status:                 status.(bool),
 				InstrumentCode:         instrumentCode,
 				IsDelivery:             isDelivery,
