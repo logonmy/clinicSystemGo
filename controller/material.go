@@ -45,6 +45,15 @@ func MaterialCreate(ctx iris.Context) {
 		return
 	}
 
+	var storehouseID string
+	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
+	if errs != nil {
+		fmt.Println("errs ===", errs)
+		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		return
+	}
+	fmt.Println("storehouseID==", storehouseID)
+
 	if manuFactory != "" {
 		lrow := model.DB.QueryRowx("select id from material where name=$1 and manu_factory=$2 limit 1", name, manuFactory)
 		if lrow == nil {
@@ -62,8 +71,8 @@ func MaterialCreate(ctx iris.Context) {
 	materialSets := []string{"name", "unit_id"}
 	materialValues := []string{"'" + name + "'", unitID}
 
-	clinicMaterialSets := []string{"clinic_id", "price"}
-	clinicMaterialValues := []string{clinicID, price}
+	clinicMaterialSets := []string{"storehouse_id", "price"}
+	clinicMaterialValues := []string{storehouseID, price}
 
 	if enName != "" {
 		materialSets = append(materialSets, "en_name")
@@ -134,7 +143,7 @@ func MaterialCreate(ctx iris.Context) {
 	clinicMaterialSetStr := strings.Join(clinicMaterialSets, ",")
 	clinicMaterialValueStr := strings.Join(clinicMaterialValues, ",")
 
-	clinicMaterialInsertSQL := "insert into clinic_material (" + clinicMaterialSetStr + ") values (" + clinicMaterialValueStr + ")"
+	clinicMaterialInsertSQL := "insert into material_stock (" + clinicMaterialSetStr + ") values (" + clinicMaterialValueStr + ")"
 	fmt.Println("clinicMaterialInsertSQL==", clinicMaterialInsertSQL)
 
 	_, err2 := tx.Exec(clinicMaterialInsertSQL)
@@ -159,7 +168,7 @@ func MaterialCreate(ctx iris.Context) {
 // MaterialUpdate 更新材料项目
 func MaterialUpdate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	clinicMaterialID := ctx.PostValue("clinic_material_id")
+	materialStockID := ctx.PostValue("material_stock_id")
 	materialID := ctx.PostValue("material_id")
 
 	name := ctx.PostValue("name")
@@ -178,7 +187,7 @@ func MaterialUpdate(ctx iris.Context) {
 	effDay := ctx.PostValue("eff_day")
 	stockWarning := ctx.PostValue("stock_warning")
 
-	if clinicID == "" || name == "" || clinicMaterialID == "" || price == "" || materialID == "" {
+	if clinicID == "" || name == "" || materialStockID == "" || price == "" || materialID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -195,7 +204,7 @@ func MaterialUpdate(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id,clinic_id,material_id from clinic_material where id=$1 limit 1", clinicMaterialID)
+	crow := model.DB.QueryRowx("select id,material_id from material_stock where id=$1 limit 1", materialStockID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -206,15 +215,10 @@ func MaterialUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所材料项目数据错误"})
 		return
 	}
-	streatmentID := strconv.FormatInt(clinicMaterialProject["material_id"].(int64), 10)
-	fmt.Println("streatmentID====", streatmentID)
+	smaterialID := strconv.FormatInt(clinicMaterialProject["material_id"].(int64), 10)
+	fmt.Println("smaterialID====", smaterialID)
 
-	if clinicID != strconv.FormatInt(clinicMaterialProject["clinic_id"].(int64), 10) {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
-		return
-	}
-
-	if streatmentID != materialID {
+	if smaterialID != materialID {
 		ctx.JSON(iris.Map{"code": "1", "msg": "材料项目数据id不匹配"})
 		return
 	}
@@ -290,10 +294,10 @@ func MaterialUpdate(ctx iris.Context) {
 	clinicMaterialSets = append(clinicMaterialSets, "updated_time=LOCALTIMESTAMP")
 	clinicMaterialSetStr := strings.Join(clinicMaterialSets, ",")
 
-	clinicMaterialUpdateSQL := "update clinic_material set " + clinicMaterialSetStr + " where id=$1"
+	clinicMaterialUpdateSQL := "update material_stock set " + clinicMaterialSetStr + " where id=$1"
 	fmt.Println("clinicMaterialUpdateSQL==", clinicMaterialUpdateSQL)
 
-	_, err2 := tx.Exec(clinicMaterialUpdateSQL, clinicMaterialID)
+	_, err2 := tx.Exec(clinicMaterialUpdateSQL, materialStockID)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
 		tx.Rollback()
@@ -315,9 +319,9 @@ func MaterialUpdate(ctx iris.Context) {
 // MaterialOnOff 启用和停用
 func MaterialOnOff(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	clinicMaterialID := ctx.PostValue("clinic_material_id")
+	materialStockID := ctx.PostValue("material_stock_id")
 	status := ctx.PostValue("status")
-	if clinicID == "" || clinicMaterialID == "" || status == "" {
+	if clinicID == "" || materialStockID == "" || status == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -334,7 +338,7 @@ func MaterialOnOff(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id,clinic_id from clinic_material where id=$1 limit 1", clinicMaterialID)
+	crow := model.DB.QueryRowx("select id from material_stock where id=$1 limit 1", materialStockID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -346,11 +350,7 @@ func MaterialOnOff(ctx iris.Context) {
 		return
 	}
 
-	if clinicID != strconv.FormatInt(clinicMaterialProject["clinic_id"].(int64), 10) {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
-		return
-	}
-	_, err1 := model.DB.Exec("update clinic_material set status=$1 where id=$2", status, clinicMaterialID)
+	_, err1 := model.DB.Exec("update material_stock set status=$1 where id=$2", status, materialStockID)
 	if err1 != nil {
 		fmt.Println(" err1====", err1)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
@@ -403,28 +403,37 @@ func MaterialList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(cm.id) as total from clinic_material cm
-		left join material m on cm.material_id = m.id
-		where cm.clinic_id=$1`
-	selectSQL := `select cm.material_id,cm.id as clinic_material_id,m.name,m.unit_id,du.name as unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory,m.specification,
-		m.en_name,cm.is_discount,cm.price,cm.status,cm.cost,cm.eff_day,cm.stock_warning
-		from clinic_material cm
-		left join material m on cm.material_id = m.id
+	var storehouseID string
+	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
+	if errs != nil {
+		fmt.Println("errs ===", errs)
+		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		return
+	}
+	fmt.Println("storehouseID==", storehouseID)
+
+	countSQL := `select count(ms.id) as total from material_stock ms
+		left join material m on ms.material_id = m.id
+		where ms.storehouse_id=$1`
+	selectSQL := `select ms.material_id,ms.id as material_stock_id,m.name,m.unit_id,du.name as unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory,m.specification,
+		m.en_name,ms.is_discount,ms.price,ms.status,ms.cost,ms.eff_day,ms.stock_warning
+		from material_stock ms
+		left join material m on ms.material_id = m.id
 		left join dose_unit du on m.unit_id = du.id
-		where cm.clinic_id=$1`
+		where ms.storehouse_id=$1`
 
 	if keyword != "" {
 		countSQL += " and m.name ~'" + keyword + "'"
 		selectSQL += " and m.name ~'" + keyword + "'"
 	}
 	if status != "" {
-		countSQL += " and cm.status=" + status
-		selectSQL += " and cm.status=" + status
+		countSQL += " and ms.status=" + status
+		selectSQL += " and ms.status=" + status
 	}
 
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
-	total := model.DB.QueryRowx(countSQL, clinicID)
+	total := model.DB.QueryRowx(countSQL, storehouseID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -435,7 +444,7 @@ func MaterialList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", clinicID, offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", storehouseID, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
@@ -444,24 +453,24 @@ func MaterialList(ctx iris.Context) {
 
 //MaterialDetail 材料项目详情
 func MaterialDetail(ctx iris.Context) {
-	clinicMaterialID := ctx.PostValue("clinic_material_id")
+	materialStockID := ctx.PostValue("material_stock_id")
 
-	if clinicMaterialID == "" {
+	if materialStockID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	selectSQL := `select cm.material_id,cm.id as clinic_material_id,m.name,m.unit_id,du.name as unit_name,m.py_code,m.remark,m.idc_code,
-		m.manu_factory,m.specification,m.en_name,cm.is_discount,cm.price,cm.status,cm.cost,cm.eff_day,cm.stock_warning
-		from clinic_material cm
-		left join material m on cm.material_id = m.id
+	selectSQL := `select ms.material_id,ms.id as material_stock_id,m.name,m.unit_id,du.name as unit_name,m.py_code,m.remark,m.idc_code,
+		m.manu_factory,m.specification,m.en_name,ms.is_discount,ms.price,ms.status,ms.cost,ms.eff_day,ms.stock_warning
+		from material_stock ms
+		left join material m on ms.material_id = m.id
 		left join dose_unit du on m.unit_id = du.id
-		where cm.id=$1`
+		where ms.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL, clinicMaterialID)
+	rows, _ := model.DB.Queryx(selectSQL, materialStockID)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})

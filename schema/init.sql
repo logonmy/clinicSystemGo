@@ -819,7 +819,7 @@ CREATE TABLE storehouse
   deleted_time timestamp with time zone
 );
 
---库存
+--药品库存
 CREATE TABLE drug_stock
 (
   id serial PRIMARY KEY NOT NULL,--id
@@ -1169,11 +1169,11 @@ CREATE TABLE material
   UNIQUE(name,manu_factory)
 );
 
---诊所材料费用项目
-CREATE TABLE clinic_material
+--诊所材料库存
+CREATE TABLE material_stock
 (
   id serial PRIMARY KEY NOT NULL,--id
-  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
   material_id INTEGER references material(id),--材料费用项目id
   cost integer CHECK(cost > 0), --成本价
   price integer NOT NULL CHECK(price > 0), --销售价
