@@ -16,7 +16,7 @@ func ExaminationProjectCreate(ctx iris.Context) {
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
-	unit := ctx.PostValue("unit")
+	unitID := ctx.PostValue("unit_id")
 	organ := ctx.PostValue("organ")
 	remark := ctx.PostValue("remark")
 
@@ -72,9 +72,9 @@ func ExaminationProjectCreate(ctx iris.Context) {
 		examinationSets = append(examinationSets, "idc_code")
 		examinationValues = append(examinationValues, "'"+idcCode+"'")
 	}
-	if unit != "" {
-		examinationSets = append(examinationSets, "unit")
-		examinationValues = append(examinationValues, "'"+unit+"'")
+	if unitID != "" {
+		examinationSets = append(examinationSets, "unit_id")
+		examinationValues = append(examinationValues, unitID)
 	}
 	if organ != "" {
 		examinationSets = append(examinationSets, "organ")
@@ -153,7 +153,7 @@ func ExaminationProjectUpdate(ctx iris.Context) {
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
-	unit := ctx.PostValue("unit")
+	unitID := ctx.PostValue("unit_id")
 	organ := ctx.PostValue("organ")
 	remark := ctx.PostValue("remark")
 
@@ -224,8 +224,8 @@ func ExaminationProjectUpdate(ctx iris.Context) {
 	if pyCode != "" {
 		examinationSets = append(examinationSets, "py_code='"+pyCode+"'")
 	}
-	if unit != "" {
-		examinationSets = append(examinationSets, "unit='"+unit+"'")
+	if unitID != "" {
+		examinationSets = append(examinationSets, "unit_id="+unitID)
 	}
 	if idcCode != "" {
 		examinationSets = append(examinationSets, "idc_code='"+idcCode+"'")
@@ -381,10 +381,11 @@ func ExaminationProjectList(ctx iris.Context) {
 	countSQL := `select count(cep.id) as total from clinic_examination_project cep
 		left join examination_project ep on cep.examination_project_id = ep.id
 		where cep.clinic_id=$1`
-	selectSQL := `select cep.examination_project_id,cep.id as clinic_examination_project_id,ep.name,ep.unit,ep.py_code,ep.remark,ep.idc_code,
+	selectSQL := `select cep.examination_project_id,cep.id as clinic_examination_project_id,ep.name,ep.unit_id,du.name as unit_name,ep.py_code,ep.remark,ep.idc_code,
 		ep.organ,ep.en_name,cep.is_discount,cep.price,cep.status,cep.cost
 		from clinic_examination_project cep
 		left join examination_project ep on cep.examination_project_id = ep.id
+		left join dose_unit du on ep.unit_id = du.id
 		where cep.clinic_id=$1`
 
 	if keyword != "" {
@@ -425,10 +426,11 @@ func ExaminationProjectDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select cep.examination_project_id,cep.id as clinic_examination_project_id,ep.name,ep.unit,ep.py_code,ep.remark,ep.idc_code,
+	selectSQL := `select cep.examination_project_id,cep.id as clinic_examination_project_id,ep.name,ep.unit_id,du.name as unit_name,ep.py_code,ep.remark,ep.idc_code,
 	ep.organ,ep.en_name,cep.is_discount,cep.price,cep.status,cep.cost
 		from clinic_examination_project cep
 		left join examination_project ep on cep.examination_project_id = ep.id
+		left join dose_unit du on ep.unit_id = du.id
 		where cep.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)

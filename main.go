@@ -206,6 +206,33 @@ func main() {
 		examinationProject.Post("/detail", controller.ExaminationProjectDetail)
 	}
 
+	treatment := app.Party("/treatment", crs).AllowMethods(iris.MethodOptions)
+	{
+		treatment.Post("/create", controller.TreatmentCreate)
+		treatment.Post("/update", controller.TreatmentUpdate)
+		treatment.Post("/onOff", controller.TreatmentOnOff)
+		treatment.Post("/list", controller.TreatmentList)
+		treatment.Post("/detail", controller.TreatmentDetail)
+	}
+
+	otherCost := app.Party("/otherCost", crs).AllowMethods(iris.MethodOptions)
+	{
+		otherCost.Post("/create", controller.OtherCostCreate)
+		otherCost.Post("/update", controller.OtherCostUpdate)
+		otherCost.Post("/onOff", controller.OtherCostOnOff)
+		otherCost.Post("/list", controller.OtherCostList)
+		otherCost.Post("/detail", controller.OtherCostDetail)
+	}
+
+	material := app.Party("/material", crs).AllowMethods(iris.MethodOptions)
+	{
+		material.Post("/create", controller.MaterialCreate)
+		material.Post("/update", controller.MaterialUpdate)
+		material.Post("/onOff", controller.MaterialOnOff)
+		material.Post("/list", controller.MaterialList)
+		material.Post("/detail", controller.MaterialDetail)
+	}
+
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
 	{
 		laboratory.Post("/create", controller.LaboratoryCreate)

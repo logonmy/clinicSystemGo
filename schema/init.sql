@@ -978,7 +978,7 @@ CREATE TABLE examination_project
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  unit varchar(5),--单位
+  unit_id integer references dose_unit(id),--单位id
   organ varchar(20),--检查部位
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1033,7 +1033,7 @@ CREATE TABLE laboratory
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  unit varchar(5),--单位
+  unit_id integer references dose_unit(id),--单位id
   time_report varchar(10),--报告所需时间
   clinical_significance text,--临床意义
   remark text,--备注
@@ -1068,7 +1068,7 @@ CREATE TABLE laboratory_item
   name varchar(20) UNIQUE NOT NULL,--检验名称
   en_name varchar(20),--英文名称
   instrument_code varchar(20),--仪器编码
-  unit varchar(5),--单位
+  unit_id integer references dose_unit(id),--单位id
   clinical_significance text,--临床意义
   data_type integer,--数据类型 1 定性 2 定量
   is_special boolean,--参考值是否特殊
@@ -1116,6 +1116,100 @@ CREATE TABLE clinic_laboratory_association
   clinic_laboratory_item_id INTEGER references clinic_laboratory_item(id),--诊所检验项目id
   default_result varchar(10),--默认结果
   status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--治疗医嘱
+CREATE TABLE treatment
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) UNIQUE NOT NULL,--名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  unit_id integer references dose_unit(id),--单位id
+  remark text,--备注
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--诊所治疗项目
+CREATE TABLE clinic_treatment
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  treatment_id INTEGER references treatment(id),--治疗项目id
+  cost integer CHECK(cost > 0), --成本价
+  price integer NOT NULL CHECK(price > 0), --销售价
+  status boolean NOT NULL DEFAULT true,--是否启用
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--材料费用
+CREATE TABLE material
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  manu_factory varchar(20),--生产厂商
+  specification varchar(30),--规格
+  unit_id integer references dose_unit(id),--单位id
+  remark text,--备注
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE(name,manu_factory)
+);
+
+--诊所材料费用项目
+CREATE TABLE clinic_material
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  material_id INTEGER references material(id),--材料费用项目id
+  cost integer CHECK(cost > 0), --成本价
+  price integer NOT NULL CHECK(price > 0), --销售价
+  eff_day integer,--预警有效天数
+  stock_warning integer,--物资预警数
+  status boolean NOT NULL DEFAULT true,--是否启用
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--其它费用
+CREATE TABLE other_cost
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  name varchar(20) NOT NULL,--名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  unit_id integer references dose_unit(id),--单位id
+  remark text,--备注
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--诊所其它费用项目
+CREATE TABLE clinic_other_cost
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  other_cost_id INTEGER references other_cost(id),--材料费用项目id
+  cost integer CHECK(cost > 0), --成本价
+  price integer NOT NULL CHECK(price > 0), --销售价
+  status boolean NOT NULL DEFAULT true,--是否启用
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
