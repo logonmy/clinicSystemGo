@@ -916,8 +916,7 @@ CREATE TABLE diagnosis
 CREATE TABLE medical_record
 (
   id serial PRIMARY KEY NOT NULL,--id
-  patient_id INTEGER NOT NULL references patient(id),--关联的患者
-  registration_id INTEGER,--预约编号
+  clinic_triage_patient_id INTEGER NOT NULL UNIQUE references clinic_triage_patient(id),--预约编号
   morbidity_date varchar(10), --发病日期
   chief_complaint text NOT NULL, --主诉
   history_of_present_illness text,-- 现病史
