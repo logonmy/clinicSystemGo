@@ -970,8 +970,8 @@ CREATE TABLE examination_organ
   deleted_time timestamp with time zone
 );
 
---检查项目
-CREATE TABLE examination_project
+--检查医嘱
+CREATE TABLE examination
 (
   id serial PRIMARY KEY NOT NULL,--id
   name varchar(20) NOT NULL,--检查名称
@@ -986,12 +986,12 @@ CREATE TABLE examination_project
   deleted_time timestamp with time zone
 );
 
---诊所检查项目
-CREATE TABLE clinic_examination_project
+--诊所检查医嘱
+CREATE TABLE clinic_examination
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  examination_project_id integer NOT NULL references examination_project(id),--检查项目id
+  examination_id integer NOT NULL references examination(id),--检查项目id
   cost integer, --成本价
   price integer NOT NULL,--销售价
   status boolean NOT NULL DEFAULT true,--是否启用

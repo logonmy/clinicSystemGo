@@ -9,8 +9,8 @@ import (
 	"github.com/kataras/iris"
 )
 
-// ExaminationProjectCreate 创建检查缴费项目
-func ExaminationProjectCreate(ctx iris.Context) {
+// ExaminationCreate 创建检查缴费项目
+func ExaminationCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
@@ -42,13 +42,13 @@ func ExaminationProjectCreate(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from examination_project where name=$1 limit 1", name)
+	lrow := model.DB.QueryRowx("select id from examination where name=$1 limit 1", name)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 		return
 	}
-	examinationProject := FormatSQLRowToMap(lrow)
-	_, lok := examinationProject["id"]
+	examination := FormatSQLRowToMap(lrow)
+	_, lok := examination["id"]
 	if lok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "检查名称已存在"})
 		return
@@ -101,7 +101,7 @@ func ExaminationProjectCreate(ctx iris.Context) {
 	examinationSetStr := strings.Join(examinationSets, ",")
 	examinationValueStr := strings.Join(examinationValues, ",")
 
-	examinationInsertSQL := "insert into examination_project (" + examinationSetStr + ") values (" + examinationValueStr + ") RETURNING id;"
+	examinationInsertSQL := "insert into examination (" + examinationSetStr + ") values (" + examinationValueStr + ") RETURNING id;"
 	fmt.Println("examinationInsertSQL==", examinationInsertSQL)
 
 	tx, err := model.DB.Begin()
@@ -115,13 +115,13 @@ func ExaminationProjectCreate(ctx iris.Context) {
 	}
 	fmt.Println("examinationID====", examinationID)
 
-	clinicExaminationSets = append(clinicExaminationSets, "examination_project_id")
+	clinicExaminationSets = append(clinicExaminationSets, "examination_id")
 	clinicExaminationValues = append(clinicExaminationValues, examinationID)
 
 	clinicExaminationSetStr := strings.Join(clinicExaminationSets, ",")
 	clinicExaminationValueStr := strings.Join(clinicExaminationValues, ",")
 
-	clinicExaminationInsertSQL := "insert into clinic_examination_project (" + clinicExaminationSetStr + ") values (" + clinicExaminationValueStr + ")"
+	clinicExaminationInsertSQL := "insert into clinic_examination (" + clinicExaminationSetStr + ") values (" + clinicExaminationValueStr + ")"
 	fmt.Println("clinicExaminationInsertSQL==", clinicExaminationInsertSQL)
 
 	_, err2 := tx.Exec(clinicExaminationInsertSQL)
@@ -143,11 +143,11 @@ func ExaminationProjectCreate(ctx iris.Context) {
 
 }
 
-// ExaminationProjectUpdate 更新检查缴费项目
-func ExaminationProjectUpdate(ctx iris.Context) {
+// ExaminationUpdate 更新检查缴费项目
+func ExaminationUpdate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	clinicExaminationProjectID := ctx.PostValue("clinic_examination_project_id")
-	examinationProjectID := ctx.PostValue("examination_project_id")
+	clinicExaminationID := ctx.PostValue("clinic_examination_id")
+	examinationID := ctx.PostValue("examination_id")
 
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
@@ -162,7 +162,7 @@ func ExaminationProjectUpdate(ctx iris.Context) {
 	status := ctx.PostValue("status")
 	isDiscount := ctx.PostValue("is_discount")
 
-	if clinicID == "" || name == "" || clinicExaminationProjectID == "" || price == "" || examinationProjectID == "" {
+	if clinicID == "" || name == "" || clinicExaminationID == "" || price == "" || examinationID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -179,31 +179,31 @@ func ExaminationProjectUpdate(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id,clinic_id,examination_project_id from clinic_examination_project where id=$1 limit 1", clinicExaminationProjectID)
+	crow := model.DB.QueryRowx("select id,clinic_id,examination_id from clinic_examination where id=$1 limit 1", clinicExaminationID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	clinicExaminationProject := FormatSQLRowToMap(crow)
-	_, rok := clinicExaminationProject["id"]
+	clinicExamination := FormatSQLRowToMap(crow)
+	_, rok := clinicExamination["id"]
 	if !rok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所检查项目数据错误"})
 		return
 	}
-	sexaminationProjectID := strconv.FormatInt(clinicExaminationProject["examination_project_id"].(int64), 10)
-	fmt.Println("sexaminationProjectID====", sexaminationProjectID)
+	sexaminationID := strconv.FormatInt(clinicExamination["examination_id"].(int64), 10)
+	fmt.Println("sexaminationID====", sexaminationID)
 
-	if clinicID != strconv.FormatInt(clinicExaminationProject["clinic_id"].(int64), 10) {
+	if clinicID != strconv.FormatInt(clinicExamination["clinic_id"].(int64), 10) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
 		return
 	}
 
-	if sexaminationProjectID != examinationProjectID {
+	if sexaminationID != examinationID {
 		ctx.JSON(iris.Map{"code": "1", "msg": "检查项目数据id不匹配"})
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from examination_project where name=$1 and id!=$2 limit 1", name, examinationProjectID)
+	lrow := model.DB.QueryRowx("select id from examination where name=$1 and id!=$2 limit 1", name, examinationID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -250,11 +250,11 @@ func ExaminationProjectUpdate(ctx iris.Context) {
 	examinationSets = append(examinationSets, "updated_time=LOCALTIMESTAMP")
 	examinationSetStr := strings.Join(examinationSets, ",")
 
-	examinationUpdateSQL := "update examination_project set " + examinationSetStr + " where id=$1"
+	examinationUpdateSQL := "update examination set " + examinationSetStr + " where id=$1"
 	fmt.Println("examinationUpdateSQL==", examinationUpdateSQL)
 
 	tx, err := model.DB.Begin()
-	_, err = tx.Exec(examinationUpdateSQL, examinationProjectID)
+	_, err = tx.Exec(examinationUpdateSQL, examinationID)
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
@@ -265,10 +265,10 @@ func ExaminationProjectUpdate(ctx iris.Context) {
 	clinicExaminationSets = append(clinicExaminationSets, "updated_time=LOCALTIMESTAMP")
 	clinicExaminationSetStr := strings.Join(clinicExaminationSets, ",")
 
-	clinicExaminationUpdateSQL := "update clinic_examination_project set " + clinicExaminationSetStr + " where id=$1"
+	clinicExaminationUpdateSQL := "update clinic_examination set " + clinicExaminationSetStr + " where id=$1"
 	fmt.Println("clinicExaminationUpdateSQL==", clinicExaminationUpdateSQL)
 
-	_, err2 := tx.Exec(clinicExaminationUpdateSQL, clinicExaminationProjectID)
+	_, err2 := tx.Exec(clinicExaminationUpdateSQL, clinicExaminationID)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
 		tx.Rollback()
@@ -287,12 +287,12 @@ func ExaminationProjectUpdate(ctx iris.Context) {
 
 }
 
-// ExaminationProjectOnOff 启用和停用
-func ExaminationProjectOnOff(ctx iris.Context) {
+// ExaminationOnOff 启用和停用
+func ExaminationOnOff(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	clinicExaminationProjectID := ctx.PostValue("clinic_examination_project_id")
+	clinicExaminationID := ctx.PostValue("clinic_examination_id")
 	status := ctx.PostValue("status")
-	if clinicID == "" || clinicExaminationProjectID == "" || status == "" {
+	if clinicID == "" || clinicExaminationID == "" || status == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -309,23 +309,23 @@ func ExaminationProjectOnOff(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id,clinic_id from clinic_examination_project where id=$1 limit 1", clinicExaminationProjectID)
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_examination where id=$1 limit 1", clinicExaminationID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	clinicExaminationProject := FormatSQLRowToMap(crow)
-	_, rok := clinicExaminationProject["id"]
+	clinicExamination := FormatSQLRowToMap(crow)
+	_, rok := clinicExamination["id"]
 	if !rok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
 		return
 	}
 
-	if clinicID != strconv.FormatInt(clinicExaminationProject["clinic_id"].(int64), 10) {
+	if clinicID != strconv.FormatInt(clinicExamination["clinic_id"].(int64), 10) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
 		return
 	}
-	_, err1 := model.DB.Exec("update clinic_examination_project set status=$1 where id=$2", status, clinicExaminationProjectID)
+	_, err1 := model.DB.Exec("update clinic_examination set status=$1 where id=$2", status, clinicExaminationID)
 	if err1 != nil {
 		fmt.Println(" err1====", err1)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
@@ -335,8 +335,8 @@ func ExaminationProjectOnOff(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
-// ExaminationProjectList 检查缴费项目列表
-func ExaminationProjectList(ctx iris.Context) {
+// ExaminationList 检查缴费项目列表
+func ExaminationList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 	status := ctx.PostValue("status")
@@ -378,13 +378,13 @@ func ExaminationProjectList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(cep.id) as total from clinic_examination_project cep
-		left join examination_project ep on cep.examination_project_id = ep.id
+	countSQL := `select count(cep.id) as total from clinic_examination cep
+		left join examination ep on cep.examination_id = ep.id
 		where cep.clinic_id=$1`
-	selectSQL := `select cep.examination_project_id,cep.id as clinic_examination_project_id,ep.name,ep.unit_id,du.name as unit_name,ep.py_code,ep.remark,ep.idc_code,
+	selectSQL := `select cep.examination_id,cep.id as clinic_examination_id,ep.name,ep.unit_id,du.name as unit_name,ep.py_code,ep.remark,ep.idc_code,
 		ep.organ,ep.en_name,cep.is_discount,cep.price,cep.status,cep.cost
-		from clinic_examination_project cep
-		left join examination_project ep on cep.examination_project_id = ep.id
+		from clinic_examination cep
+		left join examination ep on cep.examination_id = ep.id
 		left join dose_unit du on ep.unit_id = du.id
 		where cep.clinic_id=$1`
 
@@ -417,26 +417,26 @@ func ExaminationProjectList(ctx iris.Context) {
 
 }
 
-//ExaminationProjectDetail 检查项目详情
-func ExaminationProjectDetail(ctx iris.Context) {
-	clinicExaminationProjectID := ctx.PostValue("clinic_examination_project_id")
+//ExaminationDetail 检查项目详情
+func ExaminationDetail(ctx iris.Context) {
+	clinicExaminationID := ctx.PostValue("clinic_examination_id")
 
-	if clinicExaminationProjectID == "" {
+	if clinicExaminationID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	selectSQL := `select cep.examination_project_id,cep.id as clinic_examination_project_id,ep.name,ep.unit_id,du.name as unit_name,ep.py_code,ep.remark,ep.idc_code,
+	selectSQL := `select cep.examination_id,cep.id as clinic_examination_id,ep.name,ep.unit_id,du.name as unit_name,ep.py_code,ep.remark,ep.idc_code,
 	ep.organ,ep.en_name,cep.is_discount,cep.price,cep.status,cep.cost
-		from clinic_examination_project cep
-		left join examination_project ep on cep.examination_project_id = ep.id
+		from clinic_examination cep
+		left join examination ep on cep.examination_id = ep.id
 		left join dose_unit du on ep.unit_id = du.id
 		where cep.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL, clinicExaminationProjectID)
+	rows, _ := model.DB.Queryx(selectSQL, clinicExaminationID)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})

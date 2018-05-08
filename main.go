@@ -197,13 +197,13 @@ func main() {
 		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
 	}
 
-	examinationProject := app.Party("/examinationProject", crs).AllowMethods(iris.MethodOptions)
+	examination := app.Party("/examination", crs).AllowMethods(iris.MethodOptions)
 	{
-		examinationProject.Post("/create", controller.ExaminationProjectCreate)
-		examinationProject.Post("/update", controller.ExaminationProjectUpdate)
-		examinationProject.Post("/onOff", controller.ExaminationProjectOnOff)
-		examinationProject.Post("/list", controller.ExaminationProjectList)
-		examinationProject.Post("/detail", controller.ExaminationProjectDetail)
+		examination.Post("/create", controller.ExaminationCreate)
+		examination.Post("/update", controller.ExaminationUpdate)
+		examination.Post("/onOff", controller.ExaminationOnOff)
+		examination.Post("/list", controller.ExaminationList)
+		examination.Post("/detail", controller.ExaminationDetail)
 	}
 
 	treatment := app.Party("/treatment", crs).AllowMethods(iris.MethodOptions)
