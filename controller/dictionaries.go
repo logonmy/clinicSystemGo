@@ -35,8 +35,8 @@ func DoseUnitList(ctx iris.Context) {
 	selectSQL := `select * from dose_unit where deleted_flag is null`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
 	}
 
 	total := model.DB.QueryRowx(countSQL)
@@ -83,8 +83,8 @@ func DoseFormList(ctx iris.Context) {
 	selectSQL := `select * from dose_form where deleted_flag is null`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
 	}
 
 	total := model.DB.QueryRowx(countSQL)
@@ -131,8 +131,8 @@ func DrugClassList(ctx iris.Context) {
 	selectSQL := `select * from drug_class where id > 0`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
 	}
 
 	total := model.DB.QueryRowx(countSQL)
@@ -179,8 +179,8 @@ func DrugTypeList(ctx iris.Context) {
 	selectSQL := `select * from drug_type where id > 0`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
 	}
 
 	total := model.DB.QueryRowx(countSQL)
@@ -227,8 +227,8 @@ func DrugPrintList(ctx iris.Context) {
 	selectSQL := `select * from drug_print where id > 0`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
 	}
 
 	total := model.DB.QueryRowx(countSQL)
@@ -323,8 +323,8 @@ func FrequencyList(ctx iris.Context) {
 	selectSQL := `select * from frequency where id > 0`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "' || code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "' || code ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "' or code ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "' or code ~'" + keyword + "'"
 	}
 
 	total := model.DB.QueryRowx(countSQL)
@@ -371,8 +371,8 @@ func RouteAdministrationList(ctx iris.Context) {
 	selectSQL := `select * from route_administration where id > 0`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "' || code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' || py_code ~'" + keyword + "' || code ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "' or code ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "' or code ~'" + keyword + "'"
 	}
 
 	total := model.DB.QueryRowx(countSQL)
