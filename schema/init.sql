@@ -283,16 +283,27 @@ CREATE TABLE charge_project_type
   deleted_time timestamp with time zone
 );
 
---收费项目-诊疗
-CREATE TABLE charge_project_treatment
+--诊疗
+CREATE TABLE diagnosis_treatment
 (
   id serial PRIMARY KEY NOT NULL,--id
-  project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   name varchar(20) UNIQUE NOT NULL,--名称
-  name_en varchar(20),--英文名称
+  en_name varchar(20),--英文名称
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--诊所诊疗
+CREATE TABLE clinic_diagnosis_treatment
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_id integer NOT NULL references clinic(id),--所属诊所
+  diagnosis_treatment_id integer NOT NULL references diagnosis_treatment(id),--诊疗项目id
   cost integer CHECK(cost > 0), --成本价
-  fee integer NOT NULL CHECK(fee > 0), --销售价
+  price integer NOT NULL CHECK(price > 0), --诊疗费金额
   status boolean NOT NULL DEFAULT true,--是否启用
+  is_discount boolean DEFAULT false,--是否允许折扣
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

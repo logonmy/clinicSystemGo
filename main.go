@@ -107,17 +107,19 @@ func main() {
 		triage.Post("/AppointmentsByDate", controller.AppointmentsByDate)
 	}
 
-	chargeProject := app.Party("/chargeProject", crs).AllowMethods(iris.MethodOptions)
+	diagnosisTreatment := app.Party("/diagnosisTreatment", crs).AllowMethods(iris.MethodOptions)
 	{
-		chargeProject.Post("/type/init", controller.ChargeTypeInit)
-		chargeProject.Post("/type/create", controller.ChargeTypeCreate)
-
-		chargeProject.Post("/treatment/init", controller.ChargeProjectTreatmentInit)
-		chargeProject.Post("/treatment/create", controller.ChargeProjectTreatmentCreate)
+		diagnosisTreatment.Post("/create", controller.DiagnosisTreatmentCreate)
+		diagnosisTreatment.Post("/update", controller.DiagnosisTreatmentUpdate)
+		diagnosisTreatment.Post("/onOff", controller.DiagnosisTreatmentOnOff)
+		diagnosisTreatment.Post("/list", controller.DiagnosisTreatmentList)
+		diagnosisTreatment.Post("/detail", controller.DiagnosisTreatmentDetail)
 	}
 
 	chargeUnPay := app.Party("/charge", crs).AllowMethods(iris.MethodOptions)
 	{
+		chargeUnPay.Post("/type/init", controller.ChargeTypeInit)
+		chargeUnPay.Post("/type/create", controller.ChargeTypeCreate)
 		// 创建代缴费项目
 		chargeUnPay.Post("/unPay/create", controller.ChargeUnPayCreate)
 		chargeUnPay.Post("/unPay/delete", controller.ChargeUnPayDelete)
