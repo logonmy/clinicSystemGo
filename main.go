@@ -248,6 +248,18 @@ func main() {
 		laboratory.Post("/item/searchByName", controller.LaboratoryItemSearch)
 	}
 
+	dictionaries := app.Party("/dictionaries", crs).AllowMethods(iris.MethodOptions)
+	{
+		dictionaries.Post("/DoseUnitList", controller.DoseUnitList)
+		dictionaries.Post("/DoseFormList", controller.DoseFormList)
+		dictionaries.Post("/DrugClassList", controller.DrugClassList)
+		dictionaries.Post("/DrugTypeList", controller.DrugTypeList)
+		dictionaries.Post("/DrugPrintList", controller.DrugPrintList)
+		dictionaries.Post("/ExaminationOrganList", controller.ExaminationOrganList)
+		dictionaries.Post("/FrequencyList", controller.FrequencyList)
+		dictionaries.Post("/RouteAdministrationList", controller.RouteAdministrationList)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
