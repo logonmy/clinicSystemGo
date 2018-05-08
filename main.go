@@ -107,17 +107,19 @@ func main() {
 		triage.Post("/AppointmentsByDate", controller.AppointmentsByDate)
 	}
 
-	chargeProject := app.Party("/chargeProject", crs).AllowMethods(iris.MethodOptions)
+	diagnosisTreatment := app.Party("/diagnosisTreatment", crs).AllowMethods(iris.MethodOptions)
 	{
-		chargeProject.Post("/type/init", controller.ChargeTypeInit)
-		chargeProject.Post("/type/create", controller.ChargeTypeCreate)
-
-		chargeProject.Post("/treatment/init", controller.ChargeProjectTreatmentInit)
-		chargeProject.Post("/treatment/create", controller.ChargeProjectTreatmentCreate)
+		diagnosisTreatment.Post("/create", controller.DiagnosisTreatmentCreate)
+		diagnosisTreatment.Post("/update", controller.DiagnosisTreatmentUpdate)
+		diagnosisTreatment.Post("/onOff", controller.DiagnosisTreatmentOnOff)
+		diagnosisTreatment.Post("/list", controller.DiagnosisTreatmentList)
+		diagnosisTreatment.Post("/detail", controller.DiagnosisTreatmentDetail)
 	}
 
 	chargeUnPay := app.Party("/charge", crs).AllowMethods(iris.MethodOptions)
 	{
+		chargeUnPay.Post("/type/init", controller.ChargeTypeInit)
+		chargeUnPay.Post("/type/create", controller.ChargeTypeCreate)
 		// 创建代缴费项目
 		chargeUnPay.Post("/unPay/create", controller.ChargeUnPayCreate)
 		chargeUnPay.Post("/unPay/delete", controller.ChargeUnPayDelete)
@@ -198,13 +200,40 @@ func main() {
 		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
 	}
 
-	examinationProject := app.Party("/examinationProject", crs).AllowMethods(iris.MethodOptions)
+	examination := app.Party("/examination", crs).AllowMethods(iris.MethodOptions)
 	{
-		examinationProject.Post("/create", controller.ExaminationProjectCreate)
-		examinationProject.Post("/update", controller.ExaminationProjectUpdate)
-		examinationProject.Post("/onOff", controller.ExaminationProjectOnOff)
-		examinationProject.Post("/list", controller.ExaminationProjectList)
-		examinationProject.Post("/detail", controller.ExaminationProjectDetail)
+		examination.Post("/create", controller.ExaminationCreate)
+		examination.Post("/update", controller.ExaminationUpdate)
+		examination.Post("/onOff", controller.ExaminationOnOff)
+		examination.Post("/list", controller.ExaminationList)
+		examination.Post("/detail", controller.ExaminationDetail)
+	}
+
+	treatment := app.Party("/treatment", crs).AllowMethods(iris.MethodOptions)
+	{
+		treatment.Post("/create", controller.TreatmentCreate)
+		treatment.Post("/update", controller.TreatmentUpdate)
+		treatment.Post("/onOff", controller.TreatmentOnOff)
+		treatment.Post("/list", controller.TreatmentList)
+		treatment.Post("/detail", controller.TreatmentDetail)
+	}
+
+	otherCost := app.Party("/otherCost", crs).AllowMethods(iris.MethodOptions)
+	{
+		otherCost.Post("/create", controller.OtherCostCreate)
+		otherCost.Post("/update", controller.OtherCostUpdate)
+		otherCost.Post("/onOff", controller.OtherCostOnOff)
+		otherCost.Post("/list", controller.OtherCostList)
+		otherCost.Post("/detail", controller.OtherCostDetail)
+	}
+
+	material := app.Party("/material", crs).AllowMethods(iris.MethodOptions)
+	{
+		material.Post("/create", controller.MaterialCreate)
+		material.Post("/update", controller.MaterialUpdate)
+		material.Post("/onOff", controller.MaterialOnOff)
+		material.Post("/list", controller.MaterialList)
+		material.Post("/detail", controller.MaterialDetail)
 	}
 
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
