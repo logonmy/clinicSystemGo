@@ -1187,6 +1187,7 @@ CREATE TABLE material_stock
   material_id INTEGER references material(id),--材料费用项目id
   cost integer CHECK(cost > 0), --成本价
   price integer NOT NULL CHECK(price > 0), --销售价
+  stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
   eff_day integer,--预警有效天数
   stock_warning integer,--物资预警数
   status boolean NOT NULL DEFAULT true,--是否启用
@@ -1223,4 +1224,22 @@ CREATE TABLE clinic_other_cost
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
+);
+
+
+--开治疗
+CREATE TABLE treatment_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  registration_id INTEGER NOT NULL references registration(id),--分诊记录id
+  clinic_treatment_id INTEGER NOT NULL references clinic_treatment(id),--治疗项目id
+  order_sn varchar(20) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (registration_id, clinic_treatment_id, order_sn, soft_sn)
 );
