@@ -84,7 +84,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 		"material_stock_id",
 		"order_sn",
 		"soft_sn",
-		"times",
+		"amount",
 		"operation_id",
 		"illustration",
 	}
