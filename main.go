@@ -115,6 +115,8 @@ func main() {
 		triage.Post("/LaboratoryPatientGet", controller.LaboratoryPatientGet)
 		triage.Post("/ExaminationPatientCreate", controller.ExaminationPatientCreate)
 		triage.Post("/ExaminationPatientGet", controller.ExaminationPatientGet)
+		triage.Post("/MaterialPatientCreate", controller.MaterialPatientCreate)
+		triage.Post("/MaterialPatientGet", controller.MaterialPatientGet)
 	}
 
 	diagnosisTreatment := app.Party("/diagnosisTreatment", crs).AllowMethods(iris.MethodOptions)
