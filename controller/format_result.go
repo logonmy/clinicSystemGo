@@ -49,6 +49,20 @@ type LaboratoryItem struct {
 	References             []References `json:"references"`
 }
 
+//PrescriptionModel 处方模板
+type PrescriptionModel struct {
+	PrescriptionModelID int                     `json:"prescription_patient_model_id"`
+	OperationName       string                  `json:"operation_name"`
+	IsCommon            bool                    `json:"is_common"`
+	CreatedTime         time.Time               `json:"created_time"`
+	Items               []PrescriptionModelItem `json:"items"`
+}
+
+//PrescriptionModelItem 处方模板item
+type PrescriptionModelItem struct {
+	DrugName string `json:"drug_name"`
+}
+
 // FormatSQLRowsToMapArray 格式化数据库返回的数组数据
 func FormatSQLRowsToMapArray(rows *sqlx.Rows) []map[string]interface{} {
 	var results []map[string]interface{}
@@ -189,4 +203,45 @@ func FormatPayOrderSn(clinicTriagePatientID string, chargeProjectTypeID string) 
 	var orderSn string
 	orderSn = time.Now().Format("20060102") + chargeProjectTypeID + clinicTriagePatientID
 	return orderSn
+}
+
+// FormatPrescriptionModel 格式化处方模板
+func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []PrescriptionModel {
+	var models []PrescriptionModel
+	for _, v := range prescriptionModel {
+		prescriptionModelID := v["prescription_patient_model_id"]
+		drugName := v["drug_name"]
+		operationName := v["operation_name"]
+		isCommon := v["is_common"]
+		createdTime := v["created_time"]
+		has := false
+		for k, pModel := range models {
+			dprescriptionModelID := pModel.PrescriptionModelID
+			items := pModel.Items
+			if int(prescriptionModelID.(int64)) == dprescriptionModelID {
+				item := PrescriptionModelItem{
+					DrugName: drugName.(string),
+				}
+				models[k].Items = append(items, item)
+				has = true
+			}
+		}
+		if !has {
+			var items []PrescriptionModelItem
+			item := PrescriptionModelItem{
+				DrugName: drugName.(string),
+			}
+			items = append(items, item)
+
+			pmodel := PrescriptionModel{
+				PrescriptionModelID: int(prescriptionModelID.(int64)),
+				OperationName:       operationName.(string),
+				IsCommon:            isCommon.(bool),
+				CreatedTime:         createdTime.(time.Time),
+				Items:               items,
+			}
+			models = append(models, pmodel)
+		}
+	}
+	return models
 }

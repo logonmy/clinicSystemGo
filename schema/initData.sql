@@ -8,6 +8,8 @@ INSERT INTO charge_project_type (id,name) VALUES (1,'西/成药处方'),(2,'中�
 insert into laboratory_sample (code,name) VALUES (001,'标本1'),(002,'标本2');
 
 insert into dose_unit (name,code) values ('小盒','0002'),('箱','0001'),('桶','0003');
+insert into drug_class (code,name) values ('类型1','0001'),('类型2','0002'),('类型3','0003');
+insert into dose_form (code,name) values ('剂型1','0001'),('剂型2','0002'),('剂型3','0003');
 insert into storehouse (name,clinic_id) VALUES ('专业药房',1);
 INSERT into route_administration (code,name) VALUES ('0001','口服<饭前>'),('0002','口服<饭后>'),('0003','含服'),('0004','肛塞');
 insert into frequency (code,name) VALUES ('0001','餐后'),('0002','2次/日(8-3)'),('0003','四次/日'),('0004','1次/每晚 (8pm)');

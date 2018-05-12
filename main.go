@@ -180,6 +180,10 @@ func main() {
 		drug.Post("/outstockUpdate", controller.OutstockUpdate)
 		drug.Post("/outstockCheck", controller.OutstockCheck)
 		drug.Post("/outstockDelete", controller.OutstockRecordDelete)
+		drug.Post("/PrescriptionWesternPatientModelCreate", controller.PrescriptionWesternPatientModelCreate)
+		drug.Post("/PrescriptionWesternPatientModelList", controller.PrescriptionWesternPatientModelList)
+		drug.Post("/PrescriptionChinesePatientModelCreate", controller.PrescriptionChinesePatientModelCreate)
+		drug.Post("/PrescriptionChinesePatientModelList", controller.PrescriptionChinesePatientModelList)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
