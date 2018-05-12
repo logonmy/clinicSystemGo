@@ -317,11 +317,8 @@ func PersonnelChoose(ctx iris.Context) {
 		return
 	}
 
-	clinicPatientID := clinicTriagePatient["clinic_patient_id"]
 	deparmentID := doctorVisitSchedule["department_id"]
 	doctorID := doctorVisitSchedule["personnel_id"]
-	amPm := doctorVisitSchedule["am_pm"]
-	visitDate := doctorVisitSchedule["visit_date"]
 
 	tx, err := model.DB.Begin()
 	var resultID int
@@ -344,36 +341,12 @@ func PersonnelChoose(ctx iris.Context) {
 		return
 	}
 
-	var registrationID interface{}
-	rrow := model.DB.QueryRowx("select id from registration where clinic_triage_patient_id=$1", clinicTriagePatientID)
-	registration := FormatSQLRowToMap(rrow)
-	_, rok := registration["id"]
-	if !rok {
-		err = tx.QueryRow(`INSERT INTO registration (
-			clinic_patient_id, department_id, clinic_triage_patient_id,personnel_id,visit_date,am_pm,operation_id) 
-			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, clinicPatientID, deparmentID, clinicTriagePatientID, doctorID, visitDate, amPm, triagePersonnelID).Scan(&registrationID)
-		if err != nil {
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
-			return
-		}
-	} else {
-		registrationID = registration["id"]
-		_, err = tx.Exec(`update registration set
-			department_id=$1,personnel_id=$2,visit_date=$3,am_pm=$4,operation_id=$5,updated_time=LOCALTIMESTAMP where id=$6`, deparmentID, doctorID, visitDate, amPm, triagePersonnelID, registrationID)
-		if err != nil {
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
-			return
-		}
-	}
-
 	err = tx.Commit()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": registrationID})
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": nil})
 }
 
 //TriagePersonnelList 分诊医生列表

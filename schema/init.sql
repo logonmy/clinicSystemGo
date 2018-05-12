@@ -186,25 +186,6 @@ CREATE TABLE clinic_triage_patient_operation
   UNIQUE (clinic_triage_patient_id, type, times)--联合主键，就诊人、科室、状态、日期唯一
 );
 
---挂号记录
-CREATE TABLE registration
-(
-  id serial PRIMARY KEY NOT NULL, --编号
-  clinic_patient_id integer NOT NULL references clinic_patient(id),--患者id
-  department_id integer NOT NULL REFERENCES department(id),--科室id
-  clinic_triage_patient_id integer UNIQUE NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  personnel_id integer NOT NULL REFERENCES personnel(id),--医生id
-  visit_date DATE NOT NULL,--出诊日期
-  am_pm varchar(1) NOT NULL CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
-  is_today boolean NOT NULL DEFAULT false,--是否当日号
-  status VARCHAR(2) NOT NULL DEFAULT '01',--就诊状态
-  visit_place VARCHAR(20),--就诊地址
-  operation_id integer REFERENCES personnel(id),--操作人编码
-  created_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time TIMESTAMP with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time TIMESTAMP with time zone
-);
-
 
 --角色表
 CREATE TABLE role
@@ -275,7 +256,7 @@ CREATE TABLE body_sign
 --费用项目类型
 CREATE TABLE charge_project_type
 (
-  id serial PRIMARY KEY NOT NULL,--id
+  id integer PRIMARY KEY NOT NULL,--id
   name varchar(20) UNIQUE NOT NULL,--名称
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -352,10 +333,10 @@ CREATE TABLE pre_diagnosis
 CREATE TABLE mz_unpaid_orders
 (
   id serial PRIMARY KEY NOT NULL,--id
-  registration_id INTEGER NOT NULL references registration(id),--分诊记录id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   charge_project_id INTEGER NOT NULL,--收费项目id
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
   price INTEGER NOT NULL CHECK(price > 0),--单价
@@ -375,10 +356,10 @@ CREATE TABLE mz_unpaid_orders
 CREATE TABLE mz_paid_record
 (
   id serial PRIMARY KEY NOT NULL,--id
-  registration_id INTEGER NOT NULL references registration(id),--分诊记录id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   out_trade_no varchar(20) UNIQUE,--第三方交易号
   soft_sns varchar(30) NOT NULL,--序号
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   confrim_id INTEGER NOT NULL references personnel(id),--操作员id
   pay_type_code varchar(2) NOT NULL,--支付类型编码 01-医保支付，02-挂账金额，03-抵金券，04-积分
   pay_method_code varchar(2) NOT NULL,--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
@@ -416,7 +397,7 @@ CREATE TABLE mz_paid_record_detail
   out_trade_no varchar(20) UNIQUE,--第三方交易号
   refund_status boolean NOT NULL DEFAULT false,--退费标识
   soft_sns varchar(30) NOT NULL,--序号
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
 
   derate_money INTEGER NOT NULL DEFAULT 0 ,--减免金额
@@ -438,10 +419,10 @@ CREATE TABLE mz_paid_orders
 (
   id serial PRIMARY KEY NOT NULL,--id
   mz_paid_record_id INTEGER NOT NULL references mz_paid_record(id),
-  registration_id INTEGER NOT NULL references registration(id),--分诊记录id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
   charge_project_id INTEGER NOT NULL,--收费项目id
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
   price INTEGER NOT NULL CHECK(price > 0),--单价
@@ -486,6 +467,36 @@ CREATE TABLE charge_detail
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
   
+);
+
+--挂账记录表总表
+CREATE TABLE on_credit_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  on_credit_money INTEGER NOT NULL, --挂账总金额金额
+  remain_pay_money INTEGER NOT NULL, --剩余还款金额
+  already_pay_money INTEGER NOT NULL DEFAULT 0, --已还款金额
+  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--挂账还款记录
+CREATE TABLE on_credit_record_detail
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  on_credit_record_id INTEGER NOT NULL references on_credit_record(id),--分诊记录id
+  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-挂账 1-还账 
+  pay_method_code varchar(2),--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
+  should_repay_moeny INTEGER NOT NULL, --应还金额
+  repay_moeny INTEGER NOT NULL, --实还金额
+  remain_repay_moeny INTEGER NOT NULL, --剩余挂账金额
+  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --平台管理人员
@@ -754,36 +765,6 @@ CREATE TABLE drug_print
   flag integer,--什么标志
   print_name varchar(30),--药品别名
   name_type varchar(10),--类型
-  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
-);
-
---挂账记录表总表
-CREATE TABLE on_credit_record
-(
-  id serial PRIMARY KEY NOT NULL,--id
-  registration_id INTEGER NOT NULL references registration(id),--分诊记录id
-  on_credit_money INTEGER NOT NULL, --挂账总金额金额
-  remain_pay_money INTEGER NOT NULL, --剩余还款金额
-  already_pay_money INTEGER NOT NULL DEFAULT 0, --已还款金额
-  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
-  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
-);
-
---挂账还款记录
-CREATE TABLE on_credit_record_detail
-(
-  id serial PRIMARY KEY NOT NULL,--id
-  on_credit_record_id INTEGER NOT NULL references on_credit_record(id),--分诊记录id
-  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-挂账 1-还账 
-  pay_method_code varchar(2),--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
-  should_repay_moeny INTEGER NOT NULL, --应还金额
-  repay_moeny INTEGER NOT NULL, --实还金额
-  remain_repay_moeny INTEGER NOT NULL, --剩余挂账金额
-  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1187,6 +1168,7 @@ CREATE TABLE material_stock
   material_id INTEGER references material(id),--材料费用项目id
   cost integer CHECK(cost > 0), --成本价
   price integer NOT NULL CHECK(price > 0), --销售价
+  stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
   eff_day integer,--预警有效天数
   stock_warning integer,--物资预警数
   status boolean NOT NULL DEFAULT true,--是否启用
@@ -1223,4 +1205,135 @@ CREATE TABLE clinic_other_cost
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
+);
+
+
+--开治疗
+CREATE TABLE treatment_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  clinic_treatment_id INTEGER NOT NULL references clinic_treatment(id),--治疗项目id
+  order_sn varchar(20) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (order_sn, soft_sn)
+);
+
+--开检验
+CREATE TABLE laboratory_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  clinic_laboratory_id INTEGER NOT NULL references clinic_laboratory(id),--检验项目id
+  order_sn varchar(50) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (order_sn, soft_sn)
+);
+
+--开西/成药处方
+CREATE TABLE prescription_western_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  order_sn varchar(50) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  once_dose integer,--单次剂量
+  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
+  route_administration_id integer references route_administration(id),--用法id
+  frequency_id integer references frequency(id),--用药频率id/默认频次
+  amount INTEGER NOT NULL CHECK(amount > 0),--总量
+  illustration text,--用药说明
+  fetch_address integer,--取药地点 0 本诊所 1 外购
+  eff_day integer,--有效天数
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (order_sn, soft_sn)
+);
+
+--开中药处方
+CREATE TABLE prescription_chinese_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  order_sn varchar(50) UNIQUE NOT NULL,--单号
+  day_dose integer,--每日剂量
+  dose_unit_id integer references dose_unit(id),--剂量单位id
+  route_administration_id integer references route_administration(id),--用法id
+  frequency_id integer references frequency(id),--用药频率id/默认频次
+  amount INTEGER NOT NULL CHECK(amount > 0),--总剂量
+  medicine_illustration text,--服药说明
+  fetch_address integer,--取药地点 0 本诊所 1 外购
+  eff_day integer,--天数
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--中药处方item
+CREATE TABLE prescription_chinese_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  prescription_chinese_patient_id INTEGER NOT NULL references prescription_chinese_patient(id),--中药处方id
+  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  order_sn varchar(50) UNIQUE NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  once_dose integer,--单次剂量
+  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
+  amount INTEGER NOT NULL CHECK(amount > 0),--总量
+  special_illustration text,--特殊要求
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (prescription_chinese_patient_id, soft_sn)
+);
+
+--开检查
+CREATE TABLE examination_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  clinic_examination_id INTEGER NOT NULL references clinic_examination(id),--检查项目id
+  order_sn varchar(20) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  organ varchar(20),--检查部位
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (clinic_triage_patient_id, clinic_laboratory_id, order_sn, soft_sn)
+);
+
+--开材料费
+CREATE TABLE material_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  material_stock_id INTEGER NOT NULL references material_stock(id),--检查项目id
+  order_sn varchar(20) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (clinic_triage_patient_id, material_stock_id, order_sn, soft_sn)
 );

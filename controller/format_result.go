@@ -2,6 +2,7 @@ package controller
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -181,4 +182,11 @@ func FormatFuntionmenus(functionMenus []map[string]interface{}) []Funtionmenus {
 		}
 	}
 	return menus
+}
+
+// FormatPayOrderSn 格式化单号
+func FormatPayOrderSn(clinicTriagePatientID string, chargeProjectTypeID string) string {
+	var orderSn string
+	orderSn = time.Now().Format("20060102") + chargeProjectTypeID + clinicTriagePatientID
+	return orderSn
 }

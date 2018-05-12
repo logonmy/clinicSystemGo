@@ -105,6 +105,18 @@ func main() {
 		triage.Post("/reception", controller.TriageReception)
 		triage.Post("/complete", controller.TriageComplete)
 		triage.Post("/AppointmentsByDate", controller.AppointmentsByDate)
+		triage.Post("/TreatmentPatientCreate", controller.TreatmentPatientCreate)
+		triage.Post("/TreatmentPatientGet", controller.TreatmentPatientGet)
+		triage.Post("/LaboratoryPatientCreate", controller.LaboratoryPatientCreate)
+		triage.Post("/PrescriptionWesternPatientCreate", controller.PrescriptionWesternPatientCreate)
+		triage.Post("/PrescriptionWesternPatientGet", controller.PrescriptionWesternPatientGet)
+		triage.Post("/PrescriptionChinesePatientCreate", controller.PrescriptionChinesePatientCreate)
+		triage.Post("/PrescriptionChinesePatientGet", controller.PrescriptionChinesePatientGet)
+		triage.Post("/LaboratoryPatientGet", controller.LaboratoryPatientGet)
+		triage.Post("/ExaminationPatientCreate", controller.ExaminationPatientCreate)
+		triage.Post("/ExaminationPatientGet", controller.ExaminationPatientGet)
+		triage.Post("/MaterialPatientCreate", controller.MaterialPatientCreate)
+		triage.Post("/MaterialPatientGet", controller.MaterialPatientGet)
 	}
 
 	diagnosisTreatment := app.Party("/diagnosisTreatment", crs).AllowMethods(iris.MethodOptions)
@@ -249,6 +261,18 @@ func main() {
 		laboratory.Post("/item/onOff", controller.LaboratoryItemStatus)
 		laboratory.Post("/item/list", controller.LaboratoryItemList)
 		laboratory.Post("/item/searchByName", controller.LaboratoryItemSearch)
+	}
+
+	dictionaries := app.Party("/dictionaries", crs).AllowMethods(iris.MethodOptions)
+	{
+		dictionaries.Post("/DoseUnitList", controller.DoseUnitList)
+		dictionaries.Post("/DoseFormList", controller.DoseFormList)
+		dictionaries.Post("/DrugClassList", controller.DrugClassList)
+		dictionaries.Post("/DrugTypeList", controller.DrugTypeList)
+		dictionaries.Post("/DrugPrintList", controller.DrugPrintList)
+		dictionaries.Post("/ExaminationOrganList", controller.ExaminationOrganList)
+		dictionaries.Post("/FrequencyList", controller.FrequencyList)
+		dictionaries.Post("/RouteAdministrationList", controller.RouteAdministrationList)
 	}
 
 	// http://localhost:8080

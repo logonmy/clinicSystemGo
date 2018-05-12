@@ -416,7 +416,7 @@ func MaterialList(ctx iris.Context) {
 		left join material m on ms.material_id = m.id
 		where ms.storehouse_id=$1`
 	selectSQL := `select ms.material_id,ms.id as material_stock_id,m.name,m.unit_id,du.name as unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory,m.specification,
-		m.en_name,ms.is_discount,ms.price,ms.status,ms.cost,ms.eff_day,ms.stock_warning
+		m.en_name,ms.is_discount,ms.price,ms.status,ms.cost,ms.eff_day,ms.stock_warning,ms.stock_amount
 		from material_stock ms
 		left join material m on ms.material_id = m.id
 		left join dose_unit du on m.unit_id = du.id
@@ -461,7 +461,7 @@ func MaterialDetail(ctx iris.Context) {
 	}
 
 	selectSQL := `select ms.material_id,ms.id as material_stock_id,m.name,m.unit_id,du.name as unit_name,m.py_code,m.remark,m.idc_code,
-		m.manu_factory,m.specification,m.en_name,ms.is_discount,ms.price,ms.status,ms.cost,ms.eff_day,ms.stock_warning
+		m.manu_factory,m.specification,m.en_name,ms.is_discount,ms.price,ms.status,ms.cost,ms.eff_day,ms.stock_warning,ms.stock_amount
 		from material_stock ms
 		left join material m on ms.material_id = m.id
 		left join dose_unit du on m.unit_id = du.id

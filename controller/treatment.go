@@ -367,18 +367,14 @@ func TreatmentList(ctx iris.Context) {
 
 	countSQL := `select count(ct.id) as total from clinic_treatment ct
 		left join treatment t on ct.treatment_id = t.id
-		where ct.clinic_id=$1`
+		where ct.clinic_id=$1 and t.name ~$2`
 	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name,t.unit_id,du.name as unit_name,t.py_code,t.remark,t.idc_code,
 		t.en_name,ct.is_discount,ct.price,ct.status,ct.cost
 		from clinic_treatment ct
 		left join treatment t on ct.treatment_id = t.id
 		left join dose_unit du on t.unit_id = du.id
-		where ct.clinic_id=$1`
+		where ct.clinic_id=$1 and t.name ~$2`
 
-	if keyword != "" {
-		countSQL += " and t.name ~'" + keyword + "'"
-		selectSQL += " and t.name ~'" + keyword + "'"
-	}
 	if status != "" {
 		countSQL += " and ct.status=" + status
 		selectSQL += " and ct.status=" + status
@@ -397,7 +393,7 @@ func TreatmentList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", clinicID, offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $3 limit $4", clinicID, keyword, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
