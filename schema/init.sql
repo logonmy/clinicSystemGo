@@ -1415,7 +1415,7 @@ CREATE TABLE prescription_chinese_patient_model_item
   once_dose integer,--单次剂量
   once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
-  special_illustration text,--说明
+  special_illustration text,--说明/特殊要求
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
