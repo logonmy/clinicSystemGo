@@ -1308,10 +1308,11 @@ CREATE TABLE prescription_chinese_item
   id serial PRIMARY KEY NOT NULL,--id
   prescription_chinese_patient_id INTEGER NOT NULL references prescription_chinese_patient(id),--中药处方id
   drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  order_sn varchar(50) UNIQUE NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
   once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
-  amount INTEGER NOT NULL CHECK(times > 0),--总量
+  amount INTEGER NOT NULL CHECK(amount > 0),--总量
   special_illustration text,--特殊要求
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
