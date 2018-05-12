@@ -1455,7 +1455,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
 
-		sl = append(sl, clinicTriagePatientID, clinicExaminationID, "'"+orderSn+"'", strconv.Itoa(index), times, organ, personnelID)
+		sl = append(sl, clinicTriagePatientID, clinicExaminationID, "'"+orderSn+"'", strconv.Itoa(index), times, "'"+organ+"'", personnelID)
 		sm = append(sm, clinicTriagePatientID, "4", clinicExaminationID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(amount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
 
 		if illustration == "" {
