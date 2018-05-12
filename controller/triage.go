@@ -201,6 +201,7 @@ func TriagePatientList(ctx iris.Context) {
 
 	rowSQL := `select 
 	ctp.id as clinic_triage_patient_id, 
+	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time, 
 	ctp.created_time as register_time, 
 	triage_personnel.name as register_personnel_name, 
