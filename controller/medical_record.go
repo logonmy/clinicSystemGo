@@ -110,7 +110,7 @@ func MedicalRecordModelCreate(ctx iris.Context) {
 
 // MedicalRecordListByPID 获取病历列表
 func MedicalRecordListByPID(ctx iris.Context) {
-	patientID := ctx.PostValue("patient_id")
+	patientID := ctx.PostValue("clinic_patient_id")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
@@ -126,8 +126,19 @@ func MedicalRecordListByPID(ctx iris.Context) {
 		limit = "10"
 	}
 
-	countSQL := `select count(id) as total from medocal_record where patient_id = $1`
-	selectSQL := `select * from medocal_record where patient_id = $1 ORDER BY created_time DESC offset $2 limit $3`
+	countSQL := `select count(mr.id) as total from medical_record mr left join clinic_triage_patient ctp on ctp.id = mr.clinic_triage_patient_id where ctp.clinic_patient_id = $1`
+	selectSQL := `	select mr.*,
+	c.name as clinic_name,
+	cp.id as clinic_patient_id,
+	ctp.created_time as registion_time,
+	ctp.visit_type,
+	p.name as doctor_name 
+	from medical_record mr 
+	left join clinic_triage_patient ctp on ctp.id = mr.clinic_triage_patient_id 
+	left join personnel p on p.id = ctp.doctor_id 
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+	left join clinic c on cp.clinic_id = c.id 
+	where ctp.clinic_patient_id = $1 ORDER BY mr.created_time DESC offset $2 limit $3`
 
 	total := model.DB.QueryRowx(countSQL, patientID)
 
