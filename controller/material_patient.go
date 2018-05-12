@@ -104,14 +104,14 @@ func MaterialPatientCreate(ctx iris.Context) {
 		where ms.id=$1`
 		trow := model.DB.QueryRowx(materialStockSQL, clinicExaminationID)
 		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "检查项错误"})
+			ctx.JSON(iris.Map{"code": "1", "msg": "材料费项错误"})
 			return
 		}
 		materialStock := FormatSQLRowToMap(trow)
 		fmt.Println("====", materialStock)
 		_, ok := materialStock["material_stock_id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的检查项错误"})
+			ctx.JSON(iris.Map{"code": "1", "msg": "选择的材料费项错误"})
 			return
 		}
 		price := materialStock["price"].(int64)
