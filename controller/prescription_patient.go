@@ -459,9 +459,12 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,ds.stock_amount from prescription_western_patient pwp 
+	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,ds.stock_amount,du.name as once_dose_unit_name,ra.name as route_administration_name,f.name as frequency_id from prescription_western_patient pwp 
 		left join drug_stock ds on pwp.drug_stock_id = ds.id 
 		left join drug d on ds.drug_id = d.id
+		left join dose_unit du on pwp.once_dose_unit_id = du.id
+		left join route_administration ra on pwp.route_administration_id = ra.id
+		left join frequency f on pwp.frequency_id = f.id
 		where pwp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {
@@ -480,13 +483,18 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 		return
 	}
 
-	pcprow := model.DB.QueryRowx(`select * from prescription_chinese_patient where clinic_triage_patient_id = $1`, clinicTriagePatientID)
+	pcprow := model.DB.QueryRowx(`select pcp.*,du.name as dose_unit_name,ra.name as route_administration_id,f.name as frequency_id from prescription_chinese_patient pcp
+		left join dose_unit du on pcp.dose_unit_id = du.id
+		left join route_administration ra on pcp.route_administration_id = ra.id
+		left join frequency f on pcp.frequency_id = f.id
+		where clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	prescriptionChinesePatient := FormatSQLRowToMap(pcprow)
 	prescriptionChinesePatientID := prescriptionChinesePatient["id"]
 
-	rows, err := model.DB.Queryx(`select pci.*, d.name as drug_name,d.specification,ds.stock_amount from prescription_chinese_item pci 
+	rows, err := model.DB.Queryx(`select pci.*, d.name as drug_name,d.specification,ds.stock_amount,du.name as once_dose_unit_name from prescription_chinese_item pci 
 		left join drug_stock ds on pci.drug_stock_id = ds.id 
 		left join drug d on ds.drug_id = d.id
+		left join dose_unit du on pci.once_dose_unit_id = du.id
 		where pci.prescription_chinese_patient_id = $1`, prescriptionChinesePatientID)
 
 	if err != nil {
