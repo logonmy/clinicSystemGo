@@ -1010,6 +1010,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		"operation_id",
 		"illustration",
 	}
+	orderSn := FormatPayOrderSn(clinicTriagePatientID, "7")
 
 	for index, v := range results {
 		clinicTreatmentID := v["clinic_treatment_id"]
@@ -1034,7 +1035,6 @@ func TreatmentPatientCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的治疗项错误"})
 			return
 		}
-		orderSn := FormatPayOrderSn(clinicTriagePatientID, "7")
 		price := treatment["price"].(int64)
 		name := treatment["name"].(string)
 		unitName := treatment["dose_unit_name"].(string)
@@ -1214,6 +1214,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 		"operation_id",
 		"illustration",
 	}
+	orderSn := FormatPayOrderSn(clinicTriagePatientID, "3")
 
 	for index, v := range results {
 		clinicLaboratoryID := v["clinic_laboratory_id"]
@@ -1238,7 +1239,6 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的检验项错误"})
 			return
 		}
-		orderSn := FormatPayOrderSn(clinicTriagePatientID, "3")
 		price := laboratory["price"].(int64)
 		name := laboratory["name"].(string)
 		unitName := laboratory["dose_unit_name"].(string)
@@ -1402,6 +1402,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		"eff_day",
 		"illustration",
 	}
+	orderSn := FormatPayOrderSn(clinicTriagePatientID, "1")
 
 	for index, v := range results {
 		drugStockID := v["drug_stock_id"]
@@ -1433,7 +1434,6 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 			return
 		}
 
-		orderSn := FormatPayOrderSn(clinicTriagePatientID, "1")
 		price := drugStock["ret_price"].(int64)
 		name := drugStock["name"].(string)
 		unitName := drugStock["packing_unit_name"].(string)
