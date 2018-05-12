@@ -1242,6 +1242,23 @@ CREATE TABLE laboratory_patient
   UNIQUE (order_sn, soft_sn)
 );
 
+--开检验
+CREATE TABLE laboratory_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  clinic_laboratory_id INTEGER NOT NULL references clinic_laboratory(id),--检验项目id
+  order_sn varchar(50) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (order_sn, soft_sn)
+);
+
 --开西/成药处方
 CREATE TABLE prescription_western_patient
 (
@@ -1300,4 +1317,22 @@ CREATE TABLE prescription_chinese_item
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
   UNIQUE (prescription_chinese_patient_id, soft_sn)
+);
+
+--开检查
+CREATE TABLE examination_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  clinic_examination_id INTEGER NOT NULL references clinic_examination(id),--检查项目id
+  order_sn varchar(20) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  organ varchar(20),--检查部位
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (clinic_triage_patient_id, clinic_laboratory_id, order_sn, soft_sn)
 );
