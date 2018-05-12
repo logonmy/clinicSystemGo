@@ -109,6 +109,7 @@ func main() {
 		triage.Post("/TreatmentPatientGet", controller.TreatmentPatientGet)
 		triage.Post("/LaboratoryPatientCreate", controller.LaboratoryPatientCreate)
 		triage.Post("/PrescriptionWesternPatientCreate", controller.PrescriptionWesternPatientCreate)
+		triage.Post("/PrescriptionChinesePatientCreate", controller.PrescriptionChinesePatientCreate)
 		triage.Post("/LaboratoryPatientGet", controller.LaboratoryPatientGet)
 		triage.Post("/ExaminationPatientCreate", controller.ExaminationPatientCreate)
 		triage.Post("/ExaminationPatientGet", controller.ExaminationPatientGet)
