@@ -1337,3 +1337,20 @@ CREATE TABLE material_patient
   deleted_time timestamp with time zone,
   UNIQUE (clinic_triage_patient_id, material_stock_id, order_sn, soft_sn)
 );
+
+--开其它费用
+CREATE TABLE other_cost_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  clinic_other_cost_id INTEGER NOT NULL references clinic_other_cost(id),--其它费用项目id
+  order_sn varchar(20) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  amount INTEGER NOT NULL CHECK(amount > 0),--数量
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (order_sn, soft_sn)
+);
