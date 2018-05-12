@@ -121,7 +121,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 		total := int(price) * amount
 
 		sl = append(sl, clinicTriagePatientID, clinicExaminationID, "'"+orderSn+"'", strconv.Itoa(index), times, personnelID)
-		sm = append(sm, clinicTriagePatientID, "4", clinicExaminationID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(amount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
+		sm = append(sm, clinicTriagePatientID, "5", clinicExaminationID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(amount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
 
 		if illustration == "" {
 			sl = append(sl, `null`)
