@@ -93,7 +93,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 
 	for index, v := range results {
 		clinicExaminationID := v["material_stock_id"]
-		times := v["times"]
+		times := v["amount"]
 		illustration := v["illustration"]
 		fmt.Println("clinicExaminationID====", clinicExaminationID)
 		var sl []string

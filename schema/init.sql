@@ -1329,7 +1329,7 @@ CREATE TABLE material_patient
   material_stock_id INTEGER NOT NULL references material_stock(id),--检查项目id
   order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
-  times INTEGER NOT NULL CHECK(times > 0),--次数
+  amount INTEGER NOT NULL CHECK(amount > 0),--数量
   illustration text,--说明
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
