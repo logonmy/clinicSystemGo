@@ -81,7 +81,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 	var materialStockValues []string
 	materialStockSets := []string{
 		"clinic_triage_patient_id",
-		"clinic_examination_id",
+		"material_stock_id",
 		"order_sn",
 		"soft_sn",
 		"times",
@@ -92,7 +92,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 	orderSn := FormatPayOrderSn(clinicTriagePatientID, "5")
 
 	for index, v := range results {
-		clinicExaminationID := v["clinic_examination_id"]
+		clinicExaminationID := v["material_stock_id"]
 		times := v["times"]
 		illustration := v["illustration"]
 		fmt.Println("clinicExaminationID====", clinicExaminationID)
@@ -109,7 +109,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 		}
 		materialStock := FormatSQLRowToMap(trow)
 		fmt.Println("====", materialStock)
-		_, ok := materialStock["clinic_examination_id"]
+		_, ok := materialStock["material_stock_id"]
 		if !ok {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的检查项错误"})
 			return
@@ -200,8 +200,9 @@ func MaterialPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select mp.*, m.name from material_patient mp left join material_stock ms on material_stock_id = ms.id 
+	rows, err := model.DB.Queryx(`select mp.*, m.name, m.specification,m.unit_id, du.name as unit_name, ms.stock_amount from material_patient mp left join material_stock ms on material_stock_id = ms.id 
 		left join material m on ms.material_id = m.id
+		LEFT join dose_unit du on m.unit_id = du.id
 		where mp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {
