@@ -159,13 +159,13 @@ func MedicalRecordModelList(ctx iris.Context) {
 		limit = "10"
 	}
 
-	countSQL := `select count(id) as total from medocal_record_model where model_name ~$1`
+	countSQL := `select count(id) as total from medical_record_model where model_name ~$1`
 	if isCommon != "" {
 		countSQL = countSQL + ` and is_common =` + isCommon
 	}
-	selectSQL := `select model_name,is_common,created_time from medocal_record_model where model_name ~$1 ORDER BY created_time DESC offset $2 limit $3`
+	selectSQL := `select * from medical_record_model where model_name ~$1 ORDER BY created_time DESC offset $2 limit $3`
 	if isCommon != "" {
-		selectSQL = `select model_name,is_common,created_time from medocal_record_model where model_name ~$1 AND is_common=` + isCommon + ` ORDER BY created_time DESC offset $2 limit $3`
+		selectSQL = `select * from medical_record_model where model_name ~$1 AND is_common=` + isCommon + ` ORDER BY created_time DESC offset $2 limit $3`
 	}
 
 	total := model.DB.QueryRowx(countSQL, keyword)
