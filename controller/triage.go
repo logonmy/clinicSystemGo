@@ -1114,6 +1114,27 @@ func TreatmentPatientCreate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
+//TreatmentPatientGet 查询治疗
+func TreatmentPatientGet(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	rows, err := model.DB.Queryx(`select tp.*, t.name, du.name as unit_name from treatment_patient tp left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
+		left join treatment t on ct.treatment_id = t.id
+		left join dose_unit du on t.unit_id = du.id
+		where tp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	}
+
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": result})
+}
+
 //LaboratoryPatientCreate 开检验
 func LaboratoryPatientCreate(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
