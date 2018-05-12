@@ -1117,6 +1117,26 @@ func TreatmentPatientCreate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
+//TreatmentPatientGet 查询治疗
+func TreatmentPatientGet(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	rows, err := model.DB.Queryx(`select tp.*, t.name from treatment_patient tp left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
+		join treatment t on ct.treatment_id = t.id
+		where tp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	}
+
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": result})
+}
+
 //LaboratoryPatientCreate 开检验
 func LaboratoryPatientCreate(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
@@ -1299,4 +1319,24 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+//LaboratoryPatientGet 获取检验
+func LaboratoryPatientGet(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+
+	rows, err := model.DB.Queryx(`select lp.*, l.name from laboratory_patient lp left join clinic_laboratory cl on lp.clinic_laboratory_id = cl.id 
+		join laboratory l on cl.laboratory_id = l.id
+		where lp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	}
+
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result})
 }
