@@ -154,7 +154,7 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
 		return
 	}
-	_, errdm := tx.Exec("delete from mz_unpaid_orders where clinic_triage_patient_id=$1 and charge_project_type_id=5", clinicTriagePatientID)
+	_, errdm := tx.Exec("delete from mz_unpaid_orders where clinic_triage_patient_id=$1 and charge_project_type_id=6", clinicTriagePatientID)
 	if errdm != nil {
 		fmt.Println("errdm ===", errdm)
 		tx.Rollback()
