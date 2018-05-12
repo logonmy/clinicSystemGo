@@ -487,7 +487,7 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 		left join dose_unit du on pcp.dose_unit_id = du.id
 		left join route_administration ra on pcp.route_administration_id = ra.id
 		left join frequency f on pcp.frequency_id = f.id
-		where clinic_triage_patient_id = $1`, clinicTriagePatientID)
+		where pcp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	prescriptionChinesePatient := FormatSQLRowToMap(pcprow)
 	prescriptionChinesePatientID := prescriptionChinesePatient["id"]
 
@@ -504,4 +504,196 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 	result := FormatSQLRowsToMapArray(rows)
 	prescriptionChinesePatient["items"] = result
 	ctx.JSON(iris.Map{"code": "200", "data": prescriptionChinesePatient})
+}
+
+//PrescriptionChinesePatientList 获取中药历史处方列表
+func PrescriptionChinesePatientList(ctx iris.Context) {
+	clinicPatientID := ctx.PostValue("clinic_patient_id")
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicPatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id from clinic_patient where id=$1 limit 1", clinicPatientID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		return
+	}
+	clinicPatient := FormatSQLRowToMap(row)
+
+	_, ok := clinicPatient["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人错误"})
+		return
+	}
+
+	countSQL := `select count(distinct(pcp.clinic_triage_patient_id)) as total from prescription_chinese_patient pcp
+		left join clinic_triage_patient ctp on pcp.clinic_triage_patient_id = ctp.id
+		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+		where cp.id=$1`
+	selectSQL := `select ctp.id as clinic_triage_patient_id,pcp.id as prescription_chinese_patient_id,ctp.visit_type,d.name as department_name,p.name as personnel_name,
+		mr.diagnosis,(select created_time from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id order by created_time DESC LIMIT 1) from prescription_chinese_patient pcp
+		left join clinic_triage_patient ctp on pcp.clinic_triage_patient_id = ctp.id
+		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+		left join department d on ctp.department_id = d.id
+		left join personnel p on ctp.doctor_id = p.id
+		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+		where cp.id=$1`
+
+	if keyword != "" {
+		countSQL += " and mr.diagnosis ~'" + keyword + "'"
+		selectSQL += " and mr.diagnosis ~'" + keyword + "'"
+	}
+	fmt.Println("countSQL===", countSQL)
+	fmt.Println("selectSQL===", selectSQL)
+
+	total := model.DB.QueryRowx(countSQL, clinicPatientID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", clinicPatientID, offset, limit)
+	results = FormatSQLRowsToMapArray(rows)
+
+	var resData []map[string]interface{}
+	for _, v := range results {
+		clinicTriagePatientID := v["clinic_triage_patient_id"]
+		has := false
+		for _, data := range resData {
+			dclinicTriagePatientID := data["clinic_triage_patient_id"]
+			if clinicTriagePatientID.(int64) == dclinicTriagePatientID.(int64) {
+				has = true
+			}
+		}
+		if !has {
+			resData = append(resData, v)
+		}
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": resData, "page_info": pageInfo})
+
+}
+
+//PrescriptionWesternPatientList 获取西药历史处方列表
+func PrescriptionWesternPatientList(ctx iris.Context) {
+	clinicPatientID := ctx.PostValue("clinic_patient_id")
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicPatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id from clinic_patient where id=$1 limit 1", clinicPatientID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		return
+	}
+	clinicPatient := FormatSQLRowToMap(row)
+
+	_, ok := clinicPatient["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人错误"})
+		return
+	}
+
+	countSQL := `select count(distinct(pwp.clinic_triage_patient_id)) as total from prescription_western_patient pwp
+		left join clinic_triage_patient ctp on pwp.clinic_triage_patient_id = ctp.id
+		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+		where cp.id=$1`
+	selectSQL := `select ctp.id as clinic_triage_patient_id,pwp.id as prescription_chinese_patient_id,ctp.visit_type,d.name as department_name,p.name as personnel_name,
+		mr.diagnosis,(select created_time from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id order by created_time DESC LIMIT 1) from prescription_western_patient pwp
+		left join clinic_triage_patient ctp on pwp.clinic_triage_patient_id = ctp.id
+		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+		left join department d on ctp.department_id = d.id
+		left join personnel p on ctp.doctor_id = p.id
+		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+		where cp.id=$1`
+
+	if keyword != "" {
+		countSQL += " and mr.diagnosis ~'" + keyword + "'"
+		selectSQL += " and mr.diagnosis ~'" + keyword + "'"
+	}
+	fmt.Println("countSQL===", countSQL)
+	fmt.Println("selectSQL===", selectSQL)
+
+	total := model.DB.QueryRowx(countSQL, clinicPatientID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", clinicPatientID, offset, limit)
+	results = FormatSQLRowsToMapArray(rows)
+
+	var resData []map[string]interface{}
+	for _, v := range results {
+		clinicTriagePatientID := v["clinic_triage_patient_id"]
+		has := false
+		for _, data := range resData {
+			dclinicTriagePatientID := data["clinic_triage_patient_id"]
+			if clinicTriagePatientID.(int64) == dclinicTriagePatientID.(int64) {
+				has = true
+			}
+		}
+		if !has {
+			resData = append(resData, v)
+		}
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": resData, "page_info": pageInfo})
+
 }
