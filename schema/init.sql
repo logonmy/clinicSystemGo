@@ -724,6 +724,9 @@ CREATE TABLE drug
   vol_unit_id integer references dose_unit(id),--体积单位id
   once_dose integer,--常用剂量
   once_dose_unit_id integer references dose_unit(id),--用量单位 常用剂量单位id
+  dose_count integer,--制剂数量
+  dose_count_unit_id integer references dose_unit(id),--制剂数量单位id
+  packing_unit_id integer references dose_unit(id),--药品包装id
   route_administration_id integer references route_administration(id),--用药途径id/默认用法
   frequency_id integer references frequency(id),--用药频率id/默认频次
   default_remark varchar(20),--默认用量用法说明
@@ -826,9 +829,6 @@ CREATE TABLE drug_stock
   mini_unit_id integer references dose_unit(id),--最小剂量单位id
   is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
   bulk_sales_price integer,--拆零售价/最小剂量售价
-  dose_count integer,--制剂数量
-  dose_count_id integer references dose_unit(id),--制剂数量单位id
-  packing_unit_id integer references dose_unit(id),--药品包装id
   is_discount boolean DEFAULT false,--是否允许折扣
   fetch_address varchar(10),--取药地点
   eff_day integer,--有效天数
@@ -1271,8 +1271,6 @@ CREATE TABLE prescription_chinese_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   order_sn varchar(50) UNIQUE NOT NULL,--单号
-  day_dose integer,--每日剂量
-  dose_unit_id integer references dose_unit(id),--剂量单位id
   route_administration_id integer references route_administration(id),--用法id
   frequency_id integer references frequency(id),--用药频率id/默认频次
   amount INTEGER NOT NULL CHECK(amount > 0),--总剂量
@@ -1415,7 +1413,83 @@ CREATE TABLE prescription_chinese_patient_model_item
   once_dose integer,--单次剂量
   once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
-  special_illustration text,--说明
+  special_illustration text,--说明/特殊要求
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+
+--检验模板
+CREATE TABLE laboratory_patient_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检验模板项目
+CREATE TABLE laboratory_patient_model_item
+(
+  laboratory_patient_model_id INTEGER NOT NULL references laboratory_patient_model(id),--检验模板id
+  clinic_laboratory_id INTEGER NOT NULL references clinic_laboratory(id),--检验医嘱id
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检查模板
+CREATE TABLE examination_patient_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检查模板项目
+CREATE TABLE examination_patient_model_item
+(
+  examination_patient_model_id INTEGER NOT NULL references examination_patient_model(id),--检验模板id
+  clinic_examination_id INTEGER NOT NULL references clinic_examination(id),--检查项目id
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--治疗模板
+CREATE TABLE treatment_patient_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--治疗模板项目
+CREATE TABLE treatment_patient_model_item
+(
+  treatment_patient_model_id INTEGER NOT NULL references treatment_patient_model(id),--治疗模板id
+  clinic_treatment_id INTEGER NOT NULL references clinic_treatment(id),--治疗项目id
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

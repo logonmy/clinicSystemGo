@@ -29,7 +29,7 @@ func DrugAdd(ctx iris.Context) {
 	miniDose := ctx.PostValue("mini_dose")
 	miniUnitID := ctx.PostValue("mini_unit_id")
 	doseCount := ctx.PostValue("dose_count")
-	doseCountID := ctx.PostValue("dose_count_id")
+	doseCountUnitID := ctx.PostValue("dose_count_unit_id")
 	packingUnitID := ctx.PostValue("packing_unit_id")
 	retPrice := ctx.PostValue("ret_price")
 	buyPrice := ctx.PostValue("buy_price")
@@ -135,13 +135,22 @@ func DrugAdd(ctx iris.Context) {
 		values = append(values, "'"+syCode+"'")
 	}
 
+	if doseCount != "" {
+		sets = append(sets, "dose_count")
+		values = append(values, doseCount)
+	}
+	if doseCountUnitID != "" {
+		sets = append(sets, "dose_count_unit_id")
+		values = append(values, doseCountUnitID)
+	}
+	if packingUnitID != "" {
+		sets = append(sets, "packing_unit_id")
+		values = append(values, packingUnitID)
+	}
+
 	if status != "" {
 		stockSets = append(stockSets, "status")
 		stockValues = append(stockValues, status)
-	}
-	if packingUnitID != "" {
-		stockSets = append(stockSets, "packing_unit_id")
-		stockValues = append(stockValues, packingUnitID)
 	}
 	if miniDose != "" {
 		stockSets = append(stockSets, "mini_dose")
@@ -150,14 +159,6 @@ func DrugAdd(ctx iris.Context) {
 	if miniUnitID != "" {
 		stockSets = append(stockSets, "mini_unit_id")
 		stockValues = append(stockValues, miniUnitID)
-	}
-	if doseCount != "" {
-		stockSets = append(stockSets, "dose_count")
-		stockValues = append(stockValues, doseCount)
-	}
-	if doseCountID != "" {
-		stockSets = append(stockSets, "dose_count_id")
-		stockValues = append(stockValues, doseCountID)
 	}
 	if buyPrice != "" {
 		stockSets = append(stockSets, "buy_price")
@@ -267,13 +268,19 @@ func DrugList(ctx iris.Context) {
 	fmt.Println("storehouseID==", storehouseID)
 
 	countSQL := `select count(ds.id) as total from drug_stock ds
-		left join drug d on ds.drug_id = d.id
-		where storehouse_id=$1`
-	selectSQL := `select ds.id as drug_stock_id,d.name as drug_name,d.specification,du.name as packing_unit_name,
-		ds.ret_price,d.py_code,ds.is_discount,d.default_remark,ds.status from drug_stock ds
-		left join drug d on ds.drug_id = d.id
-		left join dose_unit du on ds.packing_unit_id = du.id
-		where storehouse_id=$1`
+	left join drug d on ds.drug_id = d.id
+	where storehouse_id=$1`
+	selectSQL := `select ds.id as drug_stock_id,d.name as drug_name,d.specification,
+	d.packing_unit_id, du.name as packing_unit_name,d.type,
+			ds.ret_price,d.py_code,ds.is_discount,d.default_remark,ds.status, ds.stock_amount, d.once_dose_unit_id, odu.name as once_dose_unit_name, d.route_administration_id, ra.name as route_administration_name, d.frequency_id, f.name as frequency_name, ds.storehouse_id, s.name as storehouse_name
+			from drug_stock ds
+			left join drug d on ds.drug_id = d.id
+			left join dose_unit du on d.packing_unit_id = du.id
+			left join dose_unit odu on d.once_dose_unit_id = odu.id
+			left join route_administration ra on d.route_administration_id = ra.id
+			left join frequency f on d.frequency_id = f.id
+			left join storehouse s on ds.storehouse_id = s.id
+			where storehouse_id=$1`
 
 	// var countSet []string
 	// var selectSet []string
@@ -340,7 +347,7 @@ func DrugUpdate(ctx iris.Context) {
 	miniDose := ctx.PostValue("mini_dose")
 	miniUnitID := ctx.PostValue("mini_unit_id")
 	doseCount := ctx.PostValue("dose_count")
-	doseCountID := ctx.PostValue("dose_count_id")
+	doseCountUnitID := ctx.PostValue("dose_count_unit_id")
 	packingUnitID := ctx.PostValue("packing_unit_id")
 	retPrice := ctx.PostValue("ret_price")
 	buyPrice := ctx.PostValue("buy_price")
@@ -430,23 +437,25 @@ func DrugUpdate(ctx iris.Context) {
 		sets = append(sets, "sy_code="+"'"+syCode+"'")
 	}
 
+	if doseCount != "" {
+		sets = append(sets, "dose_count="+doseCount)
+	}
+	if doseCountUnitID != "" {
+		sets = append(sets, "dose_count_unit_id="+doseCountUnitID)
+	}
+	if packingUnitID != "" {
+		sets = append(sets, "packing_unit_id="+packingUnitID)
+	}
+
 	if status != "" {
 		stockSets = append(stockSets, "status="+status)
 	}
-	if packingUnitID != "" {
-		stockSets = append(stockSets, "packing_unit_id="+packingUnitID)
-	}
+
 	if miniDose != "" {
 		stockSets = append(stockSets, "miniDose="+miniDose)
 	}
 	if miniUnitID != "" {
 		stockSets = append(stockSets, "mini_unit_id="+miniUnitID)
-	}
-	if doseCount != "" {
-		stockSets = append(stockSets, "dose_count="+doseCount)
-	}
-	if doseCountID != "" {
-		stockSets = append(stockSets, "dose_count_id="+doseCountID)
 	}
 	if buyPrice != "" {
 		stockSets = append(stockSets, "buy_price="+buyPrice)
@@ -532,7 +541,7 @@ func DrugSearch(ctx iris.Context) {
 	selectSQL := `select ds.id as drug_stock_id,d.id as drug_id,d.manu_factory,d.name as drug_name,du.name as packing_unit_name,
 	ds.ret_price,ds.buy_price,ds.eff_day,ds.stock_amount from drug d
 	left join drug_stock ds on ds.drug_id = d.id
-	left join dose_unit du on ds.packing_unit_id = du.id
+	left join dose_unit du on d.packing_unit_id = du.id
 	where ds.storehouse_id=$1`
 
 	if keyword != "" {
@@ -559,8 +568,8 @@ func DrugDetail(ctx iris.Context) {
 	}
 	sql := `select d.name,d.specification,d.manu_factory,df.name as dose_form_name,d.dose_form_id,
 		d.print_name,d.license_no,dc.name as drug_class_name,d.drug_class_id,d.py_code,d.barcode,ds.status,
-		ds.mini_dose,mdu.name as mini_unit_name,ds.mini_unit_id,ds.dose_count,ds.dose_count_id,cdu.name as dose_count_name,
-		ds.packing_unit_id,pdu.name as packing_unit_name,ds.ret_price,ds.buy_price,ds.is_discount,ds.is_bulk_sales,ds.bulk_sales_price,ds.fetch_address,
+		ds.mini_dose,mdu.name as mini_unit_name,ds.mini_unit_id,ds.dose_count,ds.dose_count_unit_id,cdu.name as dose_count_name,
+		d.packing_unit_id,pdu.name as packing_unit_name,ds.ret_price,ds.buy_price,ds.is_discount,ds.is_bulk_sales,ds.bulk_sales_price,ds.fetch_address,
 		d.once_dose,d.once_dose_unit_id,odu.name as once_dose_unit_name,d.route_administration_id,ra.name as route_administration_name,
 		d.frequency_id,f.name as frequency_name,d.default_remark,ds.eff_day,ds.stock_warning,d.english_name,d.sy_code
 		from drug_stock ds
@@ -568,8 +577,8 @@ func DrugDetail(ctx iris.Context) {
 		left join dose_form df on d.dose_form_id = df.id
 		left join drug_class dc on d.drug_class_id = dc.id
 		left join dose_unit mdu on ds.mini_unit_id = mdu.id
-		left join dose_unit cdu on ds.dose_count_id = cdu.id
-		left join dose_unit pdu on ds.packing_unit_id = pdu.id
+		left join dose_unit cdu on ds.dose_count_unit_id = cdu.id
+		left join dose_unit pdu on d.packing_unit_id = pdu.id
 		left join dose_unit odu on d.once_dose_unit_id = odu.id
 		left join route_administration ra on d.route_administration_id = ra.id
 		left join frequency f on d.frequency_id = f.id

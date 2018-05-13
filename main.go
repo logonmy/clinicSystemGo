@@ -108,13 +108,13 @@ func main() {
 		triage.Post("/TreatmentPatientCreate", controller.TreatmentPatientCreate)
 		triage.Post("/TreatmentPatientGet", controller.TreatmentPatientGet)
 		triage.Post("/LaboratoryPatientCreate", controller.LaboratoryPatientCreate)
+		triage.Post("/LaboratoryPatientGet", controller.LaboratoryPatientGet)
 		triage.Post("/PrescriptionWesternPatientCreate", controller.PrescriptionWesternPatientCreate)
 		triage.Post("/PrescriptionWesternPatientGet", controller.PrescriptionWesternPatientGet)
 		triage.Post("/PrescriptionWesternPatientList", controller.PrescriptionWesternPatientList)
 		triage.Post("/PrescriptionChinesePatientCreate", controller.PrescriptionChinesePatientCreate)
 		triage.Post("/PrescriptionChinesePatientGet", controller.PrescriptionChinesePatientGet)
 		triage.Post("/PrescriptionChinesePatientList", controller.PrescriptionChinesePatientList)
-		triage.Post("/LaboratoryPatientGet", controller.LaboratoryPatientGet)
 		triage.Post("/ExaminationPatientCreate", controller.ExaminationPatientCreate)
 		triage.Post("/ExaminationPatientGet", controller.ExaminationPatientGet)
 		triage.Post("/OtherCostPatientCreate", controller.OtherCostPatientCreate)
@@ -184,8 +184,12 @@ func main() {
 		drug.Post("/outstockDelete", controller.OutstockRecordDelete)
 		drug.Post("/PrescriptionWesternPatientModelCreate", controller.PrescriptionWesternPatientModelCreate)
 		drug.Post("/PrescriptionWesternPatientModelList", controller.PrescriptionWesternPatientModelList)
+		drug.Post("/PrescriptionWesternPatientModelDetail", controller.PrescriptionWesternPatientModelDetail)
+		drug.Post("/PrescriptionWesternPatientModelUpdate", controller.PrescriptionWesternPatientModelUpdate)
 		drug.Post("/PrescriptionChinesePatientModelCreate", controller.PrescriptionChinesePatientModelCreate)
 		drug.Post("/PrescriptionChinesePatientModelList", controller.PrescriptionChinesePatientModelList)
+		drug.Post("/PrescriptionChinesePatientModelDetail", controller.PrescriptionChinesePatientModelDetail)
+		drug.Post("/PrescriptionChinesePatientModelUpdate", controller.PrescriptionChinesePatientModelUpdate)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
@@ -229,6 +233,10 @@ func main() {
 		examination.Post("/onOff", controller.ExaminationOnOff)
 		examination.Post("/list", controller.ExaminationList)
 		examination.Post("/detail", controller.ExaminationDetail)
+		examination.Post("/ExaminationPatientModelCreate", controller.ExaminationPatientModelCreate)
+		examination.Post("/ExaminationPatientModelList", controller.ExaminationPatientModelList)
+		examination.Post("/ExaminationPatientModelDetail", controller.ExaminationPatientModelDetail)
+		examination.Post("/ExaminationPatientModelUpdate", controller.ExaminationPatientModelUpdate)
 	}
 
 	treatment := app.Party("/treatment", crs).AllowMethods(iris.MethodOptions)
@@ -238,6 +246,10 @@ func main() {
 		treatment.Post("/onOff", controller.TreatmentOnOff)
 		treatment.Post("/list", controller.TreatmentList)
 		treatment.Post("/detail", controller.TreatmentDetail)
+		treatment.Post("/TreatmentPatientModelCreate", controller.TreatmentPatientModelCreate)
+		treatment.Post("/TreatmentPatientModelList", controller.TreatmentPatientModelList)
+		treatment.Post("/TreatmentPatientModelDetail", controller.TreatmentPatientModelDetail)
+		treatment.Post("/TreatmentPatientModelUpdate", controller.TreatmentPatientModelUpdate)
 	}
 
 	otherCost := app.Party("/otherCost", crs).AllowMethods(iris.MethodOptions)
@@ -271,6 +283,10 @@ func main() {
 		laboratory.Post("/item/onOff", controller.LaboratoryItemStatus)
 		laboratory.Post("/item/list", controller.LaboratoryItemList)
 		laboratory.Post("/item/searchByName", controller.LaboratoryItemSearch)
+		laboratory.Post("/LaboratoryPatientModelCreate", controller.LaboratoryPatientModelCreate)
+		laboratory.Post("/LaboratoryPatientModelList", controller.LaboratoryPatientModelList)
+		laboratory.Post("/LaboratoryPatientModelDetail", controller.LaboratoryPatientModelDetail)
+		laboratory.Post("/LaboratoryPatientModelUpdate", controller.LaboratoryPatientModelUpdate)
 	}
 
 	dictionaries := app.Party("/dictionaries", crs).AllowMethods(iris.MethodOptions)
@@ -283,6 +299,8 @@ func main() {
 		dictionaries.Post("/ExaminationOrganList", controller.ExaminationOrganList)
 		dictionaries.Post("/FrequencyList", controller.FrequencyList)
 		dictionaries.Post("/RouteAdministrationList", controller.RouteAdministrationList)
+		dictionaries.Post("/LaboratorySampleList", controller.LaboratorySampleList)
+		dictionaries.Post("/CuvetteColorList", controller.CuvetteColorList)
 	}
 
 	// http://localhost:8080
