@@ -182,6 +182,7 @@ func main() {
 		drug.Post("/outstockDelete", controller.OutstockRecordDelete)
 		drug.Post("/PrescriptionWesternPatientModelCreate", controller.PrescriptionWesternPatientModelCreate)
 		drug.Post("/PrescriptionWesternPatientModelList", controller.PrescriptionWesternPatientModelList)
+		drug.Post("/PrescriptionWesternPatientModelDetail", controller.PrescriptionWesternPatientModelDetail)
 		drug.Post("/PrescriptionChinesePatientModelCreate", controller.PrescriptionChinesePatientModelCreate)
 		drug.Post("/PrescriptionChinesePatientModelList", controller.PrescriptionChinesePatientModelList)
 	}

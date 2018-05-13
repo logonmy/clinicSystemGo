@@ -1271,8 +1271,6 @@ CREATE TABLE prescription_chinese_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   order_sn varchar(50) UNIQUE NOT NULL,--单号
-  day_dose integer,--每日剂量
-  dose_unit_id integer references dose_unit(id),--剂量单位id
   route_administration_id integer references route_administration(id),--用法id
   frequency_id integer references frequency(id),--用药频率id/默认频次
   amount INTEGER NOT NULL CHECK(amount > 0),--总剂量
