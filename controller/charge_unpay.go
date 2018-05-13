@@ -133,11 +133,11 @@ func ChargeUnPayDelete(ctx iris.Context) {
 
 // ChargeUnPayList 根据预约编码查询待缴费列表
 func ChargeUnPayList(ctx iris.Context) {
-	registrationid := ctx.PostValue("registration_id")
+	clinicTriagePatientid := ctx.PostValue("clinic_triage_patient_id")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
-	if registrationid == "" {
+	if clinicTriagePatientid == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -161,23 +161,33 @@ func ChargeUnPayList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx(`select count(id) as total from mz_unpaid_orders where registration_id=$1`, registrationid)
+	total := model.DB.QueryRowx(`select count(id) as total,sum(total) as charge_total,sum(discount) as discount_total from mz_unpaid_orders where clinic_triage_patient_id=$1`, clinicTriagePatientid)
 
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select * from mz_unpaid_orders where registration_id=$1 offset $2 limit $3`
+	typesql := `select sum(total) as type_charge_total, charge_project_type_id from mz_unpaid_orders where clinic_triage_patient_id = $1 group by charge_project_type_id`
 
-	rows, err1 := model.DB.Queryx(rowSQL, registrationid, offset, limit)
+	typetotal, _ := model.DB.Queryx(typesql, clinicTriagePatientid)
+
+	typetotalfomat := FormatSQLRowsToMapArray(typetotal)
+
+	rowSQL := `select m.name,m.price,m.amount,m.total,discount,p.name as doctor_name,d.name as department_name from mz_unpaid_orders m 
+	left join personnel p on p.id = m.operation_id 
+	left join department_personnel dp on dp.personnel_id = p.id 
+	left join department d on d.id = dp.department_id 
+	where m.clinic_triage_patient_id=$1 order by m.created_time DESC offset $2 limit $3`
+
+	rows, err1 := model.DB.Queryx(rowSQL, clinicTriagePatientid, offset, limit)
 
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return
 	}
-
 	result := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo, "type_total": typetotalfomat})
 
 }
 
