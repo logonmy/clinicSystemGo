@@ -451,7 +451,7 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,ds.stock_amount,du.name as once_dose_unit_name,ra.name as route_administration_name,f.name as frequency_id from prescription_western_patient pwp 
+	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,ds.stock_amount,du.name as once_dose_unit_name,ra.name as route_administration_name,pwp.frequency_id, f.name as frequency_name from prescription_western_patient pwp 
 		left join drug_stock ds on pwp.drug_stock_id = ds.id 
 		left join drug d on ds.drug_id = d.id
 		left join dose_unit du on pwp.once_dose_unit_id = du.id
