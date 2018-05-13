@@ -451,13 +451,18 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,ds.stock_amount,du.name as once_dose_unit_name,ra.name as route_administration_name,pwp.frequency_id, f.name as frequency_name from prescription_western_patient pwp 
-		left join drug_stock ds on pwp.drug_stock_id = ds.id 
-		left join drug d on ds.drug_id = d.id
-		left join dose_unit du on pwp.once_dose_unit_id = du.id
-		left join route_administration ra on pwp.route_administration_id = ra.id
-		left join frequency f on pwp.frequency_id = f.id
-		where pwp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
+	fmt.Println("clinicTriagePatientID =======", clinicTriagePatientID)
+
+	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,ds.stock_amount,du.name as once_dose_unit_name,ra.name as route_administration_name,pwp.frequency_id, f.name as frequency_name,
+		d.packing_unit_id, pdu.name as packing_unit_name, d.type
+		from prescription_western_patient pwp 
+				left join drug_stock ds on pwp.drug_stock_id = ds.id 
+				left join drug d on ds.drug_id = d.id
+				left join dose_unit du on pwp.once_dose_unit_id = du.id
+				left join dose_unit pdu on d.packing_unit_id = pdu.id
+				left join route_administration ra on pwp.route_administration_id = ra.id
+				left join frequency f on pwp.frequency_id = f.id
+				where pwp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -475,26 +480,33 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 		return
 	}
 
-	pcprow := model.DB.QueryRowx(`select pcp.*,ra.name as route_administration_id,f.name as frequency_id from prescription_chinese_patient pcp
+	pcprows, err1 := model.DB.Queryx(`select pcp.*,ra.name as route_administration_name,f.name as frequency_id from prescription_chinese_patient pcp
 		left join route_administration ra on pcp.route_administration_id = ra.id
 		left join frequency f on pcp.frequency_id = f.id
 		where pcp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
-	prescriptionChinesePatient := FormatSQLRowToMap(pcprow)
-	prescriptionChinesePatientID := prescriptionChinesePatient["id"]
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+	}
+	prescriptionChinesePatients := FormatSQLRowsToMapArray(pcprows)
 
-	rows, err := model.DB.Queryx(`select pci.*, d.name as drug_name,d.specification,ds.stock_amount,du.name as once_dose_unit_name from prescription_chinese_item pci 
-		left join drug_stock ds on pci.drug_stock_id = ds.id 
-		left join drug d on ds.drug_id = d.id
-		left join dose_unit du on pci.once_dose_unit_id = du.id
-		where pci.prescription_chinese_patient_id = $1`, prescriptionChinesePatientID)
+	for i, prescriptionChinesePatient := range prescriptionChinesePatients {
+		prescriptionChinesePatientID := prescriptionChinesePatient["id"]
 
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		rows, err := model.DB.Queryx(`select pci.*, d.name as drug_name,d.specification,ds.stock_amount,du.name as once_dose_unit_name, d.type from prescription_chinese_item pci 
+			left join drug_stock ds on pci.drug_stock_id = ds.id 
+			left join drug d on ds.drug_id = d.id
+			left join dose_unit du on pci.once_dose_unit_id = du.id
+			where pci.prescription_chinese_patient_id = $1`, prescriptionChinesePatientID)
+
+		if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		}
+
+		result := FormatSQLRowsToMapArray(rows)
+		prescriptionChinesePatients[i]["items"] = result
 	}
 
-	result := FormatSQLRowsToMapArray(rows)
-	prescriptionChinesePatient["items"] = result
-	ctx.JSON(iris.Map{"code": "200", "data": prescriptionChinesePatient})
+	ctx.JSON(iris.Map{"code": "200", "data": prescriptionChinesePatients})
 }
 
 //PrescriptionChinesePatientList 获取中药历史处方列表
