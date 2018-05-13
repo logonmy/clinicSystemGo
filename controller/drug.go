@@ -267,7 +267,9 @@ func DrugList(ctx iris.Context) {
 	}
 	fmt.Println("storehouseID==", storehouseID)
 
-	countSQL := `select count(id) as total from drug_stock where storehouse_id=$1`
+	countSQL := `select count(ds.id) as total from drug_stock ds
+	left join drug d on ds.drug_id = d.id
+	where storehouse_id=$1`
 	selectSQL := `select ds.id as drug_stock_id,d.name as drug_name,d.specification,
 	d.packing_unit_id, du.name as packing_unit_name,
 			ds.ret_price,d.py_code,ds.is_discount,d.default_remark,ds.status, ds.stock_amount, d.once_dose_unit_id, odu.name as once_dose_unit_name, d.route_administration_id, ra.name as route_administration_name, d.frequency_id, f.name as frequency_name, ds.storehouse_id, s.name as storehouse_name
@@ -283,23 +285,23 @@ func DrugList(ctx iris.Context) {
 	// var countSet []string
 	// var selectSet []string
 	if DrugType != "" {
-		countSQL += " and type=" + DrugType
+		countSQL += " and d.type=" + DrugType
 		selectSQL += " and d.type=" + DrugType
 	}
 	if keyword != "" {
-		countSQL += " and (barcode ~'" + keyword + "' or name ~'" + keyword + "')"
+		countSQL += " and (d.barcode ~'" + keyword + "' or d.name ~'" + keyword + "')"
 		selectSQL += " and (d.barcode ~'" + keyword + "' or d.name ~'" + keyword + "')"
 		// countSet = append(countSet, "(barcode ~'"+keyword+"' or name ~'"+keyword+"')")
 		// selectSet = append(selectSet, "(d.barcode ~'"+keyword+"' or d.name ~'"+keyword+"')")
 	}
 	if status != "" {
-		countSQL += " and status=" + status
-		selectSQL += " and d.status=" + status
+		countSQL += " and ds.status=" + status
+		selectSQL += " and ds.status=" + status
 		// countSet = append(countSet, "status="+status)
 		// selectSet = append(selectSet, "d.status="+status)
 	}
 	if drugClassID != "" {
-		countSQL += " and drug_class_id=" + drugClassID
+		countSQL += " and d.drug_class_id=" + drugClassID
 		selectSQL += " and d.drug_class_id=" + drugClassID
 		// countSet = append(countSet, "drug_class_id="+status)
 		// selectSet = append(selectSet, "d.drug_class_id="+status)
@@ -436,16 +438,13 @@ func DrugUpdate(ctx iris.Context) {
 	}
 
 	if doseCount != "" {
-		sets = append(sets, "dose_count")
-		values = append(values, doseCount)
+		sets = append(sets, "dose_count="+doseCount)
 	}
 	if doseCountUnitID != "" {
-		sets = append(sets, "dose_count_unit_id")
-		values = append(values, doseCountUnitID)
+		sets = append(sets, "dose_count_unit_id="+doseCountUnitID)
 	}
 	if packingUnitID != "" {
-		sets = append(sets, "packing_unit_id")
-		values = append(values, packingUnitID)
+		sets = append(sets, "packing_unit_id="+packingUnitID)
 	}
 
 	if status != "" {

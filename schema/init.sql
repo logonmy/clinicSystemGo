@@ -1257,7 +1257,7 @@ CREATE TABLE prescription_western_patient
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   illustration text,--用药说明
   fetch_address integer,--取药地点 0 本诊所 1 外购
-  eff_day integer,--有效天数
+  eff_day integer,--天数
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1353,4 +1353,70 @@ CREATE TABLE other_cost_patient
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
   UNIQUE (order_sn, soft_sn)
+);
+
+--西药处方模板
+CREATE TABLE prescription_western_patient_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--西药处方模板项目
+CREATE TABLE prescription_western_patient_model_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  prescription_western_patient_model_id INTEGER NOT NULL references prescription_western_patient_model(id),--西药处方模板id
+  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  amount INTEGER NOT NULL CHECK(amount > 0),--总量
+  once_dose integer,--单次剂量
+  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
+  route_administration_id integer references route_administration(id),--用法id
+  frequency_id integer references frequency(id),--用药频率id/默认频次
+  fetch_address integer,--取药地点 0 本诊所 1 外购
+  eff_day integer,--有效天数
+  illustration text,--用药说明
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--中药处方模板
+CREATE TABLE prescription_chinese_patient_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  route_administration_id integer references route_administration(id),--用法id
+  frequency_id integer references frequency(id),--用药频率id/默认频次
+  amount INTEGER NOT NULL CHECK(amount > 0),--总剂量
+  eff_day integer,--天数
+  fetch_address integer,--取药地点 0 本诊所 1 外购
+  medicine_illustration text,--服药说明
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--中药药处方模板项目
+CREATE TABLE prescription_chinese_patient_model_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  prescription_chinese_patient_model_id INTEGER NOT NULL references prescription_chinese_patient_model(id),--中药处方模板id
+  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  once_dose integer,--单次剂量
+  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
+  amount INTEGER NOT NULL CHECK(amount > 0),--总量
+  special_illustration text,--说明/特殊要求
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );

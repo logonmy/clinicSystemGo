@@ -110,8 +110,10 @@ func main() {
 		triage.Post("/LaboratoryPatientCreate", controller.LaboratoryPatientCreate)
 		triage.Post("/PrescriptionWesternPatientCreate", controller.PrescriptionWesternPatientCreate)
 		triage.Post("/PrescriptionWesternPatientGet", controller.PrescriptionWesternPatientGet)
+		triage.Post("/PrescriptionWesternPatientList", controller.PrescriptionWesternPatientList)
 		triage.Post("/PrescriptionChinesePatientCreate", controller.PrescriptionChinesePatientCreate)
 		triage.Post("/PrescriptionChinesePatientGet", controller.PrescriptionChinesePatientGet)
+		triage.Post("/PrescriptionChinesePatientList", controller.PrescriptionChinesePatientList)
 		triage.Post("/LaboratoryPatientGet", controller.LaboratoryPatientGet)
 		triage.Post("/ExaminationPatientCreate", controller.ExaminationPatientCreate)
 		triage.Post("/ExaminationPatientGet", controller.ExaminationPatientGet)
@@ -178,6 +180,10 @@ func main() {
 		drug.Post("/outstockUpdate", controller.OutstockUpdate)
 		drug.Post("/outstockCheck", controller.OutstockCheck)
 		drug.Post("/outstockDelete", controller.OutstockRecordDelete)
+		drug.Post("/PrescriptionWesternPatientModelCreate", controller.PrescriptionWesternPatientModelCreate)
+		drug.Post("/PrescriptionWesternPatientModelList", controller.PrescriptionWesternPatientModelList)
+		drug.Post("/PrescriptionChinesePatientModelCreate", controller.PrescriptionChinesePatientModelCreate)
+		drug.Post("/PrescriptionChinesePatientModelList", controller.PrescriptionChinesePatientModelList)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
