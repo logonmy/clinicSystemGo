@@ -391,7 +391,7 @@ func RouteAdministrationList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
-// LaboratorySample 标本种类列表
+// LaboratorySampleList 标本种类列表
 func LaboratorySampleList(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	offset := ctx.PostValue("offset")
@@ -434,7 +434,7 @@ func LaboratorySampleList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
-// CuvetteColor 试管颜色列表
+// CuvetteColorList 试管颜色列表
 func CuvetteColorList(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	offset := ctx.PostValue("offset")
