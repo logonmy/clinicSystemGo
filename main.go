@@ -183,9 +183,11 @@ func main() {
 		drug.Post("/PrescriptionWesternPatientModelCreate", controller.PrescriptionWesternPatientModelCreate)
 		drug.Post("/PrescriptionWesternPatientModelList", controller.PrescriptionWesternPatientModelList)
 		drug.Post("/PrescriptionWesternPatientModelDetail", controller.PrescriptionWesternPatientModelDetail)
+		drug.Post("/PrescriptionWesternPatientModelUpdate", controller.PrescriptionWesternPatientModelUpdate)
 		drug.Post("/PrescriptionChinesePatientModelCreate", controller.PrescriptionChinesePatientModelCreate)
 		drug.Post("/PrescriptionChinesePatientModelList", controller.PrescriptionChinesePatientModelList)
 		drug.Post("/PrescriptionChinesePatientModelDetail", controller.PrescriptionChinesePatientModelDetail)
+		drug.Post("/PrescriptionChinesePatientModelUpdate", controller.PrescriptionChinesePatientModelUpdate)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
