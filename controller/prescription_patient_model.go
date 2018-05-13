@@ -187,7 +187,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join drug_stock ds on pwpmi.drug_stock_id = ds.id
 	left join drug d on ds.drug_id = d.id
-	left join dose_unit du on ds.packing_unit_id = du.id
+	left join dose_unit du on d.packing_unit_id = du.id
 	left join personnel p on pwpm.operation_id = p.id
 	where pwpm.model_name ~$1`
 
@@ -262,6 +262,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	amount := ctx.PostValue("amount")
 	fetchAddress := ctx.PostValue("fetch_address")
 	effDay := ctx.PostValue("eff_day")
+	medicineIllustration := ctx.PostValue("medicine_illustration")
 
 	items := ctx.PostValue("items")
 	personnelID := ctx.PostValue("operation_id")
@@ -333,9 +334,9 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	}
 	var prescriptionWesternPatientModelID string
 	err := tx.QueryRow(`insert into prescription_chinese_patient_model 
-		(model_name,is_common,operation_id,route_administration_id,frequency_id,amount,fetch_address,eff_day) 
-		values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) 
-		RETURNING id`, modelName, isCommon, personnelID, routeAdministrationID, frequencyID, amount, fetchAddress, effDay).Scan(&prescriptionWesternPatientModelID)
+		(model_name,is_common,operation_id,route_administration_id,frequency_id,amount,fetch_address,eff_day,medicine_illustration) 
+		values ($1,$2,$3,$4,$5,$6,$7,$8,$9) 
+		RETURNING id`, modelName, isCommon, personnelID, routeAdministrationID, frequencyID, amount, fetchAddress, effDay, medicineIllustration).Scan(&prescriptionWesternPatientModelID)
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
@@ -425,7 +426,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join drug_stock ds on pcpmi.drug_stock_id = ds.id
 	left join drug d on ds.drug_id = d.id
-	left join dose_unit du on ds.packing_unit_id = du.id
+	left join dose_unit du on d.packing_unit_id = du.id
 	left join personnel p on pcpm.operation_id = p.id
 	where pcpm.model_name ~$1`
 	fmt.Println("countSQL===", countSQL)
@@ -464,9 +465,10 @@ func PrescriptionChinesePatientModelDetail(ctx iris.Context) {
 
 	selectmSQL := `select pcpm.id as prescription_patient_model_id,pcpm.model_name,pcpm.is_common,pcpm.status,pcpm.route_administration_id,
 		pcpm.frequency_id,pcpm.amount,pcpm.eff_day,pcpm.fetch_address,pcpm.medicine_illustration,f.name as frequency_name,ra.name as route_administration_name
+		from prescription_chinese_patient_model pcpm
 		left join route_administration ra on pcpm.route_administration_id = ra.id
 		left join frequency f on pcpm.frequency_id = f.id
-		from prescription_chinese_patient_model pcpm where id=$1`
+		where pcpm.id=$1`
 	mrows := model.DB.QueryRowx(selectmSQL, prescriptionChinesePatientModelID)
 	if mrows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
@@ -474,13 +476,13 @@ func PrescriptionChinesePatientModelDetail(ctx iris.Context) {
 	}
 	prescriptionModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select pwpmi.*,d.name as drug_name,du.name as once_dose_unit_name,ra.name as route_administration_name,
-		f.name as frequency_name from prescription_chinese_patient_model_item pcpmi
-		left join prescription_western_patient_model pwpm on pcpmi.prescription_western_patient_model_id = pwpm.id
+	selectiSQL := `select pcpmi.*,d.name as drug_name,du.name as once_dose_unit_name
+		from prescription_chinese_patient_model_item pcpmi
+		left join prescription_chinese_patient_model pwpm on pcpmi.prescription_chinese_patient_model_id = pwpm.id
 		left join drug_stock ds on pcpmi.drug_stock_id = ds.id
 		left join drug d on ds.drug_id = d.id
 		left join dose_unit du on pcpmi.once_dose_unit_id = du.id
-		where pcpmi.prescription_western_patient_model_id=$1`
+		where pcpmi.prescription_chinese_patient_model_id=$1`
 
 	rows, err := model.DB.Queryx(selectiSQL, prescriptionChinesePatientModelID)
 	if err != nil {

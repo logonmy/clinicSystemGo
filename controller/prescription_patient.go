@@ -40,25 +40,25 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 
 	prow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", personnelID)
 	if prow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "保存西/成药处方失败,操作员错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存西/成药处方失败,操作员错误"})
 		return
 	}
 	clinicTriagePatient := FormatSQLRowToMap(row)
 	personnel := FormatSQLRowToMap(prow)
-
+	fmt.Println("clinicTriagePatient==", clinicTriagePatient)
 	_, ok := clinicTriagePatient["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "分诊记录不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录不存在"})
 		return
 	}
 	status := clinicTriagePatient["status"]
 	if status.(int64) != 30 {
-		ctx.JSON(iris.Map{"code": "1", "msg": "分诊记录当前状态错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录当前状态错误"})
 		return
 	}
 	_, pok := personnel["id"]
 	if !pok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "操作员错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "操作员错误"})
 		return
 	}
 
@@ -111,18 +111,18 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		var sm []string
 		laboratorySQL := `select ds.id,d.name,ds.ret_price,du.name as packing_unit_name from drug_stock ds
 			left join drug d on d.id = ds.drug_id
-			left join dose_unit du on du.id = ds.packing_unit_id
+			left join dose_unit du on du.id = d.packing_unit_id
 			where ds.id=$1`
 		trow := model.DB.QueryRowx(laboratorySQL, drugStockID)
 		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "西/成药处方项错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "西/成药处方项错误"})
 			return
 		}
 		drugStock := FormatSQLRowToMap(trow)
 		fmt.Println("====", drugStock)
 		_, ok := drugStock["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的西/成药处方药错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的西/成药处方药错误"})
 			return
 		}
 
@@ -169,14 +169,14 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 	if errdlp != nil {
 		fmt.Println("errdlp ===", errdlp)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errdlp.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
 		return
 	}
 	_, errdm := tx.Exec("delete from mz_unpaid_orders where clinic_triage_patient_id=$1 and charge_project_type_id=1", clinicTriagePatientID)
 	if errdm != nil {
 		fmt.Println("errdm ===", errdm)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errdm.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
 		return
 	}
 
@@ -187,7 +187,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 	if errt != nil {
 		fmt.Println("errt ===", errt)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
 		return
 	}
 
@@ -198,7 +198,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 	if errm != nil {
 		fmt.Println("errm ===", errm)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
 		return
 	}
 	errc := tx.Commit()
@@ -372,7 +372,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		var sm []string
 		laboratorySQL := `select ds.id,d.name,ds.ret_price,du.name as packing_unit_name from drug_stock ds
 			left join drug d on d.id = ds.drug_id
-			left join dose_unit du on du.id = ds.packing_unit_id
+			left join dose_unit du on du.id = d.packing_unit_id
 			where ds.id=$1`
 		trow := model.DB.QueryRowx(laboratorySQL, drugStockID)
 		if trow == nil {

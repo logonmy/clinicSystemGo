@@ -271,7 +271,7 @@ func DrugList(ctx iris.Context) {
 	left join drug d on ds.drug_id = d.id
 	where storehouse_id=$1`
 	selectSQL := `select ds.id as drug_stock_id,d.name as drug_name,d.specification,
-	d.packing_unit_id, du.name as packing_unit_name,
+	d.packing_unit_id, du.name as packing_unit_name,d.type,
 			ds.ret_price,d.py_code,ds.is_discount,d.default_remark,ds.status, ds.stock_amount, d.once_dose_unit_id, odu.name as once_dose_unit_name, d.route_administration_id, ra.name as route_administration_name, d.frequency_id, f.name as frequency_name, ds.storehouse_id, s.name as storehouse_name
 			from drug_stock ds
 			left join drug d on ds.drug_id = d.id
@@ -541,7 +541,7 @@ func DrugSearch(ctx iris.Context) {
 	selectSQL := `select ds.id as drug_stock_id,d.id as drug_id,d.manu_factory,d.name as drug_name,du.name as packing_unit_name,
 	ds.ret_price,ds.buy_price,ds.eff_day,ds.stock_amount from drug d
 	left join drug_stock ds on ds.drug_id = d.id
-	left join dose_unit du on ds.packing_unit_id = du.id
+	left join dose_unit du on d.packing_unit_id = du.id
 	where ds.storehouse_id=$1`
 
 	if keyword != "" {
@@ -569,7 +569,7 @@ func DrugDetail(ctx iris.Context) {
 	sql := `select d.name,d.specification,d.manu_factory,df.name as dose_form_name,d.dose_form_id,
 		d.print_name,d.license_no,dc.name as drug_class_name,d.drug_class_id,d.py_code,d.barcode,ds.status,
 		ds.mini_dose,mdu.name as mini_unit_name,ds.mini_unit_id,ds.dose_count,ds.dose_count_unit_id,cdu.name as dose_count_name,
-		ds.packing_unit_id,pdu.name as packing_unit_name,ds.ret_price,ds.buy_price,ds.is_discount,ds.is_bulk_sales,ds.bulk_sales_price,ds.fetch_address,
+		d.packing_unit_id,pdu.name as packing_unit_name,ds.ret_price,ds.buy_price,ds.is_discount,ds.is_bulk_sales,ds.bulk_sales_price,ds.fetch_address,
 		d.once_dose,d.once_dose_unit_id,odu.name as once_dose_unit_name,d.route_administration_id,ra.name as route_administration_name,
 		d.frequency_id,f.name as frequency_name,d.default_remark,ds.eff_day,ds.stock_warning,d.english_name,d.sy_code
 		from drug_stock ds
@@ -578,7 +578,7 @@ func DrugDetail(ctx iris.Context) {
 		left join drug_class dc on d.drug_class_id = dc.id
 		left join dose_unit mdu on ds.mini_unit_id = mdu.id
 		left join dose_unit cdu on ds.dose_count_unit_id = cdu.id
-		left join dose_unit pdu on ds.packing_unit_id = pdu.id
+		left join dose_unit pdu on d.packing_unit_id = pdu.id
 		left join dose_unit odu on d.once_dose_unit_id = odu.id
 		left join route_administration ra on d.route_administration_id = ra.id
 		left join frequency f on d.frequency_id = f.id
