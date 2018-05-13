@@ -273,6 +273,7 @@ func main() {
 		laboratory.Post("/create", controller.LaboratoryCreate)
 		laboratory.Post("/list", controller.LaboratoryList)
 		laboratory.Post("/detail", controller.LaboratoryDetail)
+		laboratory.Post("/update", controller.LaboratoryUpdate)
 		laboratory.Post("/association", controller.LaboratoryAssociation)
 		laboratory.Post("/associationList", controller.AssociationList)
 		laboratory.Post("/item/create", controller.LaboratoryItemCreate)

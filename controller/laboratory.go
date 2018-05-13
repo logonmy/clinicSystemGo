@@ -31,7 +31,7 @@ func LaboratoryCreate(ctx iris.Context) {
 	isDiscount := ctx.PostValue("is_discount")
 	isDelivery := ctx.PostValue("is_delivery")
 
-	if clinicID == "" || name == "" || cost == "" || status == "" || isDiscount == "" || isDelivery == "" {
+	if clinicID == "" || name == "" || price == "" || status == "" || isDiscount == "" || isDelivery == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -262,7 +262,7 @@ func LaboratoryAssociation(ctx iris.Context) {
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+		ctx.JSON(iris.Map{"code": "1", "msg": "请检验是否漏填"})
 		return
 	}
 	errc := tx.Commit()
@@ -406,6 +406,106 @@ func LaboratoryDetail(ctx iris.Context) {
 	}
 	result := FormatSQLRowToMap(arows)
 	ctx.JSON(iris.Map{"code": "200", "data": result})
+}
+
+//LaboratoryUpdate 检验医嘱修改
+func LaboratoryUpdate(ctx iris.Context) {
+	clinicLaboratoryID := ctx.PostValue("clinic_laboratory_id")
+
+	name := ctx.PostValue("name")
+	enName := ctx.PostValue("en_name")
+	pyCode := ctx.PostValue("py_code")
+	idcCode := ctx.PostValue("idc_code")
+	unitID := ctx.PostValue("unit_id")
+	timeReport := ctx.PostValue("time_report")
+	clinicalSignificance := ctx.PostValue("clinical_significance")
+	remark := ctx.PostValue("remark")
+	laboratorySampleID := ctx.PostValue("laboratory_sample_id")
+	cuvetteColorID := ctx.PostValue("cuvette_color_id")
+
+	mergeFlag := ctx.PostValue("merge_flag")
+	cost := ctx.PostValue("cost")
+	price := ctx.PostValue("price")
+	status := ctx.PostValue("status")
+	isDiscount := ctx.PostValue("is_discount")
+	isDelivery := ctx.PostValue("is_delivery")
+
+	if clinicLaboratoryID == "" || name == "" || price == "" || status == "" || isDiscount == "" || isDelivery == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if mergeFlag == "" {
+		mergeFlag = "0"
+	}
+
+	crow := model.DB.QueryRowx("select id,clinic_id,laboratory_id from clinic_laboratory where id=$1 limit 1", clinicLaboratoryID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		return
+	}
+	clinicLaboratory := FormatSQLRowToMap(crow)
+	_, rok := clinicLaboratory["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "诊所检验医嘱数据错误"})
+		return
+	}
+	laboratoryID := strconv.FormatInt(clinicLaboratory["laboratory_id"].(int64), 10)
+	clinicID := strconv.FormatInt(clinicLaboratory["clinic_id"].(int64), 10)
+	fmt.Println("laboratoryID====", laboratoryID)
+	fmt.Println("clinicID====", clinicID)
+
+	lrow := model.DB.QueryRowx("select id from laboratory where name=$1 and id!=$2 limit 1", name, laboratoryID)
+	if lrow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		return
+	}
+	laboratoryItem := FormatSQLRowToMap(lrow)
+	_, lok := laboratoryItem["id"]
+	if lok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "检验医嘱名称已存在"})
+		return
+	}
+
+	laboratoryUpdateSQL := `update laboratory set name=$1,en_name=$2,py_code=$3,idc_code=$4,
+		unit_id=$5,time_report=$6,clinical_significance=$7,remark=$8,laboratory_sample_id=$9,cuvette_color_id=$10 where id=$11`
+	fmt.Println("laboratoryUpdateSQL==", laboratoryUpdateSQL)
+
+	clinicLaboratoryUpdateSQL := `update clinic_laboratory set clinic_id=$1,laboratory_id=$2,cost=$3,price=$4,status=$5,is_discount=$6,is_delivery=$7,merge_flag=$8 where id=$9`
+	fmt.Println("clinicLaboratoryUpdateSQL==", clinicLaboratoryUpdateSQL)
+
+	tx, err := model.DB.Begin()
+	if err != nil {
+		fmt.Println("err ===", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		return
+	}
+
+	_, err1 := tx.Exec(laboratoryUpdateSQL, name, enName, pyCode, idcCode, unitID, timeReport, clinicalSignificance, remark, laboratorySampleID, cuvetteColorID, laboratoryID)
+	if err1 != nil {
+		fmt.Println(" err1====", err1)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	_, err2 := tx.Exec(clinicLaboratoryUpdateSQL, clinicID, laboratoryID, cost, price, status, isDiscount, isDelivery, mergeFlag, clinicLaboratoryID)
+	if err2 != nil {
+		fmt.Println(" err2====", err2)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		return
+	}
+
+	err3 := tx.Commit()
+	if err3 != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": clinicLaboratoryID})
 }
 
 //LaboratoryItemCreate 检验项目创建
