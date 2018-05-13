@@ -1418,3 +1418,79 @@ CREATE TABLE prescription_chinese_patient_model_item
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
+
+
+--检验模板
+CREATE TABLE laboratory_patient_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检验模板项目
+CREATE TABLE laboratory_patient_model_item
+(
+  laboratory_patient_model_id INTEGER NOT NULL references laboratory_patient_model(id),--检验模板id
+  clinic_laboratory_id INTEGER NOT NULL references clinic_laboratory(id),--检验医嘱id
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检查模板
+CREATE TABLE examination_patient_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检查模板项目
+CREATE TABLE examination_patient_model_item
+(
+  examination_patient_model_id INTEGER NOT NULL references examination_patient_model(id),--检验模板id
+  clinic_examination_id INTEGER NOT NULL references clinic_examination(id),--检查项目id
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--治疗模板
+CREATE TABLE treatment_patient_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(20) NOT NULL,--模板名称
+  is_common boolean NOT NULL DEFAULT false,--是否通用
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--治疗模板项目
+CREATE TABLE treatment_patient_model_item
+(
+  treatment_patient_model_id INTEGER NOT NULL references treatment_patient_model(id),--治疗模板id
+  clinic_treatment_id INTEGER NOT NULL references clinic_treatment(id),--治疗项目id
+  times INTEGER NOT NULL CHECK(times > 0),--次数
+  illustration text,--说明
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);

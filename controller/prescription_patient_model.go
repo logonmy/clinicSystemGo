@@ -29,17 +29,6 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
 		return
 	}
-	// row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	// if row == nil {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-	// 	return
-	// }
-	// clinic := FormatSQLRowToMap(row)
-	// _, ok := clinic["id"]
-	// if !ok {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
-	// 	return
-	// }
 	row := model.DB.QueryRowx("select id from prescription_western_patient_model where model_name=$1 limit 1", modelName)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
@@ -272,17 +261,6 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
 		return
 	}
-	// row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	// if row == nil {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-	// 	return
-	// }
-	// clinic := FormatSQLRowToMap(row)
-	// _, ok := clinic["id"]
-	// if !ok {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
-	// 	return
-	// }
 	mrow := model.DB.QueryRowx("select id from prescription_western_patient_model where id=$1 limit 1", prescriptionWesternPatientModelID)
 	if mrow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
@@ -449,17 +427,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
 		return
 	}
-	// row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	// if row == nil {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-	// 	return
-	// }
-	// clinic := FormatSQLRowToMap(row)
-	// _, ok := clinic["id"]
-	// if !ok {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
-	// 	return
-	// }
+
 	row := model.DB.QueryRowx("select id from prescription_chinese_patient_model where model_name=$1 limit 1", modelName)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
@@ -692,17 +660,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
 		return
 	}
-	// row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	// if row == nil {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-	// 	return
-	// }
-	// clinic := FormatSQLRowToMap(row)
-	// _, ok := clinic["id"]
-	// if !ok {
-	// 	ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
-	// 	return
-	// }
+
 	mrow := model.DB.QueryRowx("select id from prescription_chinese_patient_model where id=$1 limit 1", prescriptionChinesePatientModelID)
 	if mrow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
