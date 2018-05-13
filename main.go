@@ -132,18 +132,20 @@ func main() {
 		diagnosisTreatment.Post("/detail", controller.DiagnosisTreatmentDetail)
 	}
 
-	chargeUnPay := app.Party("/charge", crs).AllowMethods(iris.MethodOptions)
+	charge := app.Party("/charge", crs).AllowMethods(iris.MethodOptions)
 	{
-		chargeUnPay.Post("/type/init", controller.ChargeTypeInit)
-		chargeUnPay.Post("/type/create", controller.ChargeTypeCreate)
+		charge.Post("/type/init", controller.ChargeTypeInit)
+		charge.Post("/type/create", controller.ChargeTypeCreate)
 		// 创建代缴费项目
-		chargeUnPay.Post("/unPay/create", controller.ChargeUnPayCreate)
-		chargeUnPay.Post("/unPay/delete", controller.ChargeUnPayDelete)
-		chargeUnPay.Post("/unPay/list", controller.ChargeUnPayList)
+		charge.Post("/unPay/create", controller.ChargeUnPayCreate)
+		charge.Post("/unPay/delete", controller.ChargeUnPayDelete)
+		charge.Post("/unPay/list", controller.ChargeUnPayList)
 
-		chargeUnPay.Post("/pay", controller.ChargePay)
+		charge.Post("/pay", controller.ChargePay)
+		charge.Post("/paid/list", controller.ChargePaidList)
 
-		chargeUnPay.Post("/paid/list", controller.ChargePaidList)
+		charge.Post("/traigePatient/unpay", controller.GetUnChargeTraigePatients)
+
 	}
 
 	//挂账
