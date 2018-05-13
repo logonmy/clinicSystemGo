@@ -268,10 +268,15 @@ func DrugList(ctx iris.Context) {
 
 	countSQL := `select count(id) as total from drug_stock where storehouse_id=$1`
 	selectSQL := `select ds.id as drug_stock_id,d.name as drug_name,d.specification,du.name as packing_unit_name,
-		ds.ret_price,d.py_code,ds.is_discount,d.default_remark,ds.status from drug_stock ds
-		left join drug d on ds.drug_id = d.id
-		left join dose_unit du on ds.packing_unit_id = du.id
-		where storehouse_id=$1`
+	ds.ret_price,d.py_code,ds.is_discount,d.default_remark,ds.status, ds.stock_amount, d.once_dose_unit_id, odu.name as once_dose_unit_name, d.route_administration_id, ra.name as route_administration_name, d.frequency_id, f.name as frequency_name, ds.storehouse_id, s.name as storehouse_name
+	from drug_stock ds
+	left join drug d on ds.drug_id = d.id
+	left join dose_unit du on ds.packing_unit_id = du.id
+	left join dose_unit odu on d.once_dose_unit_id = odu.id
+	left join route_administration ra on d.route_administration_id = ra.id
+	left join frequency f on d.frequency_id = f.id
+	left join storehouse s on ds.storehouse_id = s.id
+	where storehouse_id=$1`
 
 	// var countSet []string
 	// var selectSet []string
