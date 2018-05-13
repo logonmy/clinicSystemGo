@@ -346,7 +346,7 @@ func LaboratoryList(ctx iris.Context) {
 	countSQL := `select count(cl.id) as total from clinic_laboratory cl
 		left join laboratory l on cl.laboratory_id = l.id
 		where cl.clinic_id=$1`
-	selectSQL := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name,l.unit_id,du.name as unit_name,cl.cost,l.py_code,cl.is_discount,
+	selectSQL := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name,l.unit_id,du.name as unit_name,cl.price,l.py_code,cl.is_discount,
 		l.remark,cl.status
 		from clinic_laboratory cl
 		left join laboratory l on cl.laboratory_id = l.id
