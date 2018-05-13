@@ -172,12 +172,14 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 
 	countSQL := `select count(id) as total from prescription_western_patient_model where model_name ~$1`
 	selectSQL := `select pwpm.id as prescription_patient_model_id,d.name as drug_name,pwpmi.amount,du.name as packing_unit_name,
-	pwpm.is_common,pwpm.created_time,p.name as operation_name,pwpm.model_name from prescription_western_patient_model pwpm
+	pwpm.is_common,pwpm.created_time,p.name as operation_name,pwpm.model_name,pwpmi.once_dose,odu.name as once_dose_unit_name
+	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join drug_stock ds on pwpmi.drug_stock_id = ds.id
 	left join drug d on ds.drug_id = d.id
 	left join dose_unit du on d.packing_unit_id = du.id
 	left join personnel p on pwpm.operation_id = p.id
+	left join dose_unit odu on pwpmi.once_dose_unit_id = odu.id
 	where pwpm.model_name ~$1`
 
 	if isCommon != "" {
@@ -559,12 +561,14 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 
 	countSQL := `select count(id) as total from prescription_chinese_patient_model where model_name ~$1`
 	selectSQL := `select pcpm.id as prescription_patient_model_id,d.name as drug_name,pcpmi.amount,du.name as packing_unit_name,
-	pcpm.is_common,pcpm.created_time,p.name as operation_name,pcpm.model_name from prescription_chinese_patient_model pcpm
+	pcpm.is_common,pcpm.created_time,p.name as operation_name,pcpm.model_name,pcpmi.once_dose,odu.name as once_dose_unit_name 
+	from prescription_chinese_patient_model pcpm
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join drug_stock ds on pcpmi.drug_stock_id = ds.id
 	left join drug d on ds.drug_id = d.id
 	left join dose_unit du on d.packing_unit_id = du.id
 	left join personnel p on pcpm.operation_id = p.id
+	left join dose_unit odu on pcpmi.once_dose_unit_id = odu.id
 	where pcpm.model_name ~$1`
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)

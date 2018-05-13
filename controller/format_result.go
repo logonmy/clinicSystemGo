@@ -61,9 +61,11 @@ type PrescriptionModel struct {
 
 //PrescriptionModelItem 处方模板item
 type PrescriptionModelItem struct {
-	DrugName        string `json:"drug_name"`
-	Amount          int    `json:"amount"`
-	PackingUnitName string `json:"packing_unit_name"`
+	DrugName         string `json:"drug_name"`
+	Amount           int    `json:"amount"`
+	OnceDose         int    `json:"once_dose"`
+	OnceDoseUnitName string `json:"once_dose_unit_name"`
+	PackingUnitName  string `json:"packing_unit_name"`
 }
 
 // FormatSQLRowsToMapArray 格式化数据库返回的数组数据
@@ -219,6 +221,8 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		isCommon := v["is_common"]
 		createdTime := v["created_time"]
 		amount := v["amount"]
+		onceDose := v["once_dose"]
+		onceDoseUnitName := v["once_dose_unit_name"]
 		packingUnitName := v["packing_unit_name"]
 		has := false
 		for k, pModel := range models {
@@ -226,9 +230,11 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 			items := pModel.Items
 			if int(prescriptionModelID.(int64)) == dprescriptionModelID {
 				item := PrescriptionModelItem{
-					DrugName:        drugName.(string),
-					Amount:          int(amount.(int64)),
-					PackingUnitName: packingUnitName.(string),
+					DrugName:         drugName.(string),
+					Amount:           int(amount.(int64)),
+					OnceDose:         int(onceDose.(int64)),
+					OnceDoseUnitName: onceDoseUnitName.(string),
+					PackingUnitName:  packingUnitName.(string),
 				}
 				models[k].Items = append(items, item)
 				has = true
@@ -237,9 +243,11 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		if !has {
 			var items []PrescriptionModelItem
 			item := PrescriptionModelItem{
-				DrugName:        drugName.(string),
-				Amount:          int(amount.(int64)),
-				PackingUnitName: packingUnitName.(string),
+				DrugName:         drugName.(string),
+				Amount:           int(amount.(int64)),
+				OnceDose:         int(onceDose.(int64)),
+				OnceDoseUnitName: onceDoseUnitName.(string),
+				PackingUnitName:  packingUnitName.(string),
 			}
 			items = append(items, item)
 
