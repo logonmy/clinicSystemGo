@@ -724,6 +724,9 @@ CREATE TABLE drug
   vol_unit_id integer references dose_unit(id),--体积单位id
   once_dose integer,--常用剂量
   once_dose_unit_id integer references dose_unit(id),--用量单位 常用剂量单位id
+  dose_count integer,--制剂数量
+  dose_count_unit_id integer references dose_unit(id),--制剂数量单位id
+  packing_unit_id integer references dose_unit(id),--药品包装id
   route_administration_id integer references route_administration(id),--用药途径id/默认用法
   frequency_id integer references frequency(id),--用药频率id/默认频次
   default_remark varchar(20),--默认用量用法说明
@@ -826,9 +829,6 @@ CREATE TABLE drug_stock
   mini_unit_id integer references dose_unit(id),--最小剂量单位id
   is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
   bulk_sales_price integer,--拆零售价/最小剂量售价
-  dose_count integer,--制剂数量
-  dose_count_id integer references dose_unit(id),--制剂数量单位id
-  packing_unit_id integer references dose_unit(id),--药品包装id
   is_discount boolean DEFAULT false,--是否允许折扣
   fetch_address varchar(10),--取药地点
   eff_day integer,--有效天数
