@@ -216,6 +216,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	routeAdministrationID := ctx.PostValue("route_administration_id")
 	frequencyID := ctx.PostValue("frequency_id")
+	prescriptionChinesePatientID := ctx.PostValue("id")
 	amount := ctx.PostValue("amount")
 	medicineIllustration := ctx.PostValue("medicine_illustration")
 	fetchAddress := ctx.PostValue("fetch_address")
@@ -223,12 +224,14 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	personnelID := ctx.PostValue("personnel_id")
 	items := ctx.PostValue("items")
 
+	fmt.Println("prescriptionChinesePatientID, ========", prescriptionChinesePatientID)
+
 	if clinicTriagePatientID == "" || routeAdministrationID == "" || frequencyID == "" || amount == "" || fetchAddress == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	if items == "" {
-		ctx.JSON(iris.Map{"code": "200", "data": nil})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择项目"})
 		return
 	}
 
@@ -298,17 +301,38 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		"medicine_illustration",
 	}
 
-	var prescriptionChineseItemValues []string
-	prescriptionChineseItemSets := []string{
-		"drug_stock_id",
-		"order_sn",
-		"soft_sn",
-		"once_dose",
-		"once_dose_unit_id",
-		"amount",
-		"prescription_chinese_patient_id",
-		"special_illustration",
+	tx, errb := model.DB.Begin()
+	if errb != nil {
+		fmt.Println("errb ===", errb)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
+		return
 	}
+	if prescriptionChinesePatientID != "" {
+		fmt.Println(" delete data ======")
+		_, errdm := tx.Exec("delete from mz_unpaid_orders where prescription_chinese_patient_id=$1 and charge_project_type_id=2", prescriptionChinesePatientID)
+		if errdm != nil {
+			fmt.Println("errdm ===", errdm)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
+			return
+		}
+		_, errdlp := tx.Exec("delete from prescription_chinese_item where prescription_chinese_patient_id=$1", prescriptionChinesePatientID)
+		if errdlp != nil {
+			fmt.Println("errdlp ===", errdlp)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
+			return
+		}
+		_, errdlp = tx.Exec("delete from prescription_chinese_patient where id=$1", prescriptionChinesePatientID)
+		if errdlp != nil {
+			fmt.Println("errdlp ===", errdlp)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
+			return
+		}
+	}
+
 	orderSn := FormatPayOrderSn(clinicTriagePatientID, "2")
 	prescriptionChinesePatientValues = append(prescriptionChinesePatientValues, clinicTriagePatientID, "'"+orderSn+"'", routeAdministrationID, frequencyID, amount, fetchAddress, personnelID)
 
@@ -323,28 +347,6 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		prescriptionChinesePatientValues = append(prescriptionChinesePatientValues, "'"+medicineIllustration+"'")
 	}
 
-	tx, errb := model.DB.Begin()
-	if errb != nil {
-		fmt.Println("errb ===", errb)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
-		return
-	}
-	_, errdlp := tx.Exec("delete from prescription_chinese_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
-	if errdlp != nil {
-		fmt.Println("errdlp ===", errdlp)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
-		return
-	}
-
-	_, errdm := tx.Exec("delete from mz_unpaid_orders where clinic_triage_patient_id=$1 and charge_project_type_id=2", clinicTriagePatientID)
-	if errdm != nil {
-		fmt.Println("errdm ===", errdm)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
-		return
-	}
 	tSetStr := strings.Join(prescriptionChinesePatientSets, ",")
 	tValueStr := strings.Join(prescriptionChinesePatientValues, ",")
 
@@ -352,7 +354,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	fmt.Println("insertpwpSQL===", insertpwpSQL)
 
 	pcprow := tx.QueryRow(insertpwpSQL)
-	var prescriptionChinesePatientID string
+	// var prescriptionChinesePatientID string
 	errp := pcprow.Scan(&prescriptionChinesePatientID)
 	if errp != nil {
 		fmt.Println("errp ===", errp)
@@ -360,7 +362,29 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "保存中药处方错误"})
 		return
 	}
-	fmt.Println("====", prescriptionChinesePatientID)
+	fmt.Println("insert prescriptionChinesePatientID====", prescriptionChinesePatientID)
+	orderSn += prescriptionChinesePatientID
+
+	_, errp = tx.Exec(`update prescription_chinese_patient set order_sn = $1 where id = $2`, orderSn, prescriptionChinesePatientID)
+
+	if errp != nil {
+		fmt.Println("errp ===", errp)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存修改中药处方错误"})
+		return
+	}
+	var prescriptionChineseItemValues []string
+	prescriptionChineseItemSets := []string{
+		"drug_stock_id",
+		"order_sn",
+		"soft_sn",
+		"once_dose",
+		"once_dose_unit_id",
+		"amount",
+		"prescription_chinese_patient_id",
+		"special_illustration",
+	}
+
 	for index, v := range results {
 		drugStockID := v["drug_stock_id"]
 		onceDose := v["once_dose"]
@@ -480,7 +504,7 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 		return
 	}
 
-	pcprows, err1 := model.DB.Queryx(`select pcp.*,ra.name as route_administration_name,f.name as frequency_id from prescription_chinese_patient pcp
+	pcprows, err1 := model.DB.Queryx(`select pcp.*,ra.name as route_administration_name, f.name as frequency_name from prescription_chinese_patient pcp
 		left join route_administration ra on pcp.route_administration_id = ra.id
 		left join frequency f on pcp.frequency_id = f.id
 		where pcp.clinic_triage_patient_id = $1`, clinicTriagePatientID)

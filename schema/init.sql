@@ -335,6 +335,7 @@ CREATE TABLE mz_unpaid_orders
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
+  prescription_chinese_patient_id INTEGER,--中药处方id
   charge_project_id INTEGER NOT NULL,--收费项目id
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
@@ -1289,7 +1290,7 @@ CREATE TABLE prescription_chinese_item
   id serial PRIMARY KEY NOT NULL,--id
   prescription_chinese_patient_id INTEGER NOT NULL references prescription_chinese_patient(id),--中药处方id
   drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
-  order_sn varchar(50) UNIQUE NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
   once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
