@@ -297,6 +297,8 @@ func main() {
 		dictionaries.Post("/ExaminationOrganList", controller.ExaminationOrganList)
 		dictionaries.Post("/FrequencyList", controller.FrequencyList)
 		dictionaries.Post("/RouteAdministrationList", controller.RouteAdministrationList)
+		dictionaries.Post("/LaboratorySampleList", controller.LaboratorySampleList)
+		dictionaries.Post("/CuvetteColorList", controller.CuvetteColorList)
 	}
 
 	// http://localhost:8080
