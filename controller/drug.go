@@ -20,11 +20,11 @@ func DrugAdd(ctx iris.Context) {
 	pyCode := ctx.PostValue("py_code")
 	printName := ctx.PostValue("print_name")
 	specification := ctx.PostValue("specification")
-	manuFactory := ctx.PostValue("manu_factory")
+	manuFactoryID := ctx.PostValue("manu_factory_id")
 	status := ctx.PostValue("status")
 	licenseNo := ctx.PostValue("license_no")
 	doseFormID := ctx.PostValue("dose_form_id")
-	drugClassID := ctx.PostValue("drug_class_id")
+	drugTypeID := ctx.PostValue("drug_type_id")
 
 	miniDose := ctx.PostValue("mini_dose")
 	miniUnitID := ctx.PostValue("mini_unit_id")
@@ -90,9 +90,9 @@ func DrugAdd(ctx iris.Context) {
 		sets = append(sets, "specification")
 		values = append(values, "'"+specification+"'")
 	}
-	if manuFactory != "" {
-		sets = append(sets, "manu_factory")
-		values = append(values, "'"+manuFactory+"'")
+	if manuFactoryID != "" {
+		sets = append(sets, "manu_factory_id")
+		values = append(values, manuFactoryID)
 	}
 	if licenseNo != "" {
 		sets = append(sets, "license_no")
@@ -102,9 +102,9 @@ func DrugAdd(ctx iris.Context) {
 		sets = append(sets, "dose_form_id")
 		values = append(values, doseFormID)
 	}
-	if drugClassID != "" {
-		sets = append(sets, "drug_class_id")
-		values = append(values, drugClassID)
+	if drugTypeID != "" {
+		sets = append(sets, "drug_type_id")
+		values = append(values, drugTypeID)
 	}
 	if onceDose != "" {
 		sets = append(sets, "once_dose")
@@ -231,7 +231,7 @@ func DrugList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	DrugType := ctx.PostValue("type")
 	keyword := ctx.PostValue("keyword")
-	drugClassID := ctx.PostValue("drug_class_id")
+	drugTypeID := ctx.PostValue("drug_type_id")
 	status := ctx.PostValue("status")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
@@ -300,11 +300,11 @@ func DrugList(ctx iris.Context) {
 		// countSet = append(countSet, "status="+status)
 		// selectSet = append(selectSet, "d.status="+status)
 	}
-	if drugClassID != "" {
-		countSQL += " and d.drug_class_id=" + drugClassID
-		selectSQL += " and d.drug_class_id=" + drugClassID
-		// countSet = append(countSet, "drug_class_id="+status)
-		// selectSet = append(selectSet, "d.drug_class_id="+status)
+	if drugTypeID != "" {
+		countSQL += " and d.drug_type_id=" + drugTypeID
+		selectSQL += " and d.drug_type_id=" + drugTypeID
+		// countSet = append(countSet, "drug_type_id="+status)
+		// selectSet = append(selectSet, "d.drug_type_id="+status)
 	}
 
 	// if len(countSet) > 0 {
@@ -338,11 +338,11 @@ func DrugUpdate(ctx iris.Context) {
 	pyCode := ctx.PostValue("py_code")
 	printName := ctx.PostValue("print_name")
 	specification := ctx.PostValue("specification")
-	manuFactory := ctx.PostValue("manu_factory")
+	manuFactoryID := ctx.PostValue("manu_factory_id")
 	status := ctx.PostValue("status")
 	licenseNo := ctx.PostValue("license_no")
 	doseFormID := ctx.PostValue("dose_form_id")
-	drugClassID := ctx.PostValue("drug_class_id")
+	drugTypeID := ctx.PostValue("drug_type_id")
 
 	miniDose := ctx.PostValue("mini_dose")
 	miniUnitID := ctx.PostValue("mini_unit_id")
@@ -403,8 +403,8 @@ func DrugUpdate(ctx iris.Context) {
 	if specification != "" {
 		sets = append(sets, "specification="+"'"+specification+"'")
 	}
-	if manuFactory != "" {
-		sets = append(sets, "manu_factory="+"'"+manuFactory+"'")
+	if manuFactoryID != "" {
+		sets = append(sets, "manu_factory_id="+manuFactoryID)
 	}
 	if licenseNo != "" {
 		sets = append(sets, "license_no="+"'"+licenseNo+"'")
@@ -412,8 +412,8 @@ func DrugUpdate(ctx iris.Context) {
 	if doseFormID != "" {
 		sets = append(sets, "dose_form_id="+doseFormID)
 	}
-	if drugClassID != "" {
-		sets = append(sets, "drug_class_id="+drugClassID)
+	if drugTypeID != "" {
+		sets = append(sets, "drug_type_id="+drugTypeID)
 	}
 	if onceDose != "" {
 		sets = append(sets, "once_dose="+onceDose)
@@ -538,10 +538,11 @@ func DrugSearch(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select ds.id as drug_stock_id,d.id as drug_id,d.manu_factory,d.name as drug_name,du.name as packing_unit_name,
+	selectSQL := `select ds.id as drug_stock_id,d.id as drug_id,d.manu_factory_id,mf.name as manu_factory_name,d.name as drug_name,du.name as packing_unit_name,
 	ds.ret_price,ds.buy_price,ds.eff_day,ds.stock_amount from drug d
 	left join drug_stock ds on ds.drug_id = d.id
 	left join dose_unit du on d.packing_unit_id = du.id
+	left join manu_factory mf on d.manu_factory_id = mf.id
 	where ds.storehouse_id=$1`
 
 	if keyword != "" {
@@ -566,8 +567,8 @@ func DrugDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	sql := `select d.name,d.specification,d.manu_factory,df.name as dose_form_name,d.dose_form_id,
-		d.print_name,d.license_no,dc.name as drug_class_name,d.drug_class_id,d.py_code,d.barcode,ds.status,
+	sql := `select d.name,d.specification,d.manu_factory_id,mf.name as manu_factory_name,df.name as dose_form_name,d.dose_form_id,
+		d.print_name,d.license_no,dc.name as drug_type_name,d.drug_type_id,d.py_code,d.barcode,ds.status,
 		ds.mini_dose,mdu.name as mini_unit_name,ds.mini_unit_id,ds.dose_count,ds.dose_count_unit_id,cdu.name as dose_count_name,
 		d.packing_unit_id,pdu.name as packing_unit_name,ds.ret_price,ds.buy_price,ds.is_discount,ds.is_bulk_sales,ds.bulk_sales_price,ds.fetch_address,
 		d.once_dose,d.once_dose_unit_id,odu.name as once_dose_unit_name,d.route_administration_id,ra.name as route_administration_name,
@@ -575,13 +576,14 @@ func DrugDetail(ctx iris.Context) {
 		from drug_stock ds
 		left join drug d on ds.drug_id = d.id
 		left join dose_form df on d.dose_form_id = df.id
-		left join drug_class dc on d.drug_class_id = dc.id
+		left join drug_type dc on d.drug_type_id = dc.id
 		left join dose_unit mdu on ds.mini_unit_id = mdu.id
 		left join dose_unit cdu on ds.dose_count_unit_id = cdu.id
 		left join dose_unit pdu on d.packing_unit_id = pdu.id
 		left join dose_unit odu on d.once_dose_unit_id = odu.id
 		left join route_administration ra on d.route_administration_id = ra.id
 		left join frequency f on d.frequency_id = f.id
+		left join manu_factory mf on d.manu_factory_id = mf.id
 		where ds.id=$1`
 	arows := model.DB.QueryRowx(sql, drugStockID)
 	if arows == nil {
@@ -677,72 +679,110 @@ func DrugInstock(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
-
-	var values []string
-	orderNumber := "RKD-" + strconv.FormatInt(time.Now().Unix(), 10)
-
+	orderNumber := "DRKD-" + strconv.FormatInt(time.Now().Unix(), 10)
+	values := []string{
+		storehouseID,
+		"'" + orderNumber + "'",
+		instockWayID,
+		supplierID,
+		"date '" + instockDate + "'",
+		operationID,
+		"'" + remark + "'"}
 	sets := []string{
 		"storehouse_id",
+		"order_number",
+		"instock_way_id",
+		"supplier_id",
+		"instock_date",
+		"instock_operation_id",
+		"remark"}
+
+	var itemValues []string
+	itemSets := []string{
 		"drug_id",
-		"packing_unit_id",
-		"manu_factory",
 		"instock_amount",
 		"ret_price",
 		"buy_price",
 		"serial",
 		"eff_day",
-		"order_number",
-		"instock_way_id",
-		"supplier_id",
-		"instock_date",
-		"instock_operation_id"}
+		"drug_instock_record_id"}
 
-	if remark != "" {
-		sets = append(sets, "remark")
+	setStr := strings.Join(sets, ",")
+	valueStr := strings.Join(values, ",")
+	insertSQL := "insert into drug_instock_record (" + setStr + ") values (" + valueStr + ") RETURNING id"
+	fmt.Println("insertSQL===", insertSQL)
+
+	tx, errb := model.DB.Begin()
+	if errb != nil {
+		fmt.Println("errb ===", errb)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
+		return
 	}
+
+	var drugInstockRecordID string
+	errp := tx.QueryRow(insertSQL).Scan(&drugInstockRecordID)
+	if errp != nil {
+		fmt.Println("errp ===", errp)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存入库错误"})
+		return
+	}
+	fmt.Println("drugInstockRecordID====", drugInstockRecordID)
+
 	for _, v := range results {
 		drugID := v["drug_id"]
+		instockAmount := v["instock_amount"]
+		if instockAmount == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "数量为必填项"})
+			return
+		}
 		var s []string
 		row := model.DB.QueryRowx("select id from drug where id=$1 limit 1", drugID)
 		if row == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "入库保存失败"})
 			return
 		}
 		drug := FormatSQLRowToMap(row)
 		_, ok := drug["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "新增药品不存在"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "入库药品不存在"})
 			return
 		}
-		s = append(s, storehouseID, v["drug_id"], v["packing_unit_id"], "'"+v["manu_factory"]+"'", v["instock_amount"],
-			v["ret_price"], v["buy_price"], "'"+v["serial"]+"'", v["eff_day"], "'"+orderNumber+"'", instockWayID,
-			supplierID, "date '"+instockDate+"'", operationID)
-		if remark != "" {
-			s = append(s, "'"+remark+"'")
-		}
+		s = append(s, v["drug_id"], v["instock_amount"], v["ret_price"], v["buy_price"], "'"+v["serial"]+"'", v["eff_day"], drugInstockRecordID)
+
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
-		values = append(values, str)
+		itemValues = append(itemValues, str)
 	}
 
-	setStr := strings.Join(sets, ",")
-	valueStr := strings.Join(values, ",")
-	insertSQL := "insert into instock_record (" + setStr + ") values " + valueStr
-	fmt.Println("insertSQL===", insertSQL)
-	_, err := model.DB.Exec(insertSQL)
+	itemSetStr := strings.Join(itemSets, ",")
+	itemValueStr := strings.Join(itemValues, ",")
+	insertiSQL := "insert into drug_instock_record_item (" + itemSetStr + ") values " + itemValueStr
+	fmt.Println("insertiSQL====", insertiSQL)
+
+	_, err := tx.Exec(insertiSQL)
 	if err != nil {
 		fmt.Println("err ===", err)
+		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+		return
+	}
+
+	errc := tx.Commit()
+	if errc != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errc.Error()})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
-//InstockRecord 入库记录列表
-func InstockRecord(ctx iris.Context) {
+//DrugInstockRecord 入库记录列表
+func DrugInstockRecord(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	startDate := ctx.PostValue("start_date")
 	endDate := ctx.PostValue("end_date")
@@ -789,10 +829,10 @@ func InstockRecord(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(DISTINCT order_number) as total from instock_record where storehouse_id=$1`
-	selectSQL := `select ir.id as instock_record_id,ir.instock_date,ir.order_number, iw.name as instock_way_name,
+	countSQL := `select count(id) as total from drug_instock_record where storehouse_id=$1`
+	selectSQL := `select ir.id as drug_instock_record_id,ir.instock_date,ir.order_number, iw.name as instock_way_name,
 		vp.name as verify_operation_name,s.name as supplier_name,p.name as instock_operation_name,ir.verify_status
-		from instock_record ir
+		from drug_instock_record ir
 		left join supplier s on ir.supplier_id = s.id
 		left join instock_way iw on ir.instock_way_id = iw.id
 		left join personnel p on ir.instock_operation_id = p.id
@@ -829,55 +869,65 @@ func InstockRecord(ctx iris.Context) {
 	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", storehouseID, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 
-	var instockRecord []map[string]interface{}
-	for _, v := range results {
-		has := false
-		for _, vRes := range instockRecord {
-			if vRes["order_number"].(string) == v["order_number"].(string) {
-				has = true
-				continue
-			}
-		}
-		if !has {
-			instockRecord = append(instockRecord, v)
-		}
-	}
-	ctx.JSON(iris.Map{"code": "200", "data": instockRecord, "page_info": pageInfo})
+	// var instockRecord []map[string]interface{}
+	// for _, v := range results {
+	// 	has := false
+	// 	for _, vRes := range instockRecord {
+	// 		if vRes["order_number"].(string) == v["order_number"].(string) {
+	// 			has = true
+	// 			continue
+	// 		}
+	// 	}
+	// 	if !has {
+	// 		instockRecord = append(instockRecord, v)
+	// 	}
+	// }
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
-//InstockRecordDetail 入库记录详情
-func InstockRecordDetail(ctx iris.Context) {
-	orderNumber := ctx.PostValue("order_number")
-	if orderNumber == "" {
+//DrugInstockRecordDetail 入库记录详情
+func DrugInstockRecordDetail(ctx iris.Context) {
+	drugInstockRecordID := ctx.PostValue("drug_instock_record_id")
+	if drugInstockRecordID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	sql := `select ir.id as instock_record_id,d.name as drug_name,ir.drug_id,ir.packing_unit_id,du.name as packing_unit_name,ir.manu_factory,ir.instock_amount,
-		ir.ret_price,ir.buy_price,ir.serial,ir.instock_date,ir.order_number,ir.created_time,s.name as supplier_name,ir.supplier_id,ir.remark,
+	sql := `select ir.id as drug_instock_record_id,mf.name as manu_factory_name,
+		ir.instock_date,ir.order_number,ir.created_time,s.name as supplier_name,ir.supplier_id,ir.remark,
 		ir.verify_operation_id,vp.name as verify_operation_name,ir.instock_way_id,iw.name as instock_way_name,ir.instock_operation_id,p.name as instock_operation_name 
-		from instock_record ir
-		left join drug d on ir.drug_id = d.id
+		from drug_instock_record ir
 		left join supplier s on ir.supplier_id = s.id
 		left join instock_way iw on ir.instock_way_id = iw.id
 		left join personnel p on ir.instock_operation_id = p.id
 		left join personnel vp on ir.verify_operation_id = vp.id
-		left join dose_unit du on ir.packing_unit_id = du.id
-		where order_number=$1`
+		where id=$1`
 
-	arows, err := model.DB.Queryx(sql, orderNumber)
+	arow := model.DB.QueryRowx(sql, drugInstockRecordID)
+	result := FormatSQLRowToMap(arow)
+
+	isql := `select d.name as drug_name,du.name as packing_unit_name,mf.name as manu_factory_name,iri.instock_amount,
+		iri.ret_price,iri.buy_price,iri.serial,iri.eff_day
+		from drug_instock_record_item iri
+		left join drug d on iri.drug_id = d.id
+		left join dose_unit du on d.packing_unit_id = du.id
+		left join manu_factory mf on d.manu_factory_id = mf.id
+		where drug_instock_record_id=$1`
+
+	irows, err := model.DB.Queryx(isql, drugInstockRecordID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	result := FormatSQLRowsToMapArray(arows)
+	item := FormatSQLRowsToMapArray(irows)
+	result["items"] = item
 	ctx.JSON(iris.Map{"code": "200", "data": result})
 }
 
-//InstockUpdate 入库记录修改
-func InstockUpdate(ctx iris.Context) {
+//DrugInstockUpdate 入库记录修改
+func DrugInstockUpdate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	orderNumber := ctx.PostValue("order_number")
+	drugInstockRecordID := ctx.PostValue("drug_instock_record_id")
 	items := ctx.PostValue("items")
 	operationID := ctx.PostValue("instock_operation_id")
 	instockWayID := ctx.PostValue("instock_way_id")
@@ -885,7 +935,7 @@ func InstockUpdate(ctx iris.Context) {
 	remark := ctx.PostValue("remark")
 	instockDate := ctx.PostValue("instock_date")
 
-	if orderNumber == "" || clinicID == "" || instockWayID == "" || supplierID == "" || instockDate == "" || operationID == "" || items == "" {
+	if drugInstockRecordID == "" || clinicID == "" || instockWayID == "" || supplierID == "" || instockDate == "" || operationID == "" || items == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -907,7 +957,7 @@ func InstockUpdate(ctx iris.Context) {
 		return
 	}
 
-	row := model.DB.QueryRowx("select * from instock_record where order_number=$1 and storehouse_id=$2 limit 1", orderNumber, storehouseID)
+	row := model.DB.QueryRowx("select * from drug_instock_record where id=$1 limit 1", drugInstockRecordID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -919,85 +969,79 @@ func InstockUpdate(ctx iris.Context) {
 		return
 	}
 	verifyStatus := instockRecord["verify_status"]
-	createdTime := instockRecord["created_time"].(time.Time)
-	fmt.Println("created_time====", createdTime)
 	if verifyStatus.(string) == "02" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "入库记录已审核，不能修改"})
 		return
 	}
 
-	tx, errb := model.DB.Begin()
-
-	if errb != nil {
-		fmt.Println("errb ===", errb)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
-		return
-	}
-
-	_, errd := tx.Exec("delete from instock_record where order_number=$1 and storehouse_id=$2", orderNumber, storehouseID)
-	if errd != nil {
-		fmt.Println("errd ===", errd)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
-		return
-	}
-
 	var values []string
 	sets := []string{
-		"storehouse_id",
 		"drug_id",
-		"packing_unit_id",
-		"manu_factory",
 		"instock_amount",
 		"ret_price",
 		"buy_price",
 		"serial",
 		"eff_day",
-		"order_number",
-		"instock_way_id",
-		"supplier_id",
-		"instock_date",
-		"instock_operation_id",
-		"created_time"}
+		"drug_instock_record_id"}
 
-	if remark != "" {
-		sets = append(sets, "remark")
-	}
 	for _, v := range results {
 		drugID := v["drug_id"]
+		instockAmount := v["instock_amount"]
+		if instockAmount == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "数量为必填项"})
+			return
+		}
 		var s []string
 		row := model.DB.QueryRowx("select id from drug where id=$1 limit 1", drugID)
 		if row == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 			return
 		}
 		drug := FormatSQLRowToMap(row)
 		_, ok := drug["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "新增药品不存在"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "修改的药品不存在"})
 			return
 		}
-		s = append(s, storehouseID, v["drug_id"], v["packing_unit_id"], "'"+v["manu_factory"]+"'", v["instock_amount"],
-			v["ret_price"], v["buy_price"], "'"+v["serial"]+"'", v["eff_day"], "'"+orderNumber+"'", instockWayID,
-			supplierID, "date '"+instockDate+"'", operationID, "timestamp '"+createdTime.Format("2006-01-02 15:04:05")+"'")
-		if remark != "" {
-			s = append(s, "'"+remark+"'")
-		}
+		s = append(s, v["drug_id"], v["instock_amount"], v["ret_price"], v["buy_price"], "'"+v["serial"]+"'", v["eff_day"], drugInstockRecordID)
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
 		values = append(values, str)
 	}
+	tx, errb := model.DB.Begin()
+	if errb != nil {
+		fmt.Println("errb ===", errb)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
+		return
+	}
+
+	updateSQL := `update drug_instock_record set instock_way_id=$1,supplier_id=$2,instock_date=$3,instock_operation_id=$4,remark=$5 where id=$6`
+	_, erru := tx.Exec(updateSQL, instockWayID, supplierID, "date '"+instockDate+"'", operationID, remark, drugInstockRecordID)
+	if erru != nil {
+		fmt.Println("erru ===", erru)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": erru.Error()})
+		return
+	}
+
+	_, errd := tx.Exec("delete from drug_instock_record_item where drug_instock_record_id=$1", drugInstockRecordID)
+	if errd != nil {
+		fmt.Println("errd ===", errd)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
+		return
+	}
 
 	setStr := strings.Join(sets, ",")
 	valueStr := strings.Join(values, ",")
-	insertSQL := "insert into instock_record (" + setStr + ") values " + valueStr
+	insertSQL := "insert into drug_instock_record_item (" + setStr + ") values " + valueStr
 	fmt.Println("insertSQL===", insertSQL)
 	_, err := tx.Exec(insertSQL)
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
 		return
 	}
 
@@ -1011,61 +1055,52 @@ func InstockUpdate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
-//InstockCheck 入库审核
-func InstockCheck(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
-	orderNumber := ctx.PostValue("order_number")
+//DrugInstockCheck 入库审核
+func DrugInstockCheck(ctx iris.Context) {
+	drugInstockRecordID := ctx.PostValue("drug_instock_record_id")
 	operationID := ctx.PostValue("verify_operation_id")
-	items := ctx.PostValue("items")
-	if orderNumber == "" || clinicID == "" || operationID == "" || items == "" {
+
+	if drugInstockRecordID == "" || operationID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	var results []map[string]string
-	errj := json.Unmarshal([]byte(items), &results)
-	fmt.Println("===", results)
+	row := model.DB.QueryRowx("select * from drug_instock_record where id=$1 limit 1", drugInstockRecordID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
+		return
+	}
+	instockRecord := FormatSQLRowToMap(row)
+	_, ok := instockRecord["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "入库记录不存在"})
+		return
+	}
+	storehouseID := strconv.FormatInt(instockRecord["storehouse_id"].(int64), 10)
+	verifyStatus := instockRecord["verify_status"]
+	if verifyStatus.(string) != "01" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "当前状态不能审核"})
+		return
+	}
 
-	if errj != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
+	rows, _ := model.DB.Queryx(`select * from drug_instock_record_item  where drug_instock_record_id=$1 limit 1`, drugInstockRecordID)
+	if rows == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 		return
 	}
-	var storehouseID string
-	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
-	if errs != nil {
-		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
-		return
-	}
+	instockRecordItems := FormatSQLRowsToMapArray(rows)
 
 	sql := "update drug_stock set"
-
 	var sets []string
 	var asValues []string
 	var values []string
-	for _, v := range results {
-		instockRecordID := v["instock_record_id"]
+	for _, v := range instockRecordItems {
+		drugID := strconv.FormatInt(v["drug_id"].(int64), 10)
+		instockAmount := v["instock_amount"].(int64)
 		var s []string
-		row := model.DB.QueryRowx("select * from instock_record where id=$1 and order_number=$2 limit 1", instockRecordID, orderNumber)
-		if row == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "审核失败"})
-			return
-		}
-		instockRecord := FormatSQLRowToMap(row)
-		_, ok := instockRecord["id"]
-		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "入库记录不存在"})
-			return
-		}
-		verifyStatus := instockRecord["verify_status"]
-		if verifyStatus.(string) != "01" {
-			ctx.JSON(iris.Map{"code": "1", "msg": "当前状态不能审核"})
-			return
-		}
-
-		drow := model.DB.QueryRowx("select id,stock_amount from drug_stock where storehouse_id=$1 and drug_id=$2 limit 1", strconv.FormatInt(instockRecord["storehouse_id"].(int64), 10), strconv.FormatInt(instockRecord["drug_id"].(int64), 10))
+		drow := model.DB.QueryRowx("select id,stock_amount from drug_stock where storehouse_id=$1 and drug_id=$2 limit 1", storehouseID, drugID)
 		if drow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "审核失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 			return
 		}
 		drugStock := FormatSQLRowToMap(drow)
@@ -1074,20 +1109,16 @@ func InstockCheck(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "入库失败"})
 			return
 		}
-		stockAmount := drugStock["stock_amount"].(int64) + instockRecord["instock_amount"].(int64)
-
-		s = append(s, strconv.FormatInt(instockRecord["storehouse_id"].(int64), 10), strconv.FormatInt(instockRecord["drug_id"].(int64), 10), strconv.FormatInt(stockAmount, 10), strconv.FormatInt(instockRecord["ret_price"].(int64), 10),
-			strconv.FormatInt(instockRecord["buy_price"].(int64), 10), strconv.FormatInt(instockRecord["packing_unit_id"].(int64), 10), strconv.FormatInt(instockRecord["eff_day"].(int64), 10))
+		stockAmount := drugStock["stock_amount"].(int64) + instockAmount
+		s = append(s, storehouseID, drugID, strconv.FormatInt(stockAmount, 10))
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
 		values = append(values, str)
 	}
+
 	valueStr := strings.Join(values, ",")
-
-	sets = append(sets, " stock_amount=tmp.stockAmount", " ret_price=tmp.ret_price",
-		" buy_price=tmp.buy_price", " packing_unit_id=tmp.packing_unit_id", " eff_day=tmp.eff_day", " updated_time=LOCALTIMESTAMP")
-
-	asValues = append(asValues, "storehouse_id", "drug_id", "stockAmount", "ret_price", "buy_price", "packing_unit_id", "eff_day")
+	sets = append(sets, " stock_amount=tmp.stockAmount", " updated_time=LOCALTIMESTAMP")
+	asValues = append(asValues, "storehouse_id", "drug_id", "stockAmount")
 
 	setStr := strings.Join(sets, ",")
 	asStr := strings.Join(asValues, ",")
@@ -1111,7 +1142,7 @@ func InstockCheck(ctx iris.Context) {
 		return
 	}
 
-	_, err2 := tx.Exec("update instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP", "02", operationID)
+	_, err2 := tx.Exec("update drug_instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP", "02", operationID)
 	if err2 != nil {
 		fmt.Println("err2 ===", err2)
 		tx.Rollback()
@@ -1129,31 +1160,50 @@ func InstockCheck(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
 }
 
-//InstockRecordDelete 删除入库记录
-func InstockRecordDelete(ctx iris.Context) {
-	orderNumber := ctx.PostValue("order_number")
-	if orderNumber == "" {
+//DrugInstockRecordDelete 删除入库记录
+func DrugInstockRecordDelete(ctx iris.Context) {
+	drugInstockRecordID := ctx.PostValue("drug_instock_record_id")
+	if drugInstockRecordID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	rows, _ := model.DB.Queryx("select id from instock_record where order_number=$1 and verify_status='01'", orderNumber)
+	rows := model.DB.QueryRowx("select id from drug_instock_record where id=$1", drugInstockRecordID)
 	if rows == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "删除失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除失败"})
 		return
 	}
-	instockRecord := FormatSQLRowsToMapArray(rows)
-	len := len(instockRecord)
-	if len == 0 {
-		ctx.JSON(iris.Map{"code": "1", "msg": "入库记录不存在"})
+	instockRecord := FormatSQLRowToMap(rows)
+	_, ok := instockRecord["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "入库记录不存在"})
+		return
+	}
+	verifyStatus := instockRecord["verify_status"]
+	if verifyStatus.(string) != "01" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "当前状态不能删除"})
 		return
 	}
 
-	_, err := model.DB.Exec("delete from instock_record where order_number=$1 and verify_status='01'", orderNumber)
+	tx, err := model.DB.Begin()
 
 	if err != nil {
 		fmt.Println("err ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		return
+	}
+	_, erri := tx.Exec("delete from drug_instock_record_item where drug_instock_record_id=$1", drugInstockRecordID)
+	if erri != nil {
+		fmt.Println("erri ===", erri)
+		ctx.JSON(iris.Map{"code": "-1", "msg": erri.Error()})
+		return
+	}
+
+	_, errd := model.DB.Exec("delete from drug_instock_record where id=$1", drugInstockRecordID)
+	if errd != nil {
+		fmt.Println("errd ===", errd)
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
 		return
 	}
 
@@ -1177,20 +1227,19 @@ func DrugOutstock(ctx iris.Context) {
 	}
 	dprow := model.DB.QueryRowx("select id from department_personnel where department_id=$1 and personnel_id!=$2 limit 1", departmentID, personnelID)
 	if dprow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "出库失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "出库失败"})
 		return
 	}
 	departmentPersonnel := FormatSQLRowToMap(dprow)
 	_, dok := departmentPersonnel["id"]
 	if !dok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "领用科室与领用人员不符"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "领用科室与领用人员不符"})
 		return
 	}
 
 	var results []map[string]string
 	errj := json.Unmarshal([]byte(items), &results)
 	fmt.Println("===", results)
-
 	if errj != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
 		return
@@ -1200,35 +1249,70 @@ func DrugOutstock(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
+	orderNumber := "DCKD-" + strconv.FormatInt(time.Now().Unix(), 10)
 
-	var values []string
-	orderNumber := "CKD-" + strconv.FormatInt(time.Now().Unix(), 10)
-
+	values := []string{
+		storehouseID,
+		departmentID,
+		personnelID,
+		"'" + orderNumber + "'",
+		outstockWayID,
+		"date '" + outstockDate + "'",
+		operationID,
+		"'" + remark + "'"}
 	sets := []string{
 		"storehouse_id",
-		"drug_id",
 		"department_id",
 		"personnel_id",
-		"packing_unit_id",
-		"manu_factory",
+		"order_number",
+		"outstock_way_id",
+		"outstock_date",
+		"outstock_operation_id",
+		"remark"}
+
+	var itemValues []string
+	itemSets := []string{
+		"drug_id",
 		"outstock_amount",
 		"ret_price",
 		"buy_price",
 		"serial",
 		"eff_day",
-		"order_number",
-		"outstock_way_id",
-		"outstock_date",
-		"outstock_operation_id"}
+		"drug_instock_record_id"}
 
-	if remark != "" {
-		sets = append(sets, "remark")
+	setStr := strings.Join(sets, ",")
+	valueStr := strings.Join(values, ",")
+	insertSQL := "insert into drug_outstock_record (" + setStr + ") values (" + valueStr + ") RETURNING id"
+	fmt.Println("insertSQL===", insertSQL)
+
+	tx, errb := model.DB.Begin()
+	if errb != nil {
+		fmt.Println("errb ===", errb)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
+		return
 	}
+
+	var drugOutstockRecordID string
+	errp := tx.QueryRow(insertSQL).Scan(&drugOutstockRecordID)
+	if errp != nil {
+		fmt.Println("errp ===", errp)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存出库错误"})
+		return
+	}
+	fmt.Println("drugOutstockRecordID====", drugOutstockRecordID)
+
 	for _, v := range results {
 		drugID := v["drug_id"]
+		outstockAmount := v["outstock_amount"]
+		if outstockAmount == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "数量为必填项"})
+			return
+		}
 		var s []string
 		row := model.DB.QueryRowx("select id from drug where id=$1 limit 1", drugID)
 		if row == nil {
@@ -1241,32 +1325,28 @@ func DrugOutstock(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "新增出库药品不存在"})
 			return
 		}
-		s = append(s, storehouseID, v["drug_id"], departmentID, personnelID, v["packing_unit_id"], "'"+v["manu_factory"]+"'", v["outstock_amount"],
-			v["ret_price"], v["buy_price"], "'"+v["serial"]+"'", v["eff_day"], "'"+orderNumber+"'", outstockWayID,
-			"date '"+outstockDate+"'", operationID)
-		if remark != "" {
-			s = append(s, "'"+remark+"'")
-		}
+		s = append(s, storehouseID, v["drug_id"], v["outstock_amount"],
+			v["ret_price"], v["buy_price"], "'"+v["serial"]+"'", v["eff_day"], drugOutstockRecordID)
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
-		values = append(values, str)
+		itemValues = append(itemValues, str)
 	}
 
-	setStr := strings.Join(sets, ",")
-	valueStr := strings.Join(values, ",")
-	insertSQL := "insert into outstock_record (" + setStr + ") values " + valueStr
-	fmt.Println("insertSQL===", insertSQL)
-	_, err := model.DB.Exec(insertSQL)
+	itemSetStr := strings.Join(itemSets, ",")
+	itemValueStr := strings.Join(itemValues, ",")
+	insertiSQL := "insert into drug_outstock_record (" + itemSetStr + ") values " + itemValueStr
+	fmt.Println("insertiSQL===", insertiSQL)
+	_, err := model.DB.Exec(insertiSQL)
 	if err != nil {
 		fmt.Println("err ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
-//OutstockRecord 出库记录列表
-func OutstockRecord(ctx iris.Context) {
+//DrugOutstockRecord 出库记录列表
+func DrugOutstockRecord(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	startDate := ctx.PostValue("start_date")
 	endDate := ctx.PostValue("end_date")
@@ -1309,14 +1389,14 @@ func OutstockRecord(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
 
-	countSQL := `select count(DISTINCT order_number) as total from outstock_record where storehouse_id=$1`
-	selectSQL := `select outr.id as outstock_record_id,outr.outstock_date,outr.order_number, ow.name as outstock_way_name,
+	countSQL := `select count(id) as total from drug_outstock_record where storehouse_id=$1`
+	selectSQL := `select outr.id as drug_outstock_record_id,outr.outstock_date,outr.order_number, ow.name as outstock_way_name,
 		vp.name as verify_operation_name,d.name as department_name,p.name as personnel_name,op.name as outstock_operation_name,outr.verify_status
-		from outstock_record outr
+		from drug_outstock_record outr
 		left join department d on outr.department_id = d.id
 		left join personnel p on outr.personnel_id = p.id
 		left join outstock_way ow on outr.outstock_way_id = ow.id
@@ -1354,57 +1434,67 @@ func OutstockRecord(ctx iris.Context) {
 	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", storehouseID, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 
-	var outstockRecord []map[string]interface{}
-	for _, v := range results {
-		has := false
-		for _, vRes := range outstockRecord {
-			if vRes["order_number"].(string) == v["order_number"].(string) {
-				has = true
-				continue
-			}
-		}
-		if !has {
-			outstockRecord = append(outstockRecord, v)
-		}
-	}
-	ctx.JSON(iris.Map{"code": "200", "data": outstockRecord, "page_info": pageInfo})
+	// var outstockRecord []map[string]interface{}
+	// for _, v := range results {
+	// 	has := false
+	// 	for _, vRes := range outstockRecord {
+	// 		if vRes["order_number"].(string) == v["order_number"].(string) {
+	// 			has = true
+	// 			continue
+	// 		}
+	// 	}
+	// 	if !has {
+	// 		outstockRecord = append(outstockRecord, v)
+	// 	}
+	// }
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
-//OutstockRecordDetail 出库记录详情
-func OutstockRecordDetail(ctx iris.Context) {
-	orderNumber := ctx.PostValue("order_number")
-	if orderNumber == "" {
+//DrugOutstockRecordDetail 出库记录详情
+func DrugOutstockRecordDetail(ctx iris.Context) {
+	drugOutstockRecordID := ctx.PostValue("drug_outstock_record_id")
+	if drugOutstockRecordID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	sql := `select outr.id as outstock_record_id,d.name as drug_name,outr.drug_id,outr.packing_unit_id,du.name as packing_unit_name,outr.manu_factory,outr.outstock_amount,
-		outr.ret_price,outr.buy_price,outr.serial,outr.outstock_date,outr.order_number,outr.created_time,dept.name as department_name,outr.department_id,outr.remark,
-		outr.verify_operation_id,vp.name as verify_operation_name,outr.personnel_id,p.name as personnel_name,outr.outstock_way_id,ow.name as outstock_way_name,
+	sql := `select outr.id as drug_outstock_record_id,outr.outstock_date,outr.order_number,outr.created_time,
+		dept.name as department_name,outr.department_id,outr.remark,outr.verify_operation_id,vp.name as verify_operation_name,
+		outr.personnel_id,p.name as personnel_name,outr.outstock_way_id,ow.name as outstock_way_name,
 		outr.outstock_operation_id,op.name as outstock_operation_name 
-		from outstock_record outr
-		left join drug d on outr.drug_id = d.id
+		from drug_outstock_record outr
 		left join department dept on outr.department_id = dept.id
 		left join personnel p on outr.personnel_id = p.id
 		left join outstock_way ow on outr.outstock_way_id = ow.id
 		left join personnel op on outr.outstock_operation_id = op.id
 		left join personnel vp on outr.verify_operation_id = vp.id
-		left join dose_unit du on outr.packing_unit_id = du.id
-		where order_number=$1`
+		where id=$1`
 
-	arows, err := model.DB.Queryx(sql, orderNumber)
+	row := model.DB.QueryRowx(sql, drugOutstockRecordID)
+	result := FormatSQLRowToMap(row)
+
+	isql := `select d.name as drug_name,ori.drug_id,du.name as packing_unit_name,mf.name as manu_factory_name,ori.outstock_amount,
+		ori.ret_price,ori.buy_price,ori.serial,ori.eff_day
+		from drug_outstock_record_item ori
+		left join drug d on outr.drug_id = d.id
+		left join dose_unit du on d.packing_unit_id = du.id
+		left join manu_factory mf on d.manu_factory_id = mf.id
+		where drug_outstock_record_id=$1`
+
+	irows, err := model.DB.Queryx(isql, drugOutstockRecordID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	result := FormatSQLRowsToMapArray(arows)
+	item := FormatSQLRowsToMapArray(irows)
+	result["items"] = item
 	ctx.JSON(iris.Map{"code": "200", "data": result})
 }
 
-//OutstockUpdate 出库记录修改
-func OutstockUpdate(ctx iris.Context) {
+//DrugOutstockUpdate 出库记录修改
+func DrugOutstockUpdate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	orderNumber := ctx.PostValue("order_number")
+	drugOutstockRecordID := ctx.PostValue("drug_outstock_record_id")
 	items := ctx.PostValue("items")
 	operationID := ctx.PostValue("outstock_operation_id")
 	outstockWayID := ctx.PostValue("outstock_way_id")
@@ -1413,19 +1503,19 @@ func OutstockUpdate(ctx iris.Context) {
 	remark := ctx.PostValue("remark")
 	outstockDate := ctx.PostValue("outstock_date")
 
-	if clinicID == "" || orderNumber == "" || items == "" || outstockWayID == "" || departmentID == "" || operationID == "" || personnelID == "" || outstockDate == "" {
+	if clinicID == "" || drugOutstockRecordID == "" || items == "" || outstockWayID == "" || departmentID == "" || operationID == "" || personnelID == "" || outstockDate == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	dprow := model.DB.QueryRowx("select id from department_personnel where department_id=$1 and personnel_id!=$2 limit 1", departmentID, personnelID)
 	if dprow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "出库失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "出库失败"})
 		return
 	}
 	departmentPersonnel := FormatSQLRowToMap(dprow)
 	_, dok := departmentPersonnel["id"]
 	if !dok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "领用科室与领用人员不符"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "领用科室与领用人员不符"})
 		return
 	}
 
@@ -1446,7 +1536,7 @@ func OutstockUpdate(ctx iris.Context) {
 		return
 	}
 
-	row := model.DB.QueryRowx("select * from outstock_record where order_number=$1 and storehouse_id=$2 limit 1", orderNumber, storehouseID)
+	row := model.DB.QueryRowx("select * from drug_outstock_record where id=$1 and storehouse_id=$2 limit 1", drugOutstockRecordID, storehouseID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -1458,52 +1548,21 @@ func OutstockUpdate(ctx iris.Context) {
 		return
 	}
 	verifyStatus := outstockRecord["verify_status"]
-	createdTime := outstockRecord["created_time"].(time.Time)
-	fmt.Println("created_time====", createdTime)
 	if verifyStatus.(string) == "02" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "出库记录已审核，不能修改"})
 		return
 	}
 
-	tx, errb := model.DB.Begin()
-
-	if errb != nil {
-		fmt.Println("errb ===", errb)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
-		return
-	}
-
-	_, errd := tx.Exec("delete from outstock_record where order_number=$1 and storehouse_id=$2", orderNumber, storehouseID)
-	if errd != nil {
-		fmt.Println("errd ===", errd)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
-		return
-	}
-
 	var values []string
 	sets := []string{
-		"storehouse_id",
 		"drug_id",
-		"department_id",
-		"personnel_id",
-		"packing_unit_id",
-		"manu_factory",
 		"outstock_amount",
 		"ret_price",
 		"buy_price",
 		"serial",
 		"eff_day",
-		"order_number",
-		"outstock_way_id",
-		"outstock_date",
-		"outstock_operation_id",
-		"created_time"}
+		"drug_outstock_record_id"}
 
-	if remark != "" {
-		sets = append(sets, "remark")
-	}
 	for _, v := range results {
 		drugID := v["drug_id"]
 		var s []string
@@ -1518,20 +1577,39 @@ func OutstockUpdate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "修改的出库药品不存在"})
 			return
 		}
-		s = append(s, storehouseID, v["drug_id"], departmentID, personnelID, v["packing_unit_id"], "'"+v["manu_factory"]+"'", v["outstock_amount"],
-			v["ret_price"], v["buy_price"], "'"+v["serial"]+"'", v["eff_day"], "'"+orderNumber+"'", outstockWayID,
-			"date '"+outstockDate+"'", operationID, "timestamp '"+createdTime.Format("2006-01-02 15:04:05")+"'")
-		if remark != "" {
-			s = append(s, "'"+remark+"'")
-		}
+		s = append(s, v["drug_id"], v["outstock_amount"], v["ret_price"], v["buy_price"], "'"+v["serial"]+"'", v["eff_day"], drugOutstockRecordID)
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
 		values = append(values, str)
 	}
 
+	tx, errb := model.DB.Begin()
+	if errb != nil {
+		fmt.Println("errb ===", errb)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		return
+	}
+
+	updateSQL := `update drug_outstock_record set department_id=$1,personnel_id=$2,outstock_way_id=$3,outstock_date=$4,outstock_operation_id=$5,remark=$6 where id=$7`
+	_, erru := tx.Exec(updateSQL, departmentID, personnelID, outstockWayID, "date '"+outstockDate+"'", operationID, remark, drugOutstockRecordID)
+	if erru != nil {
+		fmt.Println("erru ===", erru)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": erru.Error()})
+		return
+	}
+	_, errd := tx.Exec("delete from drug_outstock_record_item where drug_outstock_record_id=$1", drugOutstockRecordID)
+	if errd != nil {
+		fmt.Println("errd ===", errd)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
+		return
+	}
+
 	setStr := strings.Join(sets, ",")
 	valueStr := strings.Join(values, ",")
-	insertSQL := "insert into outstock_record (" + setStr + ") values " + valueStr
+	insertSQL := "insert into drug_outstock_record_item (" + setStr + ") values " + valueStr
 	fmt.Println("insertSQL===", insertSQL)
 	_, err := tx.Exec(insertSQL)
 	if err != nil {
@@ -1551,62 +1629,52 @@ func OutstockUpdate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
-//OutstockCheck 出库审核
-func OutstockCheck(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
-	orderNumber := ctx.PostValue("order_number")
+//DrugOutstockCheck 出库审核
+func DrugOutstockCheck(ctx iris.Context) {
+	drugOutstockRecordID := ctx.PostValue("drug_outstock_record_id")
 	operationID := ctx.PostValue("verify_operation_id")
-	items := ctx.PostValue("items")
-	if orderNumber == "" || clinicID == "" || operationID == "" || items == "" {
+	if drugOutstockRecordID == "" || operationID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	var results []map[string]string
-	errj := json.Unmarshal([]byte(items), &results)
-	fmt.Println("===", results)
+	row := model.DB.QueryRowx("select * from drug_outstock_record where id=$1 limit 1", drugOutstockRecordID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
+		return
+	}
+	OutstockRecord := FormatSQLRowToMap(row)
+	_, ok := OutstockRecord["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "入库记录不存在"})
+		return
+	}
+	storehouseID := strconv.FormatInt(OutstockRecord["storehouse_id"].(int64), 10)
+	verifyStatus := OutstockRecord["verify_status"]
+	if verifyStatus.(string) != "01" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "当前状态不能审核"})
+		return
+	}
 
-	if errj != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
+	rows, _ := model.DB.Queryx(`select * from drug_outstock_record_item  where drug_outstock_record_id=$1 limit 1`, drugOutstockRecordID)
+	if rows == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 		return
 	}
-	var storehouseID string
-	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
-	if errs != nil {
-		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
-		return
-	}
+	outstockRecordItems := FormatSQLRowsToMapArray(rows)
 
 	sql := "update drug_stock set"
 
 	var sets []string
 	var asValues []string
 	var values []string
-	for _, v := range results {
-		outstockRecordID := v["outstock_record_id"]
+	for _, v := range outstockRecordItems {
+		drugID := strconv.FormatInt(v["drug_id"].(int64), 10)
+		outstockAmount := v["outstock_amount"].(int64)
 		var s []string
-		row := model.DB.QueryRowx("select * from outstock_record where id=$1 and order_number=$2 limit 1", outstockRecordID, orderNumber)
-		if row == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "审核失败"})
-			return
-		}
-		outstockRecord := FormatSQLRowToMap(row)
-		_, ok := outstockRecord["id"]
-		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "出库记录不存在"})
-			return
-		}
-
-		verifyStatus := outstockRecord["verify_status"]
-		if verifyStatus.(string) != "01" {
-			ctx.JSON(iris.Map{"code": "1", "msg": "当前状态不能审核"})
-			return
-		}
-
-		drow := model.DB.QueryRowx("select id,stock_amount from drug_stock where storehouse_id=$1 and drug_id=$2 limit 1", strconv.FormatInt(outstockRecord["storehouse_id"].(int64), 10), strconv.FormatInt(outstockRecord["drug_id"].(int64), 10))
+		drow := model.DB.QueryRowx("select id,stock_amount from drug_stock where storehouse_id=$1 and drug_id=$2 limit 1", storehouseID, drugID)
 		if drow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "审核失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 			return
 		}
 		drugStock := FormatSQLRowToMap(drow)
@@ -1615,10 +1683,9 @@ func OutstockCheck(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "入库失败"})
 			return
 		}
-		stockAmount := drugStock["stock_amount"].(int64) - outstockRecord["outstock_amount"].(int64)
+		stockAmount := drugStock["stock_amount"].(int64) - outstockAmount
 
-		s = append(s, strconv.FormatInt(outstockRecord["storehouse_id"].(int64), 10),
-			strconv.FormatInt(outstockRecord["drug_id"].(int64), 10), strconv.FormatInt(stockAmount, 10))
+		s = append(s, storehouseID, drugID, strconv.FormatInt(stockAmount, 10))
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
 		values = append(values, str)
@@ -1626,7 +1693,6 @@ func OutstockCheck(ctx iris.Context) {
 	valueStr := strings.Join(values, ",")
 
 	sets = append(sets, " stock_amount=tmp.stock_amount", " updated_time=LOCALTIMESTAMP")
-
 	asValues = append(asValues, "storehouse_id", "drug_id", "stock_amount")
 
 	setStr := strings.Join(sets, ",")
@@ -1651,7 +1717,7 @@ func OutstockCheck(ctx iris.Context) {
 		return
 	}
 
-	_, err2 := tx.Exec("update outstock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP", "02", operationID)
+	_, err2 := tx.Exec("update drug_outstock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP", "02", operationID)
 	if err2 != nil {
 		fmt.Println("err2 ===", err2)
 		tx.Rollback()
@@ -1669,31 +1735,50 @@ func OutstockCheck(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
 }
 
-//OutstockRecordDelete 删除出库记录
-func OutstockRecordDelete(ctx iris.Context) {
-	orderNumber := ctx.PostValue("order_number")
-	if orderNumber == "" {
+//DrugOutstockRecordDelete 删除出库记录
+func DrugOutstockRecordDelete(ctx iris.Context) {
+	drugOutstockRecordID := ctx.PostValue("drug_outstock_record_id")
+	if drugOutstockRecordID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	rows, _ := model.DB.Queryx("select id from outstock_record where order_number=$1 and verify_status='01'", orderNumber)
+	rows := model.DB.QueryRowx("select id from drug_outstock_record where id=$1", drugOutstockRecordID)
 	if rows == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "删除失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除失败"})
 		return
 	}
-	instockRecord := FormatSQLRowsToMapArray(rows)
-	len := len(instockRecord)
-	if len == 0 {
-		ctx.JSON(iris.Map{"code": "1", "msg": "出库记录不存在"})
+	instockRecord := FormatSQLRowToMap(rows)
+	_, ok := instockRecord["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "出库库记录不存在"})
+		return
+	}
+	verifyStatus := instockRecord["verify_status"]
+	if verifyStatus.(string) != "01" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "当前状态不能删除"})
 		return
 	}
 
-	_, err := model.DB.Exec("delete from outstock_record where order_number=$1 and verify_status='01'", orderNumber)
+	tx, err := model.DB.Begin()
 
 	if err != nil {
 		fmt.Println("err ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		return
+	}
+	_, erri := tx.Exec("delete from drug_instock_record_item where drug_outstock_record_id=$1", drugOutstockRecordID)
+	if erri != nil {
+		fmt.Println("erri ===", erri)
+		ctx.JSON(iris.Map{"code": "-1", "msg": erri.Error()})
+		return
+	}
+
+	_, errd := model.DB.Exec("delete from drug_outstock_record where id=$1", drugOutstockRecordID)
+	if errd != nil {
+		fmt.Println("errd ===", errd)
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
 		return
 	}
 
