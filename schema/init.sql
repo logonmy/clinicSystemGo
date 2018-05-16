@@ -1254,6 +1254,7 @@ CREATE TABLE material_outstock_record
 CREATE TABLE material_outstock_record_item
 (
   id serial PRIMARY KEY NOT NULL,--id
+  material_outstock_record_id INTEGER NOT NULL references material_outstock_record(id),--耗材出库记录id
   material_id INTEGER NOT NULL references material(id),--药品id
   outstock_amount INTEGER NOT NULL CHECK(outstock_amount > 0),--出库数量
   serial varchar(20),--批号

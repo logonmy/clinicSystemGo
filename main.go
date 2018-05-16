@@ -268,6 +268,18 @@ func main() {
 		material.Post("/onOff", controller.MaterialOnOff)
 		material.Post("/list", controller.MaterialList)
 		material.Post("/detail", controller.MaterialDetail)
+		material.Post("/instock", controller.MaterialInstock)
+		material.Post("/instockRecord", controller.MaterialInstockRecord)
+		material.Post("/instockRecordDetail", controller.MaterialInstockRecordDetail)
+		material.Post("/instockUpdate", controller.MaterialInstockUpdate)
+		material.Post("/instockCheck", controller.MaterialInstockCheck)
+		material.Post("/instockDelete", controller.MaterialInstockRecordDelete)
+		material.Post("/outstock", controller.MaterialOutstock)
+		material.Post("/outstockRecord", controller.MaterialOutstockRecord)
+		material.Post("/outstockRecordDetail", controller.MaterialOutstockRecordDetail)
+		material.Post("/outstockUpdate", controller.MaterialOutstockUpdate)
+		material.Post("/outstockCheck", controller.MaterialOutstockCheck)
+		material.Post("/outstockDelete", controller.MaterialOutstockRecordDelete)
 	}
 
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
