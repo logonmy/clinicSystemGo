@@ -1075,8 +1075,8 @@ CREATE TABLE clinic_laboratory
 CREATE TABLE laboratory_item
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(20) UNIQUE NOT NULL,--检验名称
-  en_name varchar(20),--英文名称
+  name varchar(100) UNIQUE NOT NULL,--检验名称
+  en_name varchar(100),--英文名称
   instrument_code varchar(20),--仪器编码
   -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称

@@ -381,7 +381,7 @@ func TreatmentList(ctx iris.Context) {
 
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
-	total := model.DB.QueryRowx(countSQL, clinicID)
+	total := model.DB.QueryRowx(countSQL, clinicID, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return

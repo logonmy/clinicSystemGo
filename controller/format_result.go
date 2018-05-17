@@ -41,8 +41,8 @@ type LaboratoryItem struct {
 	UnitName               interface{}  `json:"unit_name"`
 	UnitID                 interface{}  `json:"unit_id"`
 	Status                 bool         `json:"status"`
-	IsSpecial              bool         `json:"is_special"`
-	DataType               int64        `json:"data_type"`
+	IsSpecial              interface{}  `json:"is_special"`
+	DataType               interface{}  `json:"data_type"`
 	InstrumentCode         interface{}  `json:"instrument_code"`
 	IsDelivery             interface{}  `json:"is_delivery"`
 	DefaultResult          interface{}  `json:"default_result"`
@@ -159,9 +159,9 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 				Status:                 status.(bool),
 				InstrumentCode:         instrumentCode,
 				IsDelivery:             isDelivery,
-				DataType:               dataType.(int64),
+				DataType:               dataType,
 				DefaultResult:          defaultResult,
-				IsSpecial:              isSpecial.(bool),
+				IsSpecial:              isSpecial,
 				References:             references,
 			}
 			laboratoryItems = append(laboratoryItems, laboratoryItem)
