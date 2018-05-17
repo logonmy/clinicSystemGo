@@ -986,7 +986,8 @@ CREATE TABLE examination
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   organ varchar(20),--检查部位
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1041,7 +1042,8 @@ CREATE TABLE laboratory
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   time_report varchar(10),--报告所需时间
   clinical_significance text,--临床意义
   remark text,--备注
@@ -1076,7 +1078,8 @@ CREATE TABLE laboratory_item
   name varchar(20) UNIQUE NOT NULL,--检验名称
   en_name varchar(20),--英文名称
   instrument_code varchar(20),--仪器编码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   clinical_significance text,--临床意义
   data_type integer,--数据类型 1 定性 2 定量
   is_special boolean,--参考值是否特殊
@@ -1137,7 +1140,8 @@ CREATE TABLE treatment
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1273,7 +1277,8 @@ CREATE TABLE other_cost
   name varchar(20) NOT NULL,--名称
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

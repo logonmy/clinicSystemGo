@@ -16,7 +16,7 @@ func ExaminationCreate(ctx iris.Context) {
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
-	unitID := ctx.PostValue("unit_id")
+	unitName := ctx.PostValue("unit_name")
 	organ := ctx.PostValue("organ")
 	remark := ctx.PostValue("remark")
 
@@ -72,9 +72,9 @@ func ExaminationCreate(ctx iris.Context) {
 		examinationSets = append(examinationSets, "idc_code")
 		examinationValues = append(examinationValues, "'"+idcCode+"'")
 	}
-	if unitID != "" {
-		examinationSets = append(examinationSets, "unit_id")
-		examinationValues = append(examinationValues, unitID)
+	if unitName != "" {
+		examinationSets = append(examinationSets, "unit_name")
+		examinationValues = append(examinationValues, unitName)
 	}
 	if organ != "" {
 		examinationSets = append(examinationSets, "organ")
@@ -151,7 +151,7 @@ func ExaminationUpdate(ctx iris.Context) {
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
-	unitID := ctx.PostValue("unit_id")
+	unitName := ctx.PostValue("unit_name")
 	organ := ctx.PostValue("organ")
 	remark := ctx.PostValue("remark")
 
@@ -204,14 +204,14 @@ func ExaminationUpdate(ctx iris.Context) {
 	}
 
 	examinationUpdateSQL := `update examination set name=$1,en_name=$2,py_code=$3,idc_code=$4,
-	unit_id=$5,organ=$6,remark=$7 where id=$8`
+	unit_name=$5,organ=$6,remark=$7 where id=$8`
 	fmt.Println("examinationUpdateSQL==", examinationUpdateSQL)
 
 	clinicExaminationUpdateSQL := `update clinic_examination set clinic_id=$1,examination_id=$2,cost=$3,price=$4,status=$5,is_discount=$6 where id=$7`
 	fmt.Println("clinicExaminationUpdateSQL==", clinicExaminationUpdateSQL)
 
 	tx, err := model.DB.Begin()
-	_, err = tx.Exec(examinationUpdateSQL, name, enName, pyCode, idcCode, unitID, organ, remark, examinationID)
+	_, err = tx.Exec(examinationUpdateSQL, name, enName, pyCode, idcCode, unitName, organ, remark, examinationID)
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
@@ -332,11 +332,10 @@ func ExaminationList(ctx iris.Context) {
 	countSQL := `select count(cep.id) as total from clinic_examination cep
 		left join examination ep on cep.examination_id = ep.id
 		where cep.clinic_id=$1`
-	selectSQL := `select cep.examination_id,cep.id as clinic_examination_id,ep.name,ep.unit_id,du.name as unit_name,ep.py_code,ep.remark,ep.idc_code,
+	selectSQL := `select cep.examination_id,cep.id as clinic_examination_id,ep.name,ep.unit_name,ep.py_code,ep.remark,ep.idc_code,
 		ep.organ,ep.en_name,cep.is_discount,cep.price,cep.status,cep.cost
 		from clinic_examination cep
 		left join examination ep on cep.examination_id = ep.id
-		left join dose_unit du on ep.unit_id = du.id
 		where cep.clinic_id=$1`
 
 	if keyword != "" {
@@ -377,11 +376,10 @@ func ExaminationDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select cep.examination_id,cep.id as clinic_examination_id,ep.name,ep.unit_id,du.name as unit_name,ep.py_code,ep.remark,ep.idc_code,
+	selectSQL := `select cep.examination_id,cep.id as clinic_examination_id,ep.name,ep.unit_name,ep.py_code,ep.remark,ep.idc_code,
 	ep.organ,ep.en_name,cep.is_discount,cep.price,cep.status,cep.cost
 		from clinic_examination cep
 		left join examination ep on cep.examination_id = ep.id
-		left join dose_unit du on ep.unit_id = du.id
 		where cep.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
