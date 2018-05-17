@@ -316,6 +316,12 @@ func main() {
 		dictionaries.Post("/CuvetteColorList", controller.CuvetteColorList)
 	}
 
+	dataImport := app.Party("/dataImport", crs).AllowMethods(iris.MethodOptions)
+	{
+		dataImport.Post("/ImportLaboratory", controller.ImportLaboratory)
+		dataImport.Post("/ImportLaboratoryItem", controller.ImportLaboratoryItem)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello

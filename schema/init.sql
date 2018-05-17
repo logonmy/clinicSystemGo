@@ -1044,7 +1044,7 @@ CREATE TABLE laboratory
   idc_code varchar(20),--国际编码
   -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称
-  time_report varchar(10),--报告所需时间
+  time_report varchar(30),--报告所需时间
   clinical_significance text,--临床意义
   remark text,--备注
   laboratory_sample_id integer REFERENCES laboratory_sample(id),--标本种类

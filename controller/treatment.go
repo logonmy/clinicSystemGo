@@ -54,7 +54,7 @@ func TreatmentCreate(ctx iris.Context) {
 	}
 
 	treatmentSets := []string{"name", "unit_name"}
-	treatmentValues := []string{"'" + name + "'", unitName}
+	treatmentValues := []string{"'" + name + "'", "'" + unitName + "'"}
 
 	clinictreatmentSets := []string{"clinic_id", "price"}
 	clinictreatmentValues := []string{clinicID, price}
@@ -215,7 +215,7 @@ func TreatmentUpdate(ctx iris.Context) {
 		treatmentSets = append(treatmentSets, "py_code='"+pyCode+"'")
 	}
 	if unitName != "" {
-		treatmentSets = append(treatmentSets, "unit_name="+unitName)
+		treatmentSets = append(treatmentSets, "unit_name="+"'"+unitName+"'")
 	}
 	if idcCode != "" {
 		treatmentSets = append(treatmentSets, "idc_code='"+idcCode+"'")
