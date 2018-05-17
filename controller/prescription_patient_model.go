@@ -171,15 +171,39 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from prescription_western_patient_model where model_name ~$1`
-	selectSQL := `select pwpm.id as prescription_patient_model_id,d.name as drug_name,pwpmi.amount,du.name as packing_unit_name,
-	pwpm.is_common,pwpm.created_time,p.name as operation_name,pwpm.model_name,pwpmi.once_dose,odu.name as once_dose_unit_name
+	selectSQL := `select pwpm.id as prescription_patient_model_id,
+	pwpm.is_common,
+	pwpm.created_time,
+	pwpm.updated_time,
+	p.name as operation_name,
+	pwpm.model_name,
+	pwpmi.drug_stock_id,
+	d.name as drug_name,
+	d.specification,
+	ds.stock_amount,
+	pwpmi.once_dose,
+	pwpmi.once_dose_unit_id,
+	odu.name as once_dose_unit_name,
+	pwpmi.route_administration_id,
+	ra.name as route_administration_name,
+	pwpmi.frequency_id, 
+	f.name as frequency_name,
+	pwpmi.eff_day,
+	pwpmi.amount,
+	d.packing_unit_id, 
+	pdu.name as packing_unit_name, 
+	pwpmi.fetch_address,
+	pwpmi.illustration,
+	d.type
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
-	left join drug_stock ds on pwpmi.drug_stock_id = ds.id
-	left join drug d on ds.drug_id = d.id
-	left join dose_unit du on d.packing_unit_id = du.id
-	left join personnel p on pwpm.operation_id = p.id
-	left join dose_unit odu on pwpmi.once_dose_unit_id = odu.id
+	left join drug_stock ds on pwpmi.drug_stock_id = ds.id 
+    left join drug d on ds.drug_id = d.id
+    left join dose_unit odu on pwpmi.once_dose_unit_id = odu.id
+    left join dose_unit pdu on d.packing_unit_id = pdu.id
+    left join route_administration ra on pwpmi.route_administration_id = ra.id
+    left join frequency f on pwpmi.frequency_id = f.id
+    left join personnel p on pwpm.operation_id = p.id
 	where pwpm.model_name ~$1`
 
 	if isCommon != "" {

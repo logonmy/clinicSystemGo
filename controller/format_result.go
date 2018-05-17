@@ -61,11 +61,23 @@ type PrescriptionModel struct {
 
 //PrescriptionModelItem 处方模板item
 type PrescriptionModelItem struct {
-	DrugName         string `json:"drug_name"`
-	Amount           int    `json:"amount"`
-	OnceDose         int    `json:"once_dose"`
-	OnceDoseUnitName string `json:"once_dose_unit_name"`
-	PackingUnitName  string `json:"packing_unit_name"`
+	DrugStockID             int    `json:"drug_stock_id"`
+	DrugName                string `json:"drug_name"`
+	Specification           string `json:"specification"`
+	StockAmount             int    `json:"stock_amount"`
+	OnceDose                int    `json:"once_dose"`
+	OnceDoseUnitID          int    `json:"once_dose_unit_id"`
+	OnceDoseUnitName        string `json:"once_dose_unit_name"`
+	RouteAdministrationID   int    `json:"route_administration_id"`
+	RouteAdministrationName string `json:"route_administration_name"`
+	FrequencyID             int    `json:"frequency_id"`
+	FrequencyName           string `json:"frequency_name"`
+	EffDay                  int    `json:"eff_day"`
+	Amount                  int    `json:"amount"`
+	PackingUnitID           int    `json:"packing_unit_id"`
+	PackingUnitName         string `json:"packing_unit_name"`
+	FetchAddress            int    `json:"fetch_address"`
+	Illustration            string `json:"illustration"`
 }
 
 // FormatSQLRowsToMapArray 格式化数据库返回的数组数据
@@ -216,41 +228,60 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 	for _, v := range prescriptionModel {
 		modelName := v["model_name"]
 		prescriptionModelID := v["prescription_patient_model_id"]
-		drugName := v["drug_name"]
 		operationName := v["operation_name"]
 		isCommon := v["is_common"]
 		createdTime := v["created_time"]
-		amount := v["amount"]
+
+		drugStockID := v["drug_stock_id"]
+		drugName := v["drug_name"]
+		specification := v["specification"]
+		stockAmount := v["stock_amount"]
 		onceDose := v["once_dose"]
+		onceDoseUnitID := v["once_dose_unit_id"]
 		onceDoseUnitName := v["once_dose_unit_name"]
+		routeAdministrationID := v["route_administration_id"]
+		routeAdministrationName := v["route_administration_name"]
+		frequencyID := v["frequency_id"]
+		frequencyName := v["frequency_name"]
+		effDay := v["eff_day"]
+		amount := v["amount"]
+		packingUnitID := v["packing_unit_id"]
 		packingUnitName := v["packing_unit_name"]
+		fetchAddress := v["fetch_address"]
+		illustration := v["illustration"]
+
 		has := false
+
+		item := PrescriptionModelItem{
+			DrugStockID:             int(drugStockID.(int64)),
+			DrugName:                drugName.(string),
+			Specification:           specification.(string),
+			StockAmount:             int(stockAmount.(int64)),
+			OnceDose:                int(onceDose.(int64)),
+			OnceDoseUnitID:          int(onceDoseUnitID.(int64)),
+			OnceDoseUnitName:        onceDoseUnitName.(string),
+			RouteAdministrationID:   int(routeAdministrationID.(int64)),
+			RouteAdministrationName: routeAdministrationName.(string),
+			FrequencyID:             int(frequencyID.(int64)),
+			FrequencyName:           frequencyName.(string),
+			EffDay:                  int(effDay.(int64)),
+			Amount:                  int(amount.(int64)),
+			PackingUnitID:           int(packingUnitID.(int64)),
+			PackingUnitName:         packingUnitName.(string),
+			FetchAddress:            int(fetchAddress.(int64)),
+			Illustration:            illustration.(string),
+		}
 		for k, pModel := range models {
 			dprescriptionModelID := pModel.PrescriptionModelID
 			items := pModel.Items
 			if int(prescriptionModelID.(int64)) == dprescriptionModelID {
-				item := PrescriptionModelItem{
-					DrugName:         drugName.(string),
-					Amount:           int(amount.(int64)),
-					OnceDose:         int(onceDose.(int64)),
-					OnceDoseUnitName: onceDoseUnitName.(string),
-					PackingUnitName:  packingUnitName.(string),
-				}
 				models[k].Items = append(items, item)
 				has = true
 			}
 		}
 		if !has {
 			var items []PrescriptionModelItem
-			item := PrescriptionModelItem{
-				DrugName:         drugName.(string),
-				Amount:           int(amount.(int64)),
-				OnceDose:         int(onceDose.(int64)),
-				OnceDoseUnitName: onceDoseUnitName.(string),
-				PackingUnitName:  packingUnitName.(string),
-			}
 			items = append(items, item)
-
 			pmodel := PrescriptionModel{
 				ModelName:           modelName.(string),
 				PrescriptionModelID: int(prescriptionModelID.(int64)),
