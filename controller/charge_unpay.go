@@ -161,7 +161,7 @@ func ChargeUnPayList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx(`select count(id) as total,sum(total) as charge_total,sum(discount) as discount_total from mz_unpaid_orders where clinic_triage_patient_id=$1`, clinicTriagePatientid)
+	total := model.DB.QueryRowx(`select count(id) as total,sum(total) as charge_total,sum(discount) as discount_total,sum(fee) as charge_total_fee from mz_unpaid_orders where clinic_triage_patient_id=$1`, clinicTriagePatientid)
 
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
@@ -173,7 +173,7 @@ func ChargeUnPayList(ctx iris.Context) {
 
 	typetotalfomat := FormatSQLRowsToMapArray(typetotal)
 
-	rowSQL := `select m.name,m.price,m.amount,m.total,discount,p.name as doctor_name,d.name as department_name from mz_unpaid_orders m 
+	rowSQL := `select m.name,m.price,m.amount,m.total,m.discount,m.fee,p.name as doctor_name,d.name as department_name from mz_unpaid_orders m 
 	left join personnel p on p.id = m.operation_id 
 	left join department_personnel dp on dp.personnel_id = p.id 
 	left join department d on d.id = dp.department_id 

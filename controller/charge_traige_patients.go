@@ -48,12 +48,12 @@ func GetUnChargeTraigePatients(ctx iris.Context) {
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,sum(total) as charge_total from mz_unpaid_orders group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
-	where up.charge_total > 0 AND cp.clinic_id=$1 AND ctp.updated_time BETWEEN $2 and $3 AND (p.name ~$4 OR p.cert_no ~$4 OR p.phone ~$4) `
+	left join (select clinic_triage_patient_id,sum(fee) as charge_total_fee from mz_unpaid_orders group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
+	where up.charge_total_fee > 0 AND cp.clinic_id=$1 AND ctp.updated_time BETWEEN $2 and $3 AND (p.name ~$4 OR p.cert_no ~$4 OR p.phone ~$4) `
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
-	up.charge_total,
+	up.charge_total_fee,
 	ctp.id as clinic_triage_patient_id,
 	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time,
