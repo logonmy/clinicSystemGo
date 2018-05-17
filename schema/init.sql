@@ -335,6 +335,7 @@ CREATE TABLE mz_unpaid_orders
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
+  prescription_chinese_patient_id INTEGER,--中药处方id
   charge_project_id INTEGER NOT NULL,--收费项目id
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
@@ -713,6 +714,7 @@ CREATE TABLE drug
   specification varchar(30),--规格
   spe_comment varchar(40),--规格备注
   manu_factory varchar(20),--生产厂商
+  manu_factory_id integer references manu_factory(id),--生产厂商id
   drug_class_id integer references drug_class(id),--药品类型id
   drug_type_id integer references drug_type(id),--药品类别id
   dose_form_id integer references dose_form(id),--药品剂型id
@@ -750,7 +752,6 @@ CREATE TABLE drug
   low_dosage_flag integer,--大规格小剂量标志
   english_name varchar(30),--英文名称
   sy_code varchar(30),--上药编码
-  manu_factory_id integer references manu_factory(id),--生产厂商id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
@@ -839,25 +840,52 @@ CREATE TABLE drug_stock
   UNIQUE (storehouse_id, drug_id)
 );
 
---入库记录
-CREATE TABLE instock_record
+--药品入库记录
+CREATE TABLE drug_instock_record
 (
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
-  drug_id INTEGER NOT NULL references drug(id),--药品id
-  instock_amount INTEGER NOT NULL CHECK(instock_amount > 0),--入库数量
-  serial varchar(20),--批号
   order_number varchar(20) NOT NULL,--入库单号
   instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
   supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
+  remark text,--备注
+  instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
+  verify_operation_id INTEGER references personnel(id),--审核人员id
+  verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核 
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--药品入库记录item
+CREATE TABLE drug_instock_record_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  drug_instock_record_id integer NOT NULL references drug_instock_record(id),--药品入库记录id
+  drug_id INTEGER NOT NULL references drug(id),--药品id
+  instock_amount INTEGER NOT NULL CHECK(instock_amount > 0),--入库数量
+  serial varchar(20),--批号
   ret_price integer,--零售价
   buy_price integer,--成本价
-  manu_factory varchar(20),--生产厂商
-  packing_unit_id integer references dose_unit(id),--药品包装id
   eff_day integer CHECK(eff_day > 0),--有效天数
-  instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
-  remark varchar(30),--备注
-  instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--药品出库记录
+CREATE TABLE drug_outstock_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  department_id INTEGER NOT NULL references department(id),--领用科室id
+  personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
+  order_number varchar(20) NOT NULL,--出库单号
+  outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
+  outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
+  remark text,--备注
+  outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -865,28 +893,17 @@ CREATE TABLE instock_record
   deleted_time timestamp with time zone
 );
 
---出库记录
-CREATE TABLE outstock_record
+--药品出库记录item
+CREATE TABLE drug_outstock_record_item
 (
   id serial PRIMARY KEY NOT NULL,--id
-  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  drug_outstock_record_id integer NOT NULL references drug_outstock_record(id),--药品出库记录id
   drug_id INTEGER NOT NULL references drug(id),--药品id
-  department_id INTEGER NOT NULL references department(id),--领用科室id
-  personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
   outstock_amount INTEGER NOT NULL CHECK(outstock_amount > 0),--出库数量
-  order_number varchar(20) NOT NULL,--出库单号
   serial varchar(20),--批号
-  outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
   ret_price integer,--零售价
   buy_price integer,--成本价
-  manu_factory varchar(20),--生产厂商
-  packing_unit_id integer references dose_unit(id),--药品包装id
   eff_day integer CHECK(eff_day > 0),--有效天数
-  outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
-  remark varchar(30),--备注
-  outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
-  verify_operation_id INTEGER references personnel(id),--审核人员id
-  verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -969,7 +986,8 @@ CREATE TABLE examination
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   organ varchar(20),--检查部位
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1024,7 +1042,8 @@ CREATE TABLE laboratory
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   time_report varchar(10),--报告所需时间
   clinical_significance text,--临床意义
   remark text,--备注
@@ -1059,7 +1078,8 @@ CREATE TABLE laboratory_item
   name varchar(20) UNIQUE NOT NULL,--检验名称
   en_name varchar(20),--英文名称
   instrument_code varchar(20),--仪器编码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   clinical_significance text,--临床意义
   data_type integer,--数据类型 1 定性 2 定量
   is_special boolean,--参考值是否特殊
@@ -1120,7 +1140,8 @@ CREATE TABLE treatment
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1150,14 +1171,14 @@ CREATE TABLE material
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  manu_factory varchar(20),--生产厂商
+  manu_factory_id integer references manu_factory(id),--生产厂商id
   specification varchar(30),--规格
   unit_id integer references dose_unit(id),--单位id
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE(name,manu_factory)
+  UNIQUE(name,manu_factory_id,specification)
 );
 
 --诊所材料库存
@@ -1168,11 +1189,82 @@ CREATE TABLE material_stock
   material_id INTEGER references material(id),--材料费用项目id
   cost integer CHECK(cost > 0), --成本价
   price integer NOT NULL CHECK(price > 0), --销售价
+  ret_price integer,--零售价
+  buy_price integer,--成本价
   stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
   eff_day integer,--预警有效天数
   stock_warning integer,--物资预警数
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--耗材入库记录
+CREATE TABLE material_instock_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  order_number varchar(20) NOT NULL,--入库单号
+  instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
+  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
+  remark text,--备注
+  instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
+  verify_operation_id INTEGER references personnel(id),--审核人员id
+  verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核 
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--耗材入库记录item
+CREATE TABLE material_instock_record_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  material_instock_record_id integer NOT NULL references material_instock_record(id),--药品入库记录id
+  material_id INTEGER NOT NULL references material(id),--药品id
+  instock_amount INTEGER NOT NULL CHECK(instock_amount > 0),--入库数量
+  serial varchar(20),--批号
+  ret_price integer,--零售价
+  buy_price integer,--成本价
+  eff_day integer CHECK(eff_day > 0),--有效天数
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--耗材出库记录
+CREATE TABLE material_outstock_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  department_id INTEGER NOT NULL references department(id),--领用科室id
+  personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
+  order_number varchar(20) NOT NULL,--出库单号
+  outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
+  outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
+  remark text,--备注
+  outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
+  verify_operation_id INTEGER references personnel(id),--审核人员id
+  verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--耗材出库记录item
+CREATE TABLE material_outstock_record_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  material_outstock_record_id INTEGER NOT NULL references material_outstock_record(id),--耗材出库记录id
+  material_id INTEGER NOT NULL references material(id),--药品id
+  outstock_amount INTEGER NOT NULL CHECK(outstock_amount > 0),--出库数量
+  serial varchar(20),--批号
+  ret_price integer,--零售价
+  buy_price integer,--成本价
+  eff_day integer CHECK(eff_day > 0),--有效天数
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1185,7 +1277,8 @@ CREATE TABLE other_cost
   name varchar(20) NOT NULL,--名称
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
-  unit_id integer references dose_unit(id),--单位id
+  -- unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位名称
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1289,7 +1382,7 @@ CREATE TABLE prescription_chinese_item
   id serial PRIMARY KEY NOT NULL,--id
   prescription_chinese_patient_id INTEGER NOT NULL references prescription_chinese_patient(id),--中药处方id
   drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
-  order_sn varchar(50) UNIQUE NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
   once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id

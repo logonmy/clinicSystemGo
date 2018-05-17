@@ -6,6 +6,7 @@ insert into outstock_way (name) VALUES ('科室领用'),('退货出库'),('报�
 insert into cuvette_color (name) VALUES ('红'), ('黑'), ('紫'),('蓝'), ('黄'), ('绿'),('灰'), ('橙');
 INSERT INTO charge_project_type (id,name) VALUES (1,'西/成药处方'),(2,'中药处方'),(3,'检验医嘱'),(4,'检查医嘱'),(5,'材料费用'),(6,'其他费用'),(7,'治疗医嘱');
 insert into laboratory_sample (code,name) VALUES (001,'标本1'),(002,'标本2');
+insert into manu_factory (code,name) VALUES ('101','北京首儿药厂'),('102','北京三和药业有限公司'),('1044','法国皮尔·法伯制药公司');
 
 insert into dose_unit (name,code) values ('小盒','0002'),('箱','0001'),('桶','0003');
 insert into drug_class (name,code) values ('类型1','0001'),('类型2','0002'),('类型3','0003');

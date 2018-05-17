@@ -15,7 +15,7 @@ func OtherCostCreate(ctx iris.Context) {
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
-	unitID := ctx.PostValue("unit_id")
+	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
 
 	price := ctx.PostValue("price")
@@ -23,7 +23,7 @@ func OtherCostCreate(ctx iris.Context) {
 	status := ctx.PostValue("status")
 	isDiscount := ctx.PostValue("is_discount")
 
-	if clinicID == "" || name == "" || price == "" || unitID == "" {
+	if clinicID == "" || name == "" || price == "" || unitName == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -52,8 +52,8 @@ func OtherCostCreate(ctx iris.Context) {
 		return
 	}
 
-	otherCostSets := []string{"name", "unit_id"}
-	otherCostValues := []string{"'" + name + "'", unitID}
+	otherCostSets := []string{"name", "unit_name"}
+	otherCostValues := []string{"'" + name + "'", unitName}
 
 	clinicOtherCostSets := []string{"clinic_id", "price"}
 	clinicOtherCostValues := []string{clinicID, price}
@@ -138,7 +138,7 @@ func OtherCostUpdate(ctx iris.Context) {
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
-	unitID := ctx.PostValue("unit_id")
+	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
 
 	price := ctx.PostValue("price")
@@ -146,7 +146,7 @@ func OtherCostUpdate(ctx iris.Context) {
 	status := ctx.PostValue("status")
 	isDiscount := ctx.PostValue("is_discount")
 
-	if clinicID == "" || name == "" || clinicOtherCostID == "" || price == "" || otherCostID == "" || unitID == "" {
+	if clinicID == "" || name == "" || clinicOtherCostID == "" || price == "" || otherCostID == "" || unitName == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -208,8 +208,8 @@ func OtherCostUpdate(ctx iris.Context) {
 	if pyCode != "" {
 		otherCostSets = append(otherCostSets, "py_code='"+pyCode+"'")
 	}
-	if unitID != "" {
-		otherCostSets = append(otherCostSets, "unit_id="+unitID)
+	if unitName != "" {
+		otherCostSets = append(otherCostSets, "unit_name="+unitName)
 	}
 	if remark != "" {
 		otherCostSets = append(otherCostSets, "remark='"+remark+"'")
@@ -360,10 +360,9 @@ func OtherCostList(ctx iris.Context) {
 		left join other_cost oc on coc.other_cost_id = oc.id
 		where coc.clinic_id=$1`
 	selectSQL := `select coc.other_cost_id,coc.id as clinic_other_cost_id,oc.name,oc.py_code,oc.remark,
-		oc.en_name,coc.is_discount,coc.price,coc.status,coc.cost,oc.unit_id,du.name as unit_name
+		oc.en_name,coc.is_discount,coc.price,coc.status,coc.cost,oc.unit_name
 		from clinic_other_cost coc
 		left join other_cost oc on coc.other_cost_id = oc.id
-		left join dose_unit du on oc.unit_id = du.id
 		where coc.clinic_id=$1`
 
 	if keyword != "" {
@@ -405,10 +404,9 @@ func OtherCostDetail(ctx iris.Context) {
 	}
 
 	selectSQL := `select coc.other_cost_id,coc.id as clinic_other_cost_id,oc.name,oc.py_code,oc.remark,
-		oc.en_name,coc.is_discount,coc.price,coc.status,coc.cost,oc.unit_id,du.name as unit_name
+		oc.en_name,coc.is_discount,coc.price,coc.status,coc.cost,oc.unit_name
 		from clinic_other_cost coc
 		left join other_cost oc on coc.other_cost_id = oc.id
-		left join dose_unit du on oc.unit_id = du.id
 		where coc.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)

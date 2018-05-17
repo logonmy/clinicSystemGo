@@ -16,7 +16,7 @@ func TreatmentCreate(ctx iris.Context) {
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
-	unitID := ctx.PostValue("unit_id")
+	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
 
 	price := ctx.PostValue("price")
@@ -24,7 +24,7 @@ func TreatmentCreate(ctx iris.Context) {
 	status := ctx.PostValue("status")
 	isDiscount := ctx.PostValue("is_discount")
 
-	if clinicID == "" || name == "" || price == "" || unitID == "" {
+	if clinicID == "" || name == "" || price == "" || unitName == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -53,8 +53,8 @@ func TreatmentCreate(ctx iris.Context) {
 		return
 	}
 
-	treatmentSets := []string{"name", "unit_id"}
-	treatmentValues := []string{"'" + name + "'", unitID}
+	treatmentSets := []string{"name", "unit_name"}
+	treatmentValues := []string{"'" + name + "'", unitName}
 
 	clinictreatmentSets := []string{"clinic_id", "price"}
 	clinictreatmentValues := []string{clinicID, price}
@@ -144,7 +144,7 @@ func TreatmentUpdate(ctx iris.Context) {
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
-	unitID := ctx.PostValue("unit_id")
+	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
 
 	price := ctx.PostValue("price")
@@ -214,8 +214,8 @@ func TreatmentUpdate(ctx iris.Context) {
 	if pyCode != "" {
 		treatmentSets = append(treatmentSets, "py_code='"+pyCode+"'")
 	}
-	if unitID != "" {
-		treatmentSets = append(treatmentSets, "unit_id="+unitID)
+	if unitName != "" {
+		treatmentSets = append(treatmentSets, "unit_name="+unitName)
 	}
 	if idcCode != "" {
 		treatmentSets = append(treatmentSets, "idc_code='"+idcCode+"'")
@@ -368,11 +368,10 @@ func TreatmentList(ctx iris.Context) {
 	countSQL := `select count(ct.id) as total from clinic_treatment ct
 		left join treatment t on ct.treatment_id = t.id
 		where ct.clinic_id=$1 and t.name ~$2`
-	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name,t.unit_id,du.name as unit_name,t.py_code,t.remark,t.idc_code,
+	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name,t.unit_name,t.py_code,t.remark,t.idc_code,
 		t.en_name,ct.is_discount,ct.price,ct.status,ct.cost
 		from clinic_treatment ct
 		left join treatment t on ct.treatment_id = t.id
-		left join dose_unit du on t.unit_id = du.id
 		where ct.clinic_id=$1 and t.name ~$2`
 
 	if status != "" {
@@ -409,11 +408,10 @@ func TreatmentDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name,t.unit_id,du.name as unit_name,t.py_code,t.remark,t.idc_code,
+	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name,t.unit_name,t.py_code,t.remark,t.idc_code,
 		t.en_name,ct.is_discount,ct.price,ct.status,ct.cost
 		from clinic_treatment ct
 		left join treatment t on ct.treatment_id = t.id
-		left join dose_unit du on t.unit_id = du.id
 		where ct.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
