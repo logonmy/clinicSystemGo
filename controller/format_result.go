@@ -51,33 +51,41 @@ type LaboratoryItem struct {
 
 //PrescriptionModel 处方模板
 type PrescriptionModel struct {
-	ModelName           string                  `json:"model_name"`
-	PrescriptionModelID int                     `json:"prescription_patient_model_id"`
-	OperationName       string                  `json:"operation_name"`
-	IsCommon            bool                    `json:"is_common"`
-	CreatedTime         time.Time               `json:"created_time"`
-	Items               []PrescriptionModelItem `json:"items"`
+	ModelName               interface{}             `json:"model_name"`
+	PrescriptionModelID     interface{}             `json:"prescription_patient_model_id"`
+	OperationName           interface{}             `json:"operation_name"`
+	IsCommon                interface{}             `json:"is_common"`
+	RouteAdministrationID   interface{}             `json:"route_administration_id"`
+	RouteAdministrationName interface{}             `json:"route_administration_name"`
+	EffDay                  interface{}             `json:"eff_day"`
+	Amount                  interface{}             `json:"amount"`
+	FrequencyID             interface{}             `json:"frequency_id"`
+	FrequencyName           interface{}             `json:"frequency_name"`
+	FetchAddress            interface{}             `json:"fetch_address"`
+	CreatedTime             interface{}             `json:"created_time"`
+	UpdatedTime             interface{}             `json:"updated_time"`
+	Items                   []PrescriptionModelItem `json:"items"`
 }
 
 //PrescriptionModelItem 处方模板item
 type PrescriptionModelItem struct {
-	DrugStockID             int    `json:"drug_stock_id"`
-	DrugName                string `json:"drug_name"`
-	Specification           string `json:"specification"`
-	StockAmount             int    `json:"stock_amount"`
-	OnceDose                int    `json:"once_dose"`
-	OnceDoseUnitID          int    `json:"once_dose_unit_id"`
-	OnceDoseUnitName        string `json:"once_dose_unit_name"`
-	RouteAdministrationID   int    `json:"route_administration_id"`
-	RouteAdministrationName string `json:"route_administration_name"`
-	FrequencyID             int    `json:"frequency_id"`
-	FrequencyName           string `json:"frequency_name"`
-	EffDay                  int    `json:"eff_day"`
-	Amount                  int    `json:"amount"`
-	PackingUnitID           int    `json:"packing_unit_id"`
-	PackingUnitName         string `json:"packing_unit_name"`
-	FetchAddress            int    `json:"fetch_address"`
-	Illustration            string `json:"illustration"`
+	DrugStockID             interface{} `json:"drug_stock_id"`
+	DrugName                interface{} `json:"drug_name"`
+	Specification           interface{} `json:"specification"`
+	StockAmount             interface{} `json:"stock_amount"`
+	OnceDose                interface{} `json:"once_dose"`
+	OnceDoseUnitID          interface{} `json:"once_dose_unit_id"`
+	OnceDoseUnitName        interface{} `json:"once_dose_unit_name"`
+	RouteAdministrationID   interface{} `json:"route_administration_id"`
+	RouteAdministrationName interface{} `json:"route_administration_name"`
+	FrequencyID             interface{} `json:"frequency_id"`
+	FrequencyName           interface{} `json:"frequency_name"`
+	EffDay                  interface{} `json:"eff_day"`
+	Amount                  interface{} `json:"amount"`
+	PackingUnitID           interface{} `json:"packing_unit_id"`
+	PackingUnitName         interface{} `json:"packing_unit_name"`
+	FetchAddress            interface{} `json:"fetch_address"`
+	Illustration            interface{} `json:"illustration"`
 }
 
 // FormatSQLRowsToMapArray 格式化数据库返回的数组数据
@@ -231,6 +239,16 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		operationName := v["operation_name"]
 		isCommon := v["is_common"]
 		createdTime := v["created_time"]
+		updatedTime := v["updated_time"]
+		infoRouteAdministrationID := v["info_route_administration_id"]
+		inforRouteAdministrationName := v["info_route_administration_name"]
+		infoEffDay := v["info_eff_day"]
+		infoAmount := v["info_amount"]
+		infoFrequencyID := v["info_frequency_id"]
+		infoFrequencyName := v["info_frequency_name"]
+		infoFetchAddress := v["info_fetch_address"]
+
+		has := false
 
 		drugStockID := v["drug_stock_id"]
 		drugName := v["drug_name"]
@@ -250,26 +268,24 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		fetchAddress := v["fetch_address"]
 		illustration := v["illustration"]
 
-		has := false
-
 		item := PrescriptionModelItem{
-			DrugStockID:             int(drugStockID.(int64)),
-			DrugName:                drugName.(string),
-			Specification:           specification.(string),
-			StockAmount:             int(stockAmount.(int64)),
-			OnceDose:                int(onceDose.(int64)),
-			OnceDoseUnitID:          int(onceDoseUnitID.(int64)),
-			OnceDoseUnitName:        onceDoseUnitName.(string),
-			RouteAdministrationID:   int(routeAdministrationID.(int64)),
-			RouteAdministrationName: routeAdministrationName.(string),
-			FrequencyID:             int(frequencyID.(int64)),
-			FrequencyName:           frequencyName.(string),
-			EffDay:                  int(effDay.(int64)),
-			Amount:                  int(amount.(int64)),
-			PackingUnitID:           int(packingUnitID.(int64)),
-			PackingUnitName:         packingUnitName.(string),
-			FetchAddress:            int(fetchAddress.(int64)),
-			Illustration:            illustration.(string),
+			DrugStockID:             drugStockID,
+			DrugName:                drugName,
+			Specification:           specification,
+			StockAmount:             stockAmount,
+			OnceDose:                onceDose,
+			OnceDoseUnitID:          onceDoseUnitID,
+			OnceDoseUnitName:        onceDoseUnitName,
+			RouteAdministrationID:   routeAdministrationID,
+			RouteAdministrationName: routeAdministrationName,
+			FrequencyID:             frequencyID,
+			FrequencyName:           frequencyName,
+			EffDay:                  effDay,
+			Amount:                  amount,
+			PackingUnitID:           packingUnitID,
+			PackingUnitName:         packingUnitName,
+			FetchAddress:            fetchAddress,
+			Illustration:            illustration,
 		}
 		for k, pModel := range models {
 			dprescriptionModelID := pModel.PrescriptionModelID
@@ -283,12 +299,20 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 			var items []PrescriptionModelItem
 			items = append(items, item)
 			pmodel := PrescriptionModel{
-				ModelName:           modelName.(string),
-				PrescriptionModelID: int(prescriptionModelID.(int64)),
-				OperationName:       operationName.(string),
-				IsCommon:            isCommon.(bool),
-				CreatedTime:         createdTime.(time.Time),
-				Items:               items,
+				ModelName:               modelName,
+				PrescriptionModelID:     prescriptionModelID,
+				OperationName:           operationName,
+				IsCommon:                isCommon,
+				CreatedTime:             createdTime,
+				RouteAdministrationID:   infoRouteAdministrationID,
+				RouteAdministrationName: inforRouteAdministrationName,
+				EffDay:                  infoEffDay,
+				Amount:                  infoAmount,
+				FrequencyID:             infoFrequencyID,
+				FrequencyName:           infoFrequencyName,
+				FetchAddress:            infoFetchAddress,
+				UpdatedTime:             updatedTime,
+				Items:                   items,
 			}
 			models = append(models, pmodel)
 		}
