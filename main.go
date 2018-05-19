@@ -314,12 +314,19 @@ func main() {
 		dictionaries.Post("/RouteAdministrationList", controller.RouteAdministrationList)
 		dictionaries.Post("/LaboratorySampleList", controller.LaboratorySampleList)
 		dictionaries.Post("/CuvetteColorList", controller.CuvetteColorList)
+		dictionaries.Post("/ManuFactoryList", controller.ManuFactoryList)
 	}
 
 	dataImport := app.Party("/dataImport", crs).AllowMethods(iris.MethodOptions)
 	{
 		dataImport.Post("/ImportLaboratory", controller.ImportLaboratory)
 		dataImport.Post("/ImportLaboratoryItem", controller.ImportLaboratoryItem)
+		dataImport.Post("/ImportFrequency", controller.ImportFrequency)
+		dataImport.Post("/ImportDoseUnit", controller.ImportDoseUnit)
+		dataImport.Post("/ImportDoseForm", controller.ImportDoseForm)
+		dataImport.Post("/ImportDrugType", controller.ImportDrugType)
+		dataImport.Post("/ImportManuFactory", controller.ImportManuFactory)
+		dataImport.Post("/ImportrRouteAdministration", controller.ImportrRouteAdministration)
 	}
 
 	// http://localhost:8080
