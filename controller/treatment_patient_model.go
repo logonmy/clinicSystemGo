@@ -27,6 +27,7 @@ type TreatmentModelItem struct {
 	ClinicTreatmentID int         `json:"clinic_treatment_id"`
 	Illustration      interface{} `json:"illustration"`
 	Times             int         `json:"times"`
+	UnitName          string      `json:"unit_name"`
 }
 
 // TreatmentPatientModelCreate 创建治疗医嘱模板
@@ -172,11 +173,21 @@ func TreatmentPatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from treatment_patient_model where model_name ~$1`
-	selectSQL := `select tpm.id as treatment_patient_model_id,tpmi.clinic_treatment_id,tpmi.illustration,l.name as treatment_name,p.name as operation_name,
-	tpm.is_common,tpm.created_time,tpm.model_name,tpmi.times from treatment_patient_model tpm
+	selectSQL := `select 
+	tpm.id as treatment_patient_model_id,
+	tpmi.clinic_treatment_id,
+	tpmi.illustration,
+	t.name as treatment_name,
+	p.name as operation_name,
+	tpm.is_common,
+	tpm.created_time,
+	tpm.model_name,
+	tpmi.illustration,
+	t.unit_name,
+	tpmi.times from treatment_patient_model tpm
 	left join treatment_patient_model_item tpmi on tpmi.treatment_patient_model_id = tpm.id
 	left join clinic_treatment cl on tpmi.clinic_treatment_id = cl.id
-	left join treatment l on cl.treatment_id = l.id
+	left join treatment t on cl.treatment_id =t.id
 	left join personnel p on tpm.operation_id = p.id
 	where tpm.model_name ~$1`
 
@@ -214,29 +225,28 @@ func TreatmentPatientModelList(ctx iris.Context) {
 		isCommon := v["is_common"]
 		createdTime := v["created_time"]
 		times := v["times"]
+		unitName := v["unit_name"]
+
+		item := TreatmentModelItem{
+			TreatmentName:     treatmentName.(string),
+			Times:             int(times.(int64)),
+			ClinicTreatmentID: int(clinicTreatmentID.(int64)),
+			Illustration:      illustration,
+			UnitName:          unitName.(string),
+		}
+
 		has := false
 		for k, pModel := range models {
 			ptreatmentPatientModelID := pModel.TreatmentPatientModelID
 			items := pModel.Items
 			if int(treatmentPatientModelID.(int64)) == ptreatmentPatientModelID {
-				item := TreatmentModelItem{
-					TreatmentName:     treatmentName.(string),
-					Times:             int(times.(int64)),
-					ClinicTreatmentID: int(clinicTreatmentID.(int64)),
-					Illustration:      illustration,
-				}
 				models[k].Items = append(items, item)
 				has = true
 			}
 		}
 		if !has {
 			var items []TreatmentModelItem
-			item := TreatmentModelItem{
-				TreatmentName:     treatmentName.(string),
-				Times:             int(times.(int64)),
-				ClinicTreatmentID: int(clinicTreatmentID.(int64)),
-				Illustration:      illustration,
-			}
+
 			items = append(items, item)
 
 			pmodel := TreatmentModel{
