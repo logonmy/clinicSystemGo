@@ -98,9 +98,8 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		fmt.Println("clinicOtherCostID====", clinicOtherCostID)
 		var sl []string
 		var sm []string
-		clinicOtherCostSQL := `select coc.id as clinic_other_cost_id,coc.price,coc.is_discount,oc.name,du.name as dose_unit_name from clinic_other_cost coc
+		clinicOtherCostSQL := `select coc.id as clinic_other_cost_id,coc.price,coc.is_discount,oc.name,oc.unit_name from clinic_other_cost coc
 		left join other_cost oc on oc.id = coc.other_cost_id
-		left join dose_unit du on du.id = oc.unit_id
 		where coc.id=$1`
 		trow := model.DB.QueryRowx(clinicOtherCostSQL, clinicOtherCostID)
 		if trow == nil {
@@ -116,7 +115,7 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		}
 		price := clinicOtherCost["price"].(int64)
 		name := clinicOtherCost["name"].(string)
-		unitName := clinicOtherCost["dose_unit_name"].(string)
+		unitName := clinicOtherCost["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
 
@@ -200,10 +199,9 @@ func OtherCostPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select ocp.*, oc.name, du.name as unit_name, oc.unit_id from other_cost_patient ocp 
+	rows, err := model.DB.Queryx(`select ocp.*, oc.name, oc.unit_name from other_cost_patient ocp 
 		left join clinic_other_cost coc on ocp.clinic_other_cost_id = coc.id 
 		left join other_cost oc on coc.other_cost_id = oc.id
-		left join dose_unit du on du.id = oc.unit_id
 		where ocp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

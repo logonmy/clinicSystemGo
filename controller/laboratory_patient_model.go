@@ -215,28 +215,22 @@ func LaboratoryPatientModelList(ctx iris.Context) {
 		clinicLaboratoryID := v["clinic_laboratory_id"]
 		illustration := v["illustration"]
 		has := false
+		item := LaboratoryModelItem{
+			LaboratoryName:     laboratoryName.(string),
+			Times:              int(times.(int64)),
+			ClinicLaboratoryID: int(clinicLaboratoryID.(int64)),
+			Illustration:       illustration,
+		}
 		for k, pModel := range models {
 			plaboratoryPatientModelID := pModel.LaboratoryPatientModelID
 			items := pModel.Items
 			if int(laboratoryPatientModelID.(int64)) == plaboratoryPatientModelID {
-				item := LaboratoryModelItem{
-					LaboratoryName:     laboratoryName.(string),
-					Times:              int(times.(int64)),
-					ClinicLaboratoryID: int(clinicLaboratoryID.(int64)),
-					Illustration:       illustration,
-				}
 				models[k].Items = append(items, item)
 				has = true
 			}
 		}
 		if !has {
 			var items []LaboratoryModelItem
-			item := LaboratoryModelItem{
-				LaboratoryName:     laboratoryName.(string),
-				Times:              int(times.(int64)),
-				ClinicLaboratoryID: int(clinicLaboratoryID.(int64)),
-				Illustration:       illustration,
-			}
 			items = append(items, item)
 
 			pmodel := LaboratoryModel{
@@ -324,28 +318,22 @@ func LaboratoryPersonalPatientModelList(ctx iris.Context) {
 		clinicLaboratoryID := v["clinic_laboratory_id"]
 		illustration := v["illustration"]
 		has := false
+		item := LaboratoryModelItem{
+			LaboratoryName:     laboratoryName.(string),
+			Times:              int(times.(int64)),
+			ClinicLaboratoryID: int(clinicLaboratoryID.(int64)),
+			Illustration:       illustration,
+		}
 		for k, pModel := range models {
 			plaboratoryPatientModelID := pModel.LaboratoryPatientModelID
 			items := pModel.Items
 			if int(laboratoryPatientModelID.(int64)) == plaboratoryPatientModelID {
-				item := LaboratoryModelItem{
-					LaboratoryName:     laboratoryName.(string),
-					Times:              int(times.(int64)),
-					ClinicLaboratoryID: int(clinicLaboratoryID.(int64)),
-					Illustration:       illustration,
-				}
 				models[k].Items = append(items, item)
 				has = true
 			}
 		}
 		if !has {
 			var items []LaboratoryModelItem
-			item := LaboratoryModelItem{
-				LaboratoryName:     laboratoryName.(string),
-				Times:              int(times.(int64)),
-				ClinicLaboratoryID: int(clinicLaboratoryID.(int64)),
-				Illustration:       illustration,
-			}
 			items = append(items, item)
 
 			pmodel := LaboratoryModel{

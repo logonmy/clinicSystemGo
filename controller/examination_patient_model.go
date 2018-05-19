@@ -324,28 +324,22 @@ func ExaminationPersonalPatientModelList(ctx iris.Context) {
 		clinicExaminationID := v["clinic_examination_id"]
 		illustration := v["illustration"]
 		has := false
+		item := ExaminationModelItem{
+			ExaminationName:     examinationName.(string),
+			Times:               int(times.(int64)),
+			ClinicExaminationID: int(clinicExaminationID.(int64)),
+			Illustration:        illustration,
+		}
 		for k, pModel := range models {
 			pexaminationPatientModelID := pModel.ExaminationPatientModelID
 			items := pModel.Items
 			if int(examinationPatientModelID.(int64)) == pexaminationPatientModelID {
-				item := ExaminationModelItem{
-					ExaminationName:     examinationName.(string),
-					Times:               int(times.(int64)),
-					ClinicExaminationID: int(clinicExaminationID.(int64)),
-					Illustration:        illustration,
-				}
 				models[k].Items = append(items, item)
 				has = true
 			}
 		}
 		if !has {
 			var items []ExaminationModelItem
-			item := ExaminationModelItem{
-				ExaminationName:     examinationName.(string),
-				Times:               int(times.(int64)),
-				ClinicExaminationID: int(clinicExaminationID.(int64)),
-				Illustration:        illustration,
-			}
 			items = append(items, item)
 
 			pmodel := ExaminationModel{

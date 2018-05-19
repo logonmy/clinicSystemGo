@@ -200,9 +200,8 @@ func TreatmentPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select tp.*, t.name, du.name as unit_name from treatment_patient tp left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
+	rows, err := model.DB.Queryx(`select tp.*, t.name, t.nit_name from treatment_patient tp left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
 		left join treatment t on ct.treatment_id = t.id
-		left join dose_unit du on t.unit_id = du.id
 		where tp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

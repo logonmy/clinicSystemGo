@@ -100,9 +100,8 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		fmt.Println("clinicExaminationID====", clinicExaminationID)
 		var sl []string
 		var sm []string
-		examinationSQL := `select ce.id as clinic_examination_id,ce.price,ce.is_discount,e.name,du.name as dose_unit_name from clinic_examination ce
+		examinationSQL := `select ce.id as clinic_examination_id,ce.price,ce.is_discount,e.name,e.unit_name from clinic_examination ce
 		left join examination e on e.id = ce.examination_id
-		left join dose_unit du on du.id = e.unit_id
 		where ce.id=$1`
 		trow := model.DB.QueryRowx(examinationSQL, clinicExaminationID)
 		if trow == nil {
@@ -118,7 +117,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		}
 		price := examination["price"].(int64)
 		name := examination["name"].(string)
-		unitName := examination["dose_unit_name"].(string)
+		unitName := examination["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
 
