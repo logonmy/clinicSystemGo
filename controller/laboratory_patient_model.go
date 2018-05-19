@@ -254,6 +254,115 @@ func LaboratoryPatientModelList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": models, "page_info": pageInfo})
 }
 
+// LaboratoryPersonalPatientModelList 查询个人和通用检验医嘱模板
+func LaboratoryPersonalPatientModelList(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	isCommon := ctx.PostValue("is_common")
+	operationID := ctx.PostValue("operation_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if operationID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) as total from laboratory_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
+	selectSQL := `select lpm.id as laboratory_patient_model_id,l.name as laboratory_name,p.name as operation_name,
+	lpm.is_common,lpm.created_time,lpmi.clinic_laboratory_id, lpmi.illustration, lpm.model_name,lpmi.times from laboratory_patient_model lpm
+	left join laboratory_patient_model_item lpmi on lpmi.laboratory_patient_model_id = lpm.id
+	left join clinic_laboratory cl on lpmi.clinic_laboratory_id = cl.id
+	left join laboratory l on cl.laboratory_id = l.id
+	left join personnel p on lpm.operation_id = p.id
+	where lpm.model_name ~$1 and (lpm.operation_id=$2 or lpm.is_common=true)`
+
+	if isCommon != "" {
+		countSQL += ` and is_common =` + isCommon
+		selectSQL += ` and lpm.is_common=` + isCommon
+	}
+
+	fmt.Println("countSQL===", countSQL)
+	fmt.Println("selectSQL===", selectSQL)
+	total := model.DB.QueryRowx(countSQL, keyword, operationID)
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $3 limit $4", keyword, operationID, offset, limit)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	var models []LaboratoryModel
+	for _, v := range result {
+		modelName := v["model_name"]
+		laboratoryPatientModelID := v["laboratory_patient_model_id"]
+		laboratoryName := v["laboratory_name"]
+		operationName := v["operation_name"]
+		isCommon := v["is_common"]
+		createdTime := v["created_time"]
+		times := v["times"]
+		clinicLaboratoryID := v["clinic_laboratory_id"]
+		illustration := v["illustration"]
+		has := false
+		for k, pModel := range models {
+			plaboratoryPatientModelID := pModel.LaboratoryPatientModelID
+			items := pModel.Items
+			if int(laboratoryPatientModelID.(int64)) == plaboratoryPatientModelID {
+				item := LaboratoryModelItem{
+					LaboratoryName:     laboratoryName.(string),
+					Times:              int(times.(int64)),
+					ClinicLaboratoryID: int(clinicLaboratoryID.(int64)),
+					Illustration:       illustration,
+				}
+				models[k].Items = append(items, item)
+				has = true
+			}
+		}
+		if !has {
+			var items []LaboratoryModelItem
+			item := LaboratoryModelItem{
+				LaboratoryName:     laboratoryName.(string),
+				Times:              int(times.(int64)),
+				ClinicLaboratoryID: int(clinicLaboratoryID.(int64)),
+				Illustration:       illustration,
+			}
+			items = append(items, item)
+
+			pmodel := LaboratoryModel{
+				ModelName:                modelName.(string),
+				LaboratoryPatientModelID: int(laboratoryPatientModelID.(int64)),
+				OperationName:            operationName.(string),
+				IsCommon:                 isCommon.(bool),
+				CreatedTime:              createdTime.(time.Time),
+				Items:                    items,
+			}
+			models = append(models, pmodel)
+		}
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": models, "page_info": pageInfo})
+}
+
 // LaboratoryPatientModelDetail 查询检验医嘱模板详情
 func LaboratoryPatientModelDetail(ctx iris.Context) {
 	laboratoryModelID := ctx.PostValue("laboratory_patient_model_id")

@@ -254,6 +254,115 @@ func ExaminationPatientModelList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": models, "page_info": pageInfo})
 }
 
+// ExaminationPersonalPatientModelList 查询个人和通用检查医嘱模板
+func ExaminationPersonalPatientModelList(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	isCommon := ctx.PostValue("is_common")
+	operationID := ctx.PostValue("operation_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if operationID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) as total from examination_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
+	selectSQL := `select epm.id as examination_patient_model_id,l.name as examination_name,p.name as operation_name,
+	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.times from examination_patient_model epm
+	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
+	left join clinic_examination cl on epmi.clinic_examination_id = cl.id
+	left join examination l on cl.examination_id = l.id
+	left join personnel p on epm.operation_id = p.id
+	where epm.model_name ~$1 and (epm.operation_id=$2 or epm.is_common=true)`
+
+	if isCommon != "" {
+		countSQL += ` and is_common =` + isCommon
+		selectSQL += ` and epm.is_common=` + isCommon
+	}
+
+	fmt.Println("countSQL===", countSQL)
+	fmt.Println("selectSQL===", selectSQL)
+	total := model.DB.QueryRowx(countSQL, keyword, operationID)
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $3 limit $4", keyword, operationID, offset, limit)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	var models []ExaminationModel
+	for _, v := range result {
+		modelName := v["model_name"]
+		examinationPatientModelID := v["examination_patient_model_id"]
+		examinationName := v["examination_name"]
+		operationName := v["operation_name"]
+		isCommon := v["is_common"]
+		createdTime := v["created_time"]
+		times := v["times"]
+		clinicExaminationID := v["clinic_examination_id"]
+		illustration := v["illustration"]
+		has := false
+		for k, pModel := range models {
+			pexaminationPatientModelID := pModel.ExaminationPatientModelID
+			items := pModel.Items
+			if int(examinationPatientModelID.(int64)) == pexaminationPatientModelID {
+				item := ExaminationModelItem{
+					ExaminationName:     examinationName.(string),
+					Times:               int(times.(int64)),
+					ClinicExaminationID: int(clinicExaminationID.(int64)),
+					Illustration:        illustration,
+				}
+				models[k].Items = append(items, item)
+				has = true
+			}
+		}
+		if !has {
+			var items []ExaminationModelItem
+			item := ExaminationModelItem{
+				ExaminationName:     examinationName.(string),
+				Times:               int(times.(int64)),
+				ClinicExaminationID: int(clinicExaminationID.(int64)),
+				Illustration:        illustration,
+			}
+			items = append(items, item)
+
+			pmodel := ExaminationModel{
+				ModelName:                 modelName.(string),
+				ExaminationPatientModelID: int(examinationPatientModelID.(int64)),
+				OperationName:             operationName.(string),
+				IsCommon:                  isCommon.(bool),
+				CreatedTime:               createdTime.(time.Time),
+				Items:                     items,
+			}
+			models = append(models, pmodel)
+		}
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": models, "page_info": pageInfo})
+}
+
 // ExaminationPatientModelDetail 查询检查医嘱模板详情
 func ExaminationPatientModelDetail(ctx iris.Context) {
 	examinationModelID := ctx.PostValue("examination_patient_model_id")
