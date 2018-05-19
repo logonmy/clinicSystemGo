@@ -121,7 +121,7 @@ func PersonnelList(ctx iris.Context) {
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	keyword := ctx.PostValue("keyword")
-	if clinicID == "" || personnelType == "" {
+	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 		return
 	}
@@ -149,9 +149,13 @@ func PersonnelList(ctx iris.Context) {
 	left join clinic c on p.clinic_id = c.id 
 	left join department_personnel dp on p.id = dp.personnel_id
 	left join department d on dp.department_id = d.id
-	where p.clinic_id = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%') and dp.type = $3`
+	where p.clinic_id = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%')`
 	if deparmentID != "" {
 		jionSQL += " and d.id = " + deparmentID
+	}
+
+	if personnelType != "" {
+		jionSQL += " and dp.type = " + personnelType
 	}
 
 	total := model.DB.QueryRowx(`select count(p.id) as total `+jionSQL, clinicID, keyword, personnelType)
