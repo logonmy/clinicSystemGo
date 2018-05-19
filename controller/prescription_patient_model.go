@@ -584,15 +584,38 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from prescription_chinese_patient_model where model_name ~$1`
-	selectSQL := `select pcpm.id as prescription_patient_model_id,d.name as drug_name,pcpmi.amount,du.name as packing_unit_name,
-	pcpm.is_common,pcpm.created_time,p.name as operation_name,pcpm.model_name,pcpmi.once_dose,odu.name as once_dose_unit_name 
+	selectSQL := `select 
+	pcpm.id as prescription_patient_model_id,
+	pcpm.is_common,
+	pcpm.created_time,
+	pcpm.updated_time,
+	p.name as operation_name,
+	pcpm.model_name,
+	pcpm.route_administration_id as info_route_administration_id,
+	ra.name as info_route_administration_name,
+	pcpm.eff_day as info_eff_day,
+	pcpm.amount as info_amount,
+	pcpm.frequency_id as info_frequency_id,
+	f.name as info_frequency_name,
+	pcpm.fetch_address as info_fetch_address,
+	pcpm.medicine_illustration,
+	pcpmi.drug_stock_id,
+	d.name as drug_name,
+	d.type,
+	ds.stock_amount,
+	pcpmi.once_dose,
+	pcpmi.once_dose_unit_id,
+	du.name as once_dose_unit_name,
+	pcpmi.special_illustration,
+	pcpmi.amount
 	from prescription_chinese_patient_model pcpm
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
-	left join drug_stock ds on pcpmi.drug_stock_id = ds.id
+	left join drug_stock ds on pcpmi.drug_stock_id = ds.id 
 	left join drug d on ds.drug_id = d.id
-	left join dose_unit du on d.packing_unit_id = du.id
+	left join dose_unit du on pcpmi.once_dose_unit_id = du.id
+	left join route_administration ra on pcpm.route_administration_id = ra.id
+	left join frequency f on pcpm.frequency_id = f.id
 	left join personnel p on pcpm.operation_id = p.id
-	left join dose_unit odu on pcpmi.once_dose_unit_id = odu.id
 	where pcpm.model_name ~$1`
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)

@@ -80,7 +80,7 @@ func LaboratoryCreate(ctx iris.Context) {
 	}
 	if unitName != "" {
 		laboratorySets = append(laboratorySets, "unit_name")
-		laboratoryValues = append(laboratoryValues, unitName)
+		laboratoryValues = append(laboratoryValues, "'"+unitName+"'")
 	}
 	if timeReport != "" {
 		laboratorySets = append(laboratorySets, "time_report")
@@ -572,7 +572,7 @@ func LaboratoryItemCreate(ctx iris.Context) {
 	}
 	if unitName != "" {
 		laboratoryItemSets = append(laboratoryItemSets, "unit_name")
-		laboratoryItemValues = append(laboratoryItemValues, unitName)
+		laboratoryItemValues = append(laboratoryItemValues, "'"+unitName+"'")
 	}
 	if clinicalSignificance != "" {
 		laboratoryItemSets = append(laboratoryItemSets, "clinical_significance")
@@ -895,7 +895,7 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 		laboratoryItemSets = append(laboratoryItemSets, "instrument_code='"+instrumentCode+"'")
 	}
 	if unitName != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "unit_name="+unitName)
+		laboratoryItemSets = append(laboratoryItemSets, "unit_name="+"'"+unitName+"'")
 	}
 	if clinicalSignificance != "" {
 		laboratoryItemSets = append(laboratoryItemSets, "clinical_significance='"+clinicalSignificance+"'")

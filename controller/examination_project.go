@@ -74,7 +74,7 @@ func ExaminationCreate(ctx iris.Context) {
 	}
 	if unitName != "" {
 		examinationSets = append(examinationSets, "unit_name")
-		examinationValues = append(examinationValues, unitName)
+		examinationValues = append(examinationValues, "'"+unitName+"'")
 	}
 	if organ != "" {
 		examinationSets = append(examinationSets, "organ")

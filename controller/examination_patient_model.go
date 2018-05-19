@@ -23,8 +23,10 @@ type ExaminationModel struct {
 
 //ExaminationModelItem 检查模板item
 type ExaminationModelItem struct {
-	ExaminationName string `json:"examination_name"`
-	Times           int    `json:"times"`
+	ExaminationName     string      `json:"examination_name"`
+	Times               int         `json:"times"`
+	ClinicExaminationID int         `json:"clinic_examination_id"`
+	Illustration        interface{} `json:"illustration"`
 }
 
 // ExaminationPatientModelCreate 创建检查医嘱模板
@@ -171,7 +173,7 @@ func ExaminationPatientModelList(ctx iris.Context) {
 
 	countSQL := `select count(id) as total from examination_patient_model where model_name ~$1`
 	selectSQL := `select epm.id as examination_patient_model_id,l.name as examination_name,p.name as operation_name,
-	epm.is_common,epm.created_time,epm.model_name,epmi.times from examination_patient_model epm
+	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.times from examination_patient_model epm
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
 	left join clinic_examination cl on epmi.clinic_examination_id = cl.id
 	left join examination l on cl.examination_id = l.id
@@ -210,14 +212,18 @@ func ExaminationPatientModelList(ctx iris.Context) {
 		isCommon := v["is_common"]
 		createdTime := v["created_time"]
 		times := v["times"]
+		clinicExaminationID := v["clinic_examination_id"]
+		illustration := v["illustration"]
 		has := false
 		for k, pModel := range models {
 			pexaminationPatientModelID := pModel.ExaminationPatientModelID
 			items := pModel.Items
 			if int(examinationPatientModelID.(int64)) == pexaminationPatientModelID {
 				item := ExaminationModelItem{
-					ExaminationName: examinationName.(string),
-					Times:           int(times.(int64)),
+					ExaminationName:     examinationName.(string),
+					Times:               int(times.(int64)),
+					ClinicExaminationID: int(clinicExaminationID.(int64)),
+					Illustration:        illustration,
 				}
 				models[k].Items = append(items, item)
 				has = true
@@ -226,8 +232,10 @@ func ExaminationPatientModelList(ctx iris.Context) {
 		if !has {
 			var items []ExaminationModelItem
 			item := ExaminationModelItem{
-				ExaminationName: examinationName.(string),
-				Times:           int(times.(int64)),
+				ExaminationName:     examinationName.(string),
+				Times:               int(times.(int64)),
+				ClinicExaminationID: int(clinicExaminationID.(int64)),
+				Illustration:        illustration,
 			}
 			items = append(items, item)
 
