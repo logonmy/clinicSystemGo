@@ -194,3 +194,48 @@ func MedicalRecordModelList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 
 }
+
+// MedicalRecordModelListByOperation 医生查询模板
+func MedicalRecordModelListByOperation(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	isCommon := ctx.PostValue("is_common")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	operationID := ctx.PostValue("operation_id")
+
+	if operationID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	countSQL := `select count(id) as total from medical_record_model where model_name ~$1 AND (operation_id = $2 or is_common = true)`
+	if isCommon != "" {
+		countSQL = countSQL + ` and is_common =` + isCommon
+	}
+	selectSQL := `select * from medical_record_model where model_name ~$1 AND (operation_id = $2 or is_common = true)`
+	if isCommon != "" {
+		selectSQL = selectSQL + ` and is_common =` + isCommon
+	}
+	selectSQL = selectSQL + " ORDER BY created_time DESC offset $3 limit $4"
+
+	total := model.DB.QueryRowx(countSQL, keyword, operationID)
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err1 := model.DB.Queryx(selectSQL, keyword, operationID, offset, limit)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+}

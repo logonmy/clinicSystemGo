@@ -224,6 +224,7 @@ func main() {
 		medicalRecord.Post("/model/create", controller.MedicalRecordModelCreate)
 		medicalRecord.Post("/listByPid", controller.MedicalRecordListByPID)
 		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
+		medicalRecord.Post("/model/listByOperation", controller.MedicalRecordModelListByOperation)
 	}
 
 	examination := app.Party("/examination", crs).AllowMethods(iris.MethodOptions)
