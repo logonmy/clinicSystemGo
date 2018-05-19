@@ -930,3 +930,68 @@ func AppointmentsByDate(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "clinic_array": clinicArray, "doctor_array": doctorArray, "page_info": pageInfo})
 }
+
+//ReceiveRecord 获取病人历史已接诊记录
+func ReceiveRecord(ctx iris.Context) {
+	clinicPatientID := ctx.PostValue("clinic_patient_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	keyword := ctx.PostValue("keyword")
+	if clinicPatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	countSQL := `select count (*) as total from clinic_triage_patient ctp
+	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id
+	where ctp.status > 30 and ctp.clinic_patient_id = $1`
+
+	querySQL := `select 
+	ctp.id as clinic_triage_patient_id,
+	ctpo.created_time,
+	ctp.visit_type,
+	d.name as department_name,
+	p.name as doctor_name,
+	mr.diagnosis,
+	(select count(*) from prescription_western_patient where clinic_triage_patient_id = ctp.id) as pwp_count,
+	(select count(*) from prescription_chinese_patient where clinic_triage_patient_id = ctp.id) as pcp_count,
+	(select count(*) from treatment_patient where clinic_triage_patient_id = ctp.id) as tp_count,
+	(select count(*) from laboratory_patient where clinic_triage_patient_id = ctp.id) as lp_count,
+	(select count(*) from examination_patient where clinic_triage_patient_id = ctp.id) as ep_count,
+	(select count(*) from material_patient where clinic_triage_patient_id = ctp.id) as mp_count,
+	(select count(*) from other_cost_patient where clinic_triage_patient_id = ctp.id) as ocp_count
+	from clinic_triage_patient ctp
+	left join clinic_triage_patient_operation ctpo on ctp.id = ctpo.clinic_triage_patient_id and type = 30 and times = 1
+	left join department d on ctp.department_id = d.id
+	left join personnel p on ctp.doctor_id = p.id
+	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id
+	where ctp.status > 30 and ctp.clinic_patient_id = $1`
+
+	if keyword != "" {
+		countSQL += `  and mr.diagnosis ~'` + keyword + `'`
+		querySQL += `  and mr.diagnosis ~'` + keyword + `'`
+	}
+
+	total := model.DB.QueryRowx(countSQL, clinicPatientID)
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.Queryx(querySQL+` order by ctpo.created_time DESC offset $2 limit $3`, clinicPatientID, offset, limit)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	}
+
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+}

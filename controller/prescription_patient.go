@@ -32,7 +32,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
 		return
 	}
-	row := model.DB.QueryRowx(`select id,status from clinic_triage_patient where id=$1 limit 1`, clinicTriagePatientID)
+	row := model.DB.QueryRowx(`select id,status from clinic_triage_patient where id=$1`, clinicTriagePatientID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "保存西/成药处方失败,分诊记录错误"})
 		return
@@ -52,6 +52,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		return
 	}
 	status := clinicTriagePatient["status"]
+	fmt.Println("status ========", status)
 	if status.(int64) != 30 {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录当前状态错误"})
 		return
@@ -262,6 +263,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		return
 	}
 	status := clinicTriagePatient["status"]
+	fmt.Println("status ========", status)
 	if status.(int64) != 30 {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录当前状态错误"})
 		return
@@ -310,21 +312,22 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	}
 	if prescriptionChinesePatientID != "" {
 		fmt.Println(" delete data ======")
-		_, errdm := tx.Exec("delete from mz_unpaid_orders where prescription_chinese_patient_id=$1 and charge_project_type_id=2", prescriptionChinesePatientID)
+		_, errdm := tx.Exec("delete from mz_unpaid_orders where prescription_chinese_patient_id=$1 and clinic_triage_patient_id = $2 and charge_project_type_id=2", prescriptionChinesePatientID, clinicTriagePatientID)
 		if errdm != nil {
 			fmt.Println("errdm ===", errdm)
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
 			return
 		}
-		_, errdlp := tx.Exec("delete from prescription_chinese_item where prescription_chinese_patient_id=$1", prescriptionChinesePatientID)
+		_, errdlp := tx.Exec(`delete from prescription_chinese_item
+			where prescription_chinese_patient_id = (select id from prescription_chinese_patient where id = $1 and clinic_triage_patient_id = $2)`, prescriptionChinesePatientID, clinicTriagePatientID)
 		if errdlp != nil {
 			fmt.Println("errdlp ===", errdlp)
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
 			return
 		}
-		_, errdlp = tx.Exec("delete from prescription_chinese_patient where id=$1", prescriptionChinesePatientID)
+		_, errdlp = tx.Exec("delete from prescription_chinese_patient where id=$1 and clinic_triage_patient_id = $2", prescriptionChinesePatientID, clinicTriagePatientID)
 		if errdlp != nil {
 			fmt.Println("errdlp ===", errdlp)
 			tx.Rollback()
