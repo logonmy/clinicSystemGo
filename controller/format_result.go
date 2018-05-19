@@ -62,6 +62,7 @@ type PrescriptionModel struct {
 	FrequencyID             interface{}             `json:"frequency_id"`
 	FrequencyName           interface{}             `json:"frequency_name"`
 	FetchAddress            interface{}             `json:"fetch_address"`
+	MedicineIllustration    interface{}             `json:"medicine_illustration"`
 	CreatedTime             interface{}             `json:"created_time"`
 	UpdatedTime             interface{}             `json:"updated_time"`
 	Items                   []PrescriptionModelItem `json:"items"`
@@ -71,6 +72,7 @@ type PrescriptionModel struct {
 type PrescriptionModelItem struct {
 	DrugStockID             interface{} `json:"drug_stock_id"`
 	DrugName                interface{} `json:"drug_name"`
+	Type                    interface{} `json:"type"`
 	Specification           interface{} `json:"specification"`
 	StockAmount             interface{} `json:"stock_amount"`
 	OnceDose                interface{} `json:"once_dose"`
@@ -86,6 +88,7 @@ type PrescriptionModelItem struct {
 	PackingUnitName         interface{} `json:"packing_unit_name"`
 	FetchAddress            interface{} `json:"fetch_address"`
 	Illustration            interface{} `json:"illustration"`
+	SpecialIllustration     interface{} `json:"special_illustration"`
 }
 
 // FormatSQLRowsToMapArray 格式化数据库返回的数组数据
@@ -247,11 +250,13 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		infoFrequencyID := v["info_frequency_id"]
 		infoFrequencyName := v["info_frequency_name"]
 		infoFetchAddress := v["info_fetch_address"]
+		medicineIllustration := v["medicine_illustration"]
 
 		has := false
 
 		drugStockID := v["drug_stock_id"]
 		drugName := v["drug_name"]
+		drugType := v["type"]
 		specification := v["specification"]
 		stockAmount := v["stock_amount"]
 		onceDose := v["once_dose"]
@@ -267,10 +272,12 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		packingUnitName := v["packing_unit_name"]
 		fetchAddress := v["fetch_address"]
 		illustration := v["illustration"]
+		specialIllustration := v["special_illustration"]
 
 		item := PrescriptionModelItem{
 			DrugStockID:             drugStockID,
 			DrugName:                drugName,
+			Type:                    drugType,
 			Specification:           specification,
 			StockAmount:             stockAmount,
 			OnceDose:                onceDose,
@@ -286,11 +293,12 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 			PackingUnitName:         packingUnitName,
 			FetchAddress:            fetchAddress,
 			Illustration:            illustration,
+			SpecialIllustration:     specialIllustration,
 		}
 		for k, pModel := range models {
 			dprescriptionModelID := pModel.PrescriptionModelID
 			items := pModel.Items
-			if int(prescriptionModelID.(int64)) == dprescriptionModelID {
+			if prescriptionModelID == dprescriptionModelID {
 				models[k].Items = append(items, item)
 				has = true
 			}
@@ -311,6 +319,7 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 				FrequencyID:             infoFrequencyID,
 				FrequencyName:           infoFrequencyName,
 				FetchAddress:            infoFetchAddress,
+				MedicineIllustration:    medicineIllustration,
 				UpdatedTime:             updatedTime,
 				Items:                   items,
 			}
