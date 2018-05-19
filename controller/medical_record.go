@@ -2,6 +2,7 @@ package controller
 
 import (
 	"clinicSystemGo/model"
+	"fmt"
 
 	"github.com/kataras/iris"
 )
@@ -160,6 +161,7 @@ func MedicalRecordListByPID(ctx iris.Context) {
 func MedicalRecordModelList(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	isCommon := ctx.PostValue("is_common")
+	operationID := ctx.PostValue("operation_id")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
@@ -171,21 +173,28 @@ func MedicalRecordModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from medical_record_model where model_name ~$1`
+	selectSQL := `select mrm.*, p.name as operation_name from medical_record_model mrm
+	left join personnel p on mrm.operation_id = p.id
+	where mrm.model_name ~$1`
+
 	if isCommon != "" {
-		countSQL = countSQL + ` and is_common =` + isCommon
-	}
-	selectSQL := `select * from medical_record_model where model_name ~$1 ORDER BY created_time DESC offset $2 limit $3`
-	if isCommon != "" {
-		selectSQL = `select * from medical_record_model where model_name ~$1 AND is_common=` + isCommon + ` ORDER BY created_time DESC offset $2 limit $3`
+		countSQL += ` and is_common =` + isCommon
+		selectSQL += ` and mrm.is_common=` + isCommon
 	}
 
+	if operationID != "" {
+		countSQL += ` and operation_id =` + operationID
+		selectSQL += ` and mrm.operation_id=` + operationID
+	}
+	fmt.Println("countSQL===", countSQL)
+	fmt.Println("selectSQL===", selectSQL)
 	total := model.DB.QueryRowx(countSQL, keyword)
 
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.Queryx(selectSQL, keyword, offset, limit)
+	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $2 limit $3", keyword, offset, limit)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return

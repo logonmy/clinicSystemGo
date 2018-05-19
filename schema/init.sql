@@ -665,8 +665,8 @@ CREATE TABLE manu_factory
 (
   id serial PRIMARY KEY NOT NULL,--id
   code varchar(20),--编码
-  name varchar(20) NOT NULL,--厂商名称
-  abbr_name varchar(30),--
+  name varchar(100) NOT NULL,--厂商名称
+  abbr_name varchar(100),--
   zip_code varchar(10),--
   address varchar(40),--地址
   tel varchar(20),--电话
@@ -691,7 +691,7 @@ CREATE TABLE route_administration
   d_code varchar(20),--五笔
   type_code varchar(20),--分类编码
   is_print integer,--是否打印
-  input_type integer,--护士录入类别
+  input_type varchar(5),--护士录入类别
   deleted_flag integer,--删除标志
   weight integer,--排序码/权重
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -766,7 +766,7 @@ CREATE TABLE drug_print
   name varchar(30) NOT NULL,--药品名称
   py_code varchar(20),--拼音码
   d_code varchar(20),--简码
-  flag integer,--什么标志
+  status boolean,--启用标志
   print_name varchar(30),--药品别名
   name_type varchar(10),--类型
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
