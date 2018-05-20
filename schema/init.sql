@@ -358,14 +358,13 @@ CREATE TABLE mz_paid_record
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  out_trade_no varchar(20) UNIQUE,--第三方交易号
-  soft_sns varchar(30) NOT NULL,--序号
-  order_sn varchar(50) NOT NULL,--单号
-  confrim_id INTEGER NOT NULL references personnel(id),--操作员id
-  pay_type_code varchar(2) NOT NULL,--支付类型编码 01-医保支付，02-挂账金额，03-抵金券，04-积分
-  pay_method_code varchar(2) NOT NULL,--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
+  out_trade_no varchar(30) UNIQUE,--系统交易号
+  trade_no varchar(30) UNIQUE,--第三方平台交易号(如；支付宝，微信)
+  orders_ids text NOT NULL, --已缴费与未交费的记录id
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  pay_method_code varchar(2) NOT NULL,--支付方式编码，1-支付宝，2-微信, 3-银行卡, 4-现金
 
-  status varchar(30) NOT NULL,--订单状态  --SUCCESS 缴费成功 --HALF-REFUND 半退费  --REFUND-SUCCESS 全退
+  status varchar(30) NOT NULL,--订单状态  WATTING_FOR_PAY 待支付 ; TRADE_SUCCESS 交易成功； PART_REFUND 部分退费； TOTAL_REFUND 全额退费
   
   derate_money INTEGER NOT NULL DEFAULT 0 CHECK(derate_money >= 0),--减免金额
   voucher_money INTEGER NOT NULL DEFAULT 0 CHECK(voucher_money >= 0) ,--抵金券金额
@@ -373,17 +372,10 @@ CREATE TABLE mz_paid_record
   bonus_points_money INTEGER NOT NULL DEFAULT 0 CHECK(bonus_points_money >= 0) ,--积分兑换金额
   on_credit_money INTEGER NOT NULL DEFAULT 0 CHECK(on_credit_money >= 0) ,--挂账金额
   medical_money INTEGER NOT NULL DEFAULT 0 CHECK(medical_money >= 0),--医保金额
+
   total_money  INTEGER NOT NULL  ,--应收金额
   balance_money INTEGER NOT NULL ,--实收金额
-
-  derate_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(derate_money_refund <= 0),--减免金额（退）
-  voucher_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(voucher_money_refund <= 0),--抵金券金额（退）
-  discount_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(discount_money_refund <= 0),--折扣金额（退）
-  bonus_points_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(bonus_points_money_refund <= 0),--积分兑换金额（退）
-  on_credit_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(on_credit_money_refund <= 0),--挂账金额（退）
-  medical_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(medical_money_refund <= 0),--医保金额（退）
-  total_money_refund  INTEGER NOT NULL DEFAULT 0  CHECK(total_money_refund <= 0),--应退金额（退）
-  balance_money_refund INTEGER NOT NULL DEFAULT 0 CHECK(balance_money_refund <= 0),--实退金额（退）
+  refund_money INTEGER NOT NULL DEFAULT 0,--已退费金额
 
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
