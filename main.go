@@ -185,10 +185,12 @@ func main() {
 		drug.Post("/outstockDelete", controller.DrugOutstockRecordDelete)
 		drug.Post("/PrescriptionWesternPatientModelCreate", controller.PrescriptionWesternPatientModelCreate)
 		drug.Post("/PrescriptionWesternPatientModelList", controller.PrescriptionWesternPatientModelList)
+		drug.Post("/PrescriptionWesternPersonalPatientModelList", controller.PrescriptionWesternPersonalPatientModelList)
 		drug.Post("/PrescriptionWesternPatientModelDetail", controller.PrescriptionWesternPatientModelDetail)
 		drug.Post("/PrescriptionWesternPatientModelUpdate", controller.PrescriptionWesternPatientModelUpdate)
 		drug.Post("/PrescriptionChinesePatientModelCreate", controller.PrescriptionChinesePatientModelCreate)
 		drug.Post("/PrescriptionChinesePatientModelList", controller.PrescriptionChinesePatientModelList)
+		drug.Post("/PrescriptionChinesePersonalPatientModelList", controller.PrescriptionChinesePersonalPatientModelList)
 		drug.Post("/PrescriptionChinesePatientModelDetail", controller.PrescriptionChinesePatientModelDetail)
 		drug.Post("/PrescriptionChinesePatientModelUpdate", controller.PrescriptionChinesePatientModelUpdate)
 	}
@@ -237,6 +239,7 @@ func main() {
 		examination.Post("/detail", controller.ExaminationDetail)
 		examination.Post("/ExaminationPatientModelCreate", controller.ExaminationPatientModelCreate)
 		examination.Post("/ExaminationPatientModelList", controller.ExaminationPatientModelList)
+		examination.Post("/ExaminationPersonalPatientModelList", controller.ExaminationPersonalPatientModelList)
 		examination.Post("/ExaminationPatientModelDetail", controller.ExaminationPatientModelDetail)
 		examination.Post("/ExaminationPatientModelUpdate", controller.ExaminationPatientModelUpdate)
 	}
@@ -250,6 +253,7 @@ func main() {
 		treatment.Post("/detail", controller.TreatmentDetail)
 		treatment.Post("/TreatmentPatientModelCreate", controller.TreatmentPatientModelCreate)
 		treatment.Post("/TreatmentPatientModelList", controller.TreatmentPatientModelList)
+		treatment.Post("/TreatmentPersonalPatientModelList", controller.TreatmentPersonalPatientModelList)
 		treatment.Post("/TreatmentPatientModelDetail", controller.TreatmentPatientModelDetail)
 		treatment.Post("/TreatmentPatientModelUpdate", controller.TreatmentPatientModelUpdate)
 	}
@@ -300,6 +304,7 @@ func main() {
 		laboratory.Post("/item/searchByName", controller.LaboratoryItemSearch)
 		laboratory.Post("/LaboratoryPatientModelCreate", controller.LaboratoryPatientModelCreate)
 		laboratory.Post("/LaboratoryPatientModelList", controller.LaboratoryPatientModelList)
+		laboratory.Post("/LaboratoryPersonalPatientModelList", controller.LaboratoryPersonalPatientModelList)
 		laboratory.Post("/LaboratoryPatientModelDetail", controller.LaboratoryPatientModelDetail)
 		laboratory.Post("/LaboratoryPatientModelUpdate", controller.LaboratoryPatientModelUpdate)
 	}
@@ -329,6 +334,7 @@ func main() {
 		dataImport.Post("/ImportDrugType", controller.ImportDrugType)
 		dataImport.Post("/ImportManuFactory", controller.ImportManuFactory)
 		dataImport.Post("/ImportrRouteAdministration", controller.ImportrRouteAdministration)
+		dataImport.Post("/ImportrLaboratorySample", controller.ImportrLaboratorySample)
 	}
 
 	// http://localhost:8080

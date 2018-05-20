@@ -27,6 +27,7 @@ type TreatmentModelItem struct {
 	ClinicTreatmentID int         `json:"clinic_treatment_id"`
 	Illustration      interface{} `json:"illustration"`
 	Times             int         `json:"times"`
+	UnitName          string      `json:"unit_name"`
 }
 
 // TreatmentPatientModelCreate 创建治疗医嘱模板
@@ -172,11 +173,21 @@ func TreatmentPatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from treatment_patient_model where model_name ~$1`
-	selectSQL := `select tpm.id as treatment_patient_model_id,tpmi.clinic_treatment_id,tpmi.illustration,l.name as treatment_name,p.name as operation_name,
-	tpm.is_common,tpm.created_time,tpm.model_name,tpmi.times from treatment_patient_model tpm
+	selectSQL := `select 
+	tpm.id as treatment_patient_model_id,
+	tpmi.clinic_treatment_id,
+	tpmi.illustration,
+	t.name as treatment_name,
+	p.name as operation_name,
+	tpm.is_common,
+	tpm.created_time,
+	tpm.model_name,
+	tpmi.illustration,
+	t.unit_name,
+	tpmi.times from treatment_patient_model tpm
 	left join treatment_patient_model_item tpmi on tpmi.treatment_patient_model_id = tpm.id
 	left join clinic_treatment cl on tpmi.clinic_treatment_id = cl.id
-	left join treatment l on cl.treatment_id = l.id
+	left join treatment t on cl.treatment_id =t.id
 	left join personnel p on tpm.operation_id = p.id
 	where tpm.model_name ~$1`
 
@@ -198,6 +209,114 @@ func TreatmentPatientModelList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $2 limit $3", keyword, offset, limit)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	var models []TreatmentModel
+	for _, v := range result {
+		modelName := v["model_name"]
+		treatmentPatientModelID := v["treatment_patient_model_id"]
+		treatmentName := v["treatment_name"]
+		clinicTreatmentID := v["clinic_treatment_id"]
+		illustration := v["illustration"]
+		operationName := v["operation_name"]
+		isCommon := v["is_common"]
+		createdTime := v["created_time"]
+		times := v["times"]
+		unitName := v["unit_name"]
+
+		item := TreatmentModelItem{
+			TreatmentName:     treatmentName.(string),
+			Times:             int(times.(int64)),
+			ClinicTreatmentID: int(clinicTreatmentID.(int64)),
+			Illustration:      illustration,
+			UnitName:          unitName.(string),
+		}
+
+		has := false
+		for k, pModel := range models {
+			ptreatmentPatientModelID := pModel.TreatmentPatientModelID
+			items := pModel.Items
+			if int(treatmentPatientModelID.(int64)) == ptreatmentPatientModelID {
+				models[k].Items = append(items, item)
+				has = true
+			}
+		}
+		if !has {
+			var items []TreatmentModelItem
+
+			items = append(items, item)
+
+			pmodel := TreatmentModel{
+				ModelName:               modelName.(string),
+				TreatmentPatientModelID: int(treatmentPatientModelID.(int64)),
+				OperationName:           operationName.(string),
+				IsCommon:                isCommon.(bool),
+				CreatedTime:             createdTime.(time.Time),
+				Items:                   items,
+			}
+			models = append(models, pmodel)
+		}
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": models, "page_info": pageInfo})
+}
+
+// TreatmentPersonalPatientModelList 查询个人和通用治疗医嘱模板
+func TreatmentPersonalPatientModelList(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	isCommon := ctx.PostValue("is_common")
+	operationID := ctx.PostValue("operation_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if operationID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) as total from treatment_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
+	selectSQL := `select tpm.id as treatment_patient_model_id,tpmi.clinic_treatment_id,tpmi.illustration,l.name as treatment_name,p.name as operation_name,
+	tpm.is_common,tpm.created_time,tpm.model_name,tpmi.times from treatment_patient_model tpm
+	left join treatment_patient_model_item tpmi on tpmi.treatment_patient_model_id = tpm.id
+	left join clinic_treatment cl on tpmi.clinic_treatment_id = cl.id
+	left join treatment l on cl.treatment_id = l.id
+	left join personnel p on tpm.operation_id = p.id
+	where tpm.model_name ~$1 and (tpm.operation_id=$2 or tpm.is_common=true)`
+
+	if isCommon != "" {
+		countSQL += ` and is_common =` + isCommon
+		selectSQL += ` and tpm.is_common=` + isCommon
+	}
+
+	fmt.Println("countSQL===", countSQL)
+	fmt.Println("selectSQL===", selectSQL)
+	total := model.DB.QueryRowx(countSQL, keyword, operationID)
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $3 limit $4", keyword, operationID, offset, limit)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return

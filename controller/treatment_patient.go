@@ -97,9 +97,8 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		fmt.Println("clinicTreatmentID====", clinicTreatmentID)
 		var st []string
 		var sm []string
-		treatmentSQL := `select ct.id as clinic_treatment_id,ct.price,ct.is_discount,t.name,du.name as dose_unit_name from clinic_treatment ct
-			left join treatment t on t.id = ct.treatment_id
-			left join dose_unit du on du.id = t.unit_id
+		treatmentSQL := `select ct.id as clinic_treatment_id,ct.price,ct.is_discount,t.name,t.unit_name from clinic_treatment ct
+		left join treatment t on t.id = ct.treatment_id
 			where ct.id=$1`
 		trow := model.DB.QueryRowx(treatmentSQL, clinicTreatmentID)
 		if trow == nil {
@@ -115,7 +114,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		}
 		price := treatment["price"].(int64)
 		name := treatment["name"].(string)
-		unitName := treatment["dose_unit_name"].(string)
+		unitName := treatment["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
 
@@ -201,9 +200,8 @@ func TreatmentPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select tp.*, t.name, du.name as unit_name from treatment_patient tp left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
+	rows, err := model.DB.Queryx(`select tp.*, t.name as treatment_name, t.unit_name from treatment_patient tp left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
 		left join treatment t on ct.treatment_id = t.id
-		left join dose_unit du on t.unit_id = du.id
 		where tp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

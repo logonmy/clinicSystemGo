@@ -39,7 +39,6 @@ type LaboratoryItem struct {
 	Name                   string       `json:"name"`
 	EnName                 interface{}  `json:"en_name"`
 	UnitName               interface{}  `json:"unit_name"`
-	UnitID                 interface{}  `json:"unit_id"`
 	Status                 bool         `json:"status"`
 	IsSpecial              interface{}  `json:"is_special"`
 	DataType               interface{}  `json:"data_type"`
@@ -119,7 +118,6 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 		instrumentCode := v["instrument_code"]
 		isDelivery := v["is_delivery"]
 		enName := v["en_name"]
-		unitID := v["unit_id"]
 		unitName := v["unit_name"]
 		status := v["status"]
 		isSpecial := v["is_special"]
@@ -132,32 +130,24 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 		isPregnancy := v["is_pregnancy"]
 		stomachStatus := v["stomach_status"]
 		has := false
+		reference := References{
+			ReferenceSex:   referenceSex,
+			ReferenceMax:   referenceMax,
+			ReferenceMin:   referenceMin,
+			ReferenceValue: referenceValue,
+			IsPregnancy:    isPregnancy,
+			StomachStatus:  stomachStatus,
+		}
 		for k, vRes := range laboratoryItems {
 			vlaboratoryItemID := vRes.LaboratoryItemID
 			vreferences := vRes.References
 			if vlaboratoryItemID == laboratoryItemID.(int64) {
-				reference := References{
-					ReferenceSex:   referenceSex,
-					ReferenceMax:   referenceMax,
-					ReferenceMin:   referenceMin,
-					ReferenceValue: referenceValue,
-					IsPregnancy:    isPregnancy,
-					StomachStatus:  stomachStatus,
-				}
 				laboratoryItems[k].References = append(vreferences, reference)
 				has = true
 			}
 		}
 		if !has {
 			var references []References
-			reference := References{
-				ReferenceSex:   referenceSex,
-				ReferenceMax:   referenceMax,
-				ReferenceMin:   referenceMin,
-				IsPregnancy:    isPregnancy,
-				ReferenceValue: referenceValue,
-				StomachStatus:  stomachStatus,
-			}
 			references = append(references, reference)
 
 			laboratoryItem := LaboratoryItem{
@@ -165,7 +155,6 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 				LaboratoryItemID:       laboratoryItemID.(int64),
 				Name:                   name.(string),
 				EnName:                 enName,
-				UnitID:                 unitID,
 				UnitName:               unitName,
 				Status:                 status.(bool),
 				InstrumentCode:         instrumentCode,
@@ -192,26 +181,21 @@ func FormatFuntionmenus(functionMenus []map[string]interface{}) []Funtionmenus {
 		parentURL := v["parent_url"]
 		parentName := v["parent_name"]
 		has := false
+		children := Menu{
+			FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
+			MenuName:       childenName.(string),
+			MenuURL:        childenURL.(string),
+		}
 		for k, menu := range menus {
 			parentMenuID := menu.ParentID
 			childrenMenus := menu.ChildrensMenus
 			if strconv.FormatInt(parentID.(int64), 10) == parentMenuID {
-				childrens := Menu{
-					FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
-					MenuName:       childenName.(string),
-					MenuURL:        childenURL.(string),
-				}
-				menus[k].ChildrensMenus = append(childrenMenus, childrens)
+				menus[k].ChildrensMenus = append(childrenMenus, children)
 				has = true
 			}
 		}
 		if !has {
 			var childrens []Menu
-			children := Menu{
-				FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
-				MenuName:       childenName.(string),
-				MenuURL:        childenURL.(string),
-			}
 			childrens = append(childrens, children)
 
 			functionMenu := Funtionmenus{
