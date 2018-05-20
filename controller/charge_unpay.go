@@ -162,10 +162,18 @@ func ChargeUnPayList(ctx iris.Context) {
 	}
 
 	total := model.DB.QueryRowx(`select count(id) as total,sum(total) as charge_total,sum(discount) as discount_total,sum(fee) as charge_total_fee from mz_unpaid_orders where clinic_triage_patient_id=$1`, clinicTriagePatientid)
-
+	totalID, _ := model.DB.Queryx(`select id from mz_unpaid_orders where clinic_triage_patient_id=$1`, clinicTriagePatientid)
 	pageInfo := FormatSQLRowToMap(total)
+	totalIds := FormatSQLRowsToMapArray(totalID)
+	arr := []string{}
+	for _, item := range totalIds {
+		id := item["id"]
+		arr = append(arr, strconv.FormatInt(id.(int64), 10))
+	}
+	arrStr := strings.Join(arr, ",")
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
+	pageInfo["totalIds"] = arrStr
 
 	typesql := `select sum(total) as type_charge_total, charge_project_type_id from mz_unpaid_orders where clinic_triage_patient_id = $1 group by charge_project_type_id`
 
@@ -173,7 +181,7 @@ func ChargeUnPayList(ctx iris.Context) {
 
 	typetotalfomat := FormatSQLRowsToMapArray(typetotal)
 
-	rowSQL := `select m.name,m.price,m.amount,m.total,m.discount,m.fee,p.name as doctor_name,d.name as department_name from mz_unpaid_orders m 
+	rowSQL := `select m.id as mz_unpaid_orders_id,m.name,m.price,m.amount,m.total,m.discount,m.fee,p.name as doctor_name,d.name as department_name from mz_unpaid_orders m 
 	left join personnel p on p.id = m.operation_id 
 	left join department_personnel dp on dp.personnel_id = p.id 
 	left join department d on d.id = dp.department_id 
