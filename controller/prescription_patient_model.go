@@ -717,7 +717,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 
 	if operationID != "" {
 		countSQL += ` and operation_id =` + operationID
-		selectSQL += ` and pwpm.operation_id=` + operationID
+		selectSQL += ` and pcpm.operation_id=` + operationID
 	}
 
 	total := model.DB.QueryRowx(countSQL, keyword)
