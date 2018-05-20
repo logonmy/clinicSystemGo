@@ -25,21 +25,33 @@ func ImportLaboratory(ctx iris.Context) {
 		return
 	}
 	count := 0
-	for index, row := range xlFile.Sheets[1].Rows {
-		laboratorySets := []string{"name", "en_name", "py_code", "idc_code", "laboratory_sample", "laboratory_sample_dosage"}
-		var laboratoryValues []string
+	keymap := map[string]string{
+		"a": "a",
+	}
+	for index, row := range xlFile.Sheets[0].Rows {
+		laboratorySets := []string{"name", "py_code", "laboratory_sample", "laboratory_sample_dosage"}
 		if index == 0 {
 			continue
 		}
 		if count > 5 {
 			break
 		}
-		name := row.Cells[10].String()
+		name := row.Cells[0].String()
+		pyCode := row.Cells[3].String()
+		laboratorySampleCode := row.Cells[2].String()
+		laboratorySampleDosage := row.Cells[1].String()
 		fmt.Println("name", name)
 		if name == "" {
 			count++
 			continue
 		}
+
+		_, keyok := keymap[name]
+		if keyok {
+			continue
+		}
+
+		keymap[name] = name
 		lrow := model.DB.QueryRowx("select id from laboratory where name=$1 limit 1", name)
 		if lrow == nil {
 			continue
@@ -49,32 +61,38 @@ func ImportLaboratory(ctx iris.Context) {
 		if lok {
 			continue
 		}
-		for _, cell := range row.Cells {
-			laboratoryValues = append(laboratoryValues, "'"+cell.String()+"'")
-		}
-		laboratorySetStr := strings.Join(laboratorySets, ",")
-		laboratoryValueStr := strings.Join(laboratoryValues, ",")
 
-		laboratoryInsertSQL := "insert into laboratory (" + laboratorySetStr + ") values (" + laboratoryValueStr + ") RETURNING id;"
-		fmt.Println("laboratoryInsertSQL ===", laboratoryInsertSQL)
+		srow := model.DB.QueryRowx("select name from laboratory_sample where code=$1 limit 1", laboratorySampleCode)
+
+		laboratorySampleMap := FormatSQLRowToMap(srow)
+		laboratorySample := ""
+		_, sok := laboratorySampleMap["name"]
+		if sok {
+			laboratorySample = laboratorySampleMap["name"].(string)
+		}
+
+		laboratorySetStr := strings.Join(laboratorySets, ",")
+
+		laboratoryInsertSQL := "insert into laboratory (" + laboratorySetStr + ") values ($1, $2, $3, $4) RETURNING id;"
+		// fmt.Println("laboratoryInsertSQL ===", name, pyCode, laboratorySample, laboratorySampleDosage)
 		var laboratoryID string
-		err = tx.QueryRow(laboratoryInsertSQL).Scan(&laboratoryID)
+		err = tx.QueryRow(laboratoryInsertSQL, name, pyCode, laboratorySample, laboratorySampleDosage).Scan(&laboratoryID)
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
-		fmt.Println("laboratoryID====", laboratoryID)
-		clinicLaboratoryInsertSQL := "insert into clinic_laboratory (clinic_id,price,laboratory_id) values (1,0,$1)"
+		// fmt.Println("laboratoryID====", laboratoryID)
+		// clinicLaboratoryInsertSQL := "insert into clinic_laboratory (clinic_id,price,laboratory_id) values (1,0,$1)"
 
-		_, err2 := tx.Exec(clinicLaboratoryInsertSQL, laboratoryID)
-		if err2 != nil {
-			fmt.Println(" err2====", err2)
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
-			return
-		}
+		// _, err2 := tx.Exec(clinicLaboratoryInsertSQL, laboratoryID)
+		// if err2 != nil {
+		// 	fmt.Println(" err2====", err2)
+		// 	tx.Rollback()
+		// 	ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		// 	return
+		// }
 	}
 	err3 := tx.Commit()
 	if err3 != nil {
