@@ -302,7 +302,7 @@ func AssociationList(ctx iris.Context) {
 //LaboratoryList 检验医嘱列表
 func LaboratoryList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	keyword := ctx.PostValue("name")
+	keyword := ctx.PostValue("keyword")
 	status := ctx.PostValue("status")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
@@ -345,7 +345,7 @@ func LaboratoryList(ctx iris.Context) {
 	countSQL := `select count(cl.id) as total from clinic_laboratory cl
 		left join laboratory l on cl.laboratory_id = l.id
 		where cl.clinic_id=$1`
-	selectSQL := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name,l.unit_name,cl.price,l.py_code,cl.is_discount,
+	selectSQL := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name as laboratory_name,l.unit_name,cl.price,l.py_code,cl.is_discount,
 		l.remark,cl.status
 		from clinic_laboratory cl
 		left join laboratory l on cl.laboratory_id = l.id
