@@ -368,7 +368,7 @@ func TreatmentList(ctx iris.Context) {
 	countSQL := `select count(ct.id) as total from clinic_treatment ct
 		left join treatment t on ct.treatment_id = t.id
 		where ct.clinic_id=$1 and t.name ~$2`
-	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name,t.unit_name,t.py_code,t.remark,t.idc_code,
+	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name as treatment_name,t.unit_name,t.py_code,t.remark,t.idc_code,
 		t.en_name,ct.is_discount,ct.price,ct.status,ct.cost
 		from clinic_treatment ct
 		left join treatment t on ct.treatment_id = t.id
