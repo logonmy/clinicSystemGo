@@ -238,7 +238,6 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		onceDose := v["once_dose"]
 		onceDoseUnitName := v["once_dose_unit_name"]
 		routeAdministrationName := v["route_administration_name"]
-		frequencyID := v["frequency_id"]
 		frequencyName := v["frequency_name"]
 		effDay := v["eff_day"]
 		amount := v["amount"]
