@@ -19,17 +19,17 @@ func DrugAdd(ctx iris.Context) {
 	pyCode := ctx.PostValue("py_code")
 	printName := ctx.PostValue("print_name")
 	specification := ctx.PostValue("specification")
-	manuFactoryID := ctx.PostValue("manu_factory_id")
+	manuFactoryName := ctx.PostValue("manu_factory_name")
 	status := ctx.PostValue("status")
 	licenseNo := ctx.PostValue("license_no")
 	doseFormID := ctx.PostValue("dose_form_id")
 	drugTypeID := ctx.PostValue("drug_type_id")
 
 	miniDose := ctx.PostValue("mini_dose")
-	miniUnitID := ctx.PostValue("mini_unit_id")
+	miniUnitName := ctx.PostValue("mini_unit_name")
 	doseCount := ctx.PostValue("dose_count")
-	doseCountUnitID := ctx.PostValue("dose_count_unit_id")
-	packingUnitID := ctx.PostValue("packing_unit_id")
+	doseCountUnitName := ctx.PostValue("dose_count_unit_name")
+	packingUnitName := ctx.PostValue("packing_unit_name")
 	retPrice := ctx.PostValue("ret_price")
 	buyPrice := ctx.PostValue("buy_price")
 	isDiscount := ctx.PostValue("is_discount")
@@ -38,9 +38,9 @@ func DrugAdd(ctx iris.Context) {
 	fetchAddress := ctx.PostValue("fetch_address")
 
 	onceDose := ctx.PostValue("once_dose")
-	onceDoseUnitID := ctx.PostValue("once_dose_unit_id")
-	routeAdministrationID := ctx.PostValue("route_administration_id")
-	frequencyID := ctx.PostValue("frequency_id")
+	onceDoseUnitName := ctx.PostValue("once_dose_unit_name")
+	routeAdministrationName := ctx.PostValue("route_administration_name")
+	frequencyName := ctx.PostValue("frequency_name")
 	defaultRemark := ctx.PostValue("default_remark")
 
 	dayWarning := ctx.PostValue("day_warning")
@@ -81,9 +81,9 @@ func DrugAdd(ctx iris.Context) {
 		sets = append(sets, "specification")
 		values = append(values, "'"+specification+"'")
 	}
-	if manuFactoryID != "" {
-		sets = append(sets, "manu_factory_id")
-		values = append(values, manuFactoryID)
+	if manuFactoryName != "" {
+		sets = append(sets, "manu_factory_name")
+		values = append(values, manuFactoryName)
 	}
 	if licenseNo != "" {
 		sets = append(sets, "license_no")
@@ -101,17 +101,17 @@ func DrugAdd(ctx iris.Context) {
 		sets = append(sets, "once_dose")
 		values = append(values, onceDose)
 	}
-	if onceDoseUnitID != "" {
-		sets = append(sets, "once_dose_unit_id")
-		values = append(values, onceDoseUnitID)
+	if onceDoseUnitName != "" {
+		sets = append(sets, "once_dose_unit_name")
+		values = append(values, onceDoseUnitName)
 	}
-	if routeAdministrationID != "" {
-		sets = append(sets, "route_administration_id")
-		values = append(values, routeAdministrationID)
+	if routeAdministrationName != "" {
+		sets = append(sets, "route_administration_name")
+		values = append(values, routeAdministrationName)
 	}
-	if frequencyID != "" {
-		sets = append(sets, "frequency_id")
-		values = append(values, frequencyID)
+	if frequencyName != "" {
+		sets = append(sets, "frequency_name")
+		values = append(values, frequencyName)
 	}
 	if defaultRemark != "" {
 		sets = append(sets, "default_remark")
@@ -130,13 +130,13 @@ func DrugAdd(ctx iris.Context) {
 		sets = append(sets, "dose_count")
 		values = append(values, doseCount)
 	}
-	if doseCountUnitID != "" {
-		sets = append(sets, "dose_count_unit_id")
-		values = append(values, doseCountUnitID)
+	if doseCountUnitName != "" {
+		sets = append(sets, "dose_count_unit_name")
+		values = append(values, doseCountUnitName)
 	}
-	if packingUnitID != "" {
-		sets = append(sets, "packing_unit_id")
-		values = append(values, packingUnitID)
+	if packingUnitName != "" {
+		sets = append(sets, "packing_unit_name")
+		values = append(values, packingUnitName)
 	}
 
 	if status != "" {
@@ -147,9 +147,9 @@ func DrugAdd(ctx iris.Context) {
 		stockSets = append(stockSets, "mini_dose")
 		stockValues = append(stockValues, miniDose)
 	}
-	if miniUnitID != "" {
-		stockSets = append(stockSets, "mini_unit_id")
-		stockValues = append(stockValues, miniUnitID)
+	if miniUnitName != "" {
+		stockSets = append(stockSets, "mini_unit_name")
+		stockValues = append(stockValues, miniUnitName)
 	}
 	if buyPrice != "" {
 		stockSets = append(stockSets, "buy_price")
@@ -252,15 +252,11 @@ func DrugList(ctx iris.Context) {
 	countSQL := `select count(cd.id) as total from clinic_drug cd
 	left join drug d on cd.drug_id = d.id
 	where clinic_id=$1`
-	selectSQL := `select cd.id as clinic_drug_id,d.name as drug_name,d.specification,
-	d.packing_unit_id, du.name as packing_unit_name,d.type,
-			cd.ret_price,d.py_code,cd.is_discount,d.default_remark,cd.status, d.once_dose_unit_id, odu.name as once_dose_unit_name, d.route_administration_id, ra.name as route_administration_name, d.frequency_id, f.name as frequency_name, cd.clinic_id, s.name as storehouse_name
+	selectSQL := `select cd.id as clinic_drug_id,d.name as drug_name,d.specification,d.packing_unit_name,d.type,
+			cd.ret_price,d.py_code,cd.is_discount,d.default_remark,cd.status, d.once_dose_unit_name, odu.name as once_dose_unit_name, 
+			d.route_administration_name, d.frequency_name, cd.clinic_id, s.name as storehouse_name
 			from clinic_drug cd
 			left join drug d on cd.drug_id = d.id
-			left join dose_unit du on d.packing_unit_id = du.id
-			left join dose_unit odu on d.once_dose_unit_id = odu.id
-			left join route_administration ra on d.route_administration_id = ra.id
-			left join frequency f on d.frequency_id = f.id
 			left join storehouse s on cd.clinic_id = s.id
 			where clinic_id=$1`
 
@@ -306,17 +302,17 @@ func DrugUpdate(ctx iris.Context) {
 	pyCode := ctx.PostValue("py_code")
 	printName := ctx.PostValue("print_name")
 	specification := ctx.PostValue("specification")
-	manuFactoryID := ctx.PostValue("manu_factory_id")
+	manuFactoryName := ctx.PostValue("manu_factory_name")
 	status := ctx.PostValue("status")
 	licenseNo := ctx.PostValue("license_no")
 	doseFormID := ctx.PostValue("dose_form_id")
 	drugTypeID := ctx.PostValue("drug_type_id")
 
 	miniDose := ctx.PostValue("mini_dose")
-	miniUnitID := ctx.PostValue("mini_unit_id")
+	miniUnitName := ctx.PostValue("mini_unit_name")
 	doseCount := ctx.PostValue("dose_count")
-	doseCountUnitID := ctx.PostValue("dose_count_unit_id")
-	packingUnitID := ctx.PostValue("packing_unit_id")
+	doseCountUnitName := ctx.PostValue("dose_count_unit_name")
+	packingUnitName := ctx.PostValue("packing_unit_name")
 	retPrice := ctx.PostValue("ret_price")
 	buyPrice := ctx.PostValue("buy_price")
 	isDiscount := ctx.PostValue("is_discount")
@@ -325,9 +321,9 @@ func DrugUpdate(ctx iris.Context) {
 	fetchAddress := ctx.PostValue("fetch_address")
 
 	onceDose := ctx.PostValue("once_dose")
-	onceDoseUnitID := ctx.PostValue("once_dose_unit_id")
-	routeAdministrationID := ctx.PostValue("route_administration_id")
-	frequencyID := ctx.PostValue("frequency_id")
+	onceDoseUnitName := ctx.PostValue("once_dose_unit_name")
+	routeAdministrationName := ctx.PostValue("route_administration_name")
+	frequencyName := ctx.PostValue("frequency_name")
 	defaultRemark := ctx.PostValue("default_remark")
 
 	dayWarning := ctx.PostValue("day_warning")
@@ -335,7 +331,7 @@ func DrugUpdate(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if clinicDrugID == "" || barcode == "" || name == "" || retPrice == "" || packingUnitID == "" || DrugType == "" {
+	if clinicDrugID == "" || barcode == "" || name == "" || retPrice == "" || packingUnitName == "" || DrugType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -371,8 +367,8 @@ func DrugUpdate(ctx iris.Context) {
 	if specification != "" {
 		sets = append(sets, "specification="+"'"+specification+"'")
 	}
-	if manuFactoryID != "" {
-		sets = append(sets, "manu_factory_id="+manuFactoryID)
+	if manuFactoryName != "" {
+		sets = append(sets, "manu_factory_name="+manuFactoryName)
 	}
 	if licenseNo != "" {
 		sets = append(sets, "license_no="+"'"+licenseNo+"'")
@@ -386,14 +382,14 @@ func DrugUpdate(ctx iris.Context) {
 	if onceDose != "" {
 		sets = append(sets, "once_dose="+onceDose)
 	}
-	if onceDoseUnitID != "" {
-		sets = append(sets, "once_dose_unit_id="+onceDoseUnitID)
+	if onceDoseUnitName != "" {
+		sets = append(sets, "once_dose_unit_name="+onceDoseUnitName)
 	}
-	if routeAdministrationID != "" {
-		sets = append(sets, "route_administration_id="+routeAdministrationID)
+	if routeAdministrationName != "" {
+		sets = append(sets, "route_administration_name="+routeAdministrationName)
 	}
-	if frequencyID != "" {
-		sets = append(sets, "frequency_id="+frequencyID)
+	if frequencyName != "" {
+		sets = append(sets, "frequency_name="+frequencyName)
 	}
 	if defaultRemark != "" {
 		sets = append(sets, "default_remark="+"'"+defaultRemark+"'")
@@ -408,11 +404,11 @@ func DrugUpdate(ctx iris.Context) {
 	if doseCount != "" {
 		sets = append(sets, "dose_count="+doseCount)
 	}
-	if doseCountUnitID != "" {
-		sets = append(sets, "dose_count_unit_id="+doseCountUnitID)
+	if doseCountUnitName != "" {
+		sets = append(sets, "dose_count_unit_name="+doseCountUnitName)
 	}
-	if packingUnitID != "" {
-		sets = append(sets, "packing_unit_id="+packingUnitID)
+	if packingUnitName != "" {
+		sets = append(sets, "packing_unit_name="+packingUnitName)
 	}
 
 	if status != "" {
@@ -422,8 +418,8 @@ func DrugUpdate(ctx iris.Context) {
 	if miniDose != "" {
 		stockSets = append(stockSets, "miniDose="+miniDose)
 	}
-	if miniUnitID != "" {
-		stockSets = append(stockSets, "mini_unit_id="+miniUnitID)
+	if miniUnitName != "" {
+		stockSets = append(stockSets, "mini_unit_name="+miniUnitName)
 	}
 	if buyPrice != "" {
 		stockSets = append(stockSets, "buy_price="+buyPrice)
@@ -498,11 +494,9 @@ func DrugSearch(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select cd.id as clinic_drug_id,d.id as drug_id,d.manu_factory_id,mf.name as manu_factory_name,d.name as drug_name,du.name as packing_unit_name,
+	selectSQL := `select cd.id as clinic_drug_id,d.id as drug_id,d.manu_factory_name,d.name as drug_name,d.packing_unit_name,
 	cd.ret_price,cd.buy_price,cd.day_warning from drug d
 	left join clinic_drug cd on cd.drug_id = d.id
-	left join dose_unit du on d.packing_unit_id = du.id
-	left join manu_factory mf on d.manu_factory_id = mf.id
 	where cd.clinic_id=$1`
 
 	if keyword != "" {
@@ -527,23 +521,23 @@ func DrugDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	sql := `select d.name,d.specification,d.manu_factory_id,mf.name as manu_factory_name,df.name as dose_form_name,d.dose_form_id,
-		d.print_name,d.license_no,dc.name as drug_type_name,d.drug_type_id,d.py_code,d.barcode,cd.status,
-		cd.mini_dose,mdu.name as mini_unit_name,cd.mini_unit_id,cd.dose_count,cd.dose_count_unit_id,cdu.name as dose_count_name,
-		d.packing_unit_id,pdu.name as packing_unit_name,cd.ret_price,cd.buy_price,cd.is_discount,cd.is_bulk_sales,cd.bulk_sales_price,cd.fetch_address,
-		d.once_dose,d.once_dose_unit_id,odu.name as once_dose_unit_name,d.route_administration_id,ra.name as route_administration_name,
-		d.frequency_id,f.name as frequency_name,d.default_remark,cd.day_warning,cd.stock_warning,d.english_name,d.sy_code
+	sql := `select d.name,
+		d.specification,
+		d.manu_factory_name,
+		d.dose_form_name,
+		d.print_name,
+		d.license_no,
+		dt.name as drug_type_name,d.drug_type_id,
+		d.py_code,d.barcode,cd.status,
+		cd.mini_dose,
+		cd.mini_unit_name,
+		cd.dose_count,cd.dose_count_unit_name,
+		d.packing_unit_name,cd.ret_price,cd.buy_price,cd.is_discount,cd.is_bulk_sales,cd.bulk_sales_price,cd.fetch_address,
+		d.once_dose,d.once_dose_unit_name,d.route_administration_name,
+		d.frequency_name,d.default_remark,cd.day_warning,cd.stock_warning,d.english_name,d.sy_code
 		from clinic_drug cd
 		left join drug d on cd.drug_id = d.id
-		left join dose_form df on d.dose_form_id = df.id
-		left join drug_type dc on d.drug_type_id = dc.id
-		left join dose_unit mdu on cd.mini_unit_id = mdu.id
-		left join dose_unit cdu on cd.dose_count_unit_id = cdu.id
-		left join dose_unit pdu on d.packing_unit_id = pdu.id
-		left join dose_unit odu on d.once_dose_unit_id = odu.id
-		left join route_administration ra on d.route_administration_id = ra.id
-		left join frequency f on d.frequency_id = f.id
-		left join manu_factory mf on d.manu_factory_id = mf.id
+		left join drug_type dt on d.drug_type_id = dt.id
 		where cd.id=$1`
 	arows := model.DB.QueryRowx(sql, clinicDrugID)
 	if arows == nil {

@@ -58,9 +58,9 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 		"prescription_western_patient_model_id",
 		"drug_stock_id",
 		"once_dose",
-		"once_dose_unit_id",
-		"route_administration_id",
-		"frequency_id",
+		"once_dose_unit_name",
+		"route_administration_name",
+		"frequencyName",
 		"amount",
 		"fetch_address",
 		"eff_day",
@@ -86,9 +86,9 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 	for _, v := range results {
 		drugStockID := v["drug_stock_id"]
 		onceDose := v["once_dose"]
-		onceDoseUnitID := v["once_dose_unit_id"]
-		routeAdministrationID := v["route_administration_id"]
-		frequencyID := v["frequency_id"]
+		onceDoseUnitName := v["once_dose_unit_name"]
+		routeAdministrationName := v["route_administration_name"]
+		frequencyName := v["frequencyName"]
 		times := v["amount"]
 		illustration := v["illustration"]
 		fetchAddress := v["fetch_address"]
@@ -107,7 +107,7 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
 			return
 		}
-		s = append(s, prescriptionWesternPatientModelID, drugStockID, onceDose, onceDoseUnitID, routeAdministrationID, frequencyID, times, fetchAddress)
+		s = append(s, prescriptionWesternPatientModelID, drugStockID, onceDose, onceDoseUnitName, routeAdministrationName, frequencyName, times, fetchAddress)
 		if effDay == "" {
 			s = append(s, `null`)
 		} else {
@@ -182,27 +182,19 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	d.specification,
 	ds.stock_amount,
 	pwpmi.once_dose,
-	pwpmi.once_dose_unit_id,
-	odu.name as once_dose_unit_name,
-	pwpmi.route_administration_id,
-	ra.name as route_administration_name,
-	pwpmi.frequency_id, 
-	f.name as frequency_name,
+	pwpmi.once_dose_unit_name,
+	pwpmi.route_administration_name,
+	pwpmi.frequency_name, 
 	pwpmi.eff_day,
 	pwpmi.amount,
-	d.packing_unit_id, 
-	pdu.name as packing_unit_name, 
+	d.packing_unit_name, 
 	pwpmi.fetch_address,
 	pwpmi.illustration,
 	d.type
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join drug_stock ds on pwpmi.drug_stock_id = ds.id 
-    left join drug d on ds.drug_id = d.id
-    left join dose_unit odu on pwpmi.once_dose_unit_id = odu.id
-    left join dose_unit pdu on d.packing_unit_id = pdu.id
-    left join route_administration ra on pwpmi.route_administration_id = ra.id
-    left join frequency f on pwpmi.frequency_id = f.id
+		left join drug d on ds.drug_id = d.id		
     left join personnel p on pwpm.operation_id = p.id
 	where pwpm.model_name ~$1`
 
@@ -277,27 +269,19 @@ func PrescriptionWesternPersonalPatientModelList(ctx iris.Context) {
 	d.specification,
 	ds.stock_amount,
 	pwpmi.once_dose,
-	pwpmi.once_dose_unit_id,
-	odu.name as once_dose_unit_name,
-	pwpmi.route_administration_id,
-	ra.name as route_administration_name,
-	pwpmi.frequency_id, 
-	f.name as frequency_name,
+	pwpmi.once_dose_unit_name,
+	pwpmi.route_administration_name,
+	pwpmi.frequency_name, 
 	pwpmi.eff_day,
 	pwpmi.amount,
-	d.packing_unit_id, 
-	pdu.name as packing_unit_name, 
+	d.packing_unit_name, 
 	pwpmi.fetch_address,
 	pwpmi.illustration,
 	d.type
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join drug_stock ds on pwpmi.drug_stock_id = ds.id 
-    left join drug d on ds.drug_id = d.id
-    left join dose_unit odu on pwpmi.once_dose_unit_id = odu.id
-    left join dose_unit pdu on d.packing_unit_id = pdu.id
-    left join route_administration ra on pwpmi.route_administration_id = ra.id
-    left join frequency f on pwpmi.frequency_id = f.id
+		left join drug d on ds.drug_id = d.id
     left join personnel p on pwpm.operation_id = p.id
 	where pwpm.model_name ~$1 and (pwpm.operation_id=$2 or pwpm.is_common=true)`
 
@@ -338,14 +322,10 @@ func PrescriptionWesternPatientModelDetail(ctx iris.Context) {
 	}
 	prescriptionModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select pwpmi.*,d.name as drug_name,du.name as once_dose_unit_name,ra.name as route_administration_name,
-		f.name as frequency_name from prescription_western_patient_model_item pwpmi
+	selectiSQL := `select pwpmi.*,d.name as drug_name from prescription_western_patient_model_item pwpmi
 		left join prescription_western_patient_model pwpm on pwpmi.prescription_western_patient_model_id = pwpm.id
 		left join drug_stock ds on pwpmi.drug_stock_id = ds.id
 		left join drug d on ds.drug_id = d.id
-		left join dose_unit du on pwpmi.once_dose_unit_id = du.id
-		left join route_administration ra on pwpmi.route_administration_id = ra.id
-		left join frequency f on pwpmi.frequency_id = f.id
 		where pwpmi.prescription_western_patient_model_id=$1`
 
 	rows, err := model.DB.Queryx(selectiSQL, prescriptionWesternPatientModelID)
@@ -419,9 +399,9 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 		"prescription_western_patient_model_id",
 		"drug_stock_id",
 		"once_dose",
-		"once_dose_unit_id",
-		"route_administration_id",
-		"frequency_id",
+		"once_dose_unit_name",
+		"route_administration_name",
+		"frequencyName",
 		"amount",
 		"fetch_address",
 		"eff_day",
@@ -448,9 +428,9 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 	for _, v := range results {
 		drugStockID := v["drug_stock_id"]
 		onceDose := v["once_dose"]
-		onceDoseUnitID := v["once_dose_unit_id"]
-		routeAdministrationID := v["route_administration_id"]
-		frequencyID := v["frequency_id"]
+		onceDoseUnitName := v["once_dose_unit_name"]
+		routeAdministrationName := v["route_administration_name"]
+		frequencyName := v["frequencyName"]
 		times := v["amount"]
 		illustration := v["illustration"]
 		fetchAddress := v["fetch_address"]
@@ -469,7 +449,7 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
 			return
 		}
-		s = append(s, prescriptionWesternPatientModelID, drugStockID, onceDose, onceDoseUnitID, routeAdministrationID, frequencyID, times, fetchAddress)
+		s = append(s, prescriptionWesternPatientModelID, drugStockID, onceDose, onceDoseUnitName, routeAdministrationName, frequencyName, times, fetchAddress)
 		if effDay == "" {
 			s = append(s, `null`)
 		} else {
@@ -521,8 +501,8 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	modelName := ctx.PostValue("model_name")
 	isCommon := ctx.PostValue("is_common")
 
-	routeAdministrationID := ctx.PostValue("route_administration_id")
-	frequencyID := ctx.PostValue("frequency_id")
+	routeAdministrationName := ctx.PostValue("route_administration_name")
+	frequencyName := ctx.PostValue("frequencyName")
 	amount := ctx.PostValue("amount")
 	fetchAddress := ctx.PostValue("fetch_address")
 	effDay := ctx.PostValue("eff_day")
@@ -574,7 +554,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 		"prescription_chinese_patient_model_id",
 		"drug_stock_id",
 		"once_dose",
-		"once_dose_unit_id",
+		"once_dose_unit_name",
 		"amount",
 		"special_illustration",
 	}
@@ -588,9 +568,9 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	}
 	var prescriptionChinesePatientModelID string
 	err := tx.QueryRow(`insert into prescription_chinese_patient_model 
-		(model_name,is_common,operation_id,route_administration_id,frequency_id,amount,fetch_address,eff_day,medicine_illustration) 
+		(model_name,is_common,operation_id,route_administration_name,frequencyName,amount,fetch_address,eff_day,medicine_illustration) 
 		values ($1,$2,$3,$4,$5,$6,$7,$8,$9) 
-		RETURNING id`, modelName, isCommon, personnelID, routeAdministrationID, frequencyID, amount, fetchAddress, effDay, medicineIllustration).Scan(&prescriptionChinesePatientModelID)
+		RETURNING id`, modelName, isCommon, personnelID, routeAdministrationName, frequencyName, amount, fetchAddress, effDay, medicineIllustration).Scan(&prescriptionChinesePatientModelID)
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
@@ -601,7 +581,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	for _, v := range results {
 		drugStockID := v["drug_stock_id"]
 		onceDose := v["once_dose"]
-		onceDoseUnitID := v["once_dose_unit_id"]
+		onceDoseUnitName := v["once_dose_unit_name"]
 		times := v["amount"]
 		illustration := v["special_illustration"]
 		var s []string
@@ -617,7 +597,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
 			return
 		}
-		s = append(s, prescriptionChinesePatientModelID, drugStockID, onceDose, onceDoseUnitID, times)
+		s = append(s, prescriptionChinesePatientModelID, drugStockID, onceDose, onceDoseUnitName, times)
 		if illustration == "" {
 			s = append(s, `null`)
 		} else {
@@ -682,12 +662,10 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	pcpm.updated_time,
 	p.name as operation_name,
 	pcpm.model_name,
-	pcpm.route_administration_id as info_route_administration_id,
-	ra.name as info_route_administration_name,
+	pcpm.route_administration_name as info_route_administration_name,
 	pcpm.eff_day as info_eff_day,
 	pcpm.amount as info_amount,
-	pcpm.frequency_id as info_frequency_id,
-	f.name as info_frequency_name,
+	pcpm.frequencyName as info_frequencyName,
 	pcpm.fetch_address as info_fetch_address,
 	pcpm.medicine_illustration,
 	pcpmi.drug_stock_id,
@@ -695,17 +673,13 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	d.type,
 	ds.stock_amount,
 	pcpmi.once_dose,
-	pcpmi.once_dose_unit_id,
-	du.name as once_dose_unit_name,
+	pcpmi.once_dose_unit_name,
 	pcpmi.special_illustration,
 	pcpmi.amount
 	from prescription_chinese_patient_model pcpm
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join drug_stock ds on pcpmi.drug_stock_id = ds.id 
 	left join drug d on ds.drug_id = d.id
-	left join dose_unit du on pcpmi.once_dose_unit_id = du.id
-	left join route_administration ra on pcpm.route_administration_id = ra.id
-	left join frequency f on pcpm.frequency_id = f.id
 	left join personnel p on pcpm.operation_id = p.id
 	where pcpm.model_name ~$1`
 	fmt.Println("countSQL===", countSQL)
@@ -776,12 +750,10 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 	pcpm.updated_time,
 	p.name as operation_name,
 	pcpm.model_name,
-	pcpm.route_administration_id as info_route_administration_id,
-	ra.name as info_route_administration_name,
+	pcpm.route_administration_name as info_route_administration_name,
 	pcpm.eff_day as info_eff_day,
 	pcpm.amount as info_amount,
-	pcpm.frequency_id as info_frequency_id,
-	f.name as info_frequency_name,
+	pcpm.frequencyName as info_frequencyName,
 	pcpm.fetch_address as info_fetch_address,
 	pcpm.medicine_illustration,
 	pcpmi.drug_stock_id,
@@ -789,17 +761,13 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 	d.type,
 	ds.stock_amount,
 	pcpmi.once_dose,
-	pcpmi.once_dose_unit_id,
-	du.name as once_dose_unit_name,
+	pcpmi.once_dose_unit_name,
 	pcpmi.special_illustration,
 	pcpmi.amount
 	from prescription_chinese_patient_model pcpm
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join drug_stock ds on pcpmi.drug_stock_id = ds.id 
 	left join drug d on ds.drug_id = d.id
-	left join dose_unit du on pcpmi.once_dose_unit_id = du.id
-	left join route_administration ra on pcpm.route_administration_id = ra.id
-	left join frequency f on pcpm.frequency_id = f.id
 	left join personnel p on pcpm.operation_id = p.id
 	where pcpm.model_name ~$1 and (pcpm.operation_id=$2 or pcpm.is_common=true)`
 
@@ -833,11 +801,11 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 func PrescriptionChinesePatientModelDetail(ctx iris.Context) {
 	prescriptionChinesePatientModelID := ctx.PostValue("prescription_patient_model_id")
 
-	selectmSQL := `select pcpm.id as prescription_patient_model_id,pcpm.model_name,pcpm.is_common,pcpm.status,pcpm.route_administration_id,
-		pcpm.frequency_id,pcpm.amount,pcpm.eff_day,pcpm.fetch_address,pcpm.medicine_illustration,f.name as frequency_name,ra.name as route_administration_name
+	selectmSQL := `select pcpm.id as prescription_patient_model_id,pcpm.model_name,pcpm.is_common,pcpm.status,pcpm.route_administration_name,
+		pcpm.frequencyName,pcpm.amount,pcpm.eff_day,pcpm.fetch_address,pcpm.medicine_illustration,f.name as frequency_name,ra.name as route_administration_name
 		from prescription_chinese_patient_model pcpm
-		left join route_administration ra on pcpm.route_administration_id = ra.id
-		left join frequency f on pcpm.frequency_id = f.id
+		left join route_administration ra on pcpm.route_administration_name = ra.id
+		left join frequency f on pcpm.frequencyName = f.id
 		where pcpm.id=$1`
 	mrows := model.DB.QueryRowx(selectmSQL, prescriptionChinesePatientModelID)
 	if mrows == nil {
@@ -846,12 +814,11 @@ func PrescriptionChinesePatientModelDetail(ctx iris.Context) {
 	}
 	prescriptionModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select pcpmi.*,d.name as drug_name,du.name as once_dose_unit_name
+	selectiSQL := `select pcpmi.*,d.name as drug_name
 		from prescription_chinese_patient_model_item pcpmi
 		left join prescription_chinese_patient_model pwpm on pcpmi.prescription_chinese_patient_model_id = pwpm.id
 		left join drug_stock ds on pcpmi.drug_stock_id = ds.id
 		left join drug d on ds.drug_id = d.id
-		left join dose_unit du on pcpmi.once_dose_unit_id = du.id
 		where pcpmi.prescription_chinese_patient_model_id=$1`
 
 	rows, err := model.DB.Queryx(selectiSQL, prescriptionChinesePatientModelID)
@@ -870,8 +837,8 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 	modelName := ctx.PostValue("model_name")
 	isCommon := ctx.PostValue("is_common")
 
-	routeAdministrationID := ctx.PostValue("route_administration_id")
-	frequencyID := ctx.PostValue("frequency_id")
+	routeAdministrationName := ctx.PostValue("route_administration_name")
+	frequencyName := ctx.PostValue("frequencyName")
 	amount := ctx.PostValue("amount")
 	fetchAddress := ctx.PostValue("fetch_address")
 	effDay := ctx.PostValue("eff_day")
@@ -935,7 +902,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 		"prescription_chinese_patient_model_id",
 		"drug_stock_id",
 		"once_dose",
-		"once_dose_unit_id",
+		"once_dose_unit_name",
 		"amount",
 		"special_illustration",
 	}
@@ -949,9 +916,9 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 	}
 
 	updateSQL := `update prescription_chinese_patient_model set model_name=$1,is_common=$2,
-		operation_id=$3,route_administration_id=$4,frequency_id=$5,amount=$6,fetch_address=$7,
+		operation_id=$3,route_administration_name=$4,frequencyName=$5,amount=$6,fetch_address=$7,
 		eff_day=$8,medicine_illustration=$9,updated_time=LOCALTIMESTAMP where id=$10`
-	_, err := tx.Exec(updateSQL, modelName, isCommon, personnelID, routeAdministrationID, frequencyID, amount, fetchAddress, effDay, medicineIllustration, prescriptionChinesePatientModelID)
+	_, err := tx.Exec(updateSQL, modelName, isCommon, personnelID, routeAdministrationName, frequencyName, amount, fetchAddress, effDay, medicineIllustration, prescriptionChinesePatientModelID)
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
@@ -962,7 +929,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 	for _, v := range results {
 		drugStockID := v["drug_stock_id"]
 		onceDose := v["once_dose"]
-		onceDoseUnitID := v["once_dose_unit_id"]
+		onceDoseUnitName := v["once_dose_unit_name"]
 		times := v["amount"]
 		illustration := v["special_illustration"]
 		var s []string
@@ -978,7 +945,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
 			return
 		}
-		s = append(s, prescriptionChinesePatientModelID, drugStockID, onceDose, onceDoseUnitID, times)
+		s = append(s, prescriptionChinesePatientModelID, drugStockID, onceDose, onceDoseUnitName, times)
 		if illustration == "" {
 			s = append(s, `null`)
 		} else {

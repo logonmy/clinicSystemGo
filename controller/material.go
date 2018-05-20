@@ -16,9 +16,9 @@ func MaterialCreate(ctx iris.Context) {
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
-	unitID := ctx.PostValue("unit_id")
+	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
-	manuFactoryID := ctx.PostValue("manu_factory_id")
+	manuFactoryName := ctx.PostValue("manu_factory_name")
 	specification := ctx.PostValue("specification")
 
 	retPrice := ctx.PostValue("ret_price")
@@ -28,7 +28,7 @@ func MaterialCreate(ctx iris.Context) {
 	dayWarning := ctx.PostValue("day_warning")
 	stockWarning := ctx.PostValue("stock_warning")
 
-	if clinicID == "" || name == "" || retPrice == "" || unitID == "" {
+	if clinicID == "" || name == "" || retPrice == "" || unitName == "" {
 		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
 		return
 	}
@@ -45,8 +45,8 @@ func MaterialCreate(ctx iris.Context) {
 		return
 	}
 
-	if manuFactoryID != "" {
-		lrow := model.DB.QueryRowx("select id from material where name=$1 and manu_factory_id=$2 limit 1", name, manuFactoryID)
+	if manuFactoryName != "" {
+		lrow := model.DB.QueryRowx("select id from material where name=$1 and manu_factory_name=$2 limit 1", name, manuFactoryName)
 		if lrow == nil {
 			ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 			return
@@ -59,8 +59,8 @@ func MaterialCreate(ctx iris.Context) {
 		}
 	}
 
-	materialSets := []string{"name", "unit_id"}
-	materialValues := []string{"'" + name + "'", unitID}
+	materialSets := []string{"name", "unit_name"}
+	materialValues := []string{"'" + name + "'", unitName}
 
 	clinicMaterialSets := []string{"clinic_id", "ret_price"}
 	clinicMaterialValues := []string{clinicID, retPrice}
@@ -81,9 +81,9 @@ func MaterialCreate(ctx iris.Context) {
 		materialSets = append(materialSets, "remark")
 		materialValues = append(materialValues, "'"+remark+"'")
 	}
-	if manuFactoryID != "" {
-		materialSets = append(materialSets, "manu_factory_id")
-		materialValues = append(materialValues, manuFactoryID)
+	if manuFactoryName != "" {
+		materialSets = append(materialSets, "manu_factory_name")
+		materialValues = append(materialValues, manuFactoryName)
 	}
 	if specification != "" {
 		materialSets = append(materialSets, "specification")
@@ -166,9 +166,9 @@ func MaterialUpdate(ctx iris.Context) {
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
-	unitID := ctx.PostValue("unit_id")
+	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
-	manuFactoryID := ctx.PostValue("manu_factory_id")
+	manuFactoryName := ctx.PostValue("manu_factory_name")
 	specification := ctx.PostValue("specification")
 
 	retPrice := ctx.PostValue("ret_price")
@@ -235,8 +235,8 @@ func MaterialUpdate(ctx iris.Context) {
 	if pyCode != "" {
 		materialSets = append(materialSets, "py_code='"+pyCode+"'")
 	}
-	if unitID != "" {
-		materialSets = append(materialSets, "unit_id="+unitID)
+	if unitName != "" {
+		materialSets = append(materialSets, "unit_name="+unitName)
 	}
 	if idcCode != "" {
 		materialSets = append(materialSets, "idc_code='"+idcCode+"'")
@@ -244,8 +244,8 @@ func MaterialUpdate(ctx iris.Context) {
 	if remark != "" {
 		materialSets = append(materialSets, "remark='"+remark+"'")
 	}
-	if manuFactoryID != "" {
-		materialSets = append(materialSets, "manu_factory_id="+manuFactoryID)
+	if manuFactoryName != "" {
+		materialSets = append(materialSets, "manu_factory_name="+manuFactoryName)
 	}
 	if specification != "" {
 		materialSets = append(materialSets, "specification='"+specification+"'")
@@ -397,12 +397,10 @@ func MaterialList(ctx iris.Context) {
 	countSQL := `select count(ms.id) as total from clinic_material ms
 		left join material m on ms.material_id = m.id
 		where ms.clinic_id=$1`
-	selectSQL := `select ms.material_id,ms.id as clinic_material_id,m.name,m.unit_id,du.name as unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_id,m.specification,
-		m.en_name,ms.is_discount,ms.ret_price,ms.status,ms.buy_price,ms.day_warning,ms.stock_warning,ms.stock_amount,mf.name as manu_factory_name
+	selectSQL := `select ms.material_id,ms.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_name,m.specification,
+		m.en_name,ms.is_discount,ms.ret_price,ms.status,ms.buy_price,ms.day_warning,ms.stock_warning,ms.stock_amount
 		from clinic_material ms
 		left join material m on ms.material_id = m.id
-		left join dose_unit du on m.unit_id = du.id
-		left join manu_factory mf on m.manu_factory_id = mf.id
 		where ms.clinic_id=$1`
 
 	if keyword != "" {
@@ -443,12 +441,10 @@ func MaterialDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select ms.material_id,ms.id as clinic_material_id,m.name,m.unit_id,du.name as unit_name,m.py_code,m.remark,m.idc_code,
-		m.manu_factory_id,mf.name as manu_factory_name,m.specification,m.en_name,ms.is_discount,ms.ret_price,ms.status,ms.buy_price,ms.day_warning,ms.stock_warning,ms.stock_amount
+	selectSQL := `select ms.material_id,ms.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,
+		m.manu_factory_name,m.specification,m.en_name,ms.is_discount,ms.ret_price,ms.status,ms.buy_price,ms.day_warning,ms.stock_warning,ms.stock_amount
 		from clinic_material ms
 		left join material m on ms.material_id = m.id
-		left join dose_unit du on m.unit_id = du.id
-		left join manu_factory mf on m.manu_factory_id = mf.id
 		where ms.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)

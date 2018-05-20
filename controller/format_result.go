@@ -54,11 +54,9 @@ type PrescriptionModel struct {
 	PrescriptionModelID     interface{}             `json:"prescription_patient_model_id"`
 	OperationName           interface{}             `json:"operation_name"`
 	IsCommon                interface{}             `json:"is_common"`
-	RouteAdministrationID   interface{}             `json:"route_administration_id"`
 	RouteAdministrationName interface{}             `json:"route_administration_name"`
 	EffDay                  interface{}             `json:"eff_day"`
 	Amount                  interface{}             `json:"amount"`
-	FrequencyID             interface{}             `json:"frequency_id"`
 	FrequencyName           interface{}             `json:"frequency_name"`
 	FetchAddress            interface{}             `json:"fetch_address"`
 	MedicineIllustration    interface{}             `json:"medicine_illustration"`
@@ -75,15 +73,11 @@ type PrescriptionModelItem struct {
 	Specification           interface{} `json:"specification"`
 	StockAmount             interface{} `json:"stock_amount"`
 	OnceDose                interface{} `json:"once_dose"`
-	OnceDoseUnitID          interface{} `json:"once_dose_unit_id"`
 	OnceDoseUnitName        interface{} `json:"once_dose_unit_name"`
-	RouteAdministrationID   interface{} `json:"route_administration_id"`
 	RouteAdministrationName interface{} `json:"route_administration_name"`
-	FrequencyID             interface{} `json:"frequency_id"`
 	FrequencyName           interface{} `json:"frequency_name"`
 	EffDay                  interface{} `json:"eff_day"`
 	Amount                  interface{} `json:"amount"`
-	PackingUnitID           interface{} `json:"packing_unit_id"`
 	PackingUnitName         interface{} `json:"packing_unit_name"`
 	FetchAddress            interface{} `json:"fetch_address"`
 	Illustration            interface{} `json:"illustration"`
@@ -227,11 +221,9 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		isCommon := v["is_common"]
 		createdTime := v["created_time"]
 		updatedTime := v["updated_time"]
-		infoRouteAdministrationID := v["info_route_administration_id"]
 		inforRouteAdministrationName := v["info_route_administration_name"]
 		infoEffDay := v["info_eff_day"]
 		infoAmount := v["info_amount"]
-		infoFrequencyID := v["info_frequency_id"]
 		infoFrequencyName := v["info_frequency_name"]
 		infoFetchAddress := v["info_fetch_address"]
 		medicineIllustration := v["medicine_illustration"]
@@ -244,15 +236,12 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		specification := v["specification"]
 		stockAmount := v["stock_amount"]
 		onceDose := v["once_dose"]
-		onceDoseUnitID := v["once_dose_unit_id"]
 		onceDoseUnitName := v["once_dose_unit_name"]
-		routeAdministrationID := v["route_administration_id"]
 		routeAdministrationName := v["route_administration_name"]
 		frequencyID := v["frequency_id"]
 		frequencyName := v["frequency_name"]
 		effDay := v["eff_day"]
 		amount := v["amount"]
-		packingUnitID := v["packing_unit_id"]
 		packingUnitName := v["packing_unit_name"]
 		fetchAddress := v["fetch_address"]
 		illustration := v["illustration"]
@@ -265,15 +254,11 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 			Specification:           specification,
 			StockAmount:             stockAmount,
 			OnceDose:                onceDose,
-			OnceDoseUnitID:          onceDoseUnitID,
 			OnceDoseUnitName:        onceDoseUnitName,
-			RouteAdministrationID:   routeAdministrationID,
 			RouteAdministrationName: routeAdministrationName,
-			FrequencyID:             frequencyID,
 			FrequencyName:           frequencyName,
 			EffDay:                  effDay,
 			Amount:                  amount,
-			PackingUnitID:           packingUnitID,
 			PackingUnitName:         packingUnitName,
 			FetchAddress:            fetchAddress,
 			Illustration:            illustration,
@@ -296,11 +281,9 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 				OperationName:           operationName,
 				IsCommon:                isCommon,
 				CreatedTime:             createdTime,
-				RouteAdministrationID:   infoRouteAdministrationID,
 				RouteAdministrationName: inforRouteAdministrationName,
 				EffDay:                  infoEffDay,
 				Amount:                  infoAmount,
-				FrequencyID:             infoFrequencyID,
 				FrequencyName:           infoFrequencyName,
 				FetchAddress:            infoFetchAddress,
 				MedicineIllustration:    medicineIllustration,

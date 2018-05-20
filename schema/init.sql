@@ -713,24 +713,23 @@ CREATE TABLE drug
   print_name varchar(30),--打印名称
   specification varchar(30),--规格
   spe_comment varchar(40),--规格备注
-  manu_factory varchar(20),--生产厂商
-  manu_factory_id integer references manu_factory(id),--生产厂商id
+  manu_factory_name varchar(100),--生产厂商
   drug_class_id integer references drug_class(id),--药品类型id
   drug_type_id integer references drug_type(id),--药品类别id
   dose_form_id integer references dose_form(id),--药品剂型id
   license_no varchar(20),--国药准字、文号
 
   weight integer,--重量
-  weight_unit_id integer references dose_unit(id),--重量单位id
+  weight_unit_name varchar(10),--重量单位
   volum integer,--体积
-  vol_unit_id integer references dose_unit(id),--体积单位id
+  vol_unit_name varchar(10),--体积单位
   once_dose integer,--常用剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 常用剂量单位id
+  once_dose_unit_name varchar(10),--用量单位 常用剂量单位
   dose_count integer,--制剂数量
-  dose_count_unit_id integer references dose_unit(id),--制剂数量单位id
-  packing_unit_id integer references dose_unit(id),--药品包装id
-  route_administration_id integer references route_administration(id),--用药途径id/默认用法
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  dose_count_unit_name varchar(10),--制剂数量单位
+  packing_unit_name varchar(10),--药品包装单位
+  route_administration_name varchar(50),--用药途径id/默认用法
+  frequency_name varchar(20),--用药频率/默认频次
   default_remark varchar(20),--默认用量用法说明
 
   serial varchar(20),--包装序号
@@ -825,7 +824,7 @@ CREATE TABLE clinic_drug
   ret_price integer,--零售价
   buy_price integer,--成本价
   mini_dose integer,--最小剂量
-  mini_unit_id integer references dose_unit(id),--最小剂量单位id
+  mini_unit_name varchar(20),--最小剂量单位id
   is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
   bulk_sales_price integer,--拆零售价/最小剂量售价
   is_discount boolean DEFAULT false,--是否允许折扣
@@ -997,7 +996,6 @@ CREATE TABLE examination
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称
   organ varchar(20),--检查部位
   remark text,--备注
@@ -1049,7 +1047,7 @@ CREATE TABLE cuvette_color
 CREATE TABLE laboratory
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(20) UNIQUE NOT NULL,--检验医嘱名称
+  name varchar(100) UNIQUE NOT NULL,--检验医嘱名称
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
@@ -1090,7 +1088,6 @@ CREATE TABLE laboratory_item
   name varchar(100) UNIQUE NOT NULL,--检验名称
   en_name varchar(100),--英文名称
   instrument_code varchar(20),--仪器编码
-  -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称
   clinical_significance text,--临床意义
   data_type integer,--数据类型 1 定性 2 定量
@@ -1152,7 +1149,6 @@ CREATE TABLE treatment
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1185,7 +1181,7 @@ CREATE TABLE material
   idc_code varchar(20),--国际编码
   manu_factory_id integer references manu_factory(id),--生产厂商id
   specification varchar(30),--规格
-  unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1299,7 +1295,6 @@ CREATE TABLE other_cost
   name varchar(20) NOT NULL,--名称
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
-  -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1366,9 +1361,9 @@ CREATE TABLE prescription_western_patient
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
-  route_administration_id integer references route_administration(id),--用法id
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  once_dose_unit_name varchar(10),--用量单位 单次剂量单位
+  route_administration_name varchar(50),--用法
+  frequency_name varchar(20),--用药频率/默认频次
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   illustration text,--用药说明
   fetch_address integer,--取药地点 0 本诊所 1 外购
@@ -1386,8 +1381,8 @@ CREATE TABLE prescription_chinese_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   order_sn varchar(50) UNIQUE NOT NULL,--单号
-  route_administration_id integer references route_administration(id),--用法id
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  route_administration_name varchar(50),--用法
+  frequency_name varchar(20),--用药频率/默认频次
   amount INTEGER NOT NULL CHECK(amount > 0),--总剂量
   medicine_illustration text,--服药说明
   fetch_address integer,--取药地点 0 本诊所 1 外购
@@ -1407,7 +1402,7 @@ CREATE TABLE prescription_chinese_item
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
+  once_dose_unit_name varchar(20),--用量单位 单次剂量单位id
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   special_illustration text,--特殊要求
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1489,9 +1484,9 @@ CREATE TABLE prescription_western_patient_model_item
   drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   once_dose integer,--单次剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
-  route_administration_id integer references route_administration(id),--用法id
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  once_dose_unit_name varchar(20),--用量单位 单次剂量单位
+  route_administration_name varchar(50),--用法
+  frequency_name varchar(20),--用药频率id/默认频次
   fetch_address integer,--取药地点 0 本诊所 1 外购
   eff_day integer,--有效天数
   illustration text,--用药说明
@@ -1506,8 +1501,8 @@ CREATE TABLE prescription_chinese_patient_model
   id serial PRIMARY KEY NOT NULL,--id
   model_name varchar(20) NOT NULL,--模板名称
   is_common boolean NOT NULL DEFAULT false,--是否通用
-  route_administration_id integer references route_administration(id),--用法id
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  route_administration_name varchar(50),--用法
+  frequency_name varchar(20),--用药频率id/默认频次
   amount INTEGER NOT NULL CHECK(amount > 0),--总剂量
   eff_day integer,--天数
   fetch_address integer,--取药地点 0 本诊所 1 外购
@@ -1526,7 +1521,7 @@ CREATE TABLE prescription_chinese_patient_model_item
   prescription_chinese_patient_model_id INTEGER NOT NULL references prescription_chinese_patient_model(id),--中药处方模板id
   drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
   once_dose integer,--单次剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
+  once_dose_unit_name varchar(20),--用量单位 单次剂量单位
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   special_illustration text,--说明/特殊要求
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

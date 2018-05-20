@@ -251,13 +251,11 @@ func DrugInstockRecordDetail(ctx iris.Context) {
 	arow := model.DB.QueryRowx(sql, drugInstockRecordID)
 	result := FormatSQLRowToMap(arow)
 
-	isql := `select d.name as drug_name,du.name as packing_unit_name,mf.name as manu_factory_name,iri.instock_amount,
+	isql := `select d.name as drug_name,d.packing_unit_name,d.manu_factory_name,iri.instock_amount,
 		iri.buy_price,iri.serial,iri.eff_date,cd.ret_price
 		from drug_instock_record_item iri
 		left join clinic_drug cd on iri.clinic_drug_id = cd.id
 		left join drug d on cd.drug_id = d.id
-		left join dose_unit du on d.packing_unit_id = du.id
-		left join manu_factory mf on d.manu_factory_id = mf.id
 		where iri.drug_instock_record_id=$1`
 
 	irows, err := model.DB.Queryx(isql, drugInstockRecordID)
@@ -831,14 +829,12 @@ func DrugOutstockRecordDetail(ctx iris.Context) {
 	row := model.DB.QueryRowx(sql, drugOutstockRecordID)
 	result := FormatSQLRowToMap(row)
 
-	isql := `select d.name as drug_name,ori.clinic_drug_id,du.name as packing_unit_name,mf.name as manu_factory_name,ori.outstock_amount,
+	isql := `select d.name as drug_name,ori.clinic_drug_id,d.packing_unit_name,d.manu_factory_name,ori.outstock_amount,
 		cd.ret_price,ds.buy_price,ds.serial,ds.eff_date
 		from drug_outstock_record_item ori
 		left join drug_stock ds on ori.drug_stock_id = ds.id
 		left join clinic_drug cd on ds.clinic_drug_id = cd.id
 		left join drug d on cd.drug_id = d.id
-		left join dose_unit du on d.packing_unit_id = du.id
-		left join manu_factory mf on d.manu_factory_id = mf.id
 		where ori.drug_outstock_record_id=$1`
 
 	irows, err := model.DB.Queryx(isql, drugOutstockRecordID)
