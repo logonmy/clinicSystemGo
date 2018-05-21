@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -9,17 +8,17 @@ import (
 
 //Menu 子菜单
 type Menu struct {
-	FunctionmenuID string `json:"functionmenu_id"`
-	MenuName       string `json:"menu_name"`
-	MenuURL        string `json:"menu_url"`
+	FunctionmenuID interface{} `json:"functionmenu_id"`
+	MenuName       interface{} `json:"menu_name"`
+	MenuURL        interface{} `json:"menu_url"`
 }
 
 //Funtionmenus 菜单
 type Funtionmenus struct {
-	ParentID       string `json:"parent_id"`
-	ParentName     string `json:"parent_name"`
-	ParentURL      string `json:"parent_url"`
-	ChildrensMenus []Menu `json:"childrens_menus"`
+	ParentID       interface{} `json:"parent_id"`
+	ParentName     interface{} `json:"parent_name"`
+	ParentURL      interface{} `json:"parent_url"`
+	ChildrensMenus []Menu      `json:"childrens_menus"`
 }
 
 //References 检验项参考值
@@ -34,12 +33,12 @@ type References struct {
 
 //LaboratoryItem 检验项
 type LaboratoryItem struct {
-	ClinicLaboratoryItemID int64        `json:"clinic_laboratory_item_id"`
-	LaboratoryItemID       int64        `json:"laboratory_item_id"`
-	Name                   string       `json:"name"`
+	ClinicLaboratoryItemID interface{}  `json:"clinic_laboratory_item_id"`
+	LaboratoryItemID       interface{}  `json:"laboratory_item_id"`
+	Name                   interface{}  `json:"name"`
 	EnName                 interface{}  `json:"en_name"`
 	UnitName               interface{}  `json:"unit_name"`
-	Status                 bool         `json:"status"`
+	Status                 interface{}  `json:"status"`
 	IsSpecial              interface{}  `json:"is_special"`
 	DataType               interface{}  `json:"data_type"`
 	InstrumentCode         interface{}  `json:"instrument_code"`
@@ -135,7 +134,7 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 		for k, vRes := range laboratoryItems {
 			vlaboratoryItemID := vRes.LaboratoryItemID
 			vreferences := vRes.References
-			if vlaboratoryItemID == laboratoryItemID.(int64) {
+			if vlaboratoryItemID == laboratoryItemID {
 				laboratoryItems[k].References = append(vreferences, reference)
 				has = true
 			}
@@ -145,12 +144,12 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 			references = append(references, reference)
 
 			laboratoryItem := LaboratoryItem{
-				ClinicLaboratoryItemID: clinicLaboratoryItemID.(int64),
-				LaboratoryItemID:       laboratoryItemID.(int64),
-				Name:                   name.(string),
+				ClinicLaboratoryItemID: clinicLaboratoryItemID,
+				LaboratoryItemID:       laboratoryItemID,
+				Name:                   name,
 				EnName:                 enName,
 				UnitName:               unitName,
-				Status:                 status.(bool),
+				Status:                 status,
 				InstrumentCode:         instrumentCode,
 				IsDelivery:             isDelivery,
 				DataType:               dataType,
@@ -176,14 +175,14 @@ func FormatFuntionmenus(functionMenus []map[string]interface{}) []Funtionmenus {
 		parentName := v["parent_name"]
 		has := false
 		children := Menu{
-			FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
-			MenuName:       childenName.(string),
-			MenuURL:        childenURL.(string),
+			FunctionmenuID: functionmenuID,
+			MenuName:       childenName,
+			MenuURL:        childenURL,
 		}
 		for k, menu := range menus {
 			parentMenuID := menu.ParentID
 			childrenMenus := menu.ChildrensMenus
-			if strconv.FormatInt(parentID.(int64), 10) == parentMenuID {
+			if parentID == parentMenuID {
 				menus[k].ChildrensMenus = append(childrenMenus, children)
 				has = true
 			}
@@ -191,11 +190,10 @@ func FormatFuntionmenus(functionMenus []map[string]interface{}) []Funtionmenus {
 		if !has {
 			var childrens []Menu
 			childrens = append(childrens, children)
-
 			functionMenu := Funtionmenus{
-				ParentID:       strconv.FormatInt(parentID.(int64), 10),
-				ParentName:     parentName.(string),
-				ParentURL:      parentURL.(string),
+				ParentID:       parentID,
+				ParentName:     parentName,
+				ParentURL:      parentURL,
 				ChildrensMenus: childrens,
 			}
 			menus = append(menus, functionMenu)

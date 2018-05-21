@@ -336,6 +336,7 @@ func main() {
 		dataImport.Post("/ImportrRouteAdministration", controller.ImportrRouteAdministration)
 		dataImport.Post("/ImportrLaboratorySample", controller.ImportrLaboratorySample)
 		dataImport.Post("/ImportExamination", controller.ImportExamination)
+		dataImport.Post("/ImportDrug", controller.ImportDrug)
 	}
 
 	// http://localhost:8080
