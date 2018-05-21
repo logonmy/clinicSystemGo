@@ -111,7 +111,7 @@ func MaterialInstock(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "入库药品不存在"})
 			return
 		}
-		s = append(s, v["clinic_material_id"], v["instock_amount"], v["buy_price"], "'"+v["serial"]+"'", v["eff_date"], materialInstockRecordID)
+		s = append(s, v["clinic_material_id"], v["instock_amount"], v["buy_price"], "'"+v["serial"]+"'", "date '"+v["eff_date"]+"'", materialInstockRecordID)
 
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
@@ -346,7 +346,7 @@ func MaterialInstockUpdate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "修改的药品不存在"})
 			return
 		}
-		s = append(s, v["clinic_material_id"], v["instock_amount"], v["buy_price"], "'"+v["serial"]+"'", v["eff_date"], materialInstockRecordID)
+		s = append(s, v["clinic_material_id"], v["instock_amount"], v["buy_price"], "'"+v["serial"]+"'", "date '"+v["eff_date"]+"'", materialInstockRecordID)
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
 		values = append(values, str)
