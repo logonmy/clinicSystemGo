@@ -1418,7 +1418,7 @@ CREATE TABLE examination_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, clinic_laboratory_id, order_sn, soft_sn)
+  UNIQUE (clinic_triage_patient_id, clinic_examination_id, order_sn, soft_sn)
 );
 
 --开材料费
