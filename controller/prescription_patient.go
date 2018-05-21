@@ -82,7 +82,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 	var prescriptionWesternPatientValues []string
 	prescriptionWesternPatientSets := []string{
 		"clinic_triage_patient_id",
-		"drug_stock_id",
+		"clinic_drug_id",
 		"order_sn",
 		"soft_sn",
 		"once_dose",
@@ -98,7 +98,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 	orderSn := FormatPayOrderSn(clinicTriagePatientID, "1")
 
 	for index, v := range results {
-		drugStockID := v["drug_stock_id"]
+		clinicDrugID := v["clinic_drug_id"]
 		onceDose := v["once_dose"]
 		onceDoseUnitName := v["once_dose_unit_name"]
 		routeAdministrationName := v["route_administration_name"]
@@ -107,33 +107,33 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		illustration := v["illustration"]
 		fetchAddress := v["fetch_address"]
 		effDay := v["eff_day"]
-		fmt.Println("drugStockID====", drugStockID)
+		fmt.Println("clinicDrugID====", clinicDrugID)
 		var sl []string
 		var sm []string
-		laboratorySQL := `select ds.id,d.name,ds.ret_price,d.packing_unit_name from drug_stock ds
-			left join drug d on d.id = ds.drug_id
-			where ds.id=$1`
-		trow := model.DB.QueryRowx(laboratorySQL, drugStockID)
+		laboratorySQL := `select cd.id,d.name,cd.ret_price,d.packing_unit_name from clinic_drug cd
+			left join drug d on d.id = cd.drug_id
+			where cd.id=$1`
+		trow := model.DB.QueryRowx(laboratorySQL, clinicDrugID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "西/成药处方项错误"})
 			return
 		}
-		drugStock := FormatSQLRowToMap(trow)
-		fmt.Println("====", drugStock)
-		_, ok := drugStock["id"]
+		clinicDrug := FormatSQLRowToMap(trow)
+		fmt.Println("====", clinicDrug)
+		_, ok := clinicDrug["id"]
 		if !ok {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的西/成药处方药错误"})
 			return
 		}
 
-		price := drugStock["ret_price"].(int64)
-		name := drugStock["name"].(string)
-		unitName := drugStock["packing_unit_name"].(string)
+		price := clinicDrug["ret_price"].(int64)
+		name := clinicDrug["name"].(string)
+		unitName := clinicDrug["packing_unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
 
-		sl = append(sl, clinicTriagePatientID, drugStockID, "'"+orderSn+"'", strconv.Itoa(index), onceDose, onceDoseUnitName, routeAdministrationName, frequencyName, times, fetchAddress, personnelID)
-		sm = append(sm, clinicTriagePatientID, "1", drugStockID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(amount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
+		sl = append(sl, clinicTriagePatientID, clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), onceDose, onceDoseUnitName, routeAdministrationName, frequencyName, times, fetchAddress, personnelID)
+		sm = append(sm, clinicTriagePatientID, "1", clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(amount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
 
 		if effDay == "" {
 			sl = append(sl, `null`)
@@ -377,7 +377,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	}
 	var prescriptionChineseItemValues []string
 	prescriptionChineseItemSets := []string{
-		"drug_stock_id",
+		"clinic_drug_id",
 		"order_sn",
 		"soft_sn",
 		"once_dose",
@@ -388,38 +388,38 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	}
 
 	for index, v := range results {
-		drugStockID := v["drug_stock_id"]
+		clinicDrugID := v["clinic_drug_id"]
 		onceDose := v["once_dose"]
 		onceDoseUnitName := v["once_dose_unit_name"]
 		times := v["amount"]
 		illustration := v["special_illustration"]
-		fmt.Println("drugStockID====", drugStockID)
+		fmt.Println("clinicDrugID====", clinicDrugID)
 		var sl []string
 		var sm []string
-		laboratorySQL := `select ds.id,d.name,ds.ret_price,d.packing_unit_name from drug_stock ds
-			left join drug d on d.id = ds.drug_id
-			where ds.id=$1`
-		trow := model.DB.QueryRowx(laboratorySQL, drugStockID)
+		laboratorySQL := `select cd.id,d.name,cd.ret_price,d.packing_unit_name from clinic_drug cd
+			left join drug d on d.id = cd.drug_id
+			where cd.id=$1`
+		trow := model.DB.QueryRowx(laboratorySQL, clinicDrugID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "中药处方项错误"})
 			return
 		}
-		drugStock := FormatSQLRowToMap(trow)
-		fmt.Println("====", drugStock)
-		_, ok := drugStock["id"]
+		clinicDrug := FormatSQLRowToMap(trow)
+		fmt.Println("====", clinicDrug)
+		_, ok := clinicDrug["id"]
 		if !ok {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的中药处方药错误"})
 			return
 		}
 
-		price := drugStock["ret_price"].(int64)
-		name := drugStock["name"].(string)
-		unitName := drugStock["packing_unit_name"].(string)
+		price := clinicDrug["ret_price"].(int64)
+		name := clinicDrug["name"].(string)
+		unitName := clinicDrug["packing_unit_name"].(string)
 		drugAmount, _ := strconv.Atoi(times)
 		total := int(price) * drugAmount
 
-		sl = append(sl, drugStockID, "'"+orderSn+"'", strconv.Itoa(index), onceDose, onceDoseUnitName, times, prescriptionChinesePatientID)
-		sm = append(sm, clinicTriagePatientID, "2", drugStockID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(drugAmount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
+		sl = append(sl, clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), onceDose, onceDoseUnitName, times, prescriptionChinesePatientID)
+		sm = append(sm, clinicTriagePatientID, "2", clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(drugAmount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
 
 		if illustration == "" {
 			sl = append(sl, `null`)
@@ -478,11 +478,11 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 
 	fmt.Println("clinicTriagePatientID =======", clinicTriagePatientID)
 
-	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,ds.stock_amount,pwp.once_dose_unit_name,
+	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,cd.stock_amount,pwp.once_dose_unit_name,
 		pwp.route_administration_name,pwp.frequency_name,	d.packing_unit_name, d.type
 		from prescription_western_patient pwp 
-				left join drug_stock ds on pwp.drug_stock_id = ds.id 
-				left join drug d on ds.drug_id = d.id
+				left join clinic_drug cd on pwp.clinic_drug_id = cd.id 
+				left join drug d on cd.drug_id = d.id
 				where pwp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {
@@ -510,9 +510,9 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 	for i, prescriptionChinesePatient := range prescriptionChinesePatients {
 		prescriptionChinesePatientID := prescriptionChinesePatient["id"]
 
-		rows, err := model.DB.Queryx(`select pci.*, d.name as drug_name,d.specification,ds.stock_amount, d.type from prescription_chinese_item pci 
-			left join drug_stock ds on pci.drug_stock_id = ds.id 
-			left join drug d on ds.drug_id = d.id
+		rows, err := model.DB.Queryx(`select pci.*, d.name as drug_name,d.specification,cd.stock_amount, d.type from prescription_chinese_item pci 
+			left join clinic_drug cd on pci.clinic_drug_id = cd.id 
+			left join drug d on cd.drug_id = d.id
 			where pci.prescription_chinese_patient_id = $1`, prescriptionChinesePatientID)
 
 		if err != nil {

@@ -1169,14 +1169,14 @@ CREATE TABLE material
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  manu_factory_id integer references manu_factory(id),--生产厂商id
+  manu_factory_name varchar(100),--生产厂商
   specification varchar(30),--规格
   unit_name varchar(20),--单位
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE(name,manu_factory_id,specification)
+  UNIQUE(name,manu_factory_name,specification)
 );
 
 --诊所材料
@@ -1237,7 +1237,7 @@ CREATE TABLE material_instock_record_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   material_instock_record_id integer NOT NULL references material_instock_record(id),--材料入库记录id
-  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所材料id
+  clinic_material_id INTEGER NOT NULL references clinic_material(id),--诊所材料id
   instock_amount INTEGER NOT NULL CHECK(instock_amount > 0),--入库数量
   serial varchar(20) NOT NULL,--批号
   buy_price integer,--成本价
@@ -1347,7 +1347,7 @@ CREATE TABLE prescription_western_patient
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
@@ -1388,7 +1388,7 @@ CREATE TABLE prescription_chinese_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   prescription_chinese_patient_id INTEGER NOT NULL references prescription_chinese_patient(id),--中药处方id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
@@ -1424,7 +1424,7 @@ CREATE TABLE material_patient
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  material_stock_id INTEGER NOT NULL references material_stock(id),--检查项目id
+  clinic_material_id INTEGER NOT NULL references clinic_material(id),--诊所药品id
   order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
@@ -1433,7 +1433,7 @@ CREATE TABLE material_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, material_stock_id, order_sn, soft_sn)
+  UNIQUE (clinic_triage_patient_id, clinic_material_id, order_sn, soft_sn)
 );
 
 --开其它费用
@@ -1471,7 +1471,7 @@ CREATE TABLE prescription_western_patient_model_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   prescription_western_patient_model_id INTEGER NOT NULL references prescription_western_patient_model(id),--西药处方模板id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   once_dose integer,--单次剂量
   once_dose_unit_name varchar(20),--用量单位 单次剂量单位
@@ -1509,7 +1509,7 @@ CREATE TABLE prescription_chinese_patient_model_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   prescription_chinese_patient_model_id INTEGER NOT NULL references prescription_chinese_patient_model(id),--中药处方模板id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   once_dose integer,--单次剂量
   once_dose_unit_name varchar(20),--用量单位 单次剂量单位
   amount INTEGER NOT NULL CHECK(amount > 0),--总量

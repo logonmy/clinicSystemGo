@@ -394,22 +394,25 @@ func MaterialList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(ms.id) as total from clinic_material ms
-		left join material m on ms.material_id = m.id
-		where ms.clinic_id=$1`
-	selectSQL := `select ms.material_id,ms.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_name,m.specification,
-		m.en_name,ms.is_discount,ms.ret_price,ms.status,ms.buy_price,ms.day_warning,ms.stock_warning,ms.stock_amount
-		from clinic_material ms
-		left join material m on ms.material_id = m.id
-		where ms.clinic_id=$1`
+	countSQL := `select count(cm.id) as total from clinic_material cm
+		left join material m on cm.material_id = m.id
+		where cm.clinic_id=$1`
+	selectSQL := `select cm.material_id,cm.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_name,m.specification,
+		m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning,sum(ms.stock_amount) as stock_amount
+		from clinic_material cm
+		left join material m on cm.material_id = m.id
+		left join material_stock ms on ms.clinic_material_id = cm.id
+		where cm.clinic_id=$1
+		group by cm.material_id,cm.id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_name,m.specification,
+		m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning`
 
 	if keyword != "" {
 		countSQL += " and m.name ~'" + keyword + "'"
 		selectSQL += " and m.name ~'" + keyword + "'"
 	}
 	if status != "" {
-		countSQL += " and ms.status=" + status
-		selectSQL += " and ms.status=" + status
+		countSQL += " and cm.status=" + status
+		selectSQL += " and cm.status=" + status
 	}
 
 	fmt.Println("countSQL===", countSQL)
@@ -441,11 +444,11 @@ func MaterialDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select ms.material_id,ms.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,
-		m.manu_factory_name,m.specification,m.en_name,ms.is_discount,ms.ret_price,ms.status,ms.buy_price,ms.day_warning,ms.stock_warning,ms.stock_amount
-		from clinic_material ms
-		left join material m on ms.material_id = m.id
-		where ms.id=$1`
+	selectSQL := `select cm.material_id,cm.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,
+		m.manu_factory_name,m.specification,m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning,cm.stock_amount
+		from clinic_material cm
+		left join material m on cm.material_id = m.id
+		where cm.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 
