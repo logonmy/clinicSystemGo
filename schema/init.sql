@@ -984,12 +984,12 @@ CREATE TABLE examination_organ
 CREATE TABLE examination
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(20) NOT NULL,--检查名称
-  en_name varchar(20),--英文名称
-  py_code varchar(20),--拼音码
-  idc_code varchar(20),--国际编码
+  name varchar(100) NOT NULL,--检查名称
+  en_name varchar(100),--英文名称
+  py_code varchar(100),--拼音码
+  idc_code varchar(100),--国际编码
   unit_name varchar(20),--单位名称
-  organ varchar(20),--检查部位
+  organ varchar(100),--检查部位
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1418,7 +1418,7 @@ CREATE TABLE examination_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, clinic_laboratory_id, order_sn, soft_sn)
+  UNIQUE (clinic_triage_patient_id, clinic_examination_id, order_sn, soft_sn)
 );
 
 --开材料费

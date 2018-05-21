@@ -30,7 +30,7 @@ func ImportLaboratory(ctx iris.Context) {
 	}
 	for index, row := range xlFile.Sheets[0].Rows {
 		laboratorySets := []string{"name", "py_code", "laboratory_sample", "laboratory_sample_dosage"}
-		if index == 0 {
+		if index < 3 {
 			continue
 		}
 		if count > 5 {
@@ -705,6 +705,75 @@ func ImportrLaboratorySample(ctx iris.Context) {
 		insertSQL := "insert into laboratory_sample (" + setStr + ") values ($1, $2, $3)"
 		fmt.Println("insertSQL ===", code, name, pyCode)
 		_, err = tx.Exec(insertSQL, code, name, pyCode)
+		if err != nil {
+			fmt.Println("err ===", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+	err3 := tx.Commit()
+	if err3 != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+//ImportExamination 导入用药途径
+func ImportExamination(ctx iris.Context) {
+	excelFileName := "examination.xlsx"
+	xlFile, err := xlsx.OpenFile(excelFileName)
+	if err != nil {
+		fmt.Printf("open failed: %s\n", err)
+		return
+	}
+	tx, err := model.DB.Begin()
+	if err != nil {
+		fmt.Println("导入失败===", err)
+		tx.Rollback()
+		return
+	}
+	count := 0
+	keymap := map[string]string{
+		"a": "a",
+	}
+	for index, row := range xlFile.Sheets[0].Rows {
+		sets := []string{"name", "py_code"}
+		if index < 3 {
+			continue
+		}
+		if count > 5 {
+			break
+		}
+		name := row.Cells[0].String()
+		pyCode := row.Cells[1].String()
+		fmt.Println("code, name", name, pyCode)
+		if name == "" {
+			count++
+			continue
+		}
+		_, keyok := keymap[name]
+		if keyok {
+			continue
+		}
+
+		keymap[name] = name
+		row := model.DB.QueryRowx("select id from examination where name=$1 limit 1", name)
+		if row == nil {
+			continue
+		}
+		obj := FormatSQLRowToMap(row)
+		_, lok := obj["id"]
+		if lok {
+			continue
+		}
+		setStr := strings.Join(sets, ",")
+
+		insertSQL := "insert into examination (" + setStr + ") values ($1, $2)"
+		fmt.Println("insertSQL ===", name, pyCode)
+		_, err = tx.Exec(insertSQL, name, pyCode)
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
