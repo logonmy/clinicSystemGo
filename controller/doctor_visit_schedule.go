@@ -608,5 +608,42 @@ func StopScheduleByID(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "-1", "msg": "停诊成功"})
+	ctx.JSON(iris.Map{"code": "200", "msg": "停诊成功"})
+}
+
+// RemoveScheduleByID 删除号源byid
+func RemoveScheduleByID(ctx iris.Context) {
+	doctorVisitScheduleID := ctx.PostValue("doctor_visit_schedule_id")
+
+	if doctorVisitScheduleID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+
+	querySQL := `select * from doctor_visit_schedule where id = $1`
+
+	row := model.DB.QueryRowx(querySQL, doctorVisitScheduleID)
+
+	scheuleMap := FormatSQLRowToMap(row)
+
+	_, ok := scheuleMap["open_flag"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "号源不存在"})
+		return
+	}
+
+	if scheuleMap["open_flag"].(bool) {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "已开放号源不能删除"})
+		return
+	}
+
+	updateSQL := `delete from doctor_visit_schedule where id = $1 and open_flag = false`
+
+	_, err := model.DB.Exec(updateSQL, doctorVisitScheduleID)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "删除成功"})
 }
