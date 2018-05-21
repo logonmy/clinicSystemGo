@@ -80,6 +80,7 @@ func main() {
 		doctorVisitSchedule.Post("/CreateOneSchedule", controller.CreateOneSchedule)
 		doctorVisitSchedule.Post("/DeleteOneUnOpenScheduleByID", controller.DeleteOneUnOpenScheduleByID)
 		doctorVisitSchedule.Post("/StopScheduleByID", controller.StopScheduleByID)
+		doctorVisitSchedule.Post("/RemoveScheduleByID", controller.RemoveScheduleByID)
 	}
 
 	patient := app.Party("/patient", crs).AllowMethods(iris.MethodOptions)
