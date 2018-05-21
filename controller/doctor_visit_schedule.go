@@ -224,9 +224,13 @@ func DoctorsWithSchedule(ctx iris.Context) {
 			 where ldp.personnel_id = dp.personnel_id and ldp.department_id = dp.department_id )
 			 order by dp.id, dvs.visit_date, dvs.am_pm asc; `
 
+	fmt.Println("scheduleSQL ======", scheduleSQL)
+
 	rows, err = model.DB.Queryx(scheduleSQL, startDate, endDate, clinicID, offset, limit)
 
 	schedules := FormatSQLRowsToMapArray(rows)
+
+	fmt.Println("schedules ===", schedules)
 
 	type Schedule struct {
 		DoctorVisitScheduleID int    `json:"doctor_visit_schedule_id"`
@@ -286,7 +290,7 @@ func DoctorsWithSchedule(ctx iris.Context) {
 			}
 		}
 
-		if has {
+		if !has {
 			DateSchedules = append(DateSchedules, dateSchedule)
 		}
 
