@@ -22,7 +22,7 @@ func DrugAdd(ctx iris.Context) {
 	manuFactoryName := ctx.PostValue("manu_factory_name")
 	status := ctx.PostValue("status")
 	licenseNo := ctx.PostValue("license_no")
-	doseFormID := ctx.PostValue("dose_form_id")
+	doseFormName := ctx.PostValue("dose_form_name")
 	drugTypeID := ctx.PostValue("drug_type_id")
 
 	miniDose := ctx.PostValue("mini_dose")
@@ -83,15 +83,15 @@ func DrugAdd(ctx iris.Context) {
 	}
 	if manuFactoryName != "" {
 		sets = append(sets, "manu_factory_name")
-		values = append(values, manuFactoryName)
+		values = append(values, "'"+manuFactoryName+"'")
 	}
 	if licenseNo != "" {
 		sets = append(sets, "license_no")
 		values = append(values, "'"+licenseNo+"'")
 	}
-	if doseFormID != "" {
-		sets = append(sets, "dose_form_id")
-		values = append(values, doseFormID)
+	if doseFormName != "" {
+		sets = append(sets, "dose_form_name")
+		values = append(values, "'"+doseFormName+"'")
 	}
 	if drugTypeID != "" {
 		sets = append(sets, "drug_type_id")
@@ -103,15 +103,15 @@ func DrugAdd(ctx iris.Context) {
 	}
 	if onceDoseUnitName != "" {
 		sets = append(sets, "once_dose_unit_name")
-		values = append(values, onceDoseUnitName)
+		values = append(values, "'"+onceDoseUnitName+"'")
 	}
 	if routeAdministrationName != "" {
 		sets = append(sets, "route_administration_name")
-		values = append(values, routeAdministrationName)
+		values = append(values, "'"+routeAdministrationName+"'")
 	}
 	if frequencyName != "" {
 		sets = append(sets, "frequency_name")
-		values = append(values, frequencyName)
+		values = append(values, "'"+frequencyName+"'")
 	}
 	if defaultRemark != "" {
 		sets = append(sets, "default_remark")
@@ -132,11 +132,11 @@ func DrugAdd(ctx iris.Context) {
 	}
 	if doseCountUnitName != "" {
 		sets = append(sets, "dose_count_unit_name")
-		values = append(values, doseCountUnitName)
+		values = append(values, "'"+doseCountUnitName+"'")
 	}
 	if packingUnitName != "" {
 		sets = append(sets, "packing_unit_name")
-		values = append(values, packingUnitName)
+		values = append(values, "'"+packingUnitName+"'")
 	}
 
 	if status != "" {
@@ -149,7 +149,7 @@ func DrugAdd(ctx iris.Context) {
 	}
 	if miniUnitName != "" {
 		stockSets = append(stockSets, "mini_unit_name")
-		stockValues = append(stockValues, miniUnitName)
+		stockValues = append(stockValues, "'"+miniUnitName+"'")
 	}
 	if buyPrice != "" {
 		stockSets = append(stockSets, "buy_price")
@@ -253,7 +253,7 @@ func DrugList(ctx iris.Context) {
 	left join drug d on cd.drug_id = d.id
 	where clinic_id=$1`
 	selectSQL := `select cd.id as clinic_drug_id,d.name as drug_name,d.specification,d.packing_unit_name,d.type,
-			cd.ret_price,d.py_code,cd.is_discount,d.default_remark,cd.status, d.once_dose_unit_name, odu.name as once_dose_unit_name, 
+			cd.ret_price,d.py_code,cd.is_discount,d.default_remark,cd.status, d.once_dose_unit_name, 
 			d.route_administration_name, d.frequency_name, cd.clinic_id, s.name as storehouse_name
 			from clinic_drug cd
 			left join drug d on cd.drug_id = d.id
@@ -305,7 +305,7 @@ func DrugUpdate(ctx iris.Context) {
 	manuFactoryName := ctx.PostValue("manu_factory_name")
 	status := ctx.PostValue("status")
 	licenseNo := ctx.PostValue("license_no")
-	doseFormID := ctx.PostValue("dose_form_id")
+	doseFormName := ctx.PostValue("dose_form_name")
 	drugTypeID := ctx.PostValue("drug_type_id")
 
 	miniDose := ctx.PostValue("mini_dose")
@@ -368,13 +368,13 @@ func DrugUpdate(ctx iris.Context) {
 		sets = append(sets, "specification="+"'"+specification+"'")
 	}
 	if manuFactoryName != "" {
-		sets = append(sets, "manu_factory_name="+manuFactoryName)
+		sets = append(sets, "manu_factory_name='"+manuFactoryName+"'")
 	}
 	if licenseNo != "" {
 		sets = append(sets, "license_no="+"'"+licenseNo+"'")
 	}
-	if doseFormID != "" {
-		sets = append(sets, "dose_form_id="+doseFormID)
+	if doseFormName != "" {
+		sets = append(sets, "dose_form_name='"+doseFormName+"'")
 	}
 	if drugTypeID != "" {
 		sets = append(sets, "drug_type_id="+drugTypeID)
@@ -383,16 +383,16 @@ func DrugUpdate(ctx iris.Context) {
 		sets = append(sets, "once_dose="+onceDose)
 	}
 	if onceDoseUnitName != "" {
-		sets = append(sets, "once_dose_unit_name="+onceDoseUnitName)
+		sets = append(sets, "once_dose_unit_name='"+onceDoseUnitName+"'")
 	}
 	if routeAdministrationName != "" {
-		sets = append(sets, "route_administration_name="+routeAdministrationName)
+		sets = append(sets, "route_administration_name='"+routeAdministrationName+"'")
 	}
 	if frequencyName != "" {
-		sets = append(sets, "frequency_name="+frequencyName)
+		sets = append(sets, "frequency_name='"+frequencyName+"'")
 	}
 	if defaultRemark != "" {
-		sets = append(sets, "default_remark="+"'"+defaultRemark+"'")
+		sets = append(sets, "default_remark='"+defaultRemark+"'")
 	}
 	if englishName != "" {
 		sets = append(sets, "english_name="+"'"+englishName+"'")
@@ -405,10 +405,10 @@ func DrugUpdate(ctx iris.Context) {
 		sets = append(sets, "dose_count="+doseCount)
 	}
 	if doseCountUnitName != "" {
-		sets = append(sets, "dose_count_unit_name="+doseCountUnitName)
+		sets = append(sets, "dose_count_unit_name='"+doseCountUnitName+"'")
 	}
 	if packingUnitName != "" {
-		sets = append(sets, "packing_unit_name="+packingUnitName)
+		sets = append(sets, "packing_unit_name='"+packingUnitName+"'")
 	}
 
 	if status != "" {
@@ -419,7 +419,7 @@ func DrugUpdate(ctx iris.Context) {
 		stockSets = append(stockSets, "miniDose="+miniDose)
 	}
 	if miniUnitName != "" {
-		stockSets = append(stockSets, "mini_unit_name="+miniUnitName)
+		stockSets = append(stockSets, "mini_unit_name='"+miniUnitName+"'")
 	}
 	if buyPrice != "" {
 		stockSets = append(stockSets, "buy_price="+buyPrice)

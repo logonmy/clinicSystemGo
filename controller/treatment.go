@@ -215,7 +215,7 @@ func TreatmentUpdate(ctx iris.Context) {
 		treatmentSets = append(treatmentSets, "py_code='"+pyCode+"'")
 	}
 	if unitName != "" {
-		treatmentSets = append(treatmentSets, "unit_name="+"'"+unitName+"'")
+		treatmentSets = append(treatmentSets, "unit_name='"+unitName+"'")
 	}
 	if idcCode != "" {
 		treatmentSets = append(treatmentSets, "idc_code='"+idcCode+"'")

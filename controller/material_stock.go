@@ -251,13 +251,11 @@ func MaterialInstockRecordDetail(ctx iris.Context) {
 	arow := model.DB.QueryRowx(sql, materialInstockRecordID)
 	result := FormatSQLRowToMap(arow)
 
-	isql := `select d.name as material_name,du.name as packing_unit_name,mf.name as manu_factory_name,iri.instock_amount,
-		iri.buy_price,iri.serial,iri.eff_date,cd.ret_price
+	isql := `select m.name as material_name,m.packing_unit_name,m.manu_factory_name,iri.instock_amount,
+		iri.buy_price,iri.serial,iri.eff_date,cm.ret_price
 		from material_instock_record_item iri
-		left join clinic_material cd on iri.clinic_material_id = cd.id
-		left join material d on cd.material_id = d.id
-		left join dose_unit du on d.packing_unit_id = du.id
-		left join manu_factory mf on d.manu_factory_id = mf.id
+		left join clinic_material cm on iri.clinic_material_id = cm.id
+		left join material m on cm.material_id = m.id
 		where iri.material_instock_record_id=$1`
 
 	irows, err := model.DB.Queryx(isql, materialInstockRecordID)
@@ -766,9 +764,9 @@ func MaterialOutstockRecord(ctx iris.Context) {
 
 	countSQL := `select count(id) as total from material_outstock_record where storehouse_id=$1`
 	selectSQL := `select outr.id as material_outstock_record_id,outr.outstock_date,outr.order_number, ow.name as outstock_way_name,
-		vp.name as verify_operation_name,d.name as department_name,p.name as personnel_name,op.name as outstock_operation_name,outr.verify_status
+		vp.name as verify_operation_name,m.name as department_name,p.name as personnel_name,op.name as outstock_operation_name,outr.verify_status
 		from material_outstock_record outr
-		left join department d on outr.department_id = d.id
+		left join department m on outr.department_id = m.id
 		left join personnel p on outr.personnel_id = p.id
 		left join outstock_way ow on outr.outstock_way_id = ow.id
 		left join personnel op on outr.outstock_operation_id = op.id
@@ -831,14 +829,12 @@ func MaterialOutstockRecordDetail(ctx iris.Context) {
 	row := model.DB.QueryRowx(sql, materialOutstockRecordID)
 	result := FormatSQLRowToMap(row)
 
-	isql := `select d.name as material_name,ori.clinic_material_id,du.name as packing_unit_name,mf.name as manu_factory_name,ori.outstock_amount,
-		cd.ret_price,ds.buy_price,ds.serial,ds.eff_date
+	isql := `select m.name as material_name,ori.clinic_material_id,m.packing_unit_name,m.manu_factory_name,ori.outstock_amount,
+		cm.ret_price,ms.buy_price,ms.serial,ms.eff_date
 		from material_outstock_record_item ori
-		left join material_stock ds on ori.material_stock_id = ds.id
-		left join clinic_material cd on ds.clinic_material_id = cd.id
-		left join material d on cd.material_id = d.id
-		left join dose_unit du on d.packing_unit_id = du.id
-		left join manu_factory mf on d.manu_factory_id = mf.id
+		left join material_stock ms on ori.material_stock_id = ms.id
+		left join clinic_material cm on ms.clinic_material_id = cm.id
+		left join material m on cm.material_id = m.id
 		where ori.material_outstock_record_id=$1`
 
 	irows, err := model.DB.Queryx(isql, materialOutstockRecordID)

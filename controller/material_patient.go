@@ -98,9 +98,8 @@ func MaterialPatientCreate(ctx iris.Context) {
 		fmt.Println("clinicExaminationID====", clinicExaminationID)
 		var sl []string
 		var sm []string
-		materialStockSQL := `select ms.id as material_stock_id,ms.price,ms.is_discount,m.name,du.name as dose_unit_name from material_stock ms
+		materialStockSQL := `select ms.id as material_stock_id,ms.price,ms.is_discount,m.name,m.dose_unit_name from material_stock ms
 		left join material m on m.id = ms.material_id
-		left join dose_unit du on du.id = m.unit_id
 		where ms.id=$1`
 		trow := model.DB.QueryRowx(materialStockSQL, clinicExaminationID)
 		if trow == nil {
@@ -200,9 +199,8 @@ func MaterialPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select mp.*, m.name, m.specification,m.unit_id, du.name as unit_name, ms.stock_amount from material_patient mp left join material_stock ms on material_stock_id = ms.id 
+	rows, err := model.DB.Queryx(`select mp.*, m.name, m.specification,m.unit_id, m.unit_name, ms.stock_amount from material_patient mp left join material_stock ms on material_stock_id = ms.id 
 		left join material m on ms.material_id = m.id
-		LEFT join dose_unit du on m.unit_id = du.id
 		where mp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

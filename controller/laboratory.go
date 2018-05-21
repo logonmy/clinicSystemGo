@@ -21,8 +21,8 @@ func LaboratoryCreate(ctx iris.Context) {
 	timeReport := ctx.PostValue("time_report")
 	clinicalSignificance := ctx.PostValue("clinical_significance")
 	remark := ctx.PostValue("remark")
-	laboratorySampleID := ctx.PostValue("laboratory_sample_id")
-	cuvetteColorID := ctx.PostValue("cuvette_color_id")
+	laboratorySample := ctx.PostValue("laboratory_sample")
+	cuvetteColorName := ctx.PostValue("cuvette_color_name")
 
 	mergeFlag := ctx.PostValue("merge_flag")
 	cost := ctx.PostValue("cost")
@@ -94,13 +94,13 @@ func LaboratoryCreate(ctx iris.Context) {
 		laboratorySets = append(laboratorySets, "remark")
 		laboratoryValues = append(laboratoryValues, "'"+remark+"'")
 	}
-	if laboratorySampleID != "" {
-		laboratorySets = append(laboratorySets, "laboratory_sample_id")
-		laboratoryValues = append(laboratoryValues, laboratorySampleID)
+	if laboratorySample != "" {
+		laboratorySets = append(laboratorySets, "laboratory_sample")
+		laboratoryValues = append(laboratoryValues, "'"+laboratorySample+"'")
 	}
-	if cuvetteColorID != "" {
-		laboratorySets = append(laboratorySets, "cuvette_color_id")
-		laboratoryValues = append(laboratoryValues, cuvetteColorID)
+	if cuvetteColorName != "" {
+		laboratorySets = append(laboratorySets, "cuvette_color_name")
+		laboratoryValues = append(laboratoryValues, "'"+cuvetteColorName+"'")
 	}
 
 	if status != "" {
@@ -284,7 +284,7 @@ func AssociationList(ctx iris.Context) {
 	}
 
 	selectSQL := `select cls.clinic_laboratory_item_id,li.id as laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,cls.default_result,
-	li.data_type,lir.reference_value,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status
+	li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status
 	from clinic_laboratory_association cls
 	left join clinic_laboratory_item cli on cls.clinic_laboratory_item_id = cli.id
 	left join laboratory_item li on cli.laboratory_item_id = li.id
@@ -388,12 +388,10 @@ func LaboratoryDetail(ctx iris.Context) {
 		return
 	}
 	sql := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name,l.en_name,l.unit_name,l.py_code,l.idc_code,l.remark,
-		l.time_report,l.clinical_significance,ls.name as laboratory_sample_name,l.laboratory_sample_id,l.cuvette_color_id,cc.name as cuvette_color_name,
+		l.time_report,l.clinical_significance,l.laboratory_sample,l.cuvette_color_name,
 		cl.cost,cl.is_discount,cl.status,cl.merge_flag,cl.price,cl.is_delivery
 		from clinic_laboratory cl
 		left join laboratory l on cl.laboratory_id = l.id
-		left join laboratory_sample ls on ls.id = l.laboratory_sample_id
-		left join cuvette_color cc on cc.id = l.cuvette_color_id
 		where cl.id=$1`
 	fmt.Println("sql==", sql)
 	arows := model.DB.QueryRowx(sql, clinicLaboratoryID)
@@ -417,8 +415,8 @@ func LaboratoryUpdate(ctx iris.Context) {
 	timeReport := ctx.PostValue("time_report")
 	clinicalSignificance := ctx.PostValue("clinical_significance")
 	remark := ctx.PostValue("remark")
-	laboratorySampleID := ctx.PostValue("laboratory_sample_id")
-	cuvetteColorID := ctx.PostValue("cuvette_color_id")
+	laboratorySample := ctx.PostValue("laboratory_sample")
+	cuvetteColorName := ctx.PostValue("cuvette_color_name")
 
 	mergeFlag := ctx.PostValue("merge_flag")
 	cost := ctx.PostValue("cost")
@@ -465,7 +463,7 @@ func LaboratoryUpdate(ctx iris.Context) {
 	}
 
 	laboratoryUpdateSQL := `update laboratory set name=$1,en_name=$2,py_code=$3,idc_code=$4,
-		unit_name=$5,time_report=$6,clinical_significance=$7,remark=$8,laboratory_sample_id=$9,cuvette_color_id=$10 where id=$11`
+		unit_name=$5,time_report=$6,clinical_significance=$7,remark=$8,laboratory_sample=$9,cuvette_color_name=$10 where id=$11`
 	fmt.Println("laboratoryUpdateSQL==", laboratoryUpdateSQL)
 
 	clinicLaboratoryUpdateSQL := `update clinic_laboratory set clinic_id=$1,laboratory_id=$2,cost=$3,price=$4,status=$5,is_discount=$6,is_delivery=$7,merge_flag=$8 where id=$9`
@@ -479,7 +477,7 @@ func LaboratoryUpdate(ctx iris.Context) {
 		return
 	}
 
-	_, err1 := tx.Exec(laboratoryUpdateSQL, name, enName, pyCode, idcCode, unitName, timeReport, clinicalSignificance, remark, laboratorySampleID, cuvetteColorID, laboratoryID)
+	_, err1 := tx.Exec(laboratoryUpdateSQL, name, enName, pyCode, idcCode, unitName, timeReport, clinicalSignificance, remark, laboratorySample, cuvetteColorName, laboratoryID)
 	if err1 != nil {
 		fmt.Println(" err1====", err1)
 		tx.Rollback()
@@ -518,7 +516,6 @@ func LaboratoryItemCreate(ctx iris.Context) {
 	isSpecial := ctx.PostValue("is_special")
 	referenceMax := ctx.PostValue("reference_max")
 	referenceMin := ctx.PostValue("reference_min")
-	referenceValue := ctx.PostValue("reference_value")
 	items := ctx.PostValue("items")
 
 	status := ctx.PostValue("status")
@@ -616,10 +613,7 @@ func LaboratoryItemCreate(ctx iris.Context) {
 			itemReferenceSets = append(itemReferenceSets, "reference_min")
 			itemReferenceValues = append(itemReferenceValues, "'"+referenceMin+"'")
 		}
-		if referenceValue != "" {
-			itemReferenceSets = append(itemReferenceSets, "reference_value")
-			itemReferenceValues = append(itemReferenceValues, "'"+referenceValue+"'")
-		}
+
 	} else if isSpecial == "true" && items != "" {
 		itemReferenceSets = append(itemReferenceSets, "reference_sex", "age_max", "age_min", "reference_max", "reference_min", "stomach_status", "is_pregnancy")
 		var results []map[string]string
@@ -773,7 +767,7 @@ func LaboratoryItemList(ctx iris.Context) {
 		left join laboratory_item li on cli.laboratory_item_id = li.id
 		where cli.clinic_id=$1`
 	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,li.instrument_code,
-		li.data_type,lir.reference_value,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,cli.is_delivery
+		li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,cli.is_delivery
 		from clinic_laboratory_item cli
 		left join laboratory_item li on cli.laboratory_item_id = li.id
 		left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
@@ -824,7 +818,6 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 	isSpecial := ctx.PostValue("is_special")
 	referenceMax := ctx.PostValue("reference_max")
 	referenceMin := ctx.PostValue("reference_min")
-	referenceValue := ctx.PostValue("reference_value")
 	items := ctx.PostValue("items")
 
 	status := ctx.PostValue("status")
@@ -895,7 +888,7 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 		laboratoryItemSets = append(laboratoryItemSets, "instrument_code='"+instrumentCode+"'")
 	}
 	if unitName != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "unit_name="+"'"+unitName+"'")
+		laboratoryItemSets = append(laboratoryItemSets, "unit_name='"+unitName+"'")
 	}
 	if clinicalSignificance != "" {
 		laboratoryItemSets = append(laboratoryItemSets, "clinical_significance='"+clinicalSignificance+"'")
@@ -933,10 +926,6 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 		if referenceMin != "" {
 			itemReferenceSets = append(itemReferenceSets, "reference_min")
 			itemReferenceValues = append(itemReferenceValues, "'"+referenceMin+"'")
-		}
-		if referenceValue != "" {
-			itemReferenceSets = append(itemReferenceSets, "reference_value")
-			itemReferenceValues = append(itemReferenceValues, "'"+referenceValue+"'")
 		}
 	} else if isSpecial == "true" && items != "" {
 		itemReferenceSets = append(itemReferenceSets, "reference_sex", "age_max", "age_min", "reference_max", "reference_min", "stomach_status", "is_pregnancy")
@@ -1120,7 +1109,7 @@ func LaboratoryItemSearch(ctx iris.Context) {
 	}
 
 	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,li.instrument_code,
-		li.data_type,lir.reference_value,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,cli.is_delivery
+		li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,cli.is_delivery
 		from clinic_laboratory_item cli
 		left join laboratory_item li on cli.laboratory_item_id = li.id
 		left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
@@ -1150,7 +1139,7 @@ func LaboratoryItemDetail(ctx iris.Context) {
 	}
 
 	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,cli.is_delivery,
-		li.data_type,lir.reference_value,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,li.instrument_code
+		li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,li.instrument_code
 		from clinic_laboratory_item cli
 		left join laboratory_item li on cli.laboratory_item_id = li.id
 		left join laboratory_item_reference lir on lir.laboratory_item_id = li.id

@@ -83,7 +83,7 @@ func MaterialCreate(ctx iris.Context) {
 	}
 	if manuFactoryName != "" {
 		materialSets = append(materialSets, "manu_factory_name")
-		materialValues = append(materialValues, manuFactoryName)
+		materialValues = append(materialValues, "'"+manuFactoryName+"'")
 	}
 	if specification != "" {
 		materialSets = append(materialSets, "specification")
@@ -236,7 +236,7 @@ func MaterialUpdate(ctx iris.Context) {
 		materialSets = append(materialSets, "py_code='"+pyCode+"'")
 	}
 	if unitName != "" {
-		materialSets = append(materialSets, "unit_name="+unitName)
+		materialSets = append(materialSets, "unit_name='"+unitName+"'")
 	}
 	if idcCode != "" {
 		materialSets = append(materialSets, "idc_code='"+idcCode+"'")
@@ -245,7 +245,7 @@ func MaterialUpdate(ctx iris.Context) {
 		materialSets = append(materialSets, "remark='"+remark+"'")
 	}
 	if manuFactoryName != "" {
-		materialSets = append(materialSets, "manu_factory_name="+manuFactoryName)
+		materialSets = append(materialSets, "manu_factory_name='"+manuFactoryName+"'")
 	}
 	if specification != "" {
 		materialSets = append(materialSets, "specification='"+specification+"'")

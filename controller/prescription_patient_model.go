@@ -60,7 +60,7 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 		"once_dose",
 		"once_dose_unit_name",
 		"route_administration_name",
-		"frequencyName",
+		"frequency_name",
 		"amount",
 		"fetch_address",
 		"eff_day",
@@ -88,7 +88,7 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 		onceDose := v["once_dose"]
 		onceDoseUnitName := v["once_dose_unit_name"]
 		routeAdministrationName := v["route_administration_name"]
-		frequencyName := v["frequencyName"]
+		frequencyName := v["frequency_name"]
 		times := v["amount"]
 		illustration := v["illustration"]
 		fetchAddress := v["fetch_address"]
@@ -401,7 +401,7 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 		"once_dose",
 		"once_dose_unit_name",
 		"route_administration_name",
-		"frequencyName",
+		"frequency_name",
 		"amount",
 		"fetch_address",
 		"eff_day",
@@ -430,7 +430,7 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 		onceDose := v["once_dose"]
 		onceDoseUnitName := v["once_dose_unit_name"]
 		routeAdministrationName := v["route_administration_name"]
-		frequencyName := v["frequencyName"]
+		frequencyName := v["frequency_name"]
 		times := v["amount"]
 		illustration := v["illustration"]
 		fetchAddress := v["fetch_address"]
@@ -502,7 +502,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	isCommon := ctx.PostValue("is_common")
 
 	routeAdministrationName := ctx.PostValue("route_administration_name")
-	frequencyName := ctx.PostValue("frequencyName")
+	frequencyName := ctx.PostValue("frequency_name")
 	amount := ctx.PostValue("amount")
 	fetchAddress := ctx.PostValue("fetch_address")
 	effDay := ctx.PostValue("eff_day")
@@ -568,7 +568,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	}
 	var prescriptionChinesePatientModelID string
 	err := tx.QueryRow(`insert into prescription_chinese_patient_model 
-		(model_name,is_common,operation_id,route_administration_name,frequencyName,amount,fetch_address,eff_day,medicine_illustration) 
+		(model_name,is_common,operation_id,route_administration_name,frequency_name,amount,fetch_address,eff_day,medicine_illustration) 
 		values ($1,$2,$3,$4,$5,$6,$7,$8,$9) 
 		RETURNING id`, modelName, isCommon, personnelID, routeAdministrationName, frequencyName, amount, fetchAddress, effDay, medicineIllustration).Scan(&prescriptionChinesePatientModelID)
 	if err != nil {
@@ -665,7 +665,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	pcpm.route_administration_name as info_route_administration_name,
 	pcpm.eff_day as info_eff_day,
 	pcpm.amount as info_amount,
-	pcpm.frequencyName as info_frequencyName,
+	pcpm.frequency_name as info_frequencyName,
 	pcpm.fetch_address as info_fetch_address,
 	pcpm.medicine_illustration,
 	pcpmi.drug_stock_id,
@@ -753,7 +753,7 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 	pcpm.route_administration_name as info_route_administration_name,
 	pcpm.eff_day as info_eff_day,
 	pcpm.amount as info_amount,
-	pcpm.frequencyName as info_frequencyName,
+	pcpm.frequency_name as info_frequencyName,
 	pcpm.fetch_address as info_fetch_address,
 	pcpm.medicine_illustration,
 	pcpmi.drug_stock_id,
@@ -802,10 +802,8 @@ func PrescriptionChinesePatientModelDetail(ctx iris.Context) {
 	prescriptionChinesePatientModelID := ctx.PostValue("prescription_patient_model_id")
 
 	selectmSQL := `select pcpm.id as prescription_patient_model_id,pcpm.model_name,pcpm.is_common,pcpm.status,pcpm.route_administration_name,
-		pcpm.frequencyName,pcpm.amount,pcpm.eff_day,pcpm.fetch_address,pcpm.medicine_illustration,f.name as frequency_name,ra.name as route_administration_name
+		pcpm.frequency_name,pcpm.amount,pcpm.eff_day,pcpm.fetch_address,pcpm.medicine_illustration
 		from prescription_chinese_patient_model pcpm
-		left join route_administration ra on pcpm.route_administration_name = ra.id
-		left join frequency f on pcpm.frequencyName = f.id
 		where pcpm.id=$1`
 	mrows := model.DB.QueryRowx(selectmSQL, prescriptionChinesePatientModelID)
 	if mrows == nil {
@@ -838,7 +836,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 	isCommon := ctx.PostValue("is_common")
 
 	routeAdministrationName := ctx.PostValue("route_administration_name")
-	frequencyName := ctx.PostValue("frequencyName")
+	frequencyName := ctx.PostValue("frequency_name")
 	amount := ctx.PostValue("amount")
 	fetchAddress := ctx.PostValue("fetch_address")
 	effDay := ctx.PostValue("eff_day")
@@ -916,7 +914,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 	}
 
 	updateSQL := `update prescription_chinese_patient_model set model_name=$1,is_common=$2,
-		operation_id=$3,route_administration_name=$4,frequencyName=$5,amount=$6,fetch_address=$7,
+		operation_id=$3,route_administration_name=$4,frequency_name=$5,amount=$6,fetch_address=$7,
 		eff_day=$8,medicine_illustration=$9,updated_time=LOCALTIMESTAMP where id=$10`
 	_, err := tx.Exec(updateSQL, modelName, isCommon, personnelID, routeAdministrationName, frequencyName, amount, fetchAddress, effDay, medicineIllustration, prescriptionChinesePatientModelID)
 	if err != nil {

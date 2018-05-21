@@ -708,7 +708,7 @@ CREATE TABLE drug
   manu_factory_name varchar(100),--生产厂商
   drug_class_id integer references drug_class(id),--药品类型id
   drug_type_id integer references drug_type(id),--药品类别id
-  dose_form_id integer references dose_form(id),--药品剂型id
+  dose_form_name varchar(20),--药品剂型
   license_no varchar(20),--国药准字、文号
 
   weight integer,--重量
@@ -1049,7 +1049,6 @@ CREATE TABLE laboratory
   remark text,--备注
   laboratory_sample varchar(30),--检验物
   laboratory_sample_dosage varchar(30),--检验物计量
-  laboratory_sample_name varchar(20),--标本种类
   cuvette_color_name varchar(20),--试管颜色
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1094,9 +1093,8 @@ CREATE TABLE laboratory_item_reference
 (
   id serial PRIMARY KEY NOT NULL,--id
   laboratory_item_id integer NOT NULL references laboratory_item(id),--检验项目id
-  reference_max varchar(20), --定量参考值最大值
-  reference_min varchar(20), --定量参考值最小值
-  reference_value varchar(20),--定性参考值
+  reference_max varchar(20), --定量/定性参考值最大值
+  reference_min varchar(20), --定量/定性参考值最小值
 
   age_max integer, --参考值年龄段最大值
   age_min integer, --参考值年龄段最小值

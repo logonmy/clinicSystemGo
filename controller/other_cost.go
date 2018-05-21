@@ -209,7 +209,7 @@ func OtherCostUpdate(ctx iris.Context) {
 		otherCostSets = append(otherCostSets, "py_code='"+pyCode+"'")
 	}
 	if unitName != "" {
-		otherCostSets = append(otherCostSets, "unit_name="+"'"+unitName+"'")
+		otherCostSets = append(otherCostSets, "unit_name='"+unitName+"'")
 	}
 	if remark != "" {
 		otherCostSets = append(otherCostSets, "remark='"+remark+"'")
