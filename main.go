@@ -140,11 +140,14 @@ func main() {
 		// 创建代缴费项目
 		charge.Post("/unPay/create", controller.ChargeUnPayCreate)
 		charge.Post("/unPay/delete", controller.ChargeUnPayDelete)
+		// 查询待缴费的项目列表
 		charge.Post("/unPay/list", controller.ChargeUnPayList)
-
-		charge.Post("/pay", controller.ChargePay)
+		// 创建支付订单
+		charge.Post("/payment/create", controller.ChargePaymentCreate)
+		// 支付到账通知
+		charge.Post("/payment/notice", controller.ChargePay)
 		charge.Post("/paid/list", controller.ChargePaidList)
-
+		// 查询有代缴费的就诊记录
 		charge.Post("/traigePatient/unpay", controller.GetUnChargeTraigePatients)
 
 	}

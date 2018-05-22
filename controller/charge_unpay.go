@@ -351,6 +351,92 @@ func ChargePay(ctx iris.Context) {
 
 }
 
+// ChargePaymentCreate 创建支付订单
+func ChargePaymentCreate(ctx iris.Context) {
+	discountMoney, _ := strconv.Atoi(ctx.PostValue("discount_money"))
+	derateMoney, _ := strconv.Atoi(ctx.PostValue("derate_money"))
+	medicalMoney, _ := strconv.Atoi(ctx.PostValue("medical_money"))
+	onCreditMoney, _ := strconv.Atoi(ctx.PostValue("on_credit_money"))
+	voucherMoney, _ := strconv.Atoi(ctx.PostValue("voucher_money"))
+	bonusPointsMoney, _ := strconv.Atoi(ctx.PostValue("bonus_points_money"))
+	money, baerr := strconv.Atoi(ctx.PostValue("balance_money"))
+
+	if baerr != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "无效的金额"})
+		return
+	}
+
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	ordersIds := ctx.PostValue("orders_ids")
+	operationID := ctx.PostValue("operation_id")
+	payMethodCode := ctx.PostValue("pay_method_code")
+
+	outTradeNo := time.Now().Format("20060102150405")
+
+	if clinicTriagePatientID == "" || ordersIds == "" || operationID == "" || payMethodCode == "" {
+		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx(`select count(*) as count, sum(fee) as charge_toral from mz_unpaid_orders where id in (` + ordersIds + `) AND clinic_triage_patient_id = ` + clinicTriagePatientID)
+	orderArray := strings.Split(ordersIds, ",")
+	rowMap := FormatSQLRowToMap(row)
+
+	if int(rowMap["count"].(int64)) != len(orderArray) {
+		ctx.JSON(iris.Map{"code": "2", "msg": "存在未知缴费项"})
+		return
+	}
+
+	if rowMap["charge_toral"] == nil {
+		ctx.JSON(iris.Map{"code": "2", "msg": "收费金额异常"})
+		return
+	}
+
+	totalMoney := rowMap["charge_toral"]
+
+	balanceMoney := int(totalMoney.(int64)) - (derateMoney + voucherMoney + discountMoney + bonusPointsMoney + onCreditMoney + medicalMoney)
+
+	if balanceMoney != money {
+		balanceMoneyStr := strconv.Itoa(balanceMoney)
+		moneyStr := strconv.Itoa(money)
+		ctx.JSON(iris.Map{"code": "2", "msg": "收费金额与应收金额不匹配，应收: " + balanceMoneyStr + "分，实收：" + moneyStr + "分"})
+		return
+	}
+
+	if balanceMoney < 0 {
+		ctx.JSON(iris.Map{"code": "3", "msg": "收费金额不能为负数"})
+		return
+	}
+
+	tx, txerr := model.DB.Beginx()
+	if txerr != nil {
+		ctx.JSON(iris.Map{"code": "2", "msg": txerr.Error()})
+		return
+	}
+
+	_, err := tx.Exec(`INSERT INTO mz_paid_record ( 
+		clinic_triage_patient_id, out_trade_no, orders_ids, operation_id, pay_method_code, status, derate_money, voucher_money, discount_money, bonus_points_money, on_credit_money, medical_money, total_money, balance_money)
+		VALUES ($1, $2, $3, $4, $5, 'WATTING_FOR_PAY', $6, $7, $8, $9, $10, $11, $12, $13)`, clinicTriagePatientID, outTradeNo, ordersIds, operationID, payMethodCode, derateMoney, voucherMoney, discountMoney, bonusPointsMoney, onCreditMoney, medicalMoney, totalMoney, balanceMoney)
+	if err != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "3", "msg": err.Error()})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "7", "msg": err.Error()})
+		return
+	}
+
+	data := map[string]interface{}{}
+	data["total_money"] = totalMoney
+	data["balance_money"] = balanceMoney
+	data["out_trade_no"] = outTradeNo
+
+	ctx.JSON(iris.Map{"code": "200", "data": data, "msg": "成功"})
+}
+
 // ChargePaidList 根据预约编码查询已缴费缴费列表
 func ChargePaidList(ctx iris.Context) {
 	registrationid := ctx.PostValue("registration_id")
