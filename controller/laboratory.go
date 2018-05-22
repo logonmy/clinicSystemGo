@@ -347,7 +347,7 @@ func LaboratoryList(ctx iris.Context) {
 		left join laboratory l on cl.laboratory_id = l.id
 		where cl.clinic_id=$1`
 	selectSQL := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name as laboratory_name,l.unit_name,cl.price,l.py_code,cl.is_discount,
-		l.remark,cl.status
+		cl.remark,cl.status
 		from clinic_laboratory cl
 		left join laboratory l on cl.laboratory_id = l.id
 		where cl.clinic_id=$1`

@@ -332,7 +332,7 @@ func ExaminationList(ctx iris.Context) {
 	countSQL := `select count(ce.id) as total from clinic_examination ce
 		left join examination e on ce.examination_id = e.id
 		where ce.clinic_id=$1`
-	selectSQL := `select ce.examination_id,ce.id as clinic_examination_id,e.name,e.unit_name,e.py_code,e.remark,e.idc_code,
+	selectSQL := `select ce.examination_id,ce.id as clinic_examination_id,e.name,e.unit_name,e.py_code,ce.remark,e.idc_code,
 		e.organ,e.en_name,ce.is_discount,ce.price,ce.status,ce.cost
 		from clinic_examination ce
 		left join examination e on ce.examination_id = e.id
