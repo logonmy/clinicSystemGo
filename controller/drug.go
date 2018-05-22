@@ -48,12 +48,12 @@ func DrugAdd(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if clinicID == "" || barcode == "" || name == "" || retPrice == "" || DrugType == "" {
+	if clinicID == "" || barcode == "" || name == "" || retPrice == "" || DrugType == "" || licenseNo == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from drug where barcode=$1 limit 1", barcode)
+	row := model.DB.QueryRowx("select id from drug where license_no=$1 limit 1", licenseNo)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 		return
@@ -65,8 +65,8 @@ func DrugAdd(ctx iris.Context) {
 		return
 	}
 
-	sets := []string{"name", "barcode", "type"}
-	values := []string{"'" + name + "'", "'" + barcode + "'", DrugType}
+	sets := []string{"name", "license_no", "type"}
+	values := []string{"'" + name + "'", "'" + licenseNo + "'", DrugType}
 	stockSets := []string{"clinic_id", "ret_price"}
 	stockValues := []string{clinicID, retPrice}
 	if pyCode != "" {
@@ -85,9 +85,9 @@ func DrugAdd(ctx iris.Context) {
 		sets = append(sets, "manu_factory_name")
 		values = append(values, "'"+manuFactoryName+"'")
 	}
-	if licenseNo != "" {
-		sets = append(sets, "license_no")
-		values = append(values, "'"+licenseNo+"'")
+	if barcode != "" {
+		sets = append(sets, "barcode")
+		values = append(values, "'"+barcode+"'")
 	}
 	if doseFormName != "" {
 		sets = append(sets, "dose_form_name")
@@ -417,9 +417,8 @@ func DrugUpdate(ctx iris.Context) {
 	if status != "" {
 		stockSets = append(stockSets, "status="+status)
 	}
-
 	if miniDose != "" {
-		stockSets = append(stockSets, "miniDose="+miniDose)
+		stockSets = append(stockSets, "mini_dose="+miniDose)
 	}
 	if miniUnitName != "" {
 		stockSets = append(stockSets, "mini_unit_name='"+miniUnitName+"'")
@@ -534,7 +533,7 @@ func DrugDetail(ctx iris.Context) {
 		d.py_code,d.barcode,cd.status,
 		cd.mini_dose,
 		cd.mini_unit_name,
-		cd.dose_count,cd.dose_count_unit_name,
+		d.dose_count,d.dose_count_unit_name,
 		d.packing_unit_name,cd.ret_price,cd.buy_price,cd.is_discount,cd.is_bulk_sales,cd.bulk_sales_price,cd.fetch_address,
 		d.once_dose,d.once_dose_unit_name,d.route_administration_name,
 		d.frequency_name,d.default_remark,cd.day_warning,cd.stock_warning,d.english_name,d.sy_code

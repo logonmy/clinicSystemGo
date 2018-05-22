@@ -132,7 +132,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
 
-		sl = append(sl, clinicTriagePatientID, clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), onceDose, onceDoseUnitName, routeAdministrationName, frequencyName, times, fetchAddress, personnelID)
+		sl = append(sl, clinicTriagePatientID, clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), onceDose, "'"+onceDoseUnitName+"'", "'"+routeAdministrationName+"'", "'"+frequencyName+"'", times, "'"+fetchAddress+"'", personnelID)
 		sm = append(sm, clinicTriagePatientID, "1", clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(amount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
 
 		if effDay == "" {
@@ -336,7 +336,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	}
 
 	orderSn := FormatPayOrderSn(clinicTriagePatientID, "2")
-	prescriptionChinesePatientValues = append(prescriptionChinesePatientValues, clinicTriagePatientID, "'"+orderSn+"'", routeAdministrationName, frequencyName, amount, fetchAddress, personnelID)
+	prescriptionChinesePatientValues = append(prescriptionChinesePatientValues, clinicTriagePatientID, "'"+orderSn+"'", "'"+routeAdministrationName+"'", "'"+frequencyName+"'", amount, "'"+fetchAddress+"'", personnelID)
 
 	if effDay == "" {
 		prescriptionChinesePatientValues = append(prescriptionChinesePatientValues, `null`)
@@ -418,7 +418,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		drugAmount, _ := strconv.Atoi(times)
 		total := int(price) * drugAmount
 
-		sl = append(sl, clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), onceDose, onceDoseUnitName, times, prescriptionChinesePatientID)
+		sl = append(sl, clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), onceDose, "'"+onceDoseUnitName+"'", times, prescriptionChinesePatientID)
 		sm = append(sm, clinicTriagePatientID, "2", clinicDrugID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(drugAmount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
 
 		if illustration == "" {
@@ -478,12 +478,21 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 
 	fmt.Println("clinicTriagePatientID =======", clinicTriagePatientID)
 
-	rows, err := model.DB.Queryx(`select pwp.*, d.name as drug_name,d.specification,cd.stock_amount,pwp.once_dose_unit_name,
-		pwp.route_administration_name,pwp.frequency_name,	d.packing_unit_name, d.type
+	rows, err := model.DB.Queryx(`select pwp.id,
+		pwp.clinic_triage_patient_id,pwp.clinic_drug_id,pwp.order_sn,pwp.soft_sn,pwp.once_dose,
+		pwp.once_dose_unit_name,pwp.route_administration_name,pwp.frequency_name,
+		pwp.amount,pwp.illustration,pwp.fetch_address,pwp.eff_day,pwp.operation_id,	
+		d.name as drug_name,d.specification,d.packing_unit_name, d.type,
+		sum(ds.stock_amount) as stock_amount
 		from prescription_western_patient pwp 
 				left join clinic_drug cd on pwp.clinic_drug_id = cd.id 
 				left join drug d on cd.drug_id = d.id
-				where pwp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
+				left join drug_stock ds on ds.clinic_drug_id = cd.id
+				where pwp.clinic_triage_patient_id = $1
+				group by pwp.id,pwp.clinic_triage_patient_id,pwp.clinic_drug_id,pwp.order_sn,pwp.soft_sn,pwp.once_dose,
+				pwp.once_dose_unit_name,pwp.route_administration_name,pwp.frequency_name,
+				pwp.amount,pwp.illustration,pwp.fetch_address,pwp.eff_day,pwp.operation_id,	
+				d.name,d.specification,d.packing_unit_name, d.type`, clinicTriagePatientID)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -510,10 +519,18 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 	for i, prescriptionChinesePatient := range prescriptionChinesePatients {
 		prescriptionChinesePatientID := prescriptionChinesePatient["id"]
 
-		rows, err := model.DB.Queryx(`select pci.*, d.name as drug_name,d.specification,cd.stock_amount, d.type from prescription_chinese_item pci 
+		rows, err := model.DB.Queryx(`select pci.id,pci.prescription_chinese_patient_id,pci.clinic_drug_id,
+			pci.order_sn,pci.soft_sn,pci.once_dose,pci.once_dose_unit_name,pci.amount,pci.special_illustration,
+			d.name as drug_name,d.specification, d.type,
+			sum(ds.stock_amount) as stock_amount
+			from prescription_chinese_item pci 
 			left join clinic_drug cd on pci.clinic_drug_id = cd.id 
 			left join drug d on cd.drug_id = d.id
-			where pci.prescription_chinese_patient_id = $1`, prescriptionChinesePatientID)
+			left join drug_stock ds on ds.clinic_drug_id = cd.id
+			where pci.prescription_chinese_patient_id = $1
+			group by pci.id,pci.prescription_chinese_patient_id,pci.clinic_drug_id,
+			pci.order_sn,pci.soft_sn,pci.once_dose,pci.once_dose_unit_name,pci.amount,pci.special_illustration,
+			d.name,d.specification, d.type`, prescriptionChinesePatientID)
 
 		if err != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
