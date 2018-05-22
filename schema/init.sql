@@ -1006,6 +1006,7 @@ CREATE TABLE clinic_examination
   price integer NOT NULL,--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  remark text,
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1065,6 +1066,7 @@ CREATE TABLE clinic_laboratory
   cost integer, --成本价
   price integer NOT NULL,--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
+  remark text,
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
   is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

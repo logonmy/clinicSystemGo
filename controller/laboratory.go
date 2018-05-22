@@ -14,6 +14,7 @@ import (
 func LaboratoryCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	name := ctx.PostValue("name")
+	laboratoryID := ctx.PostValue("laboratory_id")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
@@ -48,18 +49,6 @@ func LaboratoryCreate(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from laboratory where name=$1 limit 1", name)
-	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-		return
-	}
-	laboratory := FormatSQLRowToMap(lrow)
-	_, lok := laboratory["id"]
-	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "检验医嘱名称已存在"})
-		return
-	}
-
 	laboratorySets := []string{"name"}
 	laboratoryValues := []string{"'" + name + "'"}
 
@@ -90,10 +79,6 @@ func LaboratoryCreate(ctx iris.Context) {
 		laboratorySets = append(laboratorySets, "clinical_significance")
 		laboratoryValues = append(laboratoryValues, "'"+clinicalSignificance+"'")
 	}
-	if remark != "" {
-		laboratorySets = append(laboratorySets, "remark")
-		laboratoryValues = append(laboratoryValues, "'"+remark+"'")
-	}
 	if laboratorySample != "" {
 		laboratorySets = append(laboratorySets, "laboratory_sample")
 		laboratoryValues = append(laboratoryValues, "'"+laboratorySample+"'")
@@ -106,6 +91,10 @@ func LaboratoryCreate(ctx iris.Context) {
 	if status != "" {
 		clinicLaboratorySets = append(clinicLaboratorySets, "status")
 		clinicLaboratoryValues = append(clinicLaboratoryValues, status)
+	}
+	if remark != "" {
+		clinicLaboratorySets = append(clinicLaboratorySets, "remark")
+		clinicLaboratoryValues = append(clinicLaboratoryValues, "'"+remark+"'")
 	}
 	if mergeFlag != "" {
 		clinicLaboratorySets = append(clinicLaboratorySets, "merge_flag")
@@ -135,14 +124,17 @@ func LaboratoryCreate(ctx iris.Context) {
 	fmt.Println("laboratoryInsertSQL==", laboratoryInsertSQL)
 
 	tx, err := model.DB.Begin()
-	var laboratoryID string
-	err = tx.QueryRow(laboratoryInsertSQL).Scan(&laboratoryID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
+
+	if laboratoryID == "" {
+		err = tx.QueryRow(laboratoryInsertSQL).Scan(&laboratoryID)
+		if err != nil {
+			fmt.Println("err ===", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": err})
+			return
+		}
 	}
+
 	fmt.Println("laboratoryID====", laboratoryID)
 
 	clinicLaboratorySets = append(clinicLaboratorySets, "laboratory_id")
@@ -346,7 +338,7 @@ func LaboratoryList(ctx iris.Context) {
 		left join laboratory l on cl.laboratory_id = l.id
 		where cl.clinic_id=$1`
 	selectSQL := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name as laboratory_name,l.unit_name,cl.price,l.py_code,cl.is_discount,
-		l.remark,cl.status
+		cl.remark,cl.status
 		from clinic_laboratory cl
 		left join laboratory l on cl.laboratory_id = l.id
 		where cl.clinic_id=$1`
