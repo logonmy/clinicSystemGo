@@ -323,6 +323,8 @@ func main() {
 		dictionaries.Post("/LaboratorySampleList", controller.LaboratorySampleList)
 		dictionaries.Post("/CuvetteColorList", controller.CuvetteColorList)
 		dictionaries.Post("/ManuFactoryList", controller.ManuFactoryList)
+		dictionaries.Post("/Laboratorys", controller.Laboratorys)
+		dictionaries.Post("/Examinations", controller.Examinations)
 	}
 
 	dataImport := app.Party("/dataImport", crs).AllowMethods(iris.MethodOptions)

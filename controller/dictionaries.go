@@ -519,3 +519,89 @@ func ManuFactoryList(ctx iris.Context) {
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
+
+// LaboratoryList 基础检验医嘱项目列表
+func Laboratorys(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) from laboratory where name ~$1`
+	selectSQL := `select * from laboratory where name ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+// Examinations 基础检查医嘱项目列表
+func Examinations(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) from examination where name ~$1`
+	selectSQL := `select * from examination where name ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
