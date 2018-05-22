@@ -12,6 +12,7 @@ import (
 // ExaminationCreate 创建检查缴费项目
 func ExaminationCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
+	examinationID := ctx.PostValue("examination_id")
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
@@ -93,15 +94,7 @@ func ExaminationCreate(ctx iris.Context) {
 	fmt.Println("examinationInsertSQL==", examinationInsertSQL)
 
 	tx, err := model.DB.Begin()
-	var examinationID string
-	lrow := model.DB.QueryRowx("select id from examination where name=$1 limit 1", name)
-	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-		return
-	}
-	examination := FormatSQLRowToMap(lrow)
-	_, lok := examination["id"]
-	if !lok {
+	if examinationID == "" {
 		err = tx.QueryRow(examinationInsertSQL).Scan(&examinationID)
 		if err != nil {
 			fmt.Println("err ===", err)
@@ -109,8 +102,6 @@ func ExaminationCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": err})
 			return
 		}
-	} else {
-		examinationID = strconv.Itoa(int(examination["id"].(int64)))
 	}
 
 	fmt.Println("examinationID====", examinationID)

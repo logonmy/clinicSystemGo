@@ -14,6 +14,7 @@ import (
 func LaboratoryCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	name := ctx.PostValue("name")
+	laboratoryID := ctx.PostValue("laboratory_id")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
@@ -123,16 +124,8 @@ func LaboratoryCreate(ctx iris.Context) {
 	fmt.Println("laboratoryInsertSQL==", laboratoryInsertSQL)
 
 	tx, err := model.DB.Begin()
-	var laboratoryID string
 
-	lrow := model.DB.QueryRowx("select id from laboratory where name=$1 limit 1", name)
-	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-		return
-	}
-	laboratory := FormatSQLRowToMap(lrow)
-	_, lok := laboratory["id"]
-	if !lok {
+	if laboratoryID == "" {
 		err = tx.QueryRow(laboratoryInsertSQL).Scan(&laboratoryID)
 		if err != nil {
 			fmt.Println("err ===", err)
@@ -140,8 +133,6 @@ func LaboratoryCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": err})
 			return
 		}
-	} else {
-		laboratoryID = strconv.Itoa(int(laboratory["id"].(int64)))
 	}
 
 	fmt.Println("laboratoryID====", laboratoryID)
