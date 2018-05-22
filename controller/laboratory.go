@@ -78,10 +78,6 @@ func LaboratoryCreate(ctx iris.Context) {
 		laboratorySets = append(laboratorySets, "clinical_significance")
 		laboratoryValues = append(laboratoryValues, "'"+clinicalSignificance+"'")
 	}
-	if remark != "" {
-		laboratorySets = append(laboratorySets, "remark")
-		laboratoryValues = append(laboratoryValues, "'"+remark+"'")
-	}
 	if laboratorySample != "" {
 		laboratorySets = append(laboratorySets, "laboratory_sample")
 		laboratoryValues = append(laboratoryValues, "'"+laboratorySample+"'")
@@ -94,6 +90,10 @@ func LaboratoryCreate(ctx iris.Context) {
 	if status != "" {
 		clinicLaboratorySets = append(clinicLaboratorySets, "status")
 		clinicLaboratoryValues = append(clinicLaboratoryValues, status)
+	}
+	if remark != "" {
+		clinicLaboratorySets = append(laboratorySets, "remark")
+		clinicLaboratoryValues = append(laboratoryValues, "'"+remark+"'")
 	}
 	if mergeFlag != "" {
 		clinicLaboratorySets = append(clinicLaboratorySets, "merge_flag")
