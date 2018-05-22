@@ -237,7 +237,7 @@ func DrugInstockRecordDetail(ctx iris.Context) {
 		return
 	}
 
-	sql := `select ir.id as drug_instock_record_id,ir.instock_date,ir.order_number,ir.created_time,,ir.supplier_name,ir.remark,ir.verify_status,
+	sql := `select ir.id as drug_instock_record_id,ir.instock_date,ir.order_number,ir.created_time,ir.supplier_name,ir.remark,ir.verify_status,
 		ir.verify_operation_id,vp.name as verify_operation_name,ir.instock_way_name,ir.instock_operation_id,p.name as instock_operation_name 
 		from drug_instock_record ir
 		left join personnel p on ir.instock_operation_id = p.id
@@ -637,7 +637,7 @@ func DrugOutstock(ctx iris.Context) {
 
 	var itemValues []string
 	itemSets := []string{
-		"clinic_drug_id",
+		"drug_stock_id",
 		"outstock_amount",
 		"drug_outstock_record_id"}
 
@@ -665,25 +665,25 @@ func DrugOutstock(ctx iris.Context) {
 	fmt.Println("drugOutstockRecordID====", drugOutstockRecordID)
 
 	for _, v := range results {
-		clinicDrugID := v["clinic_drug_id"]
+		drugStockID := v["drug_stock_id"]
 		outstockAmount := v["outstock_amount"]
 		if outstockAmount == "" {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "数量为必填项"})
 			return
 		}
 		var s []string
-		row := model.DB.QueryRowx("select id from clinic_drug where id=$1 limit 1", clinicDrugID)
+		row := model.DB.QueryRowx("select id from drug_stock where id=$1 limit 1", drugStockID)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "1", "msg": "新增出库失败"})
 			return
 		}
-		drug := FormatSQLRowToMap(row)
-		_, ok := drug["id"]
+		drugStock := FormatSQLRowToMap(row)
+		_, ok := drugStock["id"]
 		if !ok {
 			ctx.JSON(iris.Map{"code": "1", "msg": "新增出库药品不存在"})
 			return
 		}
-		s = append(s, v["clinic_drug_id"], v["outstock_amount"], drugOutstockRecordID)
+		s = append(s, v["drug_stock_id"], v["outstock_amount"], drugOutstockRecordID)
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
 		itemValues = append(itemValues, str)
@@ -759,7 +759,7 @@ func DrugOutstockRecord(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from drug_outstock_record where storehouse_id=$1`
-	selectSQL := `select outr.id as drug_outstock_record_id,outr.outstock_date,outr.order_number, outr.utstock_way_name,
+	selectSQL := `select outr.id as drug_outstock_record_id,outr.outstock_date,outr.order_number, outr.outstock_way_name,
 		vp.name as verify_operation_name,d.name as department_name,p.name as personnel_name,op.name as outstock_operation_name,outr.verify_status
 		from drug_outstock_record outr
 		left join department d on outr.department_id = d.id
@@ -823,7 +823,7 @@ func DrugOutstockRecordDetail(ctx iris.Context) {
 	row := model.DB.QueryRowx(sql, drugOutstockRecordID)
 	result := FormatSQLRowToMap(row)
 
-	isql := `select d.name as drug_name,ori.clinic_drug_id,d.packing_unit_name,d.manu_factory_name,ori.outstock_amount,
+	isql := `select d.name as drug_name,ori.drug_stock_id,d.packing_unit_name,d.manu_factory_name,ori.outstock_amount,
 		cd.ret_price,ds.buy_price,ds.serial,ds.eff_date
 		from drug_outstock_record_item ori
 		left join drug_stock ds on ori.drug_stock_id = ds.id
@@ -905,25 +905,25 @@ func DrugOutstockUpdate(ctx iris.Context) {
 
 	var values []string
 	sets := []string{
-		"clinic_drug_id",
+		"drug_stock_id",
 		"outstock_amount",
 		"drug_outstock_record_id"}
 
 	for _, v := range results {
-		clinicDrugID := v["clinic_drug_id"]
+		drugStockID := v["drug_stock_id"]
 		var s []string
-		row := model.DB.QueryRowx("select id from clinic_drug where id=$1 limit 1", clinicDrugID)
+		row := model.DB.QueryRowx("select id from clinic_drug where id=$1 limit 1", drugStockID)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 			return
 		}
-		drug := FormatSQLRowToMap(row)
-		_, ok := drug["id"]
+		drugStock := FormatSQLRowToMap(row)
+		_, ok := drugStock["id"]
 		if !ok {
 			ctx.JSON(iris.Map{"code": "1", "msg": "修改的出库药品不存在"})
 			return
 		}
-		s = append(s, v["clinic_drug_id"], v["outstock_amount"], drugOutstockRecordID)
+		s = append(s, v["drug_stock_id"], v["outstock_amount"], drugOutstockRecordID)
 		str := strings.Join(s, ",")
 		str = "(" + str + ")"
 		values = append(values, str)
@@ -1001,9 +1001,7 @@ func DrugOutstockCheck(ctx iris.Context) {
 		return
 	}
 
-	rows, _ := model.DB.Queryx(`select ori.* from drug_outstock_record_item ori
-		left join drug_outstock_record or on ori.drug_outstock_record_id = or.id
-		where ori.drug_outstock_record_id=$1`, drugOutstockRecordID)
+	rows, _ := model.DB.Queryx(`select * from drug_outstock_record_item	where drug_outstock_record_id=$1`, drugOutstockRecordID)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 		return
