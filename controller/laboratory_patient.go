@@ -199,7 +199,8 @@ func LaboratoryPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select lp.*, l.name as laboratory_name from laboratory_patient lp left join clinic_laboratory cl on lp.clinic_laboratory_id = cl.id 
+	rows, err := model.DB.Queryx(`select lp.*, l.name as laboratory_name from laboratory_patient lp 
+		left join clinic_laboratory cl on lp.clinic_laboratory_id = cl.id 
 		left join laboratory l on cl.laboratory_id = l.id
 		where lp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 

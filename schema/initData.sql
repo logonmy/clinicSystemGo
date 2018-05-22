@@ -5,12 +5,30 @@ insert into instock_way (name) VALUES ('采购入库'),('公益捐赠');
 insert into outstock_way (name) VALUES ('科室领用'),('退货出库'),('报损出库');
 insert into cuvette_color (name) VALUES ('红'), ('黑'), ('紫'),('蓝'), ('黄'), ('绿'),('灰'), ('橙');
 INSERT INTO charge_project_type (id,name) VALUES (1,'西/成药处方'),(2,'中药处方'),(3,'检验医嘱'),(4,'检查医嘱'),(5,'材料费用'),(6,'其他费用'),(7,'治疗医嘱');
-insert into laboratory_sample (code,name) VALUES (001,'标本1'),(002,'标本2');
-insert into manu_factory (code,name) VALUES ('101','北京首儿药厂'),('102','北京三和药业有限公司'),('1044','法国皮尔·法伯制药公司');
+insert into examination_organ (name) values 
+('肝'),
+('胆'),
+('胰'),
+('脾'),
+('肾'),
+('肾上腺'),
+('腹腔'),
+('盆腔'),
+('肠管'),
+('阑尾'),
+('左下腹'),
+('右下腹'),
+('腹腔淋巴结'),
+('腹膜后'),
+('左上腹'),
+('胃'),
+('胆囊'),
+('残余尿'),
+('前列腺（经腹）'),
+('肾'),
+('输尿管'),
+('膀胱'),
+('残余尿'),
+('胃窗（口服造影剂）')
 
-insert into dose_unit (name,code) values ('小盒','0002'),('箱','0001'),('桶','0003');
-insert into drug_class (name,code) values ('类型1','0001'),('类型2','0002'),('类型3','0003');
-insert into dose_form (name,code) values ('剂型1','0001'),('剂型2','0002'),('剂型3','0003');
 insert into storehouse (name,clinic_id) VALUES ('专业药房',1);
-INSERT into route_administration (code,name) VALUES ('0001','口服<饭前>'),('0002','口服<饭后>'),('0003','含服'),('0004','肛塞');
-insert into frequency (code,name) VALUES ('0001','餐后'),('0002','2次/日(8-3)'),('0003','四次/日'),('0004','1次/每晚 (8pm)');

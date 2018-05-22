@@ -80,6 +80,7 @@ func main() {
 		doctorVisitSchedule.Post("/CreateOneSchedule", controller.CreateOneSchedule)
 		doctorVisitSchedule.Post("/DeleteOneUnOpenScheduleByID", controller.DeleteOneUnOpenScheduleByID)
 		doctorVisitSchedule.Post("/StopScheduleByID", controller.StopScheduleByID)
+		doctorVisitSchedule.Post("/RemoveScheduleByID", controller.RemoveScheduleByID)
 	}
 
 	patient := app.Party("/patient", crs).AllowMethods(iris.MethodOptions)
@@ -325,6 +326,8 @@ func main() {
 		dictionaries.Post("/LaboratorySampleList", controller.LaboratorySampleList)
 		dictionaries.Post("/CuvetteColorList", controller.CuvetteColorList)
 		dictionaries.Post("/ManuFactoryList", controller.ManuFactoryList)
+		dictionaries.Post("/Laboratorys", controller.Laboratorys)
+		dictionaries.Post("/Examinations", controller.Examinations)
 	}
 
 	dataImport := app.Party("/dataImport", crs).AllowMethods(iris.MethodOptions)
@@ -338,6 +341,8 @@ func main() {
 		dataImport.Post("/ImportManuFactory", controller.ImportManuFactory)
 		dataImport.Post("/ImportrRouteAdministration", controller.ImportrRouteAdministration)
 		dataImport.Post("/ImportrLaboratorySample", controller.ImportrLaboratorySample)
+		dataImport.Post("/ImportExamination", controller.ImportExamination)
+		dataImport.Post("/ImportDrug", controller.ImportDrug)
 	}
 
 	// http://localhost:8080

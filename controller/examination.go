@@ -12,6 +12,7 @@ import (
 // ExaminationCreate 创建检查缴费项目
 func ExaminationCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
+	examinationID := ctx.PostValue("examination_id")
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
@@ -42,18 +43,6 @@ func ExaminationCreate(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from examination where name=$1 limit 1", name)
-	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-		return
-	}
-	examination := FormatSQLRowToMap(lrow)
-	_, lok := examination["id"]
-	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "检查名称已存在"})
-		return
-	}
-
 	examinationSets := []string{"name"}
 	examinationValues := []string{"'" + name + "'"}
 
@@ -80,14 +69,14 @@ func ExaminationCreate(ctx iris.Context) {
 		examinationSets = append(examinationSets, "organ")
 		examinationValues = append(examinationValues, "'"+organ+"'")
 	}
-	if remark != "" {
-		examinationSets = append(examinationSets, "remark")
-		examinationValues = append(examinationValues, "'"+remark+"'")
-	}
 
 	if status != "" {
 		clinicExaminationSets = append(clinicExaminationSets, "status")
 		clinicExaminationValues = append(clinicExaminationValues, status)
+	}
+	if remark != "" {
+		clinicExaminationSets = append(clinicExaminationSets, "remark")
+		clinicExaminationValues = append(clinicExaminationValues, "'"+remark+"'")
 	}
 	if cost != "" {
 		clinicExaminationSets = append(clinicExaminationSets, "cost")
@@ -105,14 +94,16 @@ func ExaminationCreate(ctx iris.Context) {
 	fmt.Println("examinationInsertSQL==", examinationInsertSQL)
 
 	tx, err := model.DB.Begin()
-	var examinationID string
-	err = tx.QueryRow(examinationInsertSQL).Scan(&examinationID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
+	if examinationID == "" {
+		err = tx.QueryRow(examinationInsertSQL).Scan(&examinationID)
+		if err != nil {
+			fmt.Println("err ===", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": err})
+			return
+		}
 	}
+
 	fmt.Println("examinationID====", examinationID)
 
 	clinicExaminationSets = append(clinicExaminationSets, "examination_id")
@@ -329,22 +320,22 @@ func ExaminationList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(cep.id) as total from clinic_examination cep
-		left join examination ep on cep.examination_id = ep.id
-		where cep.clinic_id=$1`
-	selectSQL := `select cep.examination_id,cep.id as clinic_examination_id,ep.name,ep.unit_name,ep.py_code,ep.remark,ep.idc_code,
-		ep.organ,ep.en_name,cep.is_discount,cep.price,cep.status,cep.cost
-		from clinic_examination cep
-		left join examination ep on cep.examination_id = ep.id
-		where cep.clinic_id=$1`
+	countSQL := `select count(ce.id) as total from clinic_examination ce
+		left join examination e on ce.examination_id = e.id
+		where ce.clinic_id=$1`
+	selectSQL := `select ce.examination_id,ce.id as clinic_examination_id,e.name,e.unit_name,e.py_code,ce.remark,e.idc_code,
+		e.organ,e.en_name,ce.is_discount,ce.price,ce.status,ce.cost
+		from clinic_examination ce
+		left join examination e on ce.examination_id = e.id
+		where ce.clinic_id=$1`
 
 	if keyword != "" {
-		countSQL += " and ep.name ~'" + keyword + "'"
-		selectSQL += " and ep.name ~'" + keyword + "'"
+		countSQL += " and e.name ~'" + keyword + "'"
+		selectSQL += " and e.name ~'" + keyword + "'"
 	}
 	if status != "" {
-		countSQL += " and cep.status=" + status
-		selectSQL += " and cep.status=" + status
+		countSQL += " and ce.status=" + status
+		selectSQL += " and ce.status=" + status
 	}
 
 	fmt.Println("countSQL===", countSQL)
@@ -376,11 +367,11 @@ func ExaminationDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select cep.examination_id,cep.id as clinic_examination_id,ep.name,ep.unit_name,ep.py_code,ep.remark,ep.idc_code,
-	ep.organ,ep.en_name,cep.is_discount,cep.price,cep.status,cep.cost
-		from clinic_examination cep
-		left join examination ep on cep.examination_id = ep.id
-		where cep.id=$1`
+	selectSQL := `select ce.examination_id,ce.id as clinic_examination_id,e.name,e.unit_name,e.py_code,e.remark,e.idc_code,
+	e.organ,e.en_name,ce.is_discount,ce.price,ce.status,ce.cost
+		from clinic_examination ce
+		left join examination e on ce.examination_id = e.id
+		where ce.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 

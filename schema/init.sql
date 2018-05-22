@@ -705,24 +705,23 @@ CREATE TABLE drug
   print_name varchar(30),--打印名称
   specification varchar(30),--规格
   spe_comment varchar(40),--规格备注
-  manu_factory varchar(20),--生产厂商
-  manu_factory_id integer references manu_factory(id),--生产厂商id
+  manu_factory_name varchar(100),--生产厂商
   drug_class_id integer references drug_class(id),--药品类型id
   drug_type_id integer references drug_type(id),--药品类别id
-  dose_form_id integer references dose_form(id),--药品剂型id
+  dose_form_name varchar(20),--药品剂型
   license_no varchar(20),--国药准字、文号
 
   weight integer,--重量
-  weight_unit_id integer references dose_unit(id),--重量单位id
+  weight_unit_name varchar(10),--重量单位
   volum integer,--体积
-  vol_unit_id integer references dose_unit(id),--体积单位id
+  vol_unit_name varchar(10),--体积单位
   once_dose integer,--常用剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 常用剂量单位id
+  once_dose_unit_name varchar(10),--用量单位 常用剂量单位
   dose_count integer,--制剂数量
-  dose_count_unit_id integer references dose_unit(id),--制剂数量单位id
-  packing_unit_id integer references dose_unit(id),--药品包装id
-  route_administration_id integer references route_administration(id),--用药途径id/默认用法
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  dose_count_unit_name varchar(10),--制剂数量单位
+  packing_unit_name varchar(10),--药品包装单位
+  route_administration_name varchar(50),--用药途径id/默认用法
+  frequency_name varchar(20),--用药频率/默认频次
   default_remark varchar(20),--默认用量用法说明
 
   serial varchar(20),--包装序号
@@ -817,7 +816,7 @@ CREATE TABLE clinic_drug
   ret_price integer,--零售价
   buy_price integer,--成本价
   mini_dose integer,--最小剂量
-  mini_unit_id integer references dose_unit(id),--最小剂量单位id
+  mini_unit_name varchar(20),--最小剂量单位id
   is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
   bulk_sales_price integer,--拆零售价/最小剂量售价
   is_discount boolean DEFAULT false,--是否允许折扣
@@ -837,7 +836,7 @@ CREATE TABLE drug_stock
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  supplier_name varchar(100),--供应商
   stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
   serial varchar(20),--批号
   eff_date DATE NOT NULL,--有效日期
@@ -845,7 +844,7 @@ CREATE TABLE drug_stock
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (storehouse_id, clinic_drug_id, supplier_id, serial, eff_date)
+  UNIQUE (storehouse_id, clinic_drug_id, supplier_name, serial, eff_date)
 );
 
 --药品入库记录
@@ -854,8 +853,8 @@ CREATE TABLE drug_instock_record
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   order_number varchar(20) NOT NULL,--入库单号
-  instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  instock_way_name varchar(20),--入库方式
+  supplier_name varchar(100),--供应商
   instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
   remark text,--备注
   instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
@@ -890,7 +889,7 @@ CREATE TABLE drug_outstock_record
   personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
   order_number varchar(20) NOT NULL,--出库单号
   outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
-  outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
+  outstock_way_name varchar(20),--出库方式
   remark text,--备注
   outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
@@ -985,13 +984,12 @@ CREATE TABLE examination_organ
 CREATE TABLE examination
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(20) NOT NULL,--检查名称
-  en_name varchar(20),--英文名称
-  py_code varchar(20),--拼音码
-  idc_code varchar(20),--国际编码
-  -- unit_id integer references dose_unit(id),--单位id
+  name varchar(100) NOT NULL,--检查名称
+  en_name varchar(100),--英文名称
+  py_code varchar(100),--拼音码
+  idc_code varchar(100),--国际编码
   unit_name varchar(20),--单位名称
-  organ varchar(20),--检查部位
+  organ varchar(100),--检查部位
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1008,6 +1006,7 @@ CREATE TABLE clinic_examination
   price integer NOT NULL,--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  remark text,
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1041,7 +1040,7 @@ CREATE TABLE cuvette_color
 CREATE TABLE laboratory
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(20) UNIQUE NOT NULL,--检验医嘱名称
+  name varchar(100) UNIQUE NOT NULL,--检验医嘱名称
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
@@ -1051,7 +1050,6 @@ CREATE TABLE laboratory
   remark text,--备注
   laboratory_sample varchar(30),--检验物
   laboratory_sample_dosage varchar(30),--检验物计量
-  laboratory_sample_name varchar(20),--标本种类
   cuvette_color_name varchar(20),--试管颜色
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1068,6 +1066,7 @@ CREATE TABLE clinic_laboratory
   cost integer, --成本价
   price integer NOT NULL,--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
+  remark text,
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
   is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1082,7 +1081,6 @@ CREATE TABLE laboratory_item
   name varchar(100) UNIQUE NOT NULL,--检验名称
   en_name varchar(100),--英文名称
   instrument_code varchar(20),--仪器编码
-  -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称
   clinical_significance text,--临床意义
   data_type integer,--数据类型 1 定性 2 定量
@@ -1097,9 +1095,8 @@ CREATE TABLE laboratory_item_reference
 (
   id serial PRIMARY KEY NOT NULL,--id
   laboratory_item_id integer NOT NULL references laboratory_item(id),--检验项目id
-  reference_max varchar(20), --定量参考值最大值
-  reference_min varchar(20), --定量参考值最小值
-  reference_value varchar(20),--定性参考值
+  reference_max varchar(20), --定量/定性参考值最大值
+  reference_min varchar(20), --定量/定性参考值最小值
 
   age_max integer, --参考值年龄段最大值
   age_min integer, --参考值年龄段最小值
@@ -1144,7 +1141,6 @@ CREATE TABLE treatment
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1175,14 +1171,14 @@ CREATE TABLE material
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
   idc_code varchar(20),--国际编码
-  manu_factory_id integer references manu_factory(id),--生产厂商id
+  manu_factory_name varchar(100),--生产厂商
   specification varchar(30),--规格
-  unit_id integer references dose_unit(id),--单位id
+  unit_name varchar(20),--单位
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE(name,manu_factory_id,specification)
+  UNIQUE(name,manu_factory_name,specification)
 );
 
 --诊所材料
@@ -1209,7 +1205,7 @@ CREATE TABLE material_stock
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   clinic_material_id INTEGER NOT NULL references clinic_material(id),--诊所药品id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  supplier_name varchar(100),--供应商
   stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
   serial varchar(20),--批号
   eff_date DATE NOT NULL,--有效日期
@@ -1217,7 +1213,7 @@ CREATE TABLE material_stock
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (storehouse_id, clinic_material_id, supplier_id, serial, eff_date)
+  UNIQUE (storehouse_id, clinic_material_id, supplier_name, serial, eff_date)
 );
 
 --耗材入库记录
@@ -1226,8 +1222,8 @@ CREATE TABLE material_instock_record
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   order_number varchar(20) NOT NULL,--入库单号
-  instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  instock_way_name varchar(20),--入库方式
+  supplier_name varchar(100),--供应商
   instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
   remark text,--备注
   instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
@@ -1243,7 +1239,7 @@ CREATE TABLE material_instock_record_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   material_instock_record_id integer NOT NULL references material_instock_record(id),--材料入库记录id
-  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所材料id
+  clinic_material_id INTEGER NOT NULL references clinic_material(id),--诊所材料id
   instock_amount INTEGER NOT NULL CHECK(instock_amount > 0),--入库数量
   serial varchar(20) NOT NULL,--批号
   buy_price integer,--成本价
@@ -1262,7 +1258,7 @@ CREATE TABLE material_outstock_record
   personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
   order_number varchar(20) NOT NULL,--出库单号
   outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
-  outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
+  outstock_way_name varchar(20),--出库方式
   remark text,--备注
   outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
@@ -1291,7 +1287,6 @@ CREATE TABLE other_cost
   name varchar(20) NOT NULL,--名称
   en_name varchar(20),--英文名称
   py_code varchar(20),--拼音码
-  -- unit_id integer references dose_unit(id),--单位id
   unit_name varchar(20),--单位名称
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1354,13 +1349,13 @@ CREATE TABLE prescription_western_patient
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
-  route_administration_id integer references route_administration(id),--用法id
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  once_dose_unit_name varchar(10),--用量单位 单次剂量单位
+  route_administration_name varchar(50),--用法
+  frequency_name varchar(20),--用药频率/默认频次
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   illustration text,--用药说明
   fetch_address integer,--取药地点 0 本诊所 1 外购
@@ -1378,8 +1373,8 @@ CREATE TABLE prescription_chinese_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   order_sn varchar(50) UNIQUE NOT NULL,--单号
-  route_administration_id integer references route_administration(id),--用法id
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  route_administration_name varchar(50),--用法
+  frequency_name varchar(20),--用药频率/默认频次
   amount INTEGER NOT NULL CHECK(amount > 0),--总剂量
   medicine_illustration text,--服药说明
   fetch_address integer,--取药地点 0 本诊所 1 外购
@@ -1395,11 +1390,11 @@ CREATE TABLE prescription_chinese_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   prescription_chinese_patient_id INTEGER NOT NULL references prescription_chinese_patient(id),--中药处方id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   once_dose integer,--单次剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
+  once_dose_unit_name varchar(20),--用量单位 单次剂量单位id
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   special_illustration text,--特殊要求
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1423,7 +1418,7 @@ CREATE TABLE examination_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, clinic_laboratory_id, order_sn, soft_sn)
+  UNIQUE (clinic_triage_patient_id, clinic_examination_id, order_sn, soft_sn)
 );
 
 --开材料费
@@ -1431,7 +1426,7 @@ CREATE TABLE material_patient
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  material_stock_id INTEGER NOT NULL references material_stock(id),--检查项目id
+  clinic_material_id INTEGER NOT NULL references clinic_material(id),--诊所药品id
   order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
@@ -1440,7 +1435,7 @@ CREATE TABLE material_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, material_stock_id, order_sn, soft_sn)
+  UNIQUE (clinic_triage_patient_id, clinic_material_id, order_sn, soft_sn)
 );
 
 --开其它费用
@@ -1478,12 +1473,12 @@ CREATE TABLE prescription_western_patient_model_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   prescription_western_patient_model_id INTEGER NOT NULL references prescription_western_patient_model(id),--西药处方模板id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   once_dose integer,--单次剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
-  route_administration_id integer references route_administration(id),--用法id
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  once_dose_unit_name varchar(20),--用量单位 单次剂量单位
+  route_administration_name varchar(50),--用法
+  frequency_name varchar(20),--用药频率id/默认频次
   fetch_address integer,--取药地点 0 本诊所 1 外购
   eff_day integer,--有效天数
   illustration text,--用药说明
@@ -1498,8 +1493,8 @@ CREATE TABLE prescription_chinese_patient_model
   id serial PRIMARY KEY NOT NULL,--id
   model_name varchar(20) NOT NULL,--模板名称
   is_common boolean NOT NULL DEFAULT false,--是否通用
-  route_administration_id integer references route_administration(id),--用法id
-  frequency_id integer references frequency(id),--用药频率id/默认频次
+  route_administration_name varchar(50),--用法
+  frequency_name varchar(20),--用药频率id/默认频次
   amount INTEGER NOT NULL CHECK(amount > 0),--总剂量
   eff_day integer,--天数
   fetch_address integer,--取药地点 0 本诊所 1 外购
@@ -1516,9 +1511,9 @@ CREATE TABLE prescription_chinese_patient_model_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   prescription_chinese_patient_model_id INTEGER NOT NULL references prescription_chinese_patient_model(id),--中药处方模板id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存药id
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   once_dose integer,--单次剂量
-  once_dose_unit_id integer references dose_unit(id),--用量单位 单次剂量单位id
+  once_dose_unit_name varchar(20),--用量单位 单次剂量单位
   amount INTEGER NOT NULL CHECK(amount > 0),--总量
   special_illustration text,--说明/特殊要求
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
