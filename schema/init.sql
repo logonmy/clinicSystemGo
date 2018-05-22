@@ -335,7 +335,6 @@ CREATE TABLE mz_unpaid_orders
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
-  prescription_chinese_patient_id INTEGER,--中药处方id
   charge_project_id INTEGER NOT NULL,--收费项目id
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
@@ -343,9 +342,9 @@ CREATE TABLE mz_unpaid_orders
   price INTEGER NOT NULL CHECK(price > 0),--单价
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
   unit varchar(20),--单位
-  total INTEGER NOT NULL,--总价格
-  discount INTEGER NOT NULL DEFAULT 0,--打折金额
-  fee INTEGER NOT NULL,--缴费金额
+  total INTEGER NOT NULL,--折前总价格
+  discount INTEGER NOT NULL DEFAULT 0,--打折总金额金额
+  fee INTEGER NOT NULL,--折后金额  fee = total - discount
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

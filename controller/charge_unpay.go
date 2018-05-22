@@ -399,7 +399,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 	if balanceMoney != money {
 		balanceMoneyStr := strconv.Itoa(balanceMoney)
 		moneyStr := strconv.Itoa(money)
-		ctx.JSON(iris.Map{"code": "2", "msg": "收费金额与应收金额不匹配，应收: " + balanceMoneyStr + "分，实收：" + moneyStr + "分"})
+		ctx.JSON(iris.Map{"code": "2", "msg": "收费金额与应收金额不匹配，应收: " + balanceMoneyStr + "分钱，实收：" + moneyStr + "分钱！"})
 		return
 	}
 
