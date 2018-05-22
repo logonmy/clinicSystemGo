@@ -16,12 +16,12 @@ func DrugInstock(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	items := ctx.PostValue("items")
 	operationID := ctx.PostValue("instock_operation_id")
-	instockWayID := ctx.PostValue("instock_way_id")
-	supplierID := ctx.PostValue("supplier_id")
+	instockWayName := ctx.PostValue("instock_way_name")
+	supplierName := ctx.PostValue("supplier_name")
 	remark := ctx.PostValue("remark")
 	instockDate := ctx.PostValue("instock_date")
 
-	if clinicID == "" || instockWayID == "" || supplierID == "" || instockDate == "" || operationID == "" || items == "" {
+	if clinicID == "" || instockWayName == "" || supplierName == "" || instockDate == "" || operationID == "" || items == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -46,16 +46,16 @@ func DrugInstock(ctx iris.Context) {
 	values := []string{
 		storehouseID,
 		"'" + orderNumber + "'",
-		instockWayID,
-		supplierID,
+		"'" + instockWayName + "'",
+		"'" + supplierName + "'",
 		"date '" + instockDate + "'",
 		operationID,
 		"'" + remark + "'"}
 	sets := []string{
 		"storehouse_id",
 		"order_number",
-		"instock_way_id",
-		"supplier_id",
+		"instock_way_name",
+		"supplier_name",
 		"instock_date",
 		"instock_operation_id",
 		"remark"}
@@ -189,11 +189,9 @@ func DrugInstockRecord(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from drug_instock_record where storehouse_id=$1`
-	selectSQL := `select ir.id as drug_instock_record_id,ir.instock_date,ir.order_number, iw.name as instock_way_name,
-		vp.name as verify_operation_name,s.name as supplier_name,p.name as instock_operation_name,ir.verify_status
+	selectSQL := `select ir.id as drug_instock_record_id,ir.instock_date,ir.order_number, ir.instock_way_name,
+		vp.name as verify_operation_name,ir.supplier_name,p.name as instock_operation_name,ir.verify_status
 		from drug_instock_record ir
-		left join supplier s on ir.supplier_id = s.id
-		left join instock_way iw on ir.instock_way_id = iw.id
 		left join personnel p on ir.instock_operation_id = p.id
 		left join personnel vp on ir.verify_operation_id = vp.id
 		where storehouse_id=$1`
@@ -239,11 +237,9 @@ func DrugInstockRecordDetail(ctx iris.Context) {
 		return
 	}
 
-	sql := `select ir.id as drug_instock_record_id,ir.instock_date,ir.order_number,ir.created_time,s.name as supplier_name,ir.supplier_id,ir.remark,ir.verify_status,
-		ir.verify_operation_id,vp.name as verify_operation_name,ir.instock_way_id,iw.name as instock_way_name,ir.instock_operation_id,p.name as instock_operation_name 
+	sql := `select ir.id as drug_instock_record_id,ir.instock_date,ir.order_number,ir.created_time,,ir.supplier_name,ir.remark,ir.verify_status,
+		ir.verify_operation_id,vp.name as verify_operation_name,ir.instock_way_name,ir.instock_operation_id,p.name as instock_operation_name 
 		from drug_instock_record ir
-		left join supplier s on ir.supplier_id = s.id
-		left join instock_way iw on ir.instock_way_id = iw.id
 		left join personnel p on ir.instock_operation_id = p.id
 		left join personnel vp on ir.verify_operation_id = vp.id
 		where ir.id=$1`
@@ -274,12 +270,12 @@ func DrugInstockUpdate(ctx iris.Context) {
 	drugInstockRecordID := ctx.PostValue("drug_instock_record_id")
 	items := ctx.PostValue("items")
 	operationID := ctx.PostValue("instock_operation_id")
-	instockWayID := ctx.PostValue("instock_way_id")
-	supplierID := ctx.PostValue("supplier_id")
+	instockWayName := ctx.PostValue("instock_way_name")
+	supplierName := ctx.PostValue("supplier_name")
 	remark := ctx.PostValue("remark")
 	instockDate := ctx.PostValue("instock_date")
 
-	if drugInstockRecordID == "" || clinicID == "" || instockWayID == "" || supplierID == "" || instockDate == "" || operationID == "" || items == "" {
+	if drugInstockRecordID == "" || clinicID == "" || instockWayName == "" || supplierName == "" || instockDate == "" || operationID == "" || items == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -359,8 +355,8 @@ func DrugInstockUpdate(ctx iris.Context) {
 		return
 	}
 
-	updateSQL := `update drug_instock_record set instock_way_id=$1,supplier_id=$2,instock_date=$3,instock_operation_id=$4,remark=$5 where id=$6`
-	_, erru := tx.Exec(updateSQL, instockWayID, supplierID, instockDate, operationID, remark, drugInstockRecordID)
+	updateSQL := `update drug_instock_record set instock_way_name=$1,supplier_name=$2,instock_date=$3,instock_operation_id=$4,remark=$5 where id=$6`
+	_, erru := tx.Exec(updateSQL, instockWayName, supplierName, instockDate, operationID, remark, drugInstockRecordID)
 	if erru != nil {
 		fmt.Println("erru ===", erru)
 		tx.Rollback()
@@ -427,7 +423,7 @@ func DrugInstockCheck(ctx iris.Context) {
 		return
 	}
 
-	rows, _ := model.DB.Queryx(`select iri.*,ir.supplier_id from drug_instock_record_item iri
+	rows, _ := model.DB.Queryx(`select iri.*,ir.supplier_name from drug_instock_record_item iri
 		left join drug_instock_record ir on ir.id = iri.drug_instock_record_id
 		where iri.drug_instock_record_id=$1 `, drugInstockRecordID)
 	if rows == nil {
@@ -449,26 +445,26 @@ func DrugInstockCheck(ctx iris.Context) {
 	for _, v := range instockRecordItems {
 		clinicDrugID := strconv.FormatInt(v["clinic_drug_id"].(int64), 10)
 		instockAmount := v["instock_amount"].(int64)
-		supplierID := strconv.FormatInt(v["supplier_id"].(int64), 10)
+		supplierName := v["supplier_name"].(string)
 		serial := v["serial"].(string)
 		buyPrice := strconv.FormatInt(v["buy_price"].(int64), 10)
-		effDate := v["eff_date"].(string)
+		effDate := v["eff_date"].(time.Time).Format("2006-01-02")
 		var s []string
 		drow := model.DB.QueryRowx(`select id,stock_amount from drug_stock where storehouse_id=$1 and clinic_drug_id=$2 
-			and supplier_id=$3 and serial=$4 and eff_date=$5 limit 1`, storehouseID, clinicDrugID, supplierID, serial, effDate)
+			and supplier_name=$3 and serial=$4 and eff_date=$5 limit 1`, storehouseID, clinicDrugID, supplierName, serial, effDate)
 		if drow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 			return
 		}
 		drugStock := FormatSQLRowToMap(drow)
-		s = append(s, storehouseID, clinicDrugID, supplierID, serial, effDate, buyPrice)
+		s = append(s, storehouseID, clinicDrugID, "'"+supplierName+"'", "'"+serial+"'", "date '"+effDate+"'", buyPrice)
 		_, dok := drugStock["id"]
 		if !dok {
 			s = append(s, strconv.FormatInt(instockAmount, 10))
 			sets := []string{
 				"storehouse_id",
 				"clinic_drug_id",
-				"supplier_id",
+				"supplier_name",
 				"serial",
 				"eff_date",
 				"buy_price",
@@ -581,13 +577,13 @@ func DrugOutstock(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	items := ctx.PostValue("items")
 	operationID := ctx.PostValue("outstock_operation_id")
-	outstockWayID := ctx.PostValue("outstock_way_id")
+	outstockWayName := ctx.PostValue("outstock_way_name")
 	departmentID := ctx.PostValue("department_id")
 	personnelID := ctx.PostValue("personnel_id")
 	remark := ctx.PostValue("remark")
 	outstockDate := ctx.PostValue("outstock_date")
 
-	if clinicID == "" || items == "" || outstockWayID == "" || departmentID == "" || operationID == "" || personnelID == "" || outstockDate == "" {
+	if clinicID == "" || items == "" || outstockWayName == "" || departmentID == "" || operationID == "" || personnelID == "" || outstockDate == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -625,7 +621,7 @@ func DrugOutstock(ctx iris.Context) {
 		departmentID,
 		personnelID,
 		"'" + orderNumber + "'",
-		outstockWayID,
+		"'" + outstockWayName + "'",
 		"date '" + outstockDate + "'",
 		operationID,
 		"'" + remark + "'"}
@@ -634,7 +630,7 @@ func DrugOutstock(ctx iris.Context) {
 		"department_id",
 		"personnel_id",
 		"order_number",
-		"outstock_way_id",
+		"outstock_way_name",
 		"outstock_date",
 		"outstock_operation_id",
 		"remark"}
@@ -763,12 +759,11 @@ func DrugOutstockRecord(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from drug_outstock_record where storehouse_id=$1`
-	selectSQL := `select outr.id as drug_outstock_record_id,outr.outstock_date,outr.order_number, ow.name as outstock_way_name,
+	selectSQL := `select outr.id as drug_outstock_record_id,outr.outstock_date,outr.order_number, outr.utstock_way_name,
 		vp.name as verify_operation_name,d.name as department_name,p.name as personnel_name,op.name as outstock_operation_name,outr.verify_status
 		from drug_outstock_record outr
 		left join department d on outr.department_id = d.id
 		left join personnel p on outr.personnel_id = p.id
-		left join outstock_way ow on outr.outstock_way_id = ow.id
 		left join personnel op on outr.outstock_operation_id = op.id
 		left join personnel vp on outr.verify_operation_id = vp.id
 		where storehouse_id=$1`
@@ -816,12 +811,11 @@ func DrugOutstockRecordDetail(ctx iris.Context) {
 
 	sql := `select outr.id as drug_outstock_record_id,outr.outstock_date,outr.order_number,outr.created_time,
 		dept.name as department_name,outr.department_id,outr.remark,outr.verify_operation_id,vp.name as verify_operation_name,
-		outr.personnel_id,p.name as personnel_name,outr.outstock_way_id,ow.name as outstock_way_name,
+		outr.personnel_id,p.name as personnel_name,outr.outstock_way_name,
 		outr.outstock_operation_id,op.name as outstock_operation_name 
 		from drug_outstock_record outr
 		left join department dept on outr.department_id = dept.id
 		left join personnel p on outr.personnel_id = p.id
-		left join outstock_way ow on outr.outstock_way_id = ow.id
 		left join personnel op on outr.outstock_operation_id = op.id
 		left join personnel vp on outr.verify_operation_id = vp.id
 		where outr.id=$1`
@@ -853,13 +847,13 @@ func DrugOutstockUpdate(ctx iris.Context) {
 	drugOutstockRecordID := ctx.PostValue("drug_outstock_record_id")
 	items := ctx.PostValue("items")
 	operationID := ctx.PostValue("outstock_operation_id")
-	outstockWayID := ctx.PostValue("outstock_way_id")
+	outstockWayName := ctx.PostValue("outstock_way_name")
 	departmentID := ctx.PostValue("department_id")
 	personnelID := ctx.PostValue("personnel_id")
 	remark := ctx.PostValue("remark")
 	outstockDate := ctx.PostValue("outstock_date")
 
-	if clinicID == "" || drugOutstockRecordID == "" || items == "" || outstockWayID == "" || departmentID == "" || operationID == "" || personnelID == "" || outstockDate == "" {
+	if clinicID == "" || drugOutstockRecordID == "" || items == "" || outstockWayName == "" || departmentID == "" || operationID == "" || personnelID == "" || outstockDate == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -943,8 +937,8 @@ func DrugOutstockUpdate(ctx iris.Context) {
 		return
 	}
 
-	updateSQL := `update drug_outstock_record set department_id=$1,personnel_id=$2,outstock_way_id=$3,outstock_date=$4,outstock_operation_id=$5,remark=$6 where id=$7`
-	_, erru := tx.Exec(updateSQL, departmentID, personnelID, outstockWayID, outstockDate, operationID, remark, drugOutstockRecordID)
+	updateSQL := `update drug_outstock_record set department_id=$1,personnel_id=$2,outstock_way_name=$3,outstock_date=$4,outstock_operation_id=$5,remark=$6 where id=$7`
+	_, erru := tx.Exec(updateSQL, departmentID, personnelID, outstockWayName, outstockDate, operationID, remark, drugOutstockRecordID)
 	if erru != nil {
 		fmt.Println("erru ===", erru)
 		tx.Rollback()

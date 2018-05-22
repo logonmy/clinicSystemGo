@@ -60,7 +60,7 @@ func MaterialCreate(ctx iris.Context) {
 	}
 
 	materialSets := []string{"name", "unit_name"}
-	materialValues := []string{"'" + name + "'", unitName}
+	materialValues := []string{"'" + name + "'", "'" + unitName + "'"}
 
 	clinicMaterialSets := []string{"clinic_id", "ret_price"}
 	clinicMaterialValues := []string{clinicID, retPrice}
@@ -445,7 +445,7 @@ func MaterialDetail(ctx iris.Context) {
 	}
 
 	selectSQL := `select cm.material_id,cm.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,
-		m.manu_factory_name,m.specification,m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning,cm.stock_amount
+		m.manu_factory_name,m.specification,m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning
 		from clinic_material cm
 		left join material m on cm.material_id = m.id
 		where cm.id=$1`

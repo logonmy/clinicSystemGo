@@ -836,7 +836,7 @@ CREATE TABLE drug_stock
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  supplier_name varchar(100),--供应商
   stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
   serial varchar(20),--批号
   eff_date DATE NOT NULL,--有效日期
@@ -844,7 +844,7 @@ CREATE TABLE drug_stock
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (storehouse_id, clinic_drug_id, supplier_id, serial, eff_date)
+  UNIQUE (storehouse_id, clinic_drug_id, supplier_name, serial, eff_date)
 );
 
 --药品入库记录
@@ -853,8 +853,8 @@ CREATE TABLE drug_instock_record
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   order_number varchar(20) NOT NULL,--入库单号
-  instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  instock_way_name varchar(20),--入库方式
+  supplier_name varchar(100),--供应商
   instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
   remark text,--备注
   instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
@@ -889,7 +889,7 @@ CREATE TABLE drug_outstock_record
   personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
   order_number varchar(20) NOT NULL,--出库单号
   outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
-  outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
+  outstock_way_name varchar(20),--出库方式
   remark text,--备注
   outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
@@ -1203,7 +1203,7 @@ CREATE TABLE material_stock
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   clinic_material_id INTEGER NOT NULL references clinic_material(id),--诊所药品id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  supplier_name varchar(100),--供应商
   stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
   serial varchar(20),--批号
   eff_date DATE NOT NULL,--有效日期
@@ -1211,7 +1211,7 @@ CREATE TABLE material_stock
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (storehouse_id, clinic_material_id, supplier_id, serial, eff_date)
+  UNIQUE (storehouse_id, clinic_material_id, supplier_name, serial, eff_date)
 );
 
 --耗材入库记录
@@ -1220,8 +1220,8 @@ CREATE TABLE material_instock_record
   id serial PRIMARY KEY NOT NULL,--id
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   order_number varchar(20) NOT NULL,--入库单号
-  instock_way_id INTEGER NOT NULL references instock_way(id),--入库方式id
-  supplier_id INTEGER NOT NULL references supplier(id),--供应商id
+  instock_way_name varchar(20),--入库方式
+  supplier_name varchar(100),--供应商
   instock_date DATE NOT NULL DEFAULT CURRENT_DATE,--入库日期
   remark text,--备注
   instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
@@ -1256,7 +1256,7 @@ CREATE TABLE material_outstock_record
   personnel_id INTEGER NOT NULL references personnel(id),--领用人员id
   order_number varchar(20) NOT NULL,--出库单号
   outstock_date DATE NOT NULL DEFAULT CURRENT_DATE,--出库日期
-  outstock_way_id INTEGER NOT NULL references outstock_way(id),--出库方式id
+  outstock_way_name varchar(20),--出库方式
   remark text,--备注
   outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
