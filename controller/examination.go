@@ -75,8 +75,8 @@ func ExaminationCreate(ctx iris.Context) {
 		clinicExaminationValues = append(clinicExaminationValues, status)
 	}
 	if remark != "" {
-		clinicExaminationSets = append(examinationSets, "remark")
-		clinicExaminationValues = append(examinationValues, "'"+remark+"'")
+		clinicExaminationSets = append(clinicExaminationSets, "remark")
+		clinicExaminationValues = append(clinicExaminationValues, "'"+remark+"'")
 	}
 	if cost != "" {
 		clinicExaminationSets = append(clinicExaminationSets, "cost")
