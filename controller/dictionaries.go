@@ -31,8 +31,8 @@ func DoseUnitList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from dose_unit where deleted_flag is null`
-	selectSQL := `select * from dose_unit where deleted_flag is null`
+	countSQL := `select count(id) as total from dose_unit where id > 0`
+	selectSQL := `select * from dose_unit where id > 0`
 
 	if keyword != "" {
 		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
