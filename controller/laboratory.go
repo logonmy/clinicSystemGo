@@ -48,18 +48,6 @@ func LaboratoryCreate(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from laboratory where name=$1 limit 1", name)
-	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-		return
-	}
-	laboratory := FormatSQLRowToMap(lrow)
-	_, lok := laboratory["id"]
-	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "检验医嘱名称已存在"})
-		return
-	}
-
 	laboratorySets := []string{"name"}
 	laboratoryValues := []string{"'" + name + "'"}
 
@@ -136,13 +124,26 @@ func LaboratoryCreate(ctx iris.Context) {
 
 	tx, err := model.DB.Begin()
 	var laboratoryID string
-	err = tx.QueryRow(laboratoryInsertSQL).Scan(&laboratoryID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+
+	lrow := model.DB.QueryRowx("select id from laboratory where name=$1 limit 1", name)
+	if lrow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 		return
 	}
+	laboratory := FormatSQLRowToMap(lrow)
+	_, lok := laboratory["id"]
+	if !lok {
+		err = tx.QueryRow(laboratoryInsertSQL).Scan(&laboratoryID)
+		if err != nil {
+			fmt.Println("err ===", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": err})
+			return
+		}
+	} else {
+		laboratoryID = strconv.Itoa(int(laboratory["id"].(int64)))
+	}
+
 	fmt.Println("laboratoryID====", laboratoryID)
 
 	clinicLaboratorySets = append(clinicLaboratorySets, "laboratory_id")

@@ -42,18 +42,6 @@ func ExaminationCreate(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from examination where name=$1 limit 1", name)
-	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-		return
-	}
-	examination := FormatSQLRowToMap(lrow)
-	_, lok := examination["id"]
-	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "检查名称已存在"})
-		return
-	}
-
 	examinationSets := []string{"name"}
 	examinationValues := []string{"'" + name + "'"}
 
@@ -106,13 +94,25 @@ func ExaminationCreate(ctx iris.Context) {
 
 	tx, err := model.DB.Begin()
 	var examinationID string
-	err = tx.QueryRow(examinationInsertSQL).Scan(&examinationID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+	lrow := model.DB.QueryRowx("select id from examination where name=$1 limit 1", name)
+	if lrow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 		return
 	}
+	examination := FormatSQLRowToMap(lrow)
+	_, lok := examination["id"]
+	if !lok {
+		err = tx.QueryRow(examinationInsertSQL).Scan(&examinationID)
+		if err != nil {
+			fmt.Println("err ===", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": err})
+			return
+		}
+	} else {
+		examinationID = strconv.Itoa(int(examination["id"].(int64)))
+	}
+
 	fmt.Println("examinationID====", examinationID)
 
 	clinicExaminationSets = append(clinicExaminationSets, "examination_id")
