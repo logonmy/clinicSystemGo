@@ -329,7 +329,7 @@ CREATE TABLE pre_diagnosis
   deleted_time timestamp with time zone
 );
 
---门诊待缴费缴费
+--门诊待缴费
 CREATE TABLE mz_unpaid_orders
 (
   id serial PRIMARY KEY NOT NULL,--id
@@ -466,8 +466,8 @@ CREATE TABLE on_credit_record
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  trade_no varchar(30) UNIQUE,--第三方平台交易号(如；支付宝，微信)
   on_credit_money INTEGER NOT NULL, --挂账总金额金额
-  remain_pay_money INTEGER NOT NULL, --剩余还款金额
   already_pay_money INTEGER NOT NULL DEFAULT 0, --已还款金额
   operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

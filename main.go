@@ -146,7 +146,7 @@ func main() {
 		// 创建支付订单
 		charge.Post("/payment/create", controller.ChargePaymentCreate)
 		// 支付到账通知
-		charge.Post("/payment/notice", controller.ChargePay)
+		charge.Post("/payment/notice", controller.ChargeNotice)
 		charge.Post("/paid/list", controller.ChargePaidList)
 		// 查询有代缴费的就诊记录
 		charge.Post("/traigePatient/unpay", controller.GetUnChargeTraigePatients)
