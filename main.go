@@ -139,25 +139,28 @@ func main() {
 		charge.Post("/type/init", controller.ChargeTypeInit)
 		charge.Post("/type/create", controller.ChargeTypeCreate)
 		// 创建代缴费项目
-		charge.Post("/unPay/create", controller.ChargeUnPayCreate)
-		charge.Post("/unPay/delete", controller.ChargeUnPayDelete)
-		// 查询待缴费的项目列表
-		charge.Post("/unPay/list", controller.ChargeUnPayList)
+		// charge.Post("/unPay/create", controller.ChargeUnPayCreate)
+		// charge.Post("/unPay/delete", controller.ChargeUnPayDelete)
 		// 创建支付订单
 		charge.Post("/payment/create", controller.ChargePaymentCreate)
 		// 支付到账通知
 		charge.Post("/payment/notice", controller.ChargeNotice)
 		charge.Post("/paid/list", controller.ChargePaidList)
-		// 查询有代缴费的就诊记录
+		// 查询有待缴费的就诊记录
 		charge.Post("/traigePatient/unpay", controller.GetUnChargeTraigePatients)
+		// 查询待缴费的项目列表
+		charge.Post("/unPay/list", controller.ChargeUnPayList)
+		// 查询已缴费的就诊记录
+		charge.Post("/traigePatient/paid", controller.GetPaidTraigePatients)
 
 	}
 
 	//挂账
 	onCredit := app.Party("/onCredit", crs).AllowMethods(iris.MethodOptions)
 	{
-		onCredit.Post("/create", controller.OnCreditCreate)
-		onCredit.Post("/registtion/list", controller.OnCreditRegisttionList)
+		onCredit.Post("/traigePatient/list", controller.OnCreditTraigePatient)
+		// onCredit.Post("/create", controller.OnCreditCreate)
+		// onCredit.Post("/registtion/list", controller.OnCreditRegisttionList)
 		onCredit.Post("/registtion/detail", controller.OnCreditRegisttionDetail)
 		onCredit.Post("/repay", controller.OnCreditRepay)
 	}
