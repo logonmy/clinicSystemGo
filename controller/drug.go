@@ -14,7 +14,7 @@ import (
 func DrugAdd(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	drugID := ctx.PostValue("drug_Id")
-	DrugType := ctx.PostValue("type")
+	drugType := ctx.PostValue("type")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
 	pyCode := ctx.PostValue("py_code")
@@ -49,13 +49,13 @@ func DrugAdd(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if clinicID == "" || manuFactoryName == "" || name == "" || retPrice == "" || DrugType == "" || licenseNo == "" || specification == "" {
+	if clinicID == "" || manuFactoryName == "" || name == "" || retPrice == "" || drugType == "" || licenseNo == "" || specification == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
 	sets := []string{"name", "license_no", "type"}
-	values := []string{"'" + name + "'", "'" + licenseNo + "'", DrugType}
+	values := []string{"'" + name + "'", "'" + licenseNo + "'", drugType}
 	clinicDrugSets := []string{"clinic_id", "ret_price"}
 	clinicDrugValues := []string{clinicID, retPrice}
 	if pyCode != "" {
@@ -214,7 +214,7 @@ func DrugAdd(ctx iris.Context) {
 //DrugList 药品列表
 func DrugList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	DrugType := ctx.PostValue("type")
+	drugType := ctx.PostValue("type")
 	keyword := ctx.PostValue("keyword")
 	drugTypeID := ctx.PostValue("drug_type_id")
 	status := ctx.PostValue("status")
@@ -257,9 +257,9 @@ func DrugList(ctx iris.Context) {
 			cd.ret_price,d.py_code,cd.is_discount,d.default_remark,cd.status, d.once_dose_unit_name, 
 			d.route_administration_name, d.frequency_name, cd.clinic_id`
 
-	if DrugType != "" {
-		countSQL += " and d.type=" + DrugType
-		selectSQL += " and d.type=" + DrugType
+	if drugType != "" {
+		countSQL += " and d.type=" + drugType
+		selectSQL += " and d.type=" + drugType
 	}
 	if keyword != "" {
 		countSQL += " and (d.barcode ~'" + keyword + "' or d.name ~'" + keyword + "')"
@@ -293,7 +293,7 @@ func DrugList(ctx iris.Context) {
 //DrugUpdate 修改药品
 func DrugUpdate(ctx iris.Context) {
 	clinicDrugID := ctx.PostValue("clinic_drug_id")
-	DrugType := ctx.PostValue("type")
+	drugType := ctx.PostValue("type")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
 	pyCode := ctx.PostValue("py_code")
@@ -328,7 +328,7 @@ func DrugUpdate(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if clinicDrugID == "" || barcode == "" || name == "" || retPrice == "" || packingUnitName == "" || DrugType == "" {
+	if clinicDrugID == "" || barcode == "" || name == "" || retPrice == "" || packingUnitName == "" || drugType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -353,7 +353,7 @@ func DrugUpdate(ctx iris.Context) {
 		return
 	}
 
-	sets := []string{"name=" + "'" + name + "'", "type=" + DrugType, "barcode=" + "'" + barcode + "'", "updated_time=LOCALTIMESTAMP"}
+	sets := []string{"name=" + "'" + name + "'", "type=" + drugType, "barcode=" + "'" + barcode + "'", "updated_time=LOCALTIMESTAMP"}
 	clinicDrugSets := []string{"ret_price=" + retPrice, "updated_time=LOCALTIMESTAMP"}
 	if pyCode != "" {
 		sets = append(sets, "py_code="+"'"+pyCode+"'")
@@ -483,7 +483,7 @@ func DrugUpdate(ctx iris.Context) {
 func DrugSearch(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	clinicID := ctx.PostValue("clinic_id")
-	DrugType := ctx.PostValue("type")
+	drugType := ctx.PostValue("type")
 
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
@@ -499,8 +499,8 @@ func DrugSearch(ctx iris.Context) {
 		selectSQL += " and (d.barcode ~'" + keyword + "' or d.name ~'" + keyword + "')"
 	}
 
-	if DrugType != "" {
-		selectSQL += " and d.type=" + DrugType
+	if drugType != "" {
+		selectSQL += " and d.type=" + drugType
 	}
 
 	var results []map[string]interface{}
