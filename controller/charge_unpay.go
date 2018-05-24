@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"encoding/json"
+	"errors"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -295,11 +296,6 @@ func ChargePay(ctx iris.Context) {
 		return
 	}
 
-	//如果有挂账金额，添加挂账记录
-	if onCreditMoney > 0 {
-
-	}
-
 	//插入门诊缴费流水表
 	var ID int
 	insertPaidDetail := "insert into mz_paid_record_detail (mz_paid_record_id,out_trade_no,soft_sns,order_sn,confrim_id,discount_money,derate_money,medical_money,on_credit_money,voucher_money,bonus_points_money,total_money,balance_money) " +
@@ -399,7 +395,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 	if balanceMoney != money {
 		balanceMoneyStr := strconv.Itoa(balanceMoney)
 		moneyStr := strconv.Itoa(money)
-		ctx.JSON(iris.Map{"code": "2", "msg": "收费金额与应收金额不匹配，应收: " + balanceMoneyStr + "分，实收：" + moneyStr + "分"})
+		ctx.JSON(iris.Map{"code": "2", "msg": "收费金额与应收金额不匹配，应收: " + balanceMoneyStr + "分钱，实收：" + moneyStr + "分钱！"})
 		return
 	}
 
@@ -427,6 +423,18 @@ func ChargePaymentCreate(ctx iris.Context) {
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "7", "msg": err.Error()})
 		return
+	}
+
+	// 如果金额为0 直接通知
+	if balanceMoney == 0 || payMethodCode == "4" {
+		chaerr := charge(outTradeNo, outTradeNo, int64(balanceMoney))
+		if chaerr != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "缴费通知失败"})
+			return
+		} else {
+			ctx.JSON(iris.Map{"code": "300", "msg": "直接缴费成功"})
+			return
+		}
 	}
 
 	data := map[string]interface{}{}
@@ -485,4 +493,93 @@ func ChargePaidList(ctx iris.Context) {
 	result := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 
+}
+
+// ChargeNotice 缴费通知
+func ChargeNotice(ctx iris.Context) {
+	outTradeNo := ctx.PostValue("out_trade_no")
+	tradeNo := ctx.PostValue("trade_no")
+	money, merr := ctx.PostValueInt64("money") //钱以分为单位
+	if merr != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "无效的输入金额"})
+		return
+	}
+
+	if outTradeNo == "" || tradeNo == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	err := charge(outTradeNo, tradeNo, money)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "缴费成功"})
+	return
+}
+
+// 处理缴费通知
+func charge(outTradeNo string, tradeNo string, money int64) error {
+	payment := model.DB.QueryRowx("select * from mz_paid_record where out_trade_no = $1", outTradeNo)
+	pay := FormatSQLRowToMap(payment)
+	_, ok := pay["id"]
+	if !ok {
+		return errors.New("未找到指定的待缴费单")
+	}
+	balanceMoney := pay["balance_money"]
+	if balanceMoney.(int64) != money {
+		return errors.New("缴费金额不匹配")
+	}
+	tx, txErr := model.DB.Beginx()
+	if txErr != nil {
+		return txErr
+	}
+	_, updateErr := tx.Exec(`update mz_paid_record set trade_no = $1,updated_time = LOCALTIMESTAMP,status='TRADE_SUCCESS' WHERE out_trade_no = $2`, tradeNo, outTradeNo)
+	if updateErr != nil {
+		tx.Rollback()
+		return updateErr
+	}
+
+	operationID := pay["operation_id"]
+
+	onCreditMoney := pay["on_credit_money"]
+	if onCreditMoney.(int64) != 0 {
+		triageID := pay["clinic_triage_patient_id"]
+		creditSQL := `INSERT INTO on_credit_record( 
+		  clinic_triage_patient_id, on_credit_money, trade_no, operation_id) 
+			VALUES ($1, $2, $3, $4)`
+		_, creditErr := tx.Exec(creditSQL, triageID, onCreditMoney, tradeNo, operationID)
+		if creditErr != nil {
+			tx.Rollback()
+			return updateErr
+		}
+	}
+
+	orderIDs := pay["orders_ids"]
+	recordID := pay["id"]
+	confrimID := pay["operation_id"]
+
+	//插入已缴费
+	insertPaidOrders := "insert into mz_paid_orders (id,mz_paid_record_id,clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
+		" select id," + strconv.Itoa(int(recordID.(int64))) + ",clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id," + strconv.Itoa(int(confrimID.(int64))) + " from mz_unpaid_orders where id in (" + orderIDs.(string) + ")"
+	_, insertPaidOrdersErr := tx.Query(insertPaidOrders)
+	if insertPaidOrdersErr != nil {
+		tx.Rollback()
+		return insertPaidOrdersErr
+	}
+
+	//删除未交费
+	deleteUnPaid := "DELETE from mz_unpaid_orders where id in (" + orderIDs.(string) + ")"
+	_, deleteUnPaidErr := tx.Query(deleteUnPaid)
+	if deleteUnPaidErr != nil {
+		tx.Rollback()
+		return deleteUnPaidErr
+	}
+
+	err := tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
 }
