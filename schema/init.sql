@@ -696,7 +696,7 @@ CREATE TABLE route_administration
 CREATE TABLE drug
 (
   id serial PRIMARY KEY NOT NULL,--id
-  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-西药 1-中药
+  type INTEGER,--类型 0-西药 1-中药
   code varchar(20),--编码
   name varchar(30) NOT NULL,--药品名称
   py_code varchar(20),--拼音码
@@ -709,44 +709,44 @@ CREATE TABLE drug
   drug_class_id integer references drug_class(id),--药品类型id
   drug_type_id integer references drug_type(id),--药品类别id
   dose_form_name varchar(20),--药品剂型
-  license_no varchar(20),--国药准字、文号
-
-  weight integer,--重量
-  weight_unit_name varchar(10),--重量单位
-  volum integer,--体积
-  vol_unit_name varchar(10),--体积单位
+  license_no varchar(100),--国药准字、文号
   once_dose integer,--常用剂量
   once_dose_unit_name varchar(10),--用量单位 常用剂量单位
-  dose_count integer,--制剂数量
-  dose_count_unit_name varchar(10),--制剂数量单位
+  dose_count integer,--制剂数量/包装量
+  dose_count_unit_name varchar(10),--制剂数量单位/最小单位
   packing_unit_name varchar(10),--药品包装单位
   route_administration_name varchar(50),--用药途径id/默认用法
   frequency_name varchar(20),--用药频率/默认频次
   default_remark varchar(20),--默认用量用法说明
 
+  weight integer,--重量
+  weight_unit_name varchar(10),--重量单位
+  volum integer,--体积
+  vol_unit_name varchar(10),--体积单位
   serial varchar(20),--包装序号
+  national_standard varchar(20),--国标分类
   concentration varchar(10),--浓度
+  dcode varchar(20),--自定义码
+  infusion_flag integer,--大输液标志,9为并开药
+  country_flag integer,--进口
+  divide_flag integer,--分装标志 
+  low_dosage_flag integer,--大规格小剂量标志
   self_flag integer,--自费标识
   separate_flag integer,--单列标志
   suprice_flag integer,--贵重标志
   drug_flag integer,--毒麻标志
-  dcode varchar(20),--自定义码
-  infusion_flag integer,--大输液标志,9为并开药
-  country_flag integer,--进口
-  divide_flag integer,--分装标志
-  deleted_flag integer,--删除标志
+  english_name varchar(30),--英文名称
+  sy_code varchar(30),--上药编码
+
   zy_bill_item varchar(20),--住院帐单码
   mz_bill_item varchar(20),--门诊帐单码
   zy_charge_group varchar(20),--住院用药品分组
   mz_charge_group varchar(20),--门诊用药品分组
   extend_code varchar(20),--药品与外界衔接码
-  low_dosage_flag integer,--大规格小剂量标志
-  english_name varchar(30),--英文名称
-  sy_code varchar(30),--上药编码
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (barcode, name)
+  UNIQUE (name, specification, manu_factory_name)
 );
 
 --药品别名

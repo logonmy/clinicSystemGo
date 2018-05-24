@@ -4,6 +4,7 @@ import (
 	"clinicSystemGo/model"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/kataras/iris"
@@ -790,9 +791,9 @@ func ImportExamination(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
-//ImportDrug 导入用药途径
+//ImportDrug 导入药品
 func ImportDrug(ctx iris.Context) {
-	excelFileName := "drug.xlsx"
+	excelFileName := "drug_test.xlsx"
 	xlFile, err := xlsx.OpenFile(excelFileName)
 	if err != nil {
 		fmt.Printf("open failed: %s\n", err)
@@ -809,31 +810,223 @@ func ImportDrug(ctx iris.Context) {
 		"a": "a",
 	}
 	for index, row := range xlFile.Sheets[0].Rows {
-		sets := []string{"name", "py_code"}
-		if index < 3 {
+		sets := []string{"license_no", "name", "manu_factory_name", "code", "py_code", "serial", "national_standard", "dose_form_name", "concentration",
+			"weight_unit_name", "vol_unit_name", "dose_count_unit_name", "packing_unit_name", "specification", "dcode",
+			"infusion_flag", "country_flag", "divide_flag", "route_administration_name", "frequency_name",
+			"once_dose_unit_name", "low_dosage_flag", "self_flag", "separate_flag", "suprice_flag", "drug_flag"}
+		var values []string
+
+		if index < 1 {
 			continue
 		}
-		if count > 5 {
+		if count > 10 {
 			break
 		}
-		name := row.Cells[0].String()
-		pyCode := row.Cells[1].String()
-		fmt.Println("code, name", name, pyCode)
-		if name == "" {
+
+		licenseNo := row.Cells[0].String()
+		name := row.Cells[1].String()
+		manuFactoryCode := row.Cells[2].String()
+		specification := row.Cells[16].String()
+
+		unique := licenseNo + name + manuFactoryCode + specification
+		if licenseNo == "" {
 			count++
 			continue
+		} else {
+			count = 0
 		}
-		_, keyok := keymap[name]
+		_, keyok := keymap[unique]
 		if keyok {
+			fmt.Println("unique===", unique)
+			continue
+		}
+		keymap[unique] = unique
+
+		var manuFactoryName string
+		if manuFactoryCode != "" {
+			mfrow := model.DB.QueryRowx("select name from manu_factory where code=$1 limit 1", manuFactoryCode)
+			if mfrow == nil {
+				continue
+			}
+			manuFactory := FormatSQLRowToMap(mfrow)
+			name, mfok := manuFactory["name"]
+			if !mfok {
+				continue
+			}
+			manuFactoryName = name.(string)
+		} else {
 			continue
 		}
 
-		keymap[name] = name
-		setStr := strings.Join(sets, ",")
+		code := row.Cells[3].String()
+		pyCode := row.Cells[4].String()
+		serial := row.Cells[5].String()
+		nationalStandard := row.Cells[6].String()
 
-		insertSQL := "insert into examination (" + setStr + ") values ($1, $2)"
-		fmt.Println("insertSQL ===", name, pyCode)
-		_, err = tx.Exec(insertSQL, name, pyCode)
+		doseFormCode := row.Cells[7].String()
+		doseFormName := ""
+		if doseFormCode != "" {
+			dfrow := model.DB.QueryRowx("select name from dose_form where code=$1 limit 1", doseFormCode)
+			doseForm := FormatSQLRowToMap(dfrow)
+			name, dfok := doseForm["name"]
+			if dfok {
+				doseFormName = name.(string)
+			}
+		}
+
+		concentration := row.Cells[8].String()
+		weight := row.Cells[9].String()
+
+		weightUnitCode := row.Cells[10].String()
+		weightUnitName := ""
+		if weightUnitCode != "" {
+			wurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", weightUnitCode)
+			weightUnit := FormatSQLRowToMap(wurow)
+			name, wuok := weightUnit["name"]
+			if wuok {
+				weightUnitName = name.(string)
+			}
+		}
+		volum := row.Cells[11].String()
+		volUnitCode := row.Cells[12].String()
+		volUnitName := ""
+		if volUnitCode != "" {
+			vurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", volUnitCode)
+			volUnit := FormatSQLRowToMap(vurow)
+			name, vuok := volUnit["name"]
+			if vuok {
+				volUnitName = name.(string)
+			}
+		}
+
+		doseCountUnitCode := row.Cells[13].String()
+		doseCountUnitName := ""
+		if doseCountUnitCode != "" {
+			dcurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", doseCountUnitCode)
+			doseCountUnit := FormatSQLRowToMap(dcurow)
+			name, dcuok := doseCountUnit["name"]
+			if dcuok {
+				doseCountUnitName = name.(string)
+			}
+		}
+		doseCount := row.Cells[14].String()
+
+		packingUnitCode := row.Cells[15].String()
+		packingUnitName := ""
+		if packingUnitCode != "" {
+			pcurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", packingUnitCode)
+			packingUnit := FormatSQLRowToMap(pcurow)
+			name, puok := packingUnit["name"]
+			if puok {
+				packingUnitName = name.(string)
+			}
+		}
+		dcode := row.Cells[17].String()
+		infusionFlag := row.Cells[18].String()
+		countryFlag := row.Cells[19].String()
+		divideFlag := row.Cells[20].String()
+
+		drugTypeCode := row.Cells[21].String()
+		drugTypeID := ""
+		if drugTypeCode != "" {
+			dtrow := model.DB.QueryRowx("select id from drug_type where code=$1 limit 1", drugTypeCode)
+			drugType := FormatSQLRowToMap(dtrow)
+			name, dtok := drugType["id"]
+			if dtok {
+				drugTypeID = strconv.FormatInt(name.(int64), 10)
+			}
+		}
+
+		routeAdministrationCode := row.Cells[22].String()
+		routeAdministrationName := ""
+		if routeAdministrationCode != "" {
+			rarow := model.DB.QueryRowx("select name from route_administration where code=$1 limit 1", routeAdministrationCode)
+			routeAdministration := FormatSQLRowToMap(rarow)
+			name, raok := routeAdministration["name"]
+			if raok {
+				routeAdministrationName = name.(string)
+			}
+		}
+
+		frequencyCode := row.Cells[23].String()
+		frequencyName := ""
+		if frequencyCode != "" {
+			frow := model.DB.QueryRowx("select name from frequency where code=$1 limit 1", frequencyCode)
+			frequency := FormatSQLRowToMap(frow)
+			name, fok := frequency["name"]
+			if fok {
+				frequencyName = name.(string)
+			}
+		}
+
+		onceDose := row.Cells[24].String()
+
+		onceDoseUnitCode := row.Cells[25].String()
+		onceDoseUnitName := ""
+		if onceDoseUnitCode != "" {
+			odurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", onceDoseUnitCode)
+			onceDoseUnit := FormatSQLRowToMap(odurow)
+			name, oduok := onceDoseUnit["name"]
+			if oduok {
+				onceDoseUnitName = name.(string)
+			}
+		}
+
+		lowDosageFlag := row.Cells[26].String()
+		selfFlag := row.Cells[27].String()
+		separateFlag := row.Cells[28].String()
+		supriceFlag := row.Cells[29].String()
+		drugFlag := row.Cells[30].String()
+
+		values = append(values, "'"+licenseNo+"'", "'"+name+"'", "'"+manuFactoryName+"'", "'"+code+"'", "'"+pyCode+"'", "'"+serial+"'",
+			"'"+nationalStandard+"'", "'"+doseFormName+"'", "'"+concentration+"'", "'"+weightUnitName+"'", "'"+volUnitName+"'",
+			"'"+doseCountUnitName+"'", "'"+packingUnitName+"'", "'"+specification+"'", "'"+dcode+"'", infusionFlag, countryFlag,
+			divideFlag, "'"+routeAdministrationName+"'", "'"+frequencyName+"'", "'"+onceDoseUnitName+"'", lowDosageFlag, selfFlag,
+			separateFlag, supriceFlag, drugFlag)
+		if weight != "" {
+			sets = append(sets, "weight")
+			values = append(values, weight)
+		}
+		if volum != "" {
+			sets = append(sets, "volum")
+			values = append(values, volum)
+		}
+		if doseCount != "" {
+			sets = append(sets, "dose_count")
+			values = append(values, doseCount)
+		}
+		if drugTypeID != "" {
+			sets = append(sets, "drug_type_id")
+			values = append(values, drugTypeID)
+		}
+		if onceDose != "" {
+			sets = append(sets, "once_dose")
+			values = append(values, onceDose)
+		}
+
+		// if drugTypeID != "" {
+		// 	sets = append(sets, "drug_type_id")
+		// 	setStr := strings.Join(sets, ",")
+		// 	insertSQL := "insert into drug (" + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
+		// 		$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`
+		// 	_, err = tx.Exec(insertSQL, licenseNo, name, manuFactoryName, code, pyCode, serial, nationalStandard, doseFormName,
+		// 		concentration, weight, weightUnitName, volum, volUnitName, doseCountUnitName, doseCount, packingUnitName, specification, dcode,
+		// 		infusionFlag, countryFlag, divideFlag, routeAdministrationName, frequencyName, onceDose, onceDoseUnitName, lowDosageFlag,
+		// 		selfFlag, separateFlag, supriceFlag, drugFlag, drugTypeID)
+		// } else {
+		// 	setStr := strings.Join(sets, ",")
+		// 	insertSQL := "insert into drug (" + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
+		// 		$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30)`
+		// 	_, err = tx.Exec(insertSQL, licenseNo, name, manuFactoryName, code, pyCode, serial, nationalStandard, doseFormName,
+		// 		concentration, weight, weightUnitName, volum, volUnitName, doseCountUnitName, doseCount, packingUnitName, specification, dcode,
+		// 		infusionFlag, countryFlag, divideFlag, routeAdministrationName, frequencyName, onceDose, onceDoseUnitName, lowDosageFlag,
+		// 		selfFlag, separateFlag, supriceFlag, drugFlag)
+		// }
+		setStr := strings.Join(sets, ",")
+		valuesStr := strings.Join(values, ",")
+		insertSQL := "insert into drug (" + setStr + ") values (" + valuesStr + ")"
+		fmt.Println("insertSQL===", insertSQL)
+		_, err = tx.Exec(insertSQL)
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()

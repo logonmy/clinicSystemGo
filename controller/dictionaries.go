@@ -520,7 +520,7 @@ func ManuFactoryList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
-// LaboratoryList 基础检验医嘱项目列表
+//Laboratorys 基础检验医嘱项目列表
 func Laboratorys(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	offset := ctx.PostValue("offset")
