@@ -159,9 +159,10 @@ func main() {
 	onCredit := app.Party("/onCredit", crs).AllowMethods(iris.MethodOptions)
 	{
 		onCredit.Post("/traigePatient/list", controller.OnCreditTraigePatient)
+		onCredit.Post("/list", controller.OnCreditList)
 		// onCredit.Post("/create", controller.OnCreditCreate)
 		// onCredit.Post("/registtion/list", controller.OnCreditRegisttionList)
-		onCredit.Post("/registtion/detail", controller.OnCreditRegisttionDetail)
+		// onCredit.Post("/registtion/detail", controller.OnCreditRegisttionDetail)
 		onCredit.Post("/repay", controller.OnCreditRepay)
 	}
 
