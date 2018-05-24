@@ -520,7 +520,7 @@ func ManuFactoryList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
-// LaboratoryList 基础检验医嘱项目列表
+//Laboratorys 基础检验医嘱项目列表
 func Laboratorys(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	offset := ctx.PostValue("offset")
@@ -589,6 +589,98 @@ func Examinations(ctx iris.Context) {
 
 	countSQL := `select count(id) from examination where name ~$1`
 	selectSQL := `select * from examination where name ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+// LaboratoryItems 基础检验项目列表
+func LaboratoryItems(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) from laboratory_item where name ~$1`
+	selectSQL := `select li.id as laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,li.instrument_code,
+	li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min
+	from laboratory_item li
+	left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
+	where name ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
+	results = FormatSQLRowsToMapArray(rows)
+	laboratoryItems := FormatLaboratoryItem(results)
+
+	ctx.JSON(iris.Map{"code": "200", "data": laboratoryItems, "page_info": pageInfo})
+}
+
+// Drugs 基础药品列表
+func Drugs(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) from drug where name ~$1`
+	selectSQL := `select * from drug where name ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
