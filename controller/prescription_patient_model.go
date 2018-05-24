@@ -180,7 +180,6 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	pwpmi.clinic_drug_id,
 	d.name as drug_name,
 	d.specification,
-	cd.stock_amount,
 	pwpmi.once_dose,
 	pwpmi.once_dose_unit_name,
 	pwpmi.route_administration_name,
@@ -190,13 +189,17 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	d.packing_unit_name, 
 	pwpmi.fetch_address,
 	pwpmi.illustration,
-	d.type
+	d.type,sum(ds.stock_amount) as stock_amount
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id 
-		left join drug d on cd.drug_id = d.id		
-    left join personnel p on pwpm.operation_id = p.id
-	where pwpm.model_name ~$1`
+	left join drug d on cd.drug_id = d.id		
+	left join drug_stock ds on ds.clinic_drug_id = cd.id
+  left join personnel p on pwpm.operation_id = p.id
+	where pwpm.model_name ~$1
+	group by pwpm.id,pwpm.is_common,pwpm.created_time,pwpm.updated_time,p.name,pwpm.model_name,pwpmi.clinic_drug_id,
+		d.name,d.specification,pwpmi.once_dose,pwpmi.once_dose_unit_name,pwpmi.route_administration_name,
+		pwpmi.frequency_name, pwpmi.eff_day,pwpmi.amount,d.packing_unit_name, pwpmi.fetch_address,pwpmi.illustration,d.type`
 
 	if isCommon != "" {
 		countSQL += ` and is_common =` + isCommon
@@ -671,17 +674,20 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	pcpmi.clinic_drug_id,
 	d.name as drug_name,
 	d.type,
-	cd.stock_amount,
 	pcpmi.once_dose,
 	pcpmi.once_dose_unit_name,
 	pcpmi.special_illustration,
-	pcpmi.amount
+	pcpmi.amount,sum(ds.stock_amount) as stock_amount
 	from prescription_chinese_patient_model pcpm
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join clinic_drug cd on pcpmi.clinic_drug_id = cd.id 
 	left join drug d on cd.drug_id = d.id
+	left join drug_stock ds on ds.clinic_drug_id = cd.id
 	left join personnel p on pcpm.operation_id = p.id
-	where pcpm.model_name ~$1`
+	where pcpm.model_name ~$1
+	group by pcpm.id,pcpm.is_common,pcpm.created_time,pcpm.updated_time,p.name,pcpm.model_name,pcpm.route_administration_name,
+		pcpm.eff_day,pcpm.amount,pcpm.frequency_name,pcpm.fetch_address,pcpm.medicine_illustration,pcpmi.clinic_drug_id,
+		d.name,d.type,pcpmi.once_dose,pcpmi.once_dose_unit_name,pcpmi.special_illustration,pcpmi.amount`
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
 	if isCommon != "" {

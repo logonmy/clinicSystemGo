@@ -13,6 +13,7 @@ import (
 //DrugAdd 添加药品
 func DrugAdd(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
+	drugID := ctx.PostValue("drug_Id")
 	DrugType := ctx.PostValue("type")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
@@ -48,27 +49,15 @@ func DrugAdd(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if clinicID == "" || barcode == "" || name == "" || retPrice == "" || DrugType == "" || licenseNo == "" {
+	if clinicID == "" || manuFactoryName == "" || name == "" || retPrice == "" || DrugType == "" || licenseNo == "" || specification == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
-		return
-	}
-
-	row := model.DB.QueryRowx("select id from drug where license_no=$1 limit 1", licenseNo)
-	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-		return
-	}
-	drug := FormatSQLRowToMap(row)
-	_, ok := drug["id"]
-	if ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "药品已存在"})
 		return
 	}
 
 	sets := []string{"name", "license_no", "type"}
 	values := []string{"'" + name + "'", "'" + licenseNo + "'", DrugType}
-	stockSets := []string{"clinic_id", "ret_price"}
-	stockValues := []string{clinicID, retPrice}
+	clinicDrugSets := []string{"clinic_id", "ret_price"}
+	clinicDrugValues := []string{clinicID, retPrice}
 	if pyCode != "" {
 		sets = append(sets, "py_code")
 		values = append(values, "'"+pyCode+"'")
@@ -140,44 +129,44 @@ func DrugAdd(ctx iris.Context) {
 	}
 
 	if status != "" {
-		stockSets = append(stockSets, "status")
-		stockValues = append(stockValues, status)
+		clinicDrugSets = append(clinicDrugSets, "status")
+		clinicDrugValues = append(clinicDrugValues, status)
 	}
 	if miniDose != "" {
-		stockSets = append(stockSets, "mini_dose")
-		stockValues = append(stockValues, miniDose)
+		clinicDrugSets = append(clinicDrugSets, "mini_dose")
+		clinicDrugValues = append(clinicDrugValues, miniDose)
 	}
 	if miniUnitName != "" {
-		stockSets = append(stockSets, "mini_unit_name")
-		stockValues = append(stockValues, "'"+miniUnitName+"'")
+		clinicDrugSets = append(clinicDrugSets, "mini_unit_name")
+		clinicDrugValues = append(clinicDrugValues, "'"+miniUnitName+"'")
 	}
 	if buyPrice != "" {
-		stockSets = append(stockSets, "buy_price")
-		stockValues = append(stockValues, buyPrice)
+		clinicDrugSets = append(clinicDrugSets, "buy_price")
+		clinicDrugValues = append(clinicDrugValues, buyPrice)
 	}
 	if isDiscount != "" {
-		stockSets = append(stockSets, "is_discount")
-		stockValues = append(stockValues, isDiscount)
+		clinicDrugSets = append(clinicDrugSets, "is_discount")
+		clinicDrugValues = append(clinicDrugValues, isDiscount)
 	}
 	if isBulkSales != "" {
-		stockSets = append(stockSets, "is_bulk_sales")
-		stockValues = append(stockValues, isBulkSales)
+		clinicDrugSets = append(clinicDrugSets, "is_bulk_sales")
+		clinicDrugValues = append(clinicDrugValues, isBulkSales)
 	}
 	if bulkSalesPrice != "" {
-		stockSets = append(stockSets, "bulk_sales_price")
-		stockValues = append(stockValues, bulkSalesPrice)
+		clinicDrugSets = append(clinicDrugSets, "bulk_sales_price")
+		clinicDrugValues = append(clinicDrugValues, bulkSalesPrice)
 	}
 	if fetchAddress != "" {
-		stockSets = append(stockSets, "fetch_address")
-		stockValues = append(stockValues, "'"+fetchAddress+"'")
+		clinicDrugSets = append(clinicDrugSets, "fetch_address")
+		clinicDrugValues = append(clinicDrugValues, "'"+fetchAddress+"'")
 	}
 	if dayWarning != "" {
-		stockSets = append(stockSets, "day_warning")
-		stockValues = append(stockValues, dayWarning)
+		clinicDrugSets = append(clinicDrugSets, "day_warning")
+		clinicDrugValues = append(clinicDrugValues, dayWarning)
 	}
 	if stockWarning != "" {
-		stockSets = append(stockSets, "stock_warning")
-		stockValues = append(stockValues, stockWarning)
+		clinicDrugSets = append(clinicDrugSets, "stock_warning")
+		clinicDrugValues = append(clinicDrugValues, stockWarning)
 	}
 
 	setStr := strings.Join(sets, ",")
@@ -186,23 +175,28 @@ func DrugAdd(ctx iris.Context) {
 	fmt.Println("insertSQL===", insertSQL)
 
 	tx, err := model.DB.Begin()
-	var drugID string
-	err = tx.QueryRow(insertSQL).Scan(&drugID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
+
+	if drugID == "" {
+		err = tx.QueryRow(insertSQL).Scan(&drugID)
+		if err != nil {
+			fmt.Println("err ===", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": err})
+			return
+		}
 	}
-	stockSets = append(stockSets, "drug_id")
-	stockValues = append(stockValues, drugID)
 
-	stockSetStr := strings.Join(stockSets, ",")
-	stockValueStr := strings.Join(stockValues, ",")
-	stockSQL := "insert into clinic_drug (" + stockSetStr + ") values (" + stockValueStr + ")"
-	fmt.Println("stockSQL===", stockSQL)
+	fmt.Println("drugID====", drugID)
 
-	_, err1 := tx.Exec(stockSQL)
+	clinicDrugSets = append(clinicDrugSets, "drug_id")
+	clinicDrugValues = append(clinicDrugValues, drugID)
+
+	clinicDrugSetStr := strings.Join(clinicDrugSets, ",")
+	clinicDrugValueStr := strings.Join(clinicDrugValues, ",")
+	clinicDrugSQL := "insert into clinic_drug (" + clinicDrugSetStr + ") values (" + clinicDrugValueStr + ")"
+	fmt.Println("clinicDrugSQL===", clinicDrugSQL)
+
+	_, err1 := tx.Exec(clinicDrugSQL)
 	if err1 != nil {
 		fmt.Println(" err1====", err1)
 		tx.Rollback()
@@ -360,7 +354,7 @@ func DrugUpdate(ctx iris.Context) {
 	}
 
 	sets := []string{"name=" + "'" + name + "'", "type=" + DrugType, "barcode=" + "'" + barcode + "'", "updated_time=LOCALTIMESTAMP"}
-	stockSets := []string{"ret_price=" + retPrice, "updated_time=LOCALTIMESTAMP"}
+	clinicDrugSets := []string{"ret_price=" + retPrice, "updated_time=LOCALTIMESTAMP"}
 	if pyCode != "" {
 		sets = append(sets, "py_code="+"'"+pyCode+"'")
 	}
@@ -415,40 +409,40 @@ func DrugUpdate(ctx iris.Context) {
 	}
 
 	if status != "" {
-		stockSets = append(stockSets, "status="+status)
+		clinicDrugSets = append(clinicDrugSets, "status="+status)
 	}
 	if miniDose != "" {
-		stockSets = append(stockSets, "mini_dose="+miniDose)
+		clinicDrugSets = append(clinicDrugSets, "mini_dose="+miniDose)
 	}
 	if miniUnitName != "" {
-		stockSets = append(stockSets, "mini_unit_name='"+miniUnitName+"'")
+		clinicDrugSets = append(clinicDrugSets, "mini_unit_name='"+miniUnitName+"'")
 	}
 	if buyPrice != "" {
-		stockSets = append(stockSets, "buy_price="+buyPrice)
+		clinicDrugSets = append(clinicDrugSets, "buy_price="+buyPrice)
 	}
 	if isDiscount != "" {
-		stockSets = append(stockSets, "is_discount="+isDiscount)
+		clinicDrugSets = append(clinicDrugSets, "is_discount="+isDiscount)
 	}
 	if isBulkSales != "" {
-		stockSets = append(stockSets, "is_bulk_sales="+isBulkSales)
+		clinicDrugSets = append(clinicDrugSets, "is_bulk_sales="+isBulkSales)
 	}
 	if bulkSalesPrice != "" {
-		stockSets = append(stockSets, "bulk_sales_price="+bulkSalesPrice)
+		clinicDrugSets = append(clinicDrugSets, "bulk_sales_price="+bulkSalesPrice)
 	}
 	if fetchAddress != "" {
-		stockSets = append(stockSets, "fetch_address="+"'"+fetchAddress+"'")
+		clinicDrugSets = append(clinicDrugSets, "fetch_address="+"'"+fetchAddress+"'")
 	}
 	if dayWarning != "" {
-		stockSets = append(stockSets, "day_warning="+dayWarning)
+		clinicDrugSets = append(clinicDrugSets, "day_warning="+dayWarning)
 	}
 	if stockWarning != "" {
-		stockSets = append(stockSets, "stock_warning="+stockWarning)
+		clinicDrugSets = append(clinicDrugSets, "stock_warning="+stockWarning)
 	}
 
 	setStr := strings.Join(sets, ",")
-	stockStr := strings.Join(stockSets, ",")
+	clinicDrugStr := strings.Join(clinicDrugSets, ",")
 	fmt.Println("setStr==", setStr)
-	fmt.Println("stockStr==", stockStr)
+	fmt.Println("clinicDrugStr==", clinicDrugStr)
 
 	tx, err := model.DB.Begin()
 	if err != nil {
@@ -459,7 +453,7 @@ func DrugUpdate(ctx iris.Context) {
 	}
 
 	updateSQL := "update drug set " + setStr + "where id=$1"
-	stockUpdateSQL := "update clinic_drug set " + stockStr + "where id=$1"
+	stockUpdateSQL := "update clinic_drug set " + clinicDrugStr + "where id=$1"
 	fmt.Println("updateSQL===", updateSQL)
 
 	_, err1 := tx.Exec(updateSQL, drugID)
