@@ -803,18 +803,46 @@ func ImportDrug(ctx iris.Context) {
 		fmt.Printf("open failed: %s\n", err)
 		return
 	}
-	// count := 0
 	var resData []int
 	keymap := map[string]string{
 		"a": "a",
 	}
-	sets := []string{"license_no", "name", "manu_factory_name", "code", "py_code", "serial", "national_standard", "dose_form_name", "concentration",
-		"weight", "weight_unit_name", "volum", "vol_unit_name", "dose_count_unit_name", "dose_count", "packing_unit_name", "specification", "dcode",
-		"infusion_flag", "country_flag", "divide_flag", "route_administration_name", "frequency_name", "once_dose",
-		"once_dose_unit_name", "low_dosage_flag", "self_flag", "separate_flag", "suprice_flag", "drug_flag", "drug_type_id"}
+	sets := []string{
+		"license_no",
+		"name",
+		"manu_factory_name",
+		"code",
+		"py_code",
+		"serial",
+		"national_standard",
+		"dose_form_name",
+		"concentration",
+		"weight",
+		"weight_unit_name",
+		"volum",
+		"vol_unit_name",
+		"dose_count_unit_name",
+		"dose_count",
+		"packing_unit_name",
+		"specification",
+		"dcode",
+		"infusion_flag",
+		"country_flag",
+		"divide_flag",
+		"route_administration_name",
+		"frequency_name",
+		"once_dose",
+		"once_dose_unit_name",
+		"low_dosage_flag",
+		"self_flag",
+		"separate_flag",
+		"suprice_flag",
+		"drug_flag",
+		"drug_type_id"}
 	setStr := strings.Join(sets, ",")
 	insertSQL := `insert into drug (` + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
 			$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`
+
 	for index, row := range xlFile.Sheets[0].Rows {
 		fmt.Println(" index =====", index)
 		if index < 1 {
@@ -834,7 +862,34 @@ func ImportDrug(ctx iris.Context) {
 		licenseNo := row.Cells[0].String()
 		name := row.Cells[1].String()
 		manuFactoryCode := row.Cells[2].String()
+		code := row.Cells[3].String()
+		pyCode := row.Cells[4].String()
+		serial := row.Cells[5].String()
+		nationalStandard := row.Cells[6].String()
+		doseFormCode := row.Cells[7].String()
+		concentration := row.Cells[8].String()
+		weight := row.Cells[9].String()
+		weightUnitCode := row.Cells[10].String()
+		volum := row.Cells[11].String()
+		volUnitCode := row.Cells[12].String()
+		doseCountUnitCode := row.Cells[13].String()
+		doseCount := row.Cells[14].String()
+		packingUnitCode := row.Cells[15].String()
 		specification := row.Cells[16].String()
+		dcode := row.Cells[17].String()
+		infusionFlag := row.Cells[18].String()
+		countryFlag := row.Cells[19].String()
+		divideFlag := row.Cells[20].String()
+		drugTypeCode := row.Cells[21].String()
+		routeAdministrationCode := row.Cells[22].String()
+		frequencyCode := row.Cells[23].String()
+		onceDose := row.Cells[24].String()
+		onceDoseUnitCode := row.Cells[25].String()
+		lowDosageFlag := row.Cells[26].String()
+		selfFlag := row.Cells[27].String()
+		separateFlag := row.Cells[28].String()
+		supriceFlag := row.Cells[29].String()
+		drugFlag := row.Cells[30].String()
 
 		if name == "" {
 			continue
@@ -842,12 +897,6 @@ func ImportDrug(ctx iris.Context) {
 		if specification == "" {
 			continue
 		}
-		// if licenseNo == "" {
-		// 	count++
-		// 	// continue
-		// } else {
-		// 	count = 0
-		// }
 
 		var manuFactoryName string
 		if manuFactoryCode != "" {
@@ -875,12 +924,6 @@ func ImportDrug(ctx iris.Context) {
 		}
 		keymap[unique] = unique
 
-		code := row.Cells[3].String()
-		pyCode := row.Cells[4].String()
-		serial := row.Cells[5].String()
-		nationalStandard := row.Cells[6].String()
-
-		doseFormCode := row.Cells[7].String()
 		doseFormName := ""
 		if doseFormCode != "" {
 			dfrow := model.DB.QueryRowx("select name from dose_form where code=$1 limit 1", doseFormCode)
@@ -891,10 +934,6 @@ func ImportDrug(ctx iris.Context) {
 			}
 		}
 
-		concentration := row.Cells[8].String()
-		weight := row.Cells[9].String()
-
-		weightUnitCode := row.Cells[10].String()
 		weightUnitName := ""
 		if weightUnitCode != "" {
 			wurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", weightUnitCode)
@@ -904,8 +943,7 @@ func ImportDrug(ctx iris.Context) {
 				weightUnitName = name.(string)
 			}
 		}
-		volum := row.Cells[11].String()
-		volUnitCode := row.Cells[12].String()
+
 		volUnitName := ""
 		if volUnitCode != "" {
 			vurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", volUnitCode)
@@ -916,7 +954,6 @@ func ImportDrug(ctx iris.Context) {
 			}
 		}
 
-		doseCountUnitCode := row.Cells[13].String()
 		doseCountUnitName := ""
 		if doseCountUnitCode != "" {
 			dcurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", doseCountUnitCode)
@@ -926,9 +963,7 @@ func ImportDrug(ctx iris.Context) {
 				doseCountUnitName = name.(string)
 			}
 		}
-		doseCount := row.Cells[14].String()
 
-		packingUnitCode := row.Cells[15].String()
 		packingUnitName := ""
 		if packingUnitCode != "" {
 			pcurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", packingUnitCode)
@@ -938,12 +973,7 @@ func ImportDrug(ctx iris.Context) {
 				packingUnitName = name.(string)
 			}
 		}
-		dcode := row.Cells[17].String()
-		infusionFlag := row.Cells[18].String()
-		countryFlag := row.Cells[19].String()
-		divideFlag := row.Cells[20].String()
 
-		drugTypeCode := row.Cells[21].String()
 		drugTypeID := ""
 		if drugTypeCode != "" {
 			dtrow := model.DB.QueryRowx("select id from drug_type where code=$1 limit 1", drugTypeCode)
@@ -954,7 +984,6 @@ func ImportDrug(ctx iris.Context) {
 			}
 		}
 
-		routeAdministrationCode := row.Cells[22].String()
 		routeAdministrationName := ""
 		if routeAdministrationCode != "" {
 			rarow := model.DB.QueryRowx("select name from route_administration where code=$1 limit 1", routeAdministrationCode)
@@ -965,7 +994,6 @@ func ImportDrug(ctx iris.Context) {
 			}
 		}
 
-		frequencyCode := row.Cells[23].String()
 		frequencyName := ""
 		if frequencyCode != "" {
 			frow := model.DB.QueryRowx("select name from frequency where code=$1 limit 1", frequencyCode)
@@ -976,9 +1004,6 @@ func ImportDrug(ctx iris.Context) {
 			}
 		}
 
-		onceDose := row.Cells[24].String()
-
-		onceDoseUnitCode := row.Cells[25].String()
 		onceDoseUnitName := ""
 		if onceDoseUnitCode != "" {
 			odurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", onceDoseUnitCode)
@@ -989,24 +1014,44 @@ func ImportDrug(ctx iris.Context) {
 			}
 		}
 
-		lowDosageFlag := row.Cells[26].String()
-		selfFlag := row.Cells[27].String()
-		separateFlag := row.Cells[28].String()
-		supriceFlag := row.Cells[29].String()
-		drugFlag := row.Cells[30].String()
-
-		_, err = model.DB.Exec(insertSQL, ToNullString(licenseNo), ToNullString(name), ToNullString(manuFactoryName), ToNullString(code), ToNullString(pyCode),
-			ToNullString(serial), ToNullString(nationalStandard), ToNullString(doseFormName), ToNullString(concentration), ToNullInt64(weight),
-			ToNullString(weightUnitName), ToNullInt64(volum), ToNullString(volUnitName), ToNullString(doseCountUnitName), ToNullInt64(doseCount),
-			ToNullString(packingUnitName), ToNullString(specification), ToNullString(dcode), ToNullInt64(infusionFlag), ToNullInt64(countryFlag),
-			ToNullInt64(divideFlag), ToNullString(routeAdministrationName), ToNullString(frequencyName), ToNullInt64(onceDose),
-			ToNullString(onceDoseUnitName), ToNullInt64(lowDosageFlag), ToNullInt64(selfFlag), ToNullInt64(separateFlag),
-			ToNullInt64(supriceFlag), ToNullInt64(drugFlag), ToNullInt64(drugTypeID))
+		_, err = model.DB.Exec(insertSQL,
+			ToNullString(licenseNo),
+			ToNullString(name),
+			ToNullString(manuFactoryName),
+			ToNullString(code),
+			ToNullString(pyCode),
+			ToNullString(serial),
+			ToNullString(nationalStandard),
+			ToNullString(doseFormName),
+			ToNullString(concentration),
+			ToNullInt64(weight),
+			ToNullString(weightUnitName),
+			ToNullInt64(volum),
+			ToNullString(volUnitName),
+			ToNullString(doseCountUnitName),
+			ToNullInt64(doseCount),
+			ToNullString(packingUnitName),
+			ToNullString(specification),
+			ToNullString(dcode),
+			ToNullInt64(infusionFlag),
+			ToNullInt64(countryFlag),
+			ToNullInt64(divideFlag),
+			ToNullString(routeAdministrationName),
+			ToNullString(frequencyName),
+			ToNullInt64(onceDose),
+			ToNullString(onceDoseUnitName),
+			ToNullInt64(lowDosageFlag),
+			ToNullInt64(selfFlag),
+			ToNullInt64(separateFlag),
+			ToNullInt64(supriceFlag),
+			ToNullInt64(drugFlag),
+			ToNullInt64(drugTypeID))
 
 		if err != nil {
 			fmt.Println(" index =====", index, name, manuFactoryCode, specification, licenseNo)
 			resData = append(resData, index)
 			fmt.Println("err ===", err)
+			break
 		}
 	}
 
