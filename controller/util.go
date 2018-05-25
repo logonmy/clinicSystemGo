@@ -17,13 +17,13 @@ func ToNullInt64(s string) sql.NullInt64 {
 }
 
 // NullFloat64 处理 空float
-func NullFloat64(s string) sql.NullInt64 {
+func NullFloat64(s string) sql.NullFloat64 {
 	f, err := strconv.ParseFloat(s, 64)
 	return sql.NullFloat64{Float64: float64(f), Valid: err == nil}
 }
 
 // NullBool 处理 bool
-func NullFloat64(s string) sql.NullInt64 {
+func NullBool(s string) sql.NullBool {
 	b, err := strconv.ParseBool(s)
-	return sql.NullBool{Bool: float64(b), Valid: err == nil}
+	return sql.NullBool{Bool: bool(b), Valid: err == nil}
 }
