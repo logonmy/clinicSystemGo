@@ -829,9 +829,12 @@ func ImportDrug(ctx iris.Context) {
 		specification := row.Cells[16].String()
 
 		unique := licenseNo + name + manuFactoryCode + specification
+		if name == "" {
+			continue
+		}
 		if licenseNo == "" {
 			count++
-			continue
+			// continue
 		} else {
 			count = 0
 		}
@@ -846,16 +849,20 @@ func ImportDrug(ctx iris.Context) {
 		if manuFactoryCode != "" {
 			mfrow := model.DB.QueryRowx("select name from manu_factory where code=$1 limit 1", manuFactoryCode)
 			if mfrow == nil {
-				continue
+				// continue
+				manuFactoryName = ""
 			}
 			manuFactory := FormatSQLRowToMap(mfrow)
 			name, mfok := manuFactory["name"]
 			if !mfok {
-				continue
+				// continue
+				manuFactoryName = ""
+			} else {
+				manuFactoryName = name.(string)
 			}
-			manuFactoryName = name.(string)
 		} else {
-			continue
+			manuFactoryName = ""
+			// continue
 		}
 
 		code := row.Cells[3].String()
