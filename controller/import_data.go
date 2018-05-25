@@ -802,13 +802,8 @@ func ImportDrug(ctx iris.Context) {
 		fmt.Printf("open failed: %s\n", err)
 		return
 	}
-	tx, err := model.DB.Beginx()
-	if err != nil {
-		fmt.Println("导入失败===", err)
-		tx.Rollback()
-		return
-	}
 	// count := 0
+	var resData []int
 	keymap := map[string]string{
 		"a": "a",
 	}
@@ -838,7 +833,6 @@ func ImportDrug(ctx iris.Context) {
 		name := row.Cells[1].String()
 		manuFactoryCode := row.Cells[2].String()
 		specification := row.Cells[16].String()
-		fmt.Println(" index =====", index, name, manuFactoryCode, specification, licenseNo)
 
 		if name == "" {
 			continue
@@ -999,8 +993,7 @@ func ImportDrug(ctx iris.Context) {
 		supriceFlag := row.Cells[29].String()
 		drugFlag := row.Cells[30].String()
 
-		fmt.Println(" ======== ", name)
-		_, err = tx.Exec(insertSQL, ToNullString(licenseNo), ToNullString(name), ToNullString(manuFactoryName), ToNullString(code), ToNullString(pyCode),
+		_, err = model.DB.Exec(insertSQL, ToNullString(licenseNo), ToNullString(name), ToNullString(manuFactoryName), ToNullString(code), ToNullString(pyCode),
 			ToNullString(serial), ToNullString(nationalStandard), ToNullString(doseFormName), ToNullString(concentration), ToNullInt64(weight),
 			ToNullString(weightUnitName), ToNullInt64(volum), ToNullString(volUnitName), ToNullString(doseCountUnitName), ToNullInt64(doseCount),
 			ToNullString(packingUnitName), ToNullString(specification), ToNullString(dcode), ToNullInt64(infusionFlag), ToNullInt64(countryFlag),
@@ -1009,17 +1002,11 @@ func ImportDrug(ctx iris.Context) {
 			ToNullInt64(supriceFlag), ToNullInt64(drugFlag), ToNullInt64(drugTypeID))
 
 		if err != nil {
+			fmt.Println(" index =====", index, name, manuFactoryCode, specification, licenseNo)
+			resData = append(resData, index)
 			fmt.Println("err ===", err)
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
 		}
 	}
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
-		return
-	}
-	ctx.JSON(iris.Map{"code": "200", "data": nil})
+
+	ctx.JSON(iris.Map{"code": "200", "data": resData})
 }
