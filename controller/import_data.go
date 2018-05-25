@@ -795,7 +795,7 @@ func ImportExamination(ctx iris.Context) {
 func ImportDrug(ctx iris.Context) {
 	startIndexStr := ctx.PostValue("start_index")
 	startIndex, _ := strconv.Atoi(startIndexStr)
-	limit := 1000
+	limit := 500
 	excelFileName := "drug.xlsx"
 	xlFile, err := xlsx.OpenFile(excelFileName)
 	if err != nil {
@@ -815,6 +815,7 @@ func ImportDrug(ctx iris.Context) {
 	insertSQL := `insert into drug (` + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
 			$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`
 	for index, row := range xlFile.Sheets[0].Rows {
+		fmt.Println(" index =====", index)
 		if index < 1 {
 			continue
 		}
@@ -864,7 +865,7 @@ func ImportDrug(ctx iris.Context) {
 			continue
 		}
 
-		unique := licenseNo + "#" + name + "#" + manuFactoryCode + "#" + specification
+		unique := name + "#" + manuFactoryCode + "#" + specification
 
 		_, keyok := keymap[unique]
 		if keyok {
