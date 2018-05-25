@@ -808,7 +808,7 @@ func ImportDrug(ctx iris.Context) {
 		tx.Rollback()
 		return
 	}
-	count := 0
+	// count := 0
 	keymap := map[string]string{
 		"a": "a",
 	}
@@ -820,15 +820,17 @@ func ImportDrug(ctx iris.Context) {
 	insertSQL := `insert into drug (` + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
 			$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`
 	for index, row := range xlFile.Sheets[0].Rows {
+		if index < 1 {
+			continue
+		}
 		if index < startIndex {
 			continue
 		}
 		if index >= startIndex+limit {
 			break
 		}
-		fmt.Println(" index =====", index)
 
-		if count > 10 {
+		if index > 13621 {
 			break
 		}
 
@@ -836,6 +838,7 @@ func ImportDrug(ctx iris.Context) {
 		name := row.Cells[1].String()
 		manuFactoryCode := row.Cells[2].String()
 		specification := row.Cells[16].String()
+		fmt.Println(" index =====", index, name, manuFactoryCode, specification, licenseNo)
 
 		if name == "" {
 			continue
@@ -843,12 +846,12 @@ func ImportDrug(ctx iris.Context) {
 		if specification == "" {
 			continue
 		}
-		if licenseNo == "" {
-			count++
-			// continue
-		} else {
-			count = 0
-		}
+		// if licenseNo == "" {
+		// 	count++
+		// 	// continue
+		// } else {
+		// 	count = 0
+		// }
 
 		var manuFactoryName string
 		if manuFactoryCode != "" {
