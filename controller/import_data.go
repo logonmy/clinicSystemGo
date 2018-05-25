@@ -794,8 +794,9 @@ func ImportExamination(ctx iris.Context) {
 //ImportDrug 导入药品
 func ImportDrug(ctx iris.Context) {
 	startIndexStr := ctx.PostValue("start_index")
+	limitStr := ctx.PostValue("limit")
 	startIndex, _ := strconv.Atoi(startIndexStr)
-	limit := 500
+	limit, _ := strconv.Atoi(limitStr)
 	excelFileName := "drug.xlsx"
 	xlFile, err := xlsx.OpenFile(excelFileName)
 	if err != nil {
