@@ -804,6 +804,7 @@ func ImportDrug(ctx iris.Context) {
 		return
 	}
 	var resData []int
+	var message []string
 	keymap := map[string]string{
 		"a": "a",
 	}
@@ -920,6 +921,7 @@ func ImportDrug(ctx iris.Context) {
 		_, keyok := keymap[unique]
 		if keyok {
 			fmt.Println("unique===", unique)
+			message = append(message, unique)
 			continue
 		}
 		keymap[unique] = unique
@@ -1051,9 +1053,8 @@ func ImportDrug(ctx iris.Context) {
 			fmt.Println(" index =====", index, name, manuFactoryCode, specification, licenseNo)
 			resData = append(resData, index)
 			fmt.Println("err ===", err)
-			break
 		}
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": resData})
+	ctx.JSON(iris.Map{"code": "200", "data": resData, "message": message})
 }
