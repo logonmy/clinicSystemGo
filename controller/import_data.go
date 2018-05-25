@@ -793,6 +793,9 @@ func ImportExamination(ctx iris.Context) {
 
 //ImportDrug 导入药品
 func ImportDrug(ctx iris.Context) {
+	startIndexStr := ctx.PostValue("start_index")
+	startIndex, _ := strconv.Atoi(startIndexStr)
+	limit := 1000
 	excelFileName := "drug.xlsx"
 	xlFile, err := xlsx.OpenFile(excelFileName)
 	if err != nil {
@@ -809,15 +812,22 @@ func ImportDrug(ctx iris.Context) {
 	keymap := map[string]string{
 		"a": "a",
 	}
+	sets := []string{"license_no", "name", "manu_factory_name", "code", "py_code", "serial", "national_standard", "dose_form_name", "concentration",
+		"weight", "weight_unit_name", "volum", "vol_unit_name", "dose_count_unit_name", "dose_count", "packing_unit_name", "specification", "dcode",
+		"infusion_flag", "country_flag", "divide_flag", "route_administration_name", "frequency_name", "once_dose",
+		"once_dose_unit_name", "low_dosage_flag", "self_flag", "separate_flag", "suprice_flag", "drug_flag", "drug_type_id"}
+	setStr := strings.Join(sets, ",")
+	insertSQL := `insert into drug (` + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
+			$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`
 	for index, row := range xlFile.Sheets[0].Rows {
-		sets := []string{"license_no", "name", "manu_factory_name", "code", "py_code", "serial", "national_standard", "dose_form_name", "concentration",
-			"weight", "weight_unit_name", "volum", "vol_unit_name", "dose_count_unit_name", "dose_count", "packing_unit_name", "specification", "dcode",
-			"infusion_flag", "country_flag", "divide_flag", "route_administration_name", "frequency_name", "once_dose",
-			"once_dose_unit_name", "low_dosage_flag", "self_flag", "separate_flag", "suprice_flag", "drug_flag", "drug_type_id"}
-
-		if index < 1 {
+		if index < startIndex {
 			continue
 		}
+		if index >= startIndex+limit {
+			break
+		}
+		fmt.Println(" index =====", index)
+
 		if count > 10 {
 			break
 		}
@@ -827,7 +837,6 @@ func ImportDrug(ctx iris.Context) {
 		manuFactoryCode := row.Cells[2].String()
 		specification := row.Cells[16].String()
 
-		unique := licenseNo + name + manuFactoryCode + specification
 		if name == "" {
 			continue
 		}
@@ -840,12 +849,6 @@ func ImportDrug(ctx iris.Context) {
 		} else {
 			count = 0
 		}
-		_, keyok := keymap[unique]
-		if keyok {
-			fmt.Println("unique===", unique)
-			continue
-		}
-		keymap[unique] = unique
 
 		var manuFactoryName string
 		if manuFactoryCode != "" {
@@ -863,6 +866,15 @@ func ImportDrug(ctx iris.Context) {
 		} else {
 			continue
 		}
+
+		unique := licenseNo + "#" + name + "#" + manuFactoryCode + "#" + specification
+
+		_, keyok := keymap[unique]
+		if keyok {
+			fmt.Println("unique===", unique)
+			continue
+		}
+		keymap[unique] = unique
 
 		code := row.Cells[3].String()
 		pyCode := row.Cells[4].String()
@@ -984,10 +996,7 @@ func ImportDrug(ctx iris.Context) {
 		supriceFlag := row.Cells[29].String()
 		drugFlag := row.Cells[30].String()
 
-		setStr := strings.Join(sets, ",")
-		insertSQL := `insert into drug (` + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
-			$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`
-
+		fmt.Println(" ======== ", name)
 		_, err = tx.Exec(insertSQL, ToNullString(licenseNo), ToNullString(name), ToNullString(manuFactoryName), ToNullString(code), ToNullString(pyCode),
 			ToNullString(serial), ToNullString(nationalStandard), ToNullString(doseFormName), ToNullString(concentration), ToNullInt64(weight),
 			ToNullString(weightUnitName), ToNullInt64(volum), ToNullString(volUnitName), ToNullString(doseCountUnitName), ToNullInt64(doseCount),
