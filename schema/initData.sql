@@ -29,6 +29,6 @@ insert into examination_organ (name) values
 ('输尿管'),
 ('膀胱'),
 ('残余尿'),
-('胃窗（口服造影剂）')
+('胃窗（口服造影剂）');
 
 insert into storehouse (name,clinic_id) VALUES ('专业药房',1);
