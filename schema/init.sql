@@ -609,16 +609,11 @@ CREATE TABLE dose_unit
   deleted_time timestamp with time zone
 );
 
---药物类型
+--药品分类
 CREATE TABLE drug_class
 (
   id serial PRIMARY KEY NOT NULL,--id
-  code varchar(20),--编码
-  name varchar(30) NOT NULL,--药品名称
-  py_code varchar(20),--拼音码
-  d_code varchar(20),--简码
-  drug_kind integer,--药品类型
-  extend_code varchar(10),--什么？
+  name varchar(30) NOT NULL,--药品分类名称
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

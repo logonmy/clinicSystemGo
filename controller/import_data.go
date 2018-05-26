@@ -1058,3 +1058,33 @@ func ImportDrug(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "data": resData, "message": message})
 }
+
+// ImportDrugClass 药品分类
+func ImportDrugClass(ctx iris.Context) {
+	excelFileName := "drug_class.xlsx"
+	xlFile, err := xlsx.OpenFile(excelFileName)
+	if err != nil {
+		fmt.Printf("open failed: %s\n", err)
+		return
+	}
+	count := 0
+	for index, row := range xlFile.Sheets[0].Rows {
+		if count > 5 {
+			break
+		}
+		name := row.Cells[0].String()
+		fmt.Println("name", name)
+		if name == "" {
+			count++
+			continue
+		}
+
+		insertSQL := "insert into drug_class (name) values ($1)"
+		_, err = model.DB.Exec(insertSQL, name)
+		fmt.Println("index ====", index)
+		if err != nil {
+			fmt.Println("err ===", err)
+		}
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
