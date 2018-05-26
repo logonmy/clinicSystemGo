@@ -4,6 +4,7 @@ import (
 	"clinicSystemGo/model"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -149,7 +150,7 @@ func PersonnelList(ctx iris.Context) {
 	left join clinic c on p.clinic_id = c.id 
 	left join department_personnel dp on p.id = dp.personnel_id
 	left join department d on dp.department_id = d.id
-	where p.clinic_id = $1 and (p.code like '%' || $2 || '%' or p.name like '%' || $2 || '%')`
+	where p.clinic_id = $1 and (p.code ~$2 or p.name ~$2)`
 	if deparmentID != "" {
 		jionSQL += " and d.id = " + deparmentID
 	}
@@ -174,6 +175,80 @@ func PersonnelList(ctx iris.Context) {
 	d.code as department_code, d.name as department_name, d.id as department_id ` + jionSQL + " offset $3 limit $4"
 
 	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, offset, limit)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		return
+	}
+	result := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+}
+
+// PersonnelWithAuthorizationList 获取开通了权限的人员列表
+func PersonnelWithAuthorizationList(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	keyword := ctx.PostValue("keyword")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(p.id) as total  from personnel p 
+	left join clinic c on p.clinic_id = c.id 
+	left join department_personnel dp on p.id = dp.personnel_id
+	left join department d on dp.department_id = d.id
+	left join (select count(pr.personnel_id) as total,pr.personnel_id from personnel_role pr 
+		left join personnel p on p.id=pr.personnel_id group by pr.personnel_id) prc on prc.personnel_id=p.id
+	where p.clinic_id=:clinic_id and prc.total>0 and (p.code ~:keyword or p.name ~:keyword)`
+
+	var queryOption = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rowSQL := `select p.id, p.code, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
+	c.id as clinic_id, c.name as clinic_name,dp.type as personnel_type,d.code as department_code,
+	d.name as department_name, d.id as department_id from personnel p 
+	left join clinic c on p.clinic_id = c.id 
+	left join department_personnel dp on p.id = dp.personnel_id
+	left join department d on dp.department_id = d.id
+	left join (select count(pr.personnel_id) as total,pr.personnel_id from personnel_role pr 
+		left join personnel p on p.id=pr.personnel_id group by pr.personnel_id) prc on prc.personnel_id=p.id
+	where p.clinic_id=:clinic_id and prc.total>0 and (p.code ~:keyword or p.name ~:keyword) offset :offset limit :limit`
+
+	rows, err1 := model.DB.NamedQuery(rowSQL, queryOption)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return
@@ -242,6 +317,77 @@ func PersonnelUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+// PersonnelAuthorizationAllocation 用户权限分配
+func PersonnelAuthorizationAllocation(ctx iris.Context) {
+	id := ctx.PostValue("id")
+	items := ctx.PostValue("items")
+	if id == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+
+	lrow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", id)
+	if lrow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		return
+	}
+	personnel := FormatSQLRowToMap(lrow)
+	_, lok := personnel["id"]
+	if !lok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "用户不存在"})
+		return
+	}
+
+	if items == "" {
+		ctx.JSON(iris.Map{"code": "200", "data": nil})
+		return
+	}
+	var results []map[string]string
+	reErr := json.Unmarshal([]byte(items), &results)
+	if reErr != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": reErr.Error()})
+		return
+	}
+
+	tx, err := model.DB.Begin()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	insertSQL := `insert into personnel_role (personnel_id,role_id) values ($1,$2)`
+	for _, v := range results {
+		roleID := v["role_id"]
+		rrow := model.DB.QueryRowx("select id from role where id=$1 limit 1", roleID)
+		if rrow == nil {
+			ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+			return
+		}
+		role := FormatSQLRowToMap(rrow)
+		_, rok := role["id"]
+		if !rok {
+			ctx.JSON(iris.Map{"code": "1", "msg": "所选权限组不存在"})
+			return
+		}
+		_, err3 := tx.Exec(insertSQL,
+			ToNullInt64(id),
+			ToNullInt64(roleID),
+		)
+		if err3 != nil {
+			fmt.Println(" err3====", err3)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+			return
+		}
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})

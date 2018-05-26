@@ -55,6 +55,7 @@ func main() {
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
 		personnel.Post("/update", controller.PersonnelUpdate)
+		personnel.Post("/PersonnelWithAuthorizationList", controller.PersonnelWithAuthorizationList)
 	}
 
 	// visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
