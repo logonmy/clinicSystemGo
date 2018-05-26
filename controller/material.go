@@ -20,7 +20,6 @@ func MaterialCreate(ctx iris.Context) {
 	remark := ctx.PostValue("remark")
 	manuFactoryName := ctx.PostValue("manu_factory_name")
 	specification := ctx.PostValue("specification")
-
 	retPrice := ctx.PostValue("ret_price")
 	buyPrice := ctx.PostValue("buy_price")
 	status := ctx.PostValue("status")
@@ -46,7 +45,7 @@ func MaterialCreate(ctx iris.Context) {
 	}
 
 	if manuFactoryName != "" {
-		lrow := model.DB.QueryRowx("select id from material where name=$1 and manu_factory_name=$2 limit 1", name, manuFactoryName)
+		lrow := model.DB.QueryRowx("select id from clinic_material where name=$1 and manu_factory_name=$2 and clinic_id=$3 limit 1", name, manuFactoryName, clinicID)
 		if lrow == nil {
 			ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 			return
@@ -59,109 +58,55 @@ func MaterialCreate(ctx iris.Context) {
 		}
 	}
 
-	materialSets := []string{"name", "unit_name"}
-	materialValues := []string{"'" + name + "'", "'" + unitName + "'"}
+	clinicMaterialSets := []string{
+		"clinic_id",
+		"name",
+		"en_name",
+		"py_code",
+		"idc_code",
+		"manu_factory_name",
+		"specification",
+		"unit_name",
+		"remark",
+		"ret_price",
+		"buy_price",
+		"is_discount",
+		"day_warning",
+		"stock_warning",
+		"status",
+	}
+	clinicMaterialSetstr := strings.Join(clinicMaterialSets, ",")
+	clinicMaterialInsertSQL := "insert into clinic_material (" + clinicMaterialSetstr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)"
 
-	clinicMaterialSets := []string{"clinic_id", "ret_price"}
-	clinicMaterialValues := []string{clinicID, retPrice}
-
-	if enName != "" {
-		materialSets = append(materialSets, "en_name")
-		materialValues = append(materialValues, "'"+enName+"'")
-	}
-	if pyCode != "" {
-		materialSets = append(materialSets, "py_code")
-		materialValues = append(materialValues, "'"+pyCode+"'")
-	}
-	if idcCode != "" {
-		materialSets = append(materialSets, "idc_code")
-		materialValues = append(materialValues, "'"+idcCode+"'")
-	}
-	if remark != "" {
-		materialSets = append(materialSets, "remark")
-		materialValues = append(materialValues, "'"+remark+"'")
-	}
-	if manuFactoryName != "" {
-		materialSets = append(materialSets, "manu_factory_name")
-		materialValues = append(materialValues, "'"+manuFactoryName+"'")
-	}
-	if specification != "" {
-		materialSets = append(materialSets, "specification")
-		materialValues = append(materialValues, "'"+specification+"'")
-	}
-
-	if status != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "status")
-		clinicMaterialValues = append(clinicMaterialValues, status)
-	}
-	if buyPrice != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "buy_price")
-		clinicMaterialValues = append(clinicMaterialValues, buyPrice)
-	}
-	if isDiscount != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "is_discount")
-		clinicMaterialValues = append(clinicMaterialValues, isDiscount)
-	}
-	if dayWarning != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "day_warning")
-		clinicMaterialValues = append(clinicMaterialValues, dayWarning)
-	}
-	if stockWarning != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "stock_warning")
-		clinicMaterialValues = append(clinicMaterialValues, stockWarning)
-	}
-
-	materialSetstr := strings.Join(materialSets, ",")
-	materialValuestr := strings.Join(materialValues, ",")
-
-	materialInsertSQL := "insert into material (" + materialSetstr + ") values (" + materialValuestr + ") RETURNING id;"
-	fmt.Println("materialInsertSQL==", materialInsertSQL)
-
-	tx, err := model.DB.Begin()
-	var materialID string
-	err = tx.QueryRow(materialInsertSQL).Scan(&materialID)
+	_, err := model.DB.Exec(clinicMaterialInsertSQL,
+		ToNullInt64(clinicID),
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(pyCode),
+		ToNullString(idcCode),
+		ToNullString(manuFactoryName),
+		ToNullString(specification),
+		ToNullString(unitName),
+		ToNullString(remark),
+		ToNullInt64(retPrice),
+		ToNullInt64(buyPrice),
+		ToNullBool(isDiscount),
+		ToNullInt64(dayWarning),
+		ToNullInt64(stockWarning),
+		ToNullBool(status),
+	)
 	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
-	}
-	fmt.Println("materialID====", materialID)
-
-	clinicMaterialSets = append(clinicMaterialSets, "material_id")
-	clinicMaterialValues = append(clinicMaterialValues, materialID)
-
-	clinicMaterialSetStr := strings.Join(clinicMaterialSets, ",")
-	clinicMaterialValueStr := strings.Join(clinicMaterialValues, ",")
-
-	clinicMaterialInsertSQL := "insert into clinic_material (" + clinicMaterialSetStr + ") values (" + clinicMaterialValueStr + ")"
-	fmt.Println("clinicMaterialInsertSQL==", clinicMaterialInsertSQL)
-
-	_, err2 := tx.Exec(clinicMaterialInsertSQL)
-	if err2 != nil {
-		fmt.Println(" err2====", err2)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		fmt.Println(" err====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
-		return
-	}
-
-	ctx.JSON(iris.Map{"code": "200", "data": materialID})
-
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
 // MaterialUpdate 更新材料项目
 func MaterialUpdate(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
 	clinicMaterialID := ctx.PostValue("clinic_material_id")
-	materialID := ctx.PostValue("material_id")
-
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
@@ -170,7 +115,6 @@ func MaterialUpdate(ctx iris.Context) {
 	remark := ctx.PostValue("remark")
 	manuFactoryName := ctx.PostValue("manu_factory_name")
 	specification := ctx.PostValue("specification")
-
 	retPrice := ctx.PostValue("ret_price")
 	buyPrice := ctx.PostValue("buy_price")
 	status := ctx.PostValue("status")
@@ -178,133 +122,77 @@ func MaterialUpdate(ctx iris.Context) {
 	dayWarning := ctx.PostValue("day_warning")
 	stockWarning := ctx.PostValue("stock_warning")
 
-	if clinicID == "" || name == "" || clinicMaterialID == "" || retPrice == "" || materialID == "" {
+	if name == "" || clinicMaterialID == "" || retPrice == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
-		return
-	}
-	clinic := FormatSQLRowToMap(row)
-	_, ok := clinic["id"]
-	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
-		return
-	}
-
-	crow := model.DB.QueryRowx("select id,material_id from clinic_material where id=$1 limit 1", clinicMaterialID)
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_material where id=$1 limit 1", clinicMaterialID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	clinicMaterialProject := FormatSQLRowToMap(crow)
-	_, rok := clinicMaterialProject["id"]
+	clinicMaterial := FormatSQLRowToMap(crow)
+	_, rok := clinicMaterial["id"]
 	if !rok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所材料项目数据错误"})
 		return
 	}
-	smaterialID := strconv.FormatInt(clinicMaterialProject["material_id"].(int64), 10)
-	fmt.Println("smaterialID====", smaterialID)
+	clinicID := clinicMaterial["clinic_id"]
 
-	if smaterialID != materialID {
-		ctx.JSON(iris.Map{"code": "1", "msg": "材料项目数据id不匹配"})
-		return
-	}
-
-	lrow := model.DB.QueryRowx("select id from material where name=$1 and id!=$2 limit 1", name, materialID)
+	lrow := model.DB.QueryRowx("select id from clinic_material where name=$1 and id!=$2 and manu_factory_name=$3 and clinic_id=$4 limit 1", name, clinicMaterialID, manuFactoryName, clinicID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	laboratoryItem := FormatSQLRowToMap(lrow)
-	_, lok := laboratoryItem["id"]
+	clinicMaterialu := FormatSQLRowToMap(lrow)
+	_, lok := clinicMaterialu["id"]
 	if lok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "材料项目名称已存在"})
 		return
 	}
 
-	materialSets := []string{"name='" + name + "'"}
-	clinicMaterialSets := []string{"ret_price=" + retPrice}
+	clinicMaterialUpdateSQL := `update clinic_material set 
+		name=$1,
+		en_name=$2,
+		py_code=$3,
+		idc_code=$4,
+		manu_factory_name=$5,
+		specification=$6,
+		unit_name=$7,
+		remark=$8,
+		ret_price=$9,
+		buy_price=$10,
+		is_discount=$11
+		day_warning=$12,
+		stock_warning=$13,
+		status=$14,
+		where id=$15`
 
-	if enName != "" {
-		materialSets = append(materialSets, "en_name='"+enName+"'")
-	}
-	if pyCode != "" {
-		materialSets = append(materialSets, "py_code='"+pyCode+"'")
-	}
-	if unitName != "" {
-		materialSets = append(materialSets, "unit_name='"+unitName+"'")
-	}
-	if idcCode != "" {
-		materialSets = append(materialSets, "idc_code='"+idcCode+"'")
-	}
-	if remark != "" {
-		materialSets = append(materialSets, "remark='"+remark+"'")
-	}
-	if manuFactoryName != "" {
-		materialSets = append(materialSets, "manu_factory_name='"+manuFactoryName+"'")
-	}
-	if specification != "" {
-		materialSets = append(materialSets, "specification='"+specification+"'")
-	}
-
-	if status != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "status="+status)
-	}
-	if isDiscount != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "is_discount="+isDiscount)
-	}
-	if buyPrice != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "buy_price="+buyPrice)
-	}
-	if dayWarning != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "day_warning="+dayWarning)
-	}
-	if stockWarning != "" {
-		clinicMaterialSets = append(clinicMaterialSets, "stock_warning="+stockWarning)
-	}
-
-	materialSets = append(materialSets, "updated_time=LOCALTIMESTAMP")
-	materialSetstr := strings.Join(materialSets, ",")
-
-	materialUpdateSQL := "update material set " + materialSetstr + " where id=$1"
-	fmt.Println("materialUpdateSQL==", materialUpdateSQL)
-
-	tx, err := model.DB.Begin()
-	_, err = tx.Exec(materialUpdateSQL, materialID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
-	}
-
-	clinicMaterialSets = append(clinicMaterialSets, "updated_time=LOCALTIMESTAMP")
-	clinicMaterialSetStr := strings.Join(clinicMaterialSets, ",")
-
-	clinicMaterialUpdateSQL := "update clinic_material set " + clinicMaterialSetStr + " where id=$1"
-	fmt.Println("clinicMaterialUpdateSQL==", clinicMaterialUpdateSQL)
-
-	_, err2 := tx.Exec(clinicMaterialUpdateSQL, clinicMaterialID)
+	_, err2 := model.DB.Exec(clinicMaterialUpdateSQL,
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(pyCode),
+		ToNullString(idcCode),
+		ToNullString(manuFactoryName),
+		ToNullString(specification),
+		ToNullString(unitName),
+		ToNullString(remark),
+		ToNullInt64(retPrice),
+		ToNullInt64(buyPrice),
+		ToNullBool(isDiscount),
+		ToNullInt64(dayWarning),
+		ToNullInt64(stockWarning),
+		ToNullBool(status),
+		ToNullInt64(clinicMaterialID),
+	)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
-		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 		return
 	}
 
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
-		return
-	}
-
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
-
 }
 
 // MaterialOnOff 启用和停用
@@ -394,27 +282,24 @@ func MaterialList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(cm.id) as total from clinic_material cm
-		left join material m on cm.material_id = m.id
-		where cm.clinic_id=$1`
-	selectSQL := `select cm.material_id,cm.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_name,m.specification,
-		m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning,sum(ms.stock_amount) as stock_amount
+	countSQL := `select count(id) as total from clinic_material where clinic_id=$1`
+	selectSQL := `select cm.material_id,cm.id as clinic_material_id,cm.name,cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
+		cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning,sum(ms.stock_amount) as stock_amount
 		from clinic_material cm
-		left join material m on cm.material_id = m.id
 		left join material_stock ms on ms.clinic_material_id = cm.id
 		where cm.clinic_id=$1`
 
 	if keyword != "" {
-		countSQL += " and m.name ~'" + keyword + "'"
-		selectSQL += " and m.name ~'" + keyword + "'"
+		countSQL += " and cm.name ~'" + keyword + "'"
+		selectSQL += " and cm.name ~'" + keyword + "'"
 	}
 	if status != "" {
 		countSQL += " and cm.status=" + status
 		selectSQL += " and cm.status=" + status
 	}
 
-	selectSQL += ` group by cm.material_id,cm.id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_name,m.specification,
-	m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning`
+	selectSQL += ` group by cm.material_id,cm.id,cm.name,cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
+	cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning`
 
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
@@ -445,11 +330,7 @@ func MaterialDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select cm.material_id,cm.id as clinic_material_id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,
-		m.manu_factory_name,m.specification,m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning
-		from clinic_material cm
-		left join material m on cm.material_id = m.id
-		where cm.id=$1`
+	selectSQL := `select * from clinic_material where id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 

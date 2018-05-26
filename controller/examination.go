@@ -97,7 +97,6 @@ func ExaminationCreate(ctx iris.Context) {
 // ExaminationUpdate 更新检查缴费项目
 func ExaminationUpdate(ctx iris.Context) {
 	clinicExaminationID := ctx.PostValue("clinic_examination_id")
-
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
@@ -105,7 +104,6 @@ func ExaminationUpdate(ctx iris.Context) {
 	unitName := ctx.PostValue("unit_name")
 	organ := ctx.PostValue("organ")
 	remark := ctx.PostValue("remark")
-
 	price := ctx.PostValue("price")
 	cost := ctx.PostValue("cost")
 	status := ctx.PostValue("status")
@@ -116,7 +114,7 @@ func ExaminationUpdate(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id from clinic_examination where id=$1 limit 1", clinicExaminationID)
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_examination where id=$1 limit 1", clinicExaminationID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -127,8 +125,9 @@ func ExaminationUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所检查医嘱数据错误"})
 		return
 	}
+	clinicID := clinicExamination["clinic_id"]
 
-	lrow := model.DB.QueryRowx("select id from clinic_examination where name=$1 and id!=$2 limit 1", name, clinicExaminationID)
+	lrow := model.DB.QueryRowx("select id from clinic_examination where name=$1 and id!=$2 and clinic_id=$3 limit 1", name, clinicExaminationID, clinicID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return

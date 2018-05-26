@@ -98,9 +98,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 		fmt.Println("clinicMaterialID====", clinicMaterialID)
 		var sl []string
 		var sm []string
-		clinicMaterialSQL := `select cm.id as clinic_material_id,cm.price,cm.is_discount,m.name,m.dose_unit_name from clinic_material cm
-		left join material m on m.id = cm.material_id
-		where cm.id=$1`
+		clinicMaterialSQL := `select id as clinic_material_id,price,is_discount,name,dose_unit_name from clinic_material where id=$1`
 		trow := model.DB.QueryRowx(clinicMaterialSQL, clinicMaterialID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "1", "msg": "材料费项错误"})
@@ -199,9 +197,8 @@ func MaterialPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select mp.*, m.name, m.specification, m.unit_name, cm.stock_amount from material_patient mp 
+	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name, cm.stock_amount from material_patient mp 
 		left join clinic_material cm on mp.clinic_material_id = cm.id 
-		left join material m on cm.material_id = m.id
 		where mp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

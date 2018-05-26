@@ -17,7 +17,6 @@ func OtherCostCreate(ctx iris.Context) {
 	pyCode := ctx.PostValue("py_code")
 	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
-
 	price := ctx.PostValue("price")
 	cost := ctx.PostValue("cost")
 	status := ctx.PostValue("status")
@@ -40,7 +39,7 @@ func OtherCostCreate(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from other_cost where name=$1 limit 1", name)
+	lrow := model.DB.QueryRowx("select id from clinic_other_cost where name=$1 and clinic_id=$2 limit 1", name, clinicID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 		return
@@ -52,217 +51,115 @@ func OtherCostCreate(ctx iris.Context) {
 		return
 	}
 
-	otherCostSets := []string{"name", "unit_name"}
-	otherCostValues := []string{"'" + name + "'", "'" + unitName + "'"}
-
-	clinicOtherCostSets := []string{"clinic_id", "price"}
-	clinicOtherCostValues := []string{clinicID, price}
-
-	if enName != "" {
-		otherCostSets = append(otherCostSets, "en_name")
-		otherCostValues = append(otherCostValues, "'"+enName+"'")
-	}
-	if pyCode != "" {
-		otherCostSets = append(otherCostSets, "py_code")
-		otherCostValues = append(otherCostValues, "'"+pyCode+"'")
-	}
-	if remark != "" {
-		otherCostSets = append(otherCostSets, "remark")
-		otherCostValues = append(otherCostValues, "'"+remark+"'")
-	}
-
-	if status != "" {
-		clinicOtherCostSets = append(clinicOtherCostSets, "status")
-		clinicOtherCostValues = append(clinicOtherCostValues, status)
-	}
-	if cost != "" {
-		clinicOtherCostSets = append(clinicOtherCostSets, "cost")
-		clinicOtherCostValues = append(clinicOtherCostValues, cost)
-	}
-	if isDiscount != "" {
-		clinicOtherCostSets = append(clinicOtherCostSets, "is_discount")
-		clinicOtherCostValues = append(clinicOtherCostValues, isDiscount)
-	}
-
-	otherCostSetstr := strings.Join(otherCostSets, ",")
-	otherCostValuestr := strings.Join(otherCostValues, ",")
-
-	otherCostInsertSQL := "insert into other_cost (" + otherCostSetstr + ") values (" + otherCostValuestr + ") RETURNING id;"
-	fmt.Println("otherCostInsertSQL==", otherCostInsertSQL)
-
-	tx, err := model.DB.Begin()
-	var otherCostID string
-	err = tx.QueryRow(otherCostInsertSQL).Scan(&otherCostID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
-	}
-	fmt.Println("otherCostID====", otherCostID)
-
-	clinicOtherCostSets = append(clinicOtherCostSets, "other_cost_id")
-	clinicOtherCostValues = append(clinicOtherCostValues, otherCostID)
-
+	clinicOtherCostSets := []string{
+		"clinic_id",
+		"name",
+		"en_name",
+		"py_code",
+		"unit_name",
+		"remark",
+		"cost",
+		"price",
+		"status",
+		"is_discount"}
 	clinicOtherCostSetstr := strings.Join(clinicOtherCostSets, ",")
-	clinicOtherCostValuestr := strings.Join(clinicOtherCostValues, ",")
+	clinicOtherCostInsertSQL := "insert into clinic_other_cost (" + clinicOtherCostSetstr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)"
 
-	clinicotherCostInsertSQL := "insert into clinic_other_cost (" + clinicOtherCostSetstr + ") values (" + clinicOtherCostValuestr + ")"
-	fmt.Println("clinicotherCostInsertSQL==", clinicotherCostInsertSQL)
-
-	_, err2 := tx.Exec(clinicotherCostInsertSQL)
-	if err2 != nil {
-		fmt.Println(" err2====", err2)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+	_, err := model.DB.Exec(clinicOtherCostInsertSQL,
+		ToNullInt64(clinicID),
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(pyCode),
+		ToNullString(unitName),
+		ToNullString(remark),
+		ToNullInt64(cost),
+		ToNullInt64(price),
+		ToNullBool(status),
+		ToNullBool(isDiscount),
+	)
+	if err != nil {
+		fmt.Println(" err====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
-		return
-	}
-
-	ctx.JSON(iris.Map{"code": "200", "data": otherCostID})
-
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
 // OtherCostUpdate 更新其它费用项目
 func OtherCostUpdate(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
 	clinicOtherCostID := ctx.PostValue("clinic_other_cost_id")
-	otherCostID := ctx.PostValue("other_cost_id")
-
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
-
 	price := ctx.PostValue("price")
 	cost := ctx.PostValue("cost")
 	status := ctx.PostValue("status")
 	isDiscount := ctx.PostValue("is_discount")
 
-	if clinicID == "" || name == "" || clinicOtherCostID == "" || price == "" || otherCostID == "" || unitName == "" {
+	if name == "" || clinicOtherCostID == "" || price == "" || unitName == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
-		return
-	}
-	clinic := FormatSQLRowToMap(row)
-	_, ok := clinic["id"]
-	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
-		return
-	}
-
-	crow := model.DB.QueryRowx("select id,clinic_id,other_cost_id from clinic_other_cost where id=$1 limit 1", clinicOtherCostID)
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_other_cost where id=$1 limit 1", clinicOtherCostID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	clinicOtherCostProject := FormatSQLRowToMap(crow)
-	_, rok := clinicOtherCostProject["id"]
+	clinicOtherCost := FormatSQLRowToMap(crow)
+	_, rok := clinicOtherCost["id"]
 	if !rok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所其它费用项目数据错误"})
 		return
 	}
-	sotherCostID := strconv.FormatInt(clinicOtherCostProject["other_cost_id"].(int64), 10)
-	fmt.Println("sotherCostID====", sotherCostID)
+	clinicID := clinicOtherCost["clinic_id"]
 
-	if clinicID != strconv.FormatInt(clinicOtherCostProject["clinic_id"].(int64), 10) {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
-		return
-	}
-
-	if sotherCostID != otherCostID {
-		ctx.JSON(iris.Map{"code": "1", "msg": "其它费用项目数据id不匹配"})
-		return
-	}
-
-	lrow := model.DB.QueryRowx("select id from other_cost where name=$1 and id!=$2 limit 1", name, otherCostID)
+	lrow := model.DB.QueryRowx("select id from clinic_other_cost where name=$1 and id!=$2 and clinic_id=$3 limit 1", name, clinicOtherCostID, clinicID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	laboratoryItem := FormatSQLRowToMap(lrow)
-	_, lok := laboratoryItem["id"]
+	clinicOtherCostu := FormatSQLRowToMap(lrow)
+	_, lok := clinicOtherCostu["id"]
 	if lok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "其它费用项目名称已存在"})
 		return
 	}
 
-	otherCostSets := []string{"name='" + name + "'"}
-	clinicOtherCostSets := []string{"price=" + price}
+	clinicOtherCostUpdateSQL := `update clinic_other_cost set 
+		name=$1,
+		en_name=$2,
+		py_code=$3,
+		unit_name=$4,
+		remark=$5,
+		cost=$6,
+		price=$7,
+		status=$8,
+		is_discount=$9
+		where id=$10`
 
-	if enName != "" {
-		otherCostSets = append(otherCostSets, "en_name='"+enName+"'")
-	}
-	if pyCode != "" {
-		otherCostSets = append(otherCostSets, "py_code='"+pyCode+"'")
-	}
-	if unitName != "" {
-		otherCostSets = append(otherCostSets, "unit_name='"+unitName+"'")
-	}
-	if remark != "" {
-		otherCostSets = append(otherCostSets, "remark='"+remark+"'")
-	}
-
-	if status != "" {
-		clinicOtherCostSets = append(clinicOtherCostSets, "status="+status)
-	}
-	if isDiscount != "" {
-		clinicOtherCostSets = append(clinicOtherCostSets, "is_discount="+isDiscount)
-	}
-	if cost != "" {
-		clinicOtherCostSets = append(clinicOtherCostSets, "cost="+cost)
-	}
-
-	otherCostSets = append(otherCostSets, "updated_time=LOCALTIMESTAMP")
-	otherCostSetstr := strings.Join(otherCostSets, ",")
-
-	otherCostUpdateSQL := "update other_cost set " + otherCostSetstr + " where id=$1"
-	fmt.Println("otherCostUpdateSQL==", otherCostUpdateSQL)
-
-	tx, err := model.DB.Begin()
-	_, err = tx.Exec(otherCostUpdateSQL, otherCostID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
-	}
-
-	clinicOtherCostSets = append(clinicOtherCostSets, "updated_time=LOCALTIMESTAMP")
-	clinicOtherCostSetstr := strings.Join(clinicOtherCostSets, ",")
-
-	clinicOtherCostUpdateSQL := "update clinic_other_cost set " + clinicOtherCostSetstr + " where id=$1"
-	fmt.Println("clinicOtherCostUpdateSQL==", clinicOtherCostUpdateSQL)
-
-	_, err2 := tx.Exec(clinicOtherCostUpdateSQL, clinicOtherCostID)
+	_, err2 := model.DB.Exec(clinicOtherCostUpdateSQL,
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(pyCode),
+		ToNullString(unitName),
+		ToNullString(remark),
+		ToNullInt64(cost),
+		ToNullInt64(price),
+		ToNullBool(status),
+		ToNullBool(isDiscount),
+		ToNullInt64(clinicOtherCostID),
+	)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
-		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 		return
 	}
 
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
-		return
-	}
-
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
-
 }
 
 // OtherCostOnOff 启用和停用
@@ -356,22 +253,19 @@ func OtherCostList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(coc.id) as total from clinic_other_cost coc
-		left join other_cost oc on coc.other_cost_id = oc.id
-		where coc.clinic_id=$1`
-	selectSQL := `select coc.other_cost_id,coc.id as clinic_other_cost_id,oc.name,oc.py_code,oc.remark,
-		oc.en_name,coc.is_discount,coc.price,coc.status,coc.cost,oc.unit_name
+	countSQL := `select count(id) as total from clinic_other_cost where clinic_id=$1`
+	selectSQL := `select id as clinic_other_cost_id,name,py_code,remark,
+		en_name,is_discount,price,status,cost,unit_name
 		from clinic_other_cost coc
-		left join other_cost oc on coc.other_cost_id = oc.id
-		where coc.clinic_id=$1`
+		where clinic_id=$1`
 
 	if keyword != "" {
-		countSQL += " and oc.name ~'" + keyword + "'"
-		selectSQL += " and oc.name ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "'"
 	}
 	if status != "" {
-		countSQL += " and coc.status=" + status
-		selectSQL += " and coc.status=" + status
+		countSQL += " and status=" + status
+		selectSQL += " and status=" + status
 	}
 
 	fmt.Println("countSQL===", countSQL)
@@ -403,11 +297,11 @@ func OtherCostDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select coc.other_cost_id,coc.id as clinic_other_cost_id,oc.name,oc.py_code,oc.remark,
-		oc.en_name,coc.is_discount,coc.price,coc.status,coc.cost,oc.unit_name
+	selectSQL := `select id as clinic_other_cost_id,name,py_code,remark,
+		en_name,is_discount,price,status,cost,unit_name
 		from clinic_other_cost coc
-		left join other_cost oc on coc.other_cost_id = oc.id
-		where coc.id=$1`
+		left join other_cost oc on other_cost_id = id
+		where id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 

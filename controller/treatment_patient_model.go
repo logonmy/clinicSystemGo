@@ -177,17 +177,16 @@ func TreatmentPatientModelList(ctx iris.Context) {
 	tpm.id as treatment_patient_model_id,
 	tpmi.clinic_treatment_id,
 	tpmi.illustration,
-	t.name as treatment_name,
+	ct.name as treatment_name,
 	p.name as operation_name,
 	tpm.is_common,
 	tpm.created_time,
 	tpm.model_name,
 	tpmi.illustration,
-	t.unit_name,
+	ct.unit_name,
 	tpmi.times from treatment_patient_model tpm
 	left join treatment_patient_model_item tpmi on tpmi.treatment_patient_model_id = tpm.id
-	left join clinic_treatment cl on tpmi.clinic_treatment_id = cl.id
-	left join treatment t on cl.treatment_id =t.id
+	left join clinic_treatment ct on tpmi.clinic_treatment_id = ct.id
 	left join personnel p on tpm.operation_id = p.id
 	where tpm.model_name ~$1`
 
@@ -295,11 +294,10 @@ func TreatmentPersonalPatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from treatment_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
-	selectSQL := `select tpm.id as treatment_patient_model_id,tpmi.clinic_treatment_id,tpmi.illustration,l.name as treatment_name,p.name as operation_name,
+	selectSQL := `select tpm.id as treatment_patient_model_id,tpmi.clinic_treatment_id,tpmi.illustration,ct.name as treatment_name,p.name as operation_name,
 	tpm.is_common,tpm.created_time,tpm.model_name,tpmi.times from treatment_patient_model tpm
 	left join treatment_patient_model_item tpmi on tpmi.treatment_patient_model_id = tpm.id
-	left join clinic_treatment cl on tpmi.clinic_treatment_id = cl.id
-	left join treatment l on cl.treatment_id = l.id
+	left join clinic_treatment ct on tpmi.clinic_treatment_id = ct.id
 	left join personnel p on tpm.operation_id = p.id
 	where tpm.model_name ~$1 and (tpm.operation_id=$2 or tpm.is_common=true)`
 
@@ -385,11 +383,10 @@ func TreatmentPatientModelDetail(ctx iris.Context) {
 	}
 	treatmentModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select tpmi.clinic_treatment_id,l.name,tpmi.times,tpmi.illustration 
+	selectiSQL := `select tpmi.clinic_treatment_id,ct.name,tpmi.times,tpmi.illustration 
 		from treatment_patient_model_item tpmi
 		left join treatment_patient_model tpm on tpmi.treatment_patient_model_id = tpm.id
-		left join clinic_treatment cl on tpmi.clinic_treatment_id = cl.id
-		left join treatment l on cl.treatment_id = l.id
+		left join clinic_treatment ct on tpmi.clinic_treatment_id = ct.id
 		where tpmi.treatment_patient_model_id=$1`
 
 	rows, err := model.DB.Queryx(selectiSQL, treatmentModelID)

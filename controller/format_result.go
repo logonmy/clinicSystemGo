@@ -34,7 +34,6 @@ type References struct {
 //LaboratoryItem 检验项
 type LaboratoryItem struct {
 	ClinicLaboratoryItemID interface{}  `json:"clinic_laboratory_item_id"`
-	LaboratoryItemID       interface{}  `json:"laboratory_item_id"`
 	Name                   interface{}  `json:"name"`
 	EnName                 interface{}  `json:"en_name"`
 	UnitName               interface{}  `json:"unit_name"`
@@ -68,7 +67,7 @@ type PrescriptionModel struct {
 type PrescriptionModelItem struct {
 	ClinicDrugID            interface{} `json:"clinic_drug_id"`
 	DrugName                interface{} `json:"drug_name"`
-	Type                    interface{} `json:"type"`
+	DrugType                interface{} `json:"drug_type"`
 	Specification           interface{} `json:"specification"`
 	StockAmount             interface{} `json:"stock_amount"`
 	OnceDose                interface{} `json:"once_dose"`
@@ -106,7 +105,6 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 	var laboratoryItems []LaboratoryItem
 	for _, v := range results {
 		clinicLaboratoryItemID := v["clinic_laboratory_item_id"]
-		laboratoryItemID := v["laboratory_item_id"]
 		name := v["name"]
 		instrumentCode := v["instrument_code"]
 		isDelivery := v["is_delivery"]
@@ -132,9 +130,9 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 			StomachStatus:  stomachStatus,
 		}
 		for k, vRes := range laboratoryItems {
-			vlaboratoryItemID := vRes.LaboratoryItemID
+			vlaboratoryItemID := vRes.ClinicLaboratoryItemID
 			vreferences := vRes.References
-			if vlaboratoryItemID == laboratoryItemID {
+			if vlaboratoryItemID == clinicLaboratoryItemID {
 				laboratoryItems[k].References = append(vreferences, reference)
 				has = true
 			}
@@ -145,17 +143,16 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 
 			laboratoryItem := LaboratoryItem{
 				ClinicLaboratoryItemID: clinicLaboratoryItemID,
-				LaboratoryItemID:       laboratoryItemID,
-				Name:                   name,
-				EnName:                 enName,
-				UnitName:               unitName,
-				Status:                 status,
-				InstrumentCode:         instrumentCode,
-				IsDelivery:             isDelivery,
-				DataType:               dataType,
-				DefaultResult:          defaultResult,
-				IsSpecial:              isSpecial,
-				References:             references,
+				Name:           name,
+				EnName:         enName,
+				UnitName:       unitName,
+				Status:         status,
+				InstrumentCode: instrumentCode,
+				IsDelivery:     isDelivery,
+				DataType:       dataType,
+				DefaultResult:  defaultResult,
+				IsSpecial:      isSpecial,
+				References:     references,
 			}
 			laboratoryItems = append(laboratoryItems, laboratoryItem)
 		}
@@ -230,7 +227,7 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 
 		clinicDrugID := v["clinic_drug_id"]
 		drugName := v["drug_name"]
-		drugType := v["type"]
+		drugType := v["drug_type"]
 		specification := v["specification"]
 		stockAmount := v["stock_amount"]
 		onceDose := v["once_dose"]
@@ -247,7 +244,7 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		item := PrescriptionModelItem{
 			ClinicDrugID:            clinicDrugID,
 			DrugName:                drugName,
-			Type:                    drugType,
+			DrugType:                drugType,
 			Specification:           specification,
 			StockAmount:             stockAmount,
 			OnceDose:                onceDose,
