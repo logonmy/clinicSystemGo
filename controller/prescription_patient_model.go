@@ -189,7 +189,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	cd.packing_unit_name, 
 	pwpmi.fetch_address,
 	pwpmi.illustration,
-	cd.drug_type,sum(ds.stock_amount) as stock_amount
+	cd.drug_type_code,sum(ds.stock_amount) as stock_amount
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id 
@@ -198,7 +198,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	where pwpm.model_name ~$1
 	group by pwpm.id,pwpm.is_common,pwpm.created_time,pwpm.updated_time,p.name,pwpm.model_name,pwpmi.clinic_drug_id,
 		cd.name,cd.specification,pwpmi.once_dose,pwpmi.once_dose_unit_name,pwpmi.route_administration_name,
-		pwpmi.frequency_name, pwpmi.eff_day,pwpmi.amount,cd.packing_unit_name, pwpmi.fetch_address,pwpmi.illustration,cd.drug_type`
+		pwpmi.frequency_name, pwpmi.eff_day,pwpmi.amount,cd.packing_unit_name, pwpmi.fetch_address,pwpmi.illustration,cd.drug_type_code`
 
 	if isCommon != "" {
 		countSQL += ` and is_common =` + isCommon
@@ -279,7 +279,7 @@ func PrescriptionWesternPersonalPatientModelList(ctx iris.Context) {
 	cd.packing_unit_name, 
 	pwpmi.fetch_address,
 	pwpmi.illustration,
-	cd.drug_type
+	cd.drug_type_code
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id 
@@ -670,7 +670,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	pcpm.medicine_illustration,
 	pcpmi.clinic_drug_id,
 	cd.name as drug_name,
-	cd.drug_type,
+	cd.drug_type_code,
 	pcpmi.once_dose,
 	pcpmi.once_dose_unit_name,
 	pcpmi.special_illustration,
@@ -683,7 +683,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	where pcpm.model_name ~$1
 	group by pcpm.id,pcpm.is_common,pcpm.created_time,pcpm.updated_time,p.name,pcpm.model_name,pcpm.route_administration_name,
 		pcpm.eff_day,pcpm.amount,pcpm.frequency_name,pcpm.fetch_address,pcpm.medicine_illustration,pcpmi.clinic_drug_id,
-		cd.name,cd.drug_type,pcpmi.once_dose,pcpmi.once_dose_unit_name,pcpmi.special_illustration,pcpmi.amount`
+		cd.name,cd.drug_type_code,pcpmi.once_dose,pcpmi.once_dose_unit_name,pcpmi.special_illustration,pcpmi.amount`
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
 	if isCommon != "" {
@@ -760,7 +760,7 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 	pcpm.medicine_illustration,
 	pcpmi.clinic_drug_id,
 	cd.name as drug_name,
-	cd.drug_type,
+	cd.drug_type_code,
 	cd.stock_amount,
 	pcpmi.once_dose,
 	pcpmi.once_dose_unit_name,

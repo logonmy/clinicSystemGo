@@ -431,10 +431,9 @@ func ChargePaymentCreate(ctx iris.Context) {
 		if chaerr != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "缴费通知失败"})
 			return
-		} else {
-			ctx.JSON(iris.Map{"code": "300", "msg": "直接缴费成功"})
-			return
 		}
+		ctx.JSON(iris.Map{"code": "300", "msg": "直接缴费成功"})
+		return
 	}
 
 	data := map[string]interface{}{}

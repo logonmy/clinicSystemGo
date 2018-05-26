@@ -15,13 +15,13 @@ func ClinicDrugCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	name := ctx.PostValue("name")
 	specification := ctx.PostValue("specification")
-	manufactory := ctx.PostValue("manufactory")
+	manuFactoryName := ctx.PostValue("manu_factory_name")
 	doseFormName := ctx.PostValue("dose_form_name")
 	printName := ctx.PostValue("print_name")
 	licenseNo := ctx.PostValue("license_no")
-	drugType := ctx.PostValue("drug_type")
+	drugTypeCode := ctx.PostValue("drug_type_code")
 	pyCode := ctx.PostValue("py_code")
-	barCode := ctx.PostValue("bar_code")
+	barCode := ctx.PostValue("barcode")
 	status := ctx.PostValue("status")
 	dose := ctx.PostValue("dose")
 	doseUnit := ctx.PostValue("dose_unit")
@@ -64,8 +64,8 @@ func ClinicDrugCreate(ctx iris.Context) {
 	}
 
 	// 判断是否存在
-	selectSQL := `select * from clinic_drug where clinic_id = $1 and name = $2 and specification = $3 and manufactory = $4`
-	drugRow := model.DB.QueryRowx(selectSQL, ToNullInt64(clinicID), ToNullString(name), ToNullString(specification), ToNullString(manufactory))
+	selectSQL := `select * from clinic_drug where clinic_id = $1 and name = $2 and specification = $3 and manu_factory_name = $4`
+	drugRow := model.DB.QueryRowx(selectSQL, ToNullInt64(clinicID), ToNullString(name), ToNullString(specification), ToNullString(manuFactoryName))
 	drugMap := FormatSQLRowToMap(drugRow)
 	_, ok := drugMap["id"]
 	if ok {
@@ -78,13 +78,13 @@ func ClinicDrugCreate(ctx iris.Context) {
 		clinic_id,
 		name,
 		specification,
-		manufactory,
+		manu_factory_name,
 		dose_form_name,
 		print_name,
 		license_no,
-		drug_type,
+		drug_type_code,
 		py_code,
-		bar_code,
+		barcode,
 		status,
 		dose,
 		dose_unit,
@@ -152,11 +152,11 @@ func ClinicDrugCreate(ctx iris.Context) {
 		ToNullInt64(clinicID),
 		ToNullString(name),
 		ToNullString(specification),
-		ToNullString(manufactory),
+		ToNullString(manuFactoryName),
 		ToNullString(doseFormName),
 		ToNullString(printName),
 		ToNullString(licenseNo),
-		ToNullString(drugType),
+		ToNullString(drugTypeCode),
 		ToNullString(pyCode),
 		ToNullString(barCode),
 		ToNullBool(status),
@@ -198,7 +198,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 //ClinicDrugList 药品列表
 func ClinicDrugList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	drugType := ctx.PostValue("drug_type")
+	drugTypeCode := ctx.PostValue("drug_type_code")
 	keyword := ctx.PostValue("keyword")
 	status := ctx.PostValue("status")
 	offset := ctx.PostValue("offset")
@@ -247,9 +247,9 @@ func ClinicDrugList(ctx iris.Context) {
 		left join drug_stock ds on ds.clinic_drug_id = cd.id
 		where cd.clinic_id = :clinic_id`
 
-	if drugType != "" {
-		countSQL += " and cd.drug_type = :drug_type"
-		selectSQL += " and cd.drug_type= :drug_type"
+	if drugTypeCode != "" {
+		countSQL += " and cd.drug_type_code = :drug_type_code"
+		selectSQL += " and cd.drug_type_code= :drug_type_code"
 	}
 
 	if status != "" {
@@ -289,12 +289,12 @@ func ClinicDrugList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var queryOption = map[string]interface{}{
-		"clinic_id": ToNullInt64(clinicID),
-		"drug_type": ToNullString(drugType),
-		"status":    ToNullBool(status),
-		"keyword":   ToNullString(keyword),
-		"offset":    ToNullInt64(offset),
-		"limit":     ToNullInt64(limit),
+		"clinic_id":      ToNullInt64(clinicID),
+		"drug_type_code": ToNullString(drugTypeCode),
+		"status":         ToNullBool(status),
+		"keyword":        ToNullString(keyword),
+		"offset":         ToNullInt64(offset),
+		"limit":          ToNullInt64(limit),
 	}
 
 	var results []map[string]interface{}
@@ -313,13 +313,13 @@ func ClinicDrugUpdate(ctx iris.Context) {
 	clinicDrugID := ctx.PostValue("clinic_drug_id")
 	name := ctx.PostValue("name")
 	specification := ctx.PostValue("specification")
-	manufactory := ctx.PostValue("manufactory")
+	manuFactoryName := ctx.PostValue("manu_factory_name")
 	doseFormName := ctx.PostValue("dose_form_name")
 	printName := ctx.PostValue("print_name")
 	licenseNo := ctx.PostValue("license_no")
-	drugType := ctx.PostValue("drug_type")
+	drugTypeCode := ctx.PostValue("drug_type_code")
 	pyCode := ctx.PostValue("py_code")
-	barCode := ctx.PostValue("bar_code")
+	barCode := ctx.PostValue("barcode")
 	status := ctx.PostValue("status")
 	dose := ctx.PostValue("dose")
 	doseUnit := ctx.PostValue("dose_unit")
@@ -361,17 +361,42 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		return
 	}
 
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_drug where id=$1 limit 1", clinicDrugID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		return
+	}
+	clinicDrug := FormatSQLRowToMap(crow)
+	_, rok := clinicDrug["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "诊所材料项目数据错误"})
+		return
+	}
+	clinicID := clinicDrug["clinic_id"]
+
+	lrow := model.DB.QueryRowx("select id from clinic_drug where name=$1 and id!=$2 and manu_factory_name=$3 and clinic_id=$4 and specification=$5 limit 1", name, clinicDrugID, manuFactoryName, clinicID, specification)
+	if lrow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		return
+	}
+	clinicDrugu := FormatSQLRowToMap(lrow)
+	_, lok := clinicDrugu["id"]
+	if lok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "改药品已存在"})
+		return
+	}
+
 	// 修改数据
 	updateSQL := `udpate clinic_drug set
 		name = $2,
 		specification = $3,
-		manufactory = $4,
+		manu_factory_name = $4,
 		dose_form_name = $5,
 		print_name = $6,
 		license_no = $7,
-		drug_type = $8,
+		drug_type_code = $8,
 		py_code = $9,
-		bar_code = $10,
+		barcode = $10,
 		status = $11,
 		dose = $12,
 		dose_unit = $13,
@@ -402,11 +427,11 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		ToNullInt64(clinicDrugID),
 		ToNullString(name),
 		ToNullString(specification),
-		ToNullString(manufactory),
+		ToNullString(manuFactoryName),
 		ToNullString(doseFormName),
 		ToNullString(printName),
 		ToNullString(licenseNo),
-		ToNullString(drugType),
+		ToNullString(drugTypeCode),
 		ToNullString(pyCode),
 		ToNullString(barCode),
 		ToNullBool(status),
