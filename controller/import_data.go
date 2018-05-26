@@ -208,13 +208,13 @@ func ImportLaboratoryItem(ctx iris.Context) {
 			return
 		}
 
-		_, err1 := tx.Exec(clinicLaboratoryInsertSQL, laboratoryItemID)
-		if err1 != nil {
-			fmt.Println(" err1====", err1)
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
-			return
-		}
+		// _, err1 := tx.Exec(clinicLaboratoryInsertSQL, laboratoryItemID)
+		// if err1 != nil {
+		// 	fmt.Println(" err1====", err1)
+		// 	tx.Rollback()
+		// 	ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		// 	return
+		// }
 	}
 	err3 := tx.Commit()
 	if err3 != nil {
