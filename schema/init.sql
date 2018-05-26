@@ -812,13 +812,13 @@ CREATE TABLE clinic_drug
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   name varchar(50) NOT Null,--药名
   specification varchar(50) NOT Null,--规格
-  manufactory varchar(50) NOT Null,--生产厂商
+  manu_factory_name varchar(50) NOT Null,--生产厂商
   dose_form_name varchar(50) NOT Null,--剂型
   print_name varchar(50),--商品名
   license_no varchar(50) NOT Null,--国药准字
   drug_type varchar(50) NOT Null,--药品分类编码
   py_code varchar(50),--拼音码
-  bar_code varchar(50) NOT Null,--条形码
+  barcode varchar(50) NOT Null,--条形码
   status boolean NOT NULL DEFAULT true,--是否启用
   dose integer,--剂量
   dose_unit varchar(10),--剂量单位
