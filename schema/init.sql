@@ -1211,7 +1211,12 @@ CREATE TABLE clinic_treatment
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  treatment_id INTEGER references treatment(id),--治疗项目id
+  name varchar(20) UNIQUE NOT NULL,--名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  unit_name varchar(20),--单位名称
+  remark text,--备注
   cost integer CHECK(cost > 0), --成本价
   price integer NOT NULL CHECK(price > 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
@@ -1244,7 +1249,14 @@ CREATE TABLE clinic_material
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  material_id integer NOT NULL references material(id),--诊所材料id
+  name varchar(20) NOT NULL,--名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  manu_factory_name varchar(100),--生产厂商
+  specification varchar(30),--规格
+  unit_name varchar(20),--单位
+  remark text,--备注
   ret_price integer,--零售价
   buy_price integer,--成本价
   is_discount boolean DEFAULT false,--是否允许折扣
@@ -1357,7 +1369,11 @@ CREATE TABLE clinic_other_cost
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  other_cost_id INTEGER references other_cost(id),--材料费用项目id
+  name varchar(20) NOT NULL,--名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  unit_name varchar(20),--单位名称
+  remark text,--备注
   cost integer CHECK(cost > 0), --成本价
   price integer NOT NULL CHECK(price > 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
