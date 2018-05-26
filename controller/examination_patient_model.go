@@ -172,11 +172,10 @@ func ExaminationPatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from examination_patient_model where model_name ~$1`
-	selectSQL := `select epm.id as examination_patient_model_id,l.name as examination_name,p.name as operation_name,
+	selectSQL := `select epm.id as examination_patient_model_id,ce.name as examination_name,p.name as operation_name,
 	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.times from examination_patient_model epm
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
-	left join clinic_examination cl on epmi.clinic_examination_id = cl.id
-	left join examination l on cl.examination_id = l.id
+	left join clinic_examination ce on epmi.clinic_examination_id = ce.id
 	left join personnel p on epm.operation_id = p.id
 	where epm.model_name ~$1`
 
@@ -285,11 +284,10 @@ func ExaminationPersonalPatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from examination_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
-	selectSQL := `select epm.id as examination_patient_model_id,l.name as examination_name,p.name as operation_name,
+	selectSQL := `select epm.id as examination_patient_model_id,ce.name as examination_name,p.name as operation_name,
 	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.times from examination_patient_model epm
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
-	left join clinic_examination cl on epmi.clinic_examination_id = cl.id
-	left join examination l on cl.examination_id = l.id
+	left join clinic_examination ce on epmi.clinic_examination_id = ce.id
 	left join personnel p on epm.operation_id = p.id
 	where epm.model_name ~$1 and (epm.operation_id=$2 or epm.is_common=true)`
 
@@ -369,11 +367,10 @@ func ExaminationPatientModelDetail(ctx iris.Context) {
 	}
 	examinationModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select epmi.clinic_examination_id,l.name,epmi.times,epmi.illustration 
+	selectiSQL := `select epmi.clinic_examination_id,ce.name,epmi.times,epmi.illustration 
 		from examination_patient_model_item epmi
 		left join examination_patient_model epm on epmi.examination_patient_model_id = epm.id
-		left join clinic_examination cl on epmi.clinic_examination_id = cl.id
-		left join examination l on cl.examination_id = l.id
+		left join clinic_examination ce on epmi.clinic_examination_id = ce.id
 		where epmi.examination_patient_model_id=$1`
 
 	rows, err := model.DB.Queryx(selectiSQL, examinationModelID)

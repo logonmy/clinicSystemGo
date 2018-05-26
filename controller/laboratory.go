@@ -14,7 +14,6 @@ import (
 func LaboratoryCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	name := ctx.PostValue("name")
-	laboratoryID := ctx.PostValue("laboratory_id")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
@@ -49,119 +48,67 @@ func LaboratoryCreate(ctx iris.Context) {
 		return
 	}
 
-	laboratorySets := []string{"name"}
-	laboratoryValues := []string{"'" + name + "'"}
-
-	clinicLaboratorySets := []string{"clinic_id"}
-	clinicLaboratoryValues := []string{clinicID}
-
-	if enName != "" {
-		laboratorySets = append(laboratorySets, "en_name")
-		laboratoryValues = append(laboratoryValues, "'"+enName+"'")
+	clrow := model.DB.QueryRowx("select id from clinic_laboratory where clinic_id=$1 and name=$2 limit 1", clinicID, name)
+	if clrow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		return
 	}
-	if pyCode != "" {
-		laboratorySets = append(laboratorySets, "py_code")
-		laboratoryValues = append(laboratoryValues, "'"+pyCode+"'")
-	}
-	if idcCode != "" {
-		laboratorySets = append(laboratorySets, "idc_code")
-		laboratoryValues = append(laboratoryValues, "'"+idcCode+"'")
-	}
-	if unitName != "" {
-		laboratorySets = append(laboratorySets, "unit_name")
-		laboratoryValues = append(laboratoryValues, "'"+unitName+"'")
-	}
-	if timeReport != "" {
-		laboratorySets = append(laboratorySets, "time_report")
-		laboratoryValues = append(laboratoryValues, "'"+timeReport+"'")
-	}
-	if clinicalSignificance != "" {
-		laboratorySets = append(laboratorySets, "clinical_significance")
-		laboratoryValues = append(laboratoryValues, "'"+clinicalSignificance+"'")
-	}
-	if laboratorySample != "" {
-		laboratorySets = append(laboratorySets, "laboratory_sample")
-		laboratoryValues = append(laboratoryValues, "'"+laboratorySample+"'")
-	}
-	if cuvetteColorName != "" {
-		laboratorySets = append(laboratorySets, "cuvette_color_name")
-		laboratoryValues = append(laboratoryValues, "'"+cuvetteColorName+"'")
+	clinicLaboratory := FormatSQLRowToMap(clrow)
+	_, lok := clinicLaboratory["id"]
+	if lok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "检查医嘱名称在该诊所已存在"})
+		return
 	}
 
-	if status != "" {
-		clinicLaboratorySets = append(clinicLaboratorySets, "status")
-		clinicLaboratoryValues = append(clinicLaboratoryValues, status)
+	clinicLaboratorySets := []string{
+		"clinic_id",
+		"name",
+		"en_name",
+		"py_code",
+		"idc_code",
+		"unit_name",
+		"time_report",
+		"clinical_significance",
+		"laboratory_sample",
+		"cuvette_color_name",
+		"status",
+		"remark",
+		"merge_flag",
+		"cost",
+		"price",
+		"is_delivery",
+		"is_discount",
 	}
-	if remark != "" {
-		clinicLaboratorySets = append(clinicLaboratorySets, "remark")
-		clinicLaboratoryValues = append(clinicLaboratoryValues, "'"+remark+"'")
-	}
-	if mergeFlag != "" {
-		clinicLaboratorySets = append(clinicLaboratorySets, "merge_flag")
-		clinicLaboratoryValues = append(clinicLaboratoryValues, mergeFlag)
-	}
-	if cost != "" {
-		clinicLaboratorySets = append(clinicLaboratorySets, "cost")
-		clinicLaboratoryValues = append(clinicLaboratoryValues, cost)
-	}
-	if price != "" {
-		clinicLaboratorySets = append(clinicLaboratorySets, "price")
-		clinicLaboratoryValues = append(clinicLaboratoryValues, price)
-	}
-	if isDelivery != "" {
-		clinicLaboratorySets = append(clinicLaboratorySets, "is_delivery")
-		clinicLaboratoryValues = append(clinicLaboratoryValues, isDelivery)
-	}
-	if isDiscount != "" {
-		clinicLaboratorySets = append(clinicLaboratorySets, "is_discount")
-		clinicLaboratoryValues = append(clinicLaboratoryValues, isDiscount)
-	}
-
-	laboratoryItemSetStr := strings.Join(laboratorySets, ",")
-	laboratoryItemValueStr := strings.Join(laboratoryValues, ",")
-
-	laboratoryInsertSQL := "insert into laboratory (" + laboratoryItemSetStr + ") values (" + laboratoryItemValueStr + ") RETURNING id;"
-	fmt.Println("laboratoryInsertSQL==", laboratoryInsertSQL)
-
-	tx, err := model.DB.Begin()
-
-	if laboratoryID == "" {
-		err = tx.QueryRow(laboratoryInsertSQL).Scan(&laboratoryID)
-		if err != nil {
-			fmt.Println("err ===", err)
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": err})
-			return
-		}
-	}
-
-	fmt.Println("laboratoryID====", laboratoryID)
-
-	clinicLaboratorySets = append(clinicLaboratorySets, "laboratory_id")
-	clinicLaboratoryValues = append(clinicLaboratoryValues, laboratoryID)
 
 	clinicLaboratorySetStr := strings.Join(clinicLaboratorySets, ",")
-	clinicLaboratoryValueStr := strings.Join(clinicLaboratoryValues, ",")
+	clinicLaboratoryInsertSQL := "insert into clinic_laboratory (" + clinicLaboratorySetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)"
 
-	clinicLaboratoryInsertSQL := "insert into clinic_laboratory (" + clinicLaboratorySetStr + ") values (" + clinicLaboratoryValueStr + ")"
-	fmt.Println("clinicLaboratoryInsertSQL==", clinicLaboratoryInsertSQL)
-
-	_, err2 := tx.Exec(clinicLaboratoryInsertSQL)
+	_, err2 := model.DB.Exec(clinicLaboratoryInsertSQL,
+		ToNullInt64(clinicID),
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(pyCode),
+		ToNullString(idcCode),
+		ToNullString(unitName),
+		ToNullString(timeReport),
+		ToNullString(clinicalSignificance),
+		ToNullString(laboratorySample),
+		ToNullString(cuvetteColorName),
+		ToNullBool(status),
+		ToNullString(remark),
+		ToNullInt64(mergeFlag),
+		ToNullInt64(cost),
+		ToNullInt64(price),
+		ToNullBool(isDelivery),
+		ToNullBool(isDiscount),
+	)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
-		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 		return
 	}
 
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
-		return
-	}
-
-	ctx.JSON(iris.Map{"code": "200", "data": laboratoryID})
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
 //LaboratoryAssociation 关联检验项目
@@ -275,12 +222,11 @@ func AssociationList(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select cls.clinic_laboratory_item_id,li.id as laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,cls.default_result,
-	li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status
+	selectSQL := `select cls.clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cls.default_result,
+	cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status
 	from clinic_laboratory_association cls
 	left join clinic_laboratory_item cli on cls.clinic_laboratory_item_id = cli.id
-	left join laboratory_item li on cli.laboratory_item_id = li.id
-	left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
+	left join clinic_laboratory_item_reference clir on clir.clinic_laboratory_item_id = cli.id
 	where cls.clinic_laboratory_id=$1`
 
 	var results []map[string]interface{}
@@ -334,22 +280,17 @@ func LaboratoryList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(cl.id) as total from clinic_laboratory cl
-		left join laboratory l on cl.laboratory_id = l.id
-		where cl.clinic_id=$1`
-	selectSQL := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name as laboratory_name,l.unit_name,cl.price,l.py_code,cl.is_discount,
-		cl.remark,cl.status
-		from clinic_laboratory cl
-		left join laboratory l on cl.laboratory_id = l.id
-		where cl.clinic_id=$1`
+	countSQL := `select count(id) as total from clinic_laboratory where clinic_id=$1`
+	selectSQL := `select id as clinic_laboratory_id,name as laboratory_name,unit_name,price,py_code,is_discount,
+		remark,status from clinic_laboratory where clinic_id=$1`
 
 	if keyword != "" {
-		countSQL += " and l.name ~'" + keyword + "'"
-		selectSQL += " and l.name ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "'"
 	}
 	if status != "" {
-		countSQL += " and cl.status=" + status
-		selectSQL += " and cl.status=" + status
+		countSQL += " and status=" + status
+		selectSQL += " and status=" + status
 	}
 
 	fmt.Println("countSQL===", countSQL)
@@ -379,12 +320,10 @@ func LaboratoryDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	sql := `select l.id as laboratory_id,cl.id as clinic_laboratory_id,l.name,l.en_name,l.unit_name,l.py_code,l.idc_code,l.remark,
-		l.time_report,l.clinical_significance,l.laboratory_sample,l.cuvette_color_name,
-		cl.cost,cl.is_discount,cl.status,cl.merge_flag,cl.price,cl.is_delivery
-		from clinic_laboratory cl
-		left join laboratory l on cl.laboratory_id = l.id
-		where cl.id=$1`
+	sql := `select id as clinic_laboratory_id,name,en_name,unit_name,py_code,idc_code,remark,
+		time_report,clinical_significance,laboratory_sample,cuvette_color_name,
+		cost,is_discount,status,merge_flag,price,is_delivery
+		from clinic_laboratory where id=$1`
 	fmt.Println("sql==", sql)
 	arows := model.DB.QueryRowx(sql, clinicLaboratoryID)
 	if arows == nil {
@@ -398,7 +337,6 @@ func LaboratoryDetail(ctx iris.Context) {
 //LaboratoryUpdate 检验医嘱修改
 func LaboratoryUpdate(ctx iris.Context) {
 	clinicLaboratoryID := ctx.PostValue("clinic_laboratory_id")
-
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
@@ -409,7 +347,6 @@ func LaboratoryUpdate(ctx iris.Context) {
 	remark := ctx.PostValue("remark")
 	laboratorySample := ctx.PostValue("laboratory_sample")
 	cuvetteColorName := ctx.PostValue("cuvette_color_name")
-
 	mergeFlag := ctx.PostValue("merge_flag")
 	cost := ctx.PostValue("cost")
 	price := ctx.PostValue("price")
@@ -422,11 +359,7 @@ func LaboratoryUpdate(ctx iris.Context) {
 		return
 	}
 
-	if mergeFlag == "" {
-		mergeFlag = "0"
-	}
-
-	crow := model.DB.QueryRowx("select id,clinic_id,laboratory_id from clinic_laboratory where id=$1 limit 1", clinicLaboratoryID)
+	crow := model.DB.QueryRowx("select id from clinic_laboratory where id=$1 limit 1", clinicLaboratoryID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -437,58 +370,60 @@ func LaboratoryUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所检验医嘱数据错误"})
 		return
 	}
-	laboratoryID := strconv.FormatInt(clinicLaboratory["laboratory_id"].(int64), 10)
-	clinicID := strconv.FormatInt(clinicLaboratory["clinic_id"].(int64), 10)
-	fmt.Println("laboratoryID====", laboratoryID)
-	fmt.Println("clinicID====", clinicID)
 
-	lrow := model.DB.QueryRowx("select id from laboratory where name=$1 and id!=$2 limit 1", name, laboratoryID)
+	lrow := model.DB.QueryRowx("select id from clinic_laboratory where name=$1 and id!=$2 limit 1", name, clinicLaboratoryID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	laboratoryItem := FormatSQLRowToMap(lrow)
-	_, lok := laboratoryItem["id"]
+	clinicLaboratoryItem := FormatSQLRowToMap(lrow)
+	_, lok := clinicLaboratoryItem["id"]
 	if lok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "检验医嘱名称已存在"})
 		return
 	}
 
-	laboratoryUpdateSQL := `update laboratory set name=$1,en_name=$2,py_code=$3,idc_code=$4,
-		unit_name=$5,time_report=$6,clinical_significance=$7,remark=$8,laboratory_sample=$9,cuvette_color_name=$10 where id=$11`
-	fmt.Println("laboratoryUpdateSQL==", laboratoryUpdateSQL)
+	clinicLaboratoryUpdateSQL := `update clinic_laboratory set 
+		name=$1,
+		en_name=$2,
+		py_code=$3,
+		idc_code=$4,
+		unit_name=$5,
+		time_report=$6,
+		clinical_significance=$7,
+		laboratory_sample=$8,
+		cuvette_color_name=$9,
+		status=$10,
+		remark=$11,
+		merge_flag=$12,
+		cost=$13,
+		price=$14,
+		is_delivery=$15,
+		is_discount=$16
+		where id=$17`
 
-	clinicLaboratoryUpdateSQL := `update clinic_laboratory set clinic_id=$1,laboratory_id=$2,cost=$3,price=$4,status=$5,is_discount=$6,is_delivery=$7,merge_flag=$8 where id=$9`
-	fmt.Println("clinicLaboratoryUpdateSQL==", clinicLaboratoryUpdateSQL)
-
-	tx, err := model.DB.Begin()
+	_, err := model.DB.Exec(clinicLaboratoryUpdateSQL,
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(pyCode),
+		ToNullString(idcCode),
+		ToNullString(unitName),
+		ToNullString(timeReport),
+		ToNullString(clinicalSignificance),
+		ToNullString(laboratorySample),
+		ToNullString(cuvetteColorName),
+		ToNullBool(status),
+		ToNullString(remark),
+		ToNullInt64(mergeFlag),
+		ToNullInt64(cost),
+		ToNullInt64(price),
+		ToNullBool(isDelivery),
+		ToNullBool(isDiscount),
+		ToNullInt64(clinicLaboratoryID),
+	)
 	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
-	}
-
-	_, err1 := tx.Exec(laboratoryUpdateSQL, name, enName, pyCode, idcCode, unitName, timeReport, clinicalSignificance, remark, laboratorySample, cuvetteColorName, laboratoryID)
-	if err1 != nil {
-		fmt.Println(" err1====", err1)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
-		return
-	}
-
-	_, err2 := tx.Exec(clinicLaboratoryUpdateSQL, clinicID, laboratoryID, cost, price, status, isDiscount, isDelivery, mergeFlag, clinicLaboratoryID)
-	if err2 != nil {
-		fmt.Println(" err2====", err2)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
-		return
-	}
-
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+		fmt.Println(" err====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -498,7 +433,6 @@ func LaboratoryUpdate(ctx iris.Context) {
 //LaboratoryItemCreate 检验项目创建
 func LaboratoryItemCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	laboratoryItemID := ctx.PostValue("laboratory_item_id")
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	instrumentCode := ctx.PostValue("instrument_code")
@@ -531,188 +465,134 @@ func LaboratoryItemCreate(ctx iris.Context) {
 		return
 	}
 
-	laboratoryItemSets := []string{"name", "data_type", "is_special"}
-	laboratoryItemValues := []string{"'" + name + "'", dataType, isSpecial}
-
-	var itemReferenceSets []string
-	var itemReferenceValues []string
-
-	clinicLaboratoryItemSets := []string{"clinic_id"}
-	clinicLaboratoryItemValues := []string{clinicID}
-
-	if enName != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "en_name")
-		laboratoryItemValues = append(laboratoryItemValues, "'"+enName+"'")
+	clirow := model.DB.QueryRowx("select id from clinic_laboratory_item where clinic_id=$1 and name=$2 limit 1", clinicID, name)
+	if clirow == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		return
 	}
-	if instrumentCode != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "instrument_code")
-		laboratoryItemValues = append(laboratoryItemValues, "'"+instrumentCode+"'")
-	}
-	if unitName != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "unit_name")
-		laboratoryItemValues = append(laboratoryItemValues, "'"+unitName+"'")
-	}
-	if clinicalSignificance != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "clinical_significance")
-		laboratoryItemValues = append(laboratoryItemValues, "'"+clinicalSignificance+"'")
+	clinicLaboratoryItem := FormatSQLRowToMap(clirow)
+	_, lok := clinicLaboratoryItem["id"]
+	if lok {
+		ctx.JSON(iris.Map{"code": "1", "msg": "检验项目名称在该诊所已存在"})
+		return
 	}
 
-	if status != "" {
-		clinicLaboratoryItemSets = append(clinicLaboratoryItemSets, "status")
-		clinicLaboratoryItemValues = append(clinicLaboratoryItemValues, status)
-	}
-	if isDelivery != "" {
-		clinicLaboratoryItemSets = append(clinicLaboratoryItemSets, "is_delivery")
-		clinicLaboratoryItemValues = append(clinicLaboratoryItemValues, isDelivery)
-	}
+	itemReferenceSets := []string{
+		"clinic_laboratory_item_id",
+		"reference_max",
+		"reference_min",
+		"age_max",
+		"age_min",
+		"reference_sex",
+		"stomach_status",
+		"is_pregnancy"}
+	clinicLaboratoryItemSets := []string{
+		"clinic_id",
+		"name",
+		"en_name",
+		"instrument_code",
+		"unit_name",
+		"clinical_significance",
+		"status",
+		"is_delivery",
+		"data_type",
+		"is_special"}
 
 	tx, err := model.DB.Begin()
 
-	if laboratoryItemID == "" {
-		laboratoryItemSetStr := strings.Join(laboratoryItemSets, ",")
-		laboratoryItemValueStr := strings.Join(laboratoryItemValues, ",")
-
-		laboratoryItemInsertSQL := "insert into laboratory_item (" + laboratoryItemSetStr + ") values (" + laboratoryItemValueStr + ") RETURNING id;"
-		fmt.Println("laboratoryItemInsertSQL==", laboratoryItemInsertSQL)
-
-		err = tx.QueryRow(laboratoryItemInsertSQL).Scan(&laboratoryItemID)
-		if err != nil {
-			fmt.Println("err ===", err)
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": err})
-			return
-		}
-		fmt.Println("laboratoryItemID==", laboratoryItemID)
-
-		itemReferenceSets = append(itemReferenceSets, "laboratory_item_id")
-		if isSpecial == "false" {
-			itemReferenceValues = append(itemReferenceValues, laboratoryItemID)
-			if referenceMax != "" {
-				itemReferenceSets = append(itemReferenceSets, "reference_max")
-				itemReferenceValues = append(itemReferenceValues, "'"+referenceMax+"'")
-			}
-			if referenceMin != "" {
-				itemReferenceSets = append(itemReferenceSets, "reference_min")
-				itemReferenceValues = append(itemReferenceValues, "'"+referenceMin+"'")
-			}
-
-		} else if isSpecial == "true" && items != "" {
-			itemReferenceSets = append(itemReferenceSets, "reference_sex", "age_max", "age_min", "reference_max", "reference_min", "stomach_status", "is_pregnancy")
-			var results []map[string]string
-			reErr := json.Unmarshal([]byte(items), &results)
-			if reErr != nil {
-				ctx.JSON(iris.Map{"code": "-1", "msg": reErr.Error()})
-				return
-			}
-			for _, v := range results {
-				var s []string
-				s = append(s, laboratoryItemID)
-				referenceSex := v["reference_sex"]
-				ageMax := v["age_max"]
-				ageMin := v["age_min"]
-				referenceMax := v["reference_max"]
-				referenceMin := v["reference_min"]
-				stomachStatus := v["stomach_status"]
-				isPregnancy := v["is_pregnancy"]
-				if referenceSex != "" {
-					s = append(s, "'"+referenceSex+"'")
-				} else {
-					s = append(s, `null`)
-				}
-				if ageMax != "" {
-					s = append(s, ageMax)
-				} else {
-					s = append(s, `null`)
-				}
-				if ageMin != "" {
-					s = append(s, ageMin)
-				} else {
-					s = append(s, `null`)
-				}
-				if referenceMax != "" {
-					s = append(s, "'"+referenceMax+"'")
-				} else {
-					s = append(s, `null`)
-				}
-				if referenceMin != "" {
-					s = append(s, "'"+referenceMin+"'")
-				} else {
-					s = append(s, `null`)
-				}
-				if stomachStatus != "" {
-					s = append(s, "'"+stomachStatus+"'")
-				} else {
-					s = append(s, `null`)
-				}
-				if isPregnancy != "" {
-					s = append(s, isPregnancy)
-				} else {
-					s = append(s, `null`)
-				}
-				str := strings.Join(s, ",")
-				str = "(" + str + ")"
-				itemReferenceValues = append(itemReferenceValues, str)
-			}
-		} else {
-			ctx.JSON(iris.Map{"code": "1", "msg": "参考值是否特殊数据格式错误"})
-			return
-		}
-
-		itemReferenceSetStr := strings.Join(itemReferenceSets, ",")
-		itemReferenceValueStr := strings.Join(itemReferenceValues, ",")
-
-		itemReferenceInsertSQL := "insert into laboratory_item_reference (" + itemReferenceSetStr + ") values (" + itemReferenceValueStr + ")"
-		if isSpecial == "true" {
-			itemReferenceInsertSQL = "insert into laboratory_item_reference (" + itemReferenceSetStr + ") values " + itemReferenceValueStr
-		}
-
-		_, err1 := tx.Exec(itemReferenceInsertSQL)
-		if err1 != nil {
-			fmt.Println(" err1====", err1)
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
-			return
-		}
-
-	} else {
-		lrow := model.DB.QueryRowx("select id from clinic_laboratory_item where clinic_id=$1 and laboratory_item_id=$2 limit 1", clinicID, laboratoryItemID)
-		if lrow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-			return
-		}
-		clinicLaboratoryItem := FormatSQLRowToMap(lrow)
-		_, lok := clinicLaboratoryItem["id"]
-		if lok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "检验项目名称在该诊所已存在"})
-			return
-		}
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+		return
 	}
-
-	clinicLaboratoryItemSets = append(clinicLaboratoryItemSets, "laboratory_item_id")
-	clinicLaboratoryItemValues = append(clinicLaboratoryItemValues, laboratoryItemID)
 
 	clinicLaboratoryItemSetStr := strings.Join(clinicLaboratoryItemSets, ",")
-	clinicLaboratoryItemValueStr := strings.Join(clinicLaboratoryItemValues, ",")
+	itemReferenceSetStr := strings.Join(itemReferenceSets, ",")
 
-	clinicLaboratoryItemInsertSQL := "insert into clinic_laboratory_item (" + clinicLaboratoryItemSetStr + ") values (" + clinicLaboratoryItemValueStr + ")"
-	fmt.Println("clinicLaboratoryItemInsertSQL==", clinicLaboratoryItemInsertSQL)
+	clinicLaboratoryItemInsertSQL := "insert into clinic_laboratory_item (" + clinicLaboratoryItemSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id;"
+	itemReferenceInsertSQL := "insert into clinic_laboratory_item_reference (" + itemReferenceSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8)"
 
-	_, err2 := tx.Exec(clinicLaboratoryItemInsertSQL)
-	if err2 != nil {
-		fmt.Println(" err2====", err2)
+	var clinicLaboratoryItemID string
+	err1 := tx.QueryRow(clinicLaboratoryItemInsertSQL,
+		ToNullInt64(clinicID),
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(instrumentCode),
+		ToNullString(unitName),
+		ToNullString(clinicalSignificance),
+		ToNullBool(status),
+		ToNullBool(isDelivery),
+		ToNullInt64(dataType),
+		ToNullBool(isSpecial),
+	).Scan(&clinicLaboratoryItemID)
+	if err1 != nil {
+		fmt.Println(" err1====", err1)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+	if isSpecial == "false" {
+		_, err2 := tx.Exec(itemReferenceInsertSQL,
+			ToNullInt64(clinicLaboratoryItemID),
+			ToNullString(referenceMax),
+			ToNullString(referenceMin),
+			ToNullInt64(""),
+			ToNullInt64(""),
+			"通用",
+			ToNullBool("false"),
+			ToNullBool("false"),
+		)
+		if err2 != nil {
+			fmt.Println(" err2====", err2)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+			return
+		}
+	} else if isSpecial == "true" && items != "" {
+		var results []map[string]string
+		reErr := json.Unmarshal([]byte(items), &results)
+		if reErr != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": reErr.Error()})
+			return
+		}
+		for _, v := range results {
+			referenceSex := v["reference_sex"]
+			ageMax := v["age_max"]
+			ageMin := v["age_min"]
+			sreferenceMax := v["reference_max"]
+			sreferenceMin := v["reference_min"]
+			stomachStatus := v["stomach_status"]
+			isPregnancy := v["is_pregnancy"]
+			_, err3 := tx.Exec(itemReferenceInsertSQL,
+				ToNullInt64(clinicLaboratoryItemID),
+				ToNullString(sreferenceMax),
+				ToNullString(sreferenceMin),
+				ToNullInt64(ageMax),
+				ToNullInt64(ageMin),
+				ToNullString(referenceSex),
+				ToNullBool(stomachStatus),
+				ToNullBool(isPregnancy),
+			)
+			if err3 != nil {
+				fmt.Println(" err3====", err3)
+				tx.Rollback()
+				ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+				return
+			}
+		}
+	} else {
+		ctx.JSON(iris.Map{"code": "1", "msg": "参考值是否特殊数据格式错误"})
 		return
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": laboratoryItemID})
+	err4 := tx.Commit()
+	if err4 != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err4.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": clinicLaboratoryItemID})
 }
 
 //LaboratoryItemList 检验项目列表
@@ -758,23 +638,20 @@ func LaboratoryItemList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(cli.id) as total from clinic_laboratory_item cli
-		left join laboratory_item li on cli.laboratory_item_id = li.id
-		where cli.clinic_id=$1`
-	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,li.instrument_code,
-		li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,cli.is_delivery
+	countSQL := `select count(id) as total from clinic_laboratory_item where clinic_id=$1`
+	selectSQL := `select id as clinic_laboratory_item_id,name,en_name,unit_name,is_special,instrument_code,
+		data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,status,is_delivery
 		from clinic_laboratory_item cli
-		left join laboratory_item li on cli.laboratory_item_id = li.id
-		left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
-		where cli.clinic_id=$1`
+		left join clinic_laboratory_item_reference clir on clir.clinic_laboratory_item_id = cli.id
+		where clinic_id=$1`
 
 	if keyword != "" {
-		countSQL += " and li.name ~'" + keyword + "'"
-		selectSQL += " and li.name ~'" + keyword + "'"
+		countSQL += " and name ~'" + keyword + "'"
+		selectSQL += " and name ~'" + keyword + "'"
 	}
 	if status != "" {
-		countSQL += " and cli.status=" + status
-		selectSQL += " and cli.status=" + status
+		countSQL += " and status=" + status
+		selectSQL += " and status=" + status
 	}
 
 	fmt.Println("countSQL===", countSQL)
@@ -800,42 +677,26 @@ func LaboratoryItemList(ctx iris.Context) {
 
 //LaboratoryItemUpdate 检验项目修改
 func LaboratoryItemUpdate(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
 	clinicLaboratoryItemID := ctx.PostValue("clinic_laboratory_item_id")
-	laboratoryItemID := ctx.PostValue("laboratory_item_id")
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	instrumentCode := ctx.PostValue("instrument_code")
 	unitName := ctx.PostValue("unit_name")
 	clinicalSignificance := ctx.PostValue("clinical_significance")
 	dataType := ctx.PostValue("data_type")
-
 	isSpecial := ctx.PostValue("is_special")
 	referenceMax := ctx.PostValue("reference_max")
 	referenceMin := ctx.PostValue("reference_min")
 	items := ctx.PostValue("items")
-
 	status := ctx.PostValue("status")
 	isDelivery := ctx.PostValue("is_delivery")
 
-	if clinicID == "" || name == "" || dataType == "" || isSpecial == "" || clinicLaboratoryItemID == "" || laboratoryItemID == "" || status == "" || isDelivery == "" {
+	if name == "" || dataType == "" || isSpecial == "" || clinicLaboratoryItemID == "" || status == "" || isDelivery == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
-		return
-	}
-	clinic := FormatSQLRowToMap(row)
-	_, ok := clinic["id"]
-	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
-		return
-	}
-
-	crow := model.DB.QueryRowx("select id,clinic_id,laboratory_item_id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
+	crow := model.DB.QueryRowx("select id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -846,167 +707,62 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所检验项数据错误"})
 		return
 	}
-	slaboratoryItemID := strconv.FormatInt(clinicLaboratoryItem["laboratory_item_id"].(int64), 10)
-	fmt.Println("laboratoryItemID====", slaboratoryItemID)
 
-	if clinicID != strconv.FormatInt(clinicLaboratoryItem["clinic_id"].(int64), 10) {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
-		return
-	}
-
-	if slaboratoryItemID != laboratoryItemID {
-		ctx.JSON(iris.Map{"code": "1", "msg": "检验项目数据id不匹配"})
-		return
-	}
-
-	lrow := model.DB.QueryRowx("select id from laboratory_item where name=$1 and id!=$2 limit 1", name, laboratoryItemID)
+	lrow := model.DB.QueryRowx("select id from clinic_laboratory_item where name=$1 and id!=$2 limit 1", name, clinicLaboratoryItemID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	laboratoryItem := FormatSQLRowToMap(lrow)
-	_, lok := laboratoryItem["id"]
+	clinicLaboratoryItemu := FormatSQLRowToMap(lrow)
+	_, lok := clinicLaboratoryItemu["id"]
 	if lok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "检验项目名称已存在"})
 		return
 	}
 
-	laboratoryItemSets := []string{"name='" + name + "'", "data_type=" + dataType, "is_special=" + isSpecial}
-	var itemReferenceSets []string
-	var itemReferenceValues []string
-	var clinicLaboratoryItemSets []string
-
-	if enName != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "en_name='"+enName+"'")
-	}
-	if instrumentCode != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "instrument_code='"+instrumentCode+"'")
-	}
-	if unitName != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "unit_name='"+unitName+"'")
-	}
-	if clinicalSignificance != "" {
-		laboratoryItemSets = append(laboratoryItemSets, "clinical_significance='"+clinicalSignificance+"'")
-	}
-
-	if status != "" {
-		clinicLaboratoryItemSets = append(clinicLaboratoryItemSets, "status="+status)
-	}
-	if isDelivery != "" {
-		clinicLaboratoryItemSets = append(clinicLaboratoryItemSets, "is_delivery="+isDelivery)
-	}
-
-	laboratoryItemSets = append(laboratoryItemSets, "updated_time=LOCALTIMESTAMP")
-	laboratoryItemSetStr := strings.Join(laboratoryItemSets, ",")
-
-	laboratoryItemUpdateSQL := "update laboratory_item set " + laboratoryItemSetStr + " where id=$1"
-	fmt.Println("laboratoryItemInsertSQL==", laboratoryItemUpdateSQL)
-
-	tx, err := model.DB.Begin()
-	_, err = tx.Exec(laboratoryItemUpdateSQL, laboratoryItemID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
-	}
-
-	itemReferenceSets = append(itemReferenceSets, "laboratory_item_id")
-	if isSpecial == "false" {
-		itemReferenceValues = append(itemReferenceValues, laboratoryItemID)
-		if referenceMax != "" {
-			itemReferenceSets = append(itemReferenceSets, "reference_max")
-			itemReferenceValues = append(itemReferenceValues, "'"+referenceMax+"'")
-		}
-		if referenceMin != "" {
-			itemReferenceSets = append(itemReferenceSets, "reference_min")
-			itemReferenceValues = append(itemReferenceValues, "'"+referenceMin+"'")
-		}
-	} else if isSpecial == "true" && items != "" {
-		itemReferenceSets = append(itemReferenceSets, "reference_sex", "age_max", "age_min", "reference_max", "reference_min", "stomach_status", "is_pregnancy")
-		var results []map[string]string
-		reErr := json.Unmarshal([]byte(items), &results)
-		if reErr != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": reErr.Error()})
-			return
-		}
-		for _, v := range results {
-			var s []string
-			s = append(s, laboratoryItemID)
-			referenceSex := v["reference_sex"]
-			ageMax := v["age_max"]
-			ageMin := v["age_min"]
-			referenceMax := v["reference_max"]
-			referenceMin := v["reference_min"]
-			stomachStatus := v["stomach_status"]
-			isPregnancy := v["is_pregnancy"]
-			if referenceSex != "" {
-				s = append(s, "'"+referenceSex+"'")
-			} else {
-				s = append(s, `null`)
-			}
-			if ageMax != "" {
-				s = append(s, ageMax)
-			} else {
-				s = append(s, `null`)
-			}
-			if ageMin != "" {
-				s = append(s, ageMin)
-			} else {
-				s = append(s, `null`)
-			}
-			if referenceMax != "" {
-				s = append(s, "'"+referenceMax+"'")
-			} else {
-				s = append(s, `null`)
-			}
-			if referenceMin != "" {
-				s = append(s, "'"+referenceMin+"'")
-			} else {
-				s = append(s, `null`)
-			}
-			if stomachStatus != "" {
-				s = append(s, "'"+stomachStatus+"'")
-			} else {
-				s = append(s, `null`)
-			}
-			if isPregnancy != "" {
-				s = append(s, isPregnancy)
-			} else {
-				s = append(s, `null`)
-			}
-			str := strings.Join(s, ",")
-			str = "(" + str + ")"
-			itemReferenceValues = append(itemReferenceValues, str)
-		}
-	} else {
-		ctx.JSON(iris.Map{"code": "1", "msg": "参考值是否特殊数据格式错误"})
-		return
-	}
+	itemReferenceSets := []string{
+		"clinic_laboratory_item_id",
+		"reference_max",
+		"reference_min",
+		"age_max",
+		"age_min",
+		"reference_sex",
+		"stomach_status",
+		"is_pregnancy"}
 
 	itemReferenceSetStr := strings.Join(itemReferenceSets, ",")
-	itemReferenceValueStr := strings.Join(itemReferenceValues, ",")
+	itemReferenceInsertSQL := "insert into clinic_laboratory_item_reference (" + itemReferenceSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8)"
 
-	clinicLaboratoryItemSets = append(clinicLaboratoryItemSets, "updated_time=LOCALTIMESTAMP")
-	clinicLaboratoryItemSetStr := strings.Join(clinicLaboratoryItemSets, ",")
-
-	itemReferenceInsertSQL := "insert into laboratory_item_reference (" + itemReferenceSetStr + ") values (" + itemReferenceValueStr + ")"
-	if isSpecial == "true" {
-		itemReferenceInsertSQL = "insert into laboratory_item_reference (" + itemReferenceSetStr + ") values " + itemReferenceValueStr
-	}
-	fmt.Println("itemReferenceInsertSQL==", itemReferenceInsertSQL)
-
-	clinicLaboratoryItemUpdateSQL := "update clinic_laboratory_item set " + clinicLaboratoryItemSetStr + " where id=$1"
-	fmt.Println("clinicLaboratoryItemUpdateSQL==", clinicLaboratoryItemUpdateSQL)
-
-	_, errd := tx.Exec("delete from laboratory_item_reference where laboratory_item_id=$1", laboratoryItemID)
-	if errd != nil {
-		fmt.Println(" errd====", errd)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
+	tx, err := model.DB.Begin()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
 		return
 	}
-	_, err1 := tx.Exec(itemReferenceInsertSQL)
+
+	clinicLaboratoryItemUpdateSQL := `update clinic_laboratory_item set 
+		name=$1,
+		en_name=$2,
+		instrument_code=$3,
+		unit_name=$4,
+		clinical_significance=$5,
+		status=$6,
+		is_delivery=$7,
+		data_type=$8,
+		is_special=$9 
+		where id=$10`
+
+	_, err1 := tx.Exec(clinicLaboratoryItemUpdateSQL,
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(instrumentCode),
+		ToNullString(unitName),
+		ToNullString(clinicalSignificance),
+		ToNullBool(status),
+		ToNullBool(isDelivery),
+		ToNullInt64(dataType),
+		ToNullBool(isSpecial),
+		ToNullInt64(clinicLaboratoryItemID),
+	)
 	if err1 != nil {
 		fmt.Println(" err1====", err1)
 		tx.Rollback()
@@ -1014,11 +770,65 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 		return
 	}
 
-	_, err2 := tx.Exec(clinicLaboratoryItemUpdateSQL, clinicLaboratoryItemID)
-	if err2 != nil {
-		fmt.Println(" err2====", err2)
+	_, errd := tx.Exec("delete from clinic_laboratory_item_reference where clinic_laboratory_item_id=$1", clinicLaboratoryItemID)
+	if errd != nil {
+		fmt.Println(" errd====", errd)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
+		return
+	}
+
+	if isSpecial == "false" {
+		_, err2 := tx.Exec(itemReferenceInsertSQL,
+			ToNullInt64(clinicLaboratoryItemID),
+			ToNullString(referenceMax),
+			ToNullString(referenceMin),
+			ToNullInt64(""),
+			ToNullInt64(""),
+			"通用",
+			ToNullBool("false"),
+			ToNullBool("false"),
+		)
+		if err2 != nil {
+			fmt.Println(" err2====", err2)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+			return
+		}
+	} else if isSpecial == "true" && items != "" {
+		var results []map[string]string
+		reErr := json.Unmarshal([]byte(items), &results)
+		if reErr != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": reErr.Error()})
+			return
+		}
+		for _, v := range results {
+			referenceSex := v["reference_sex"]
+			ageMax := v["age_max"]
+			ageMin := v["age_min"]
+			sreferenceMax := v["reference_max"]
+			sreferenceMin := v["reference_min"]
+			stomachStatus := v["stomach_status"]
+			isPregnancy := v["is_pregnancy"]
+			_, err3 := tx.Exec(itemReferenceInsertSQL,
+				ToNullInt64(clinicLaboratoryItemID),
+				ToNullString(sreferenceMax),
+				ToNullString(sreferenceMin),
+				ToNullInt64(ageMax),
+				ToNullInt64(ageMin),
+				ToNullString(referenceSex),
+				ToNullBool(stomachStatus),
+				ToNullBool(isPregnancy),
+			)
+			if err3 != nil {
+				fmt.Println(" err3====", err3)
+				tx.Rollback()
+				ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+				return
+			}
+		}
+	} else {
+		ctx.JSON(iris.Map{"code": "1", "msg": "参考值是否特殊数据格式错误"})
 		return
 	}
 
@@ -1029,7 +839,7 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 		return
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": laboratoryItemID})
+	ctx.JSON(iris.Map{"code": "200", "data": clinicLaboratoryItemID})
 }
 
 //LaboratoryItemStatus 启用 停用
@@ -1103,15 +913,14 @@ func LaboratoryItemSearch(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,li.instrument_code,
-		li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,cli.is_delivery
+	selectSQL := `select cli.id as clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cli.instrument_code,
+		cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status,cli.is_delivery
 		from clinic_laboratory_item cli
-		left join laboratory_item li on cli.laboratory_item_id = li.id
-		left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
+		left join clinic_laboratory_item_reference clir on clir.clinic_laboratory_item_id = cli.id
 		where cli.clinic_id=$1 and cli.status=true`
 
 	if keyword != "" {
-		selectSQL += " and li.name ~'" + keyword + "'"
+		selectSQL += " and cli.name ~'" + keyword + "'"
 	}
 	fmt.Println("selectSQL===", selectSQL)
 
@@ -1133,11 +942,10 @@ func LaboratoryItemDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select li.id as laboratory_item_id,cli.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,cli.is_delivery,
-		li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min,cli.status,li.instrument_code
+	selectSQL := `select cli.id as clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cli.is_delivery,
+		cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status,cli.instrument_code
 		from clinic_laboratory_item cli
-		left join laboratory_item li on cli.laboratory_item_id = li.id
-		left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
+		left join clinic_laboratory_item_reference clir on clir.clinic_laboratory_item_id = cli.id
 		where cli.id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
