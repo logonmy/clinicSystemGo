@@ -14,7 +14,6 @@ import (
 func DrugAdd(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	drugID := ctx.PostValue("drug_Id")
-	drugType := ctx.PostValue("type")
 	barcode := ctx.PostValue("barcode")
 	name := ctx.PostValue("name")
 	pyCode := ctx.PostValue("py_code")
@@ -49,135 +48,49 @@ func DrugAdd(ctx iris.Context) {
 	englishName := ctx.PostValue("english_name")
 	syCode := ctx.PostValue("sy_code")
 
-	if clinicID == "" || manuFactoryName == "" || name == "" || retPrice == "" || drugType == "" || licenseNo == "" || specification == "" {
+	if clinicID == "" || manuFactoryName == "" || name == "" || retPrice == "" || licenseNo == "" || specification == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	sets := []string{"name", "license_no", "type"}
-	values := []string{"'" + name + "'", "'" + licenseNo + "'", drugType}
-	clinicDrugSets := []string{"clinic_id", "ret_price"}
-	clinicDrugValues := []string{clinicID, retPrice}
-	if pyCode != "" {
-		sets = append(sets, "py_code")
-		values = append(values, "'"+pyCode+"'")
-	}
-	if printName != "" {
-		sets = append(sets, "print_name")
-		values = append(values, "'"+printName+"'")
-	}
-	if specification != "" {
-		sets = append(sets, "specification")
-		values = append(values, "'"+specification+"'")
-	}
-	if manuFactoryName != "" {
-		sets = append(sets, "manu_factory_name")
-		values = append(values, "'"+manuFactoryName+"'")
-	}
-	if barcode != "" {
-		sets = append(sets, "barcode")
-		values = append(values, "'"+barcode+"'")
-	}
-	if doseFormName != "" {
-		sets = append(sets, "dose_form_name")
-		values = append(values, "'"+doseFormName+"'")
-	}
-	if drugTypeID != "" {
-		sets = append(sets, "drug_type_id")
-		values = append(values, drugTypeID)
-	}
-	if onceDose != "" {
-		sets = append(sets, "once_dose")
-		values = append(values, onceDose)
-	}
-	if onceDoseUnitName != "" {
-		sets = append(sets, "once_dose_unit_name")
-		values = append(values, "'"+onceDoseUnitName+"'")
-	}
-	if routeAdministrationName != "" {
-		sets = append(sets, "route_administration_name")
-		values = append(values, "'"+routeAdministrationName+"'")
-	}
-	if frequencyName != "" {
-		sets = append(sets, "frequency_name")
-		values = append(values, "'"+frequencyName+"'")
-	}
-	if defaultRemark != "" {
-		sets = append(sets, "default_remark")
-		values = append(values, "'"+defaultRemark+"'")
-	}
-	if englishName != "" {
-		sets = append(sets, "english_name")
-		values = append(values, "'"+englishName+"'")
-	}
-	if syCode != "" {
-		sets = append(sets, "sy_code")
-		values = append(values, "'"+syCode+"'")
-	}
+	sets := []string{"name", "license_no", "py_code", "print_name", "specification",
+		"manu_factory_name", "barcode", "dose_form_name", "drug_type_id", "once_dose", "once_dose_unit_name",
+		"route_administration_name", "frequency_name", "default_remark", "english_name", "sy_code",
+		"dose_count", "dose_count_unit_name", "packing_unit_name"}
 
-	if doseCount != "" {
-		sets = append(sets, "dose_count")
-		values = append(values, doseCount)
-	}
-	if doseCountUnitName != "" {
-		sets = append(sets, "dose_count_unit_name")
-		values = append(values, "'"+doseCountUnitName+"'")
-	}
-	if packingUnitName != "" {
-		sets = append(sets, "packing_unit_name")
-		values = append(values, "'"+packingUnitName+"'")
-	}
-
-	if status != "" {
-		clinicDrugSets = append(clinicDrugSets, "status")
-		clinicDrugValues = append(clinicDrugValues, status)
-	}
-	if miniDose != "" {
-		clinicDrugSets = append(clinicDrugSets, "mini_dose")
-		clinicDrugValues = append(clinicDrugValues, miniDose)
-	}
-	if miniUnitName != "" {
-		clinicDrugSets = append(clinicDrugSets, "mini_unit_name")
-		clinicDrugValues = append(clinicDrugValues, "'"+miniUnitName+"'")
-	}
-	if buyPrice != "" {
-		clinicDrugSets = append(clinicDrugSets, "buy_price")
-		clinicDrugValues = append(clinicDrugValues, buyPrice)
-	}
-	if isDiscount != "" {
-		clinicDrugSets = append(clinicDrugSets, "is_discount")
-		clinicDrugValues = append(clinicDrugValues, isDiscount)
-	}
-	if isBulkSales != "" {
-		clinicDrugSets = append(clinicDrugSets, "is_bulk_sales")
-		clinicDrugValues = append(clinicDrugValues, isBulkSales)
-	}
-	if bulkSalesPrice != "" {
-		clinicDrugSets = append(clinicDrugSets, "bulk_sales_price")
-		clinicDrugValues = append(clinicDrugValues, bulkSalesPrice)
-	}
-	if fetchAddress != "" {
-		clinicDrugSets = append(clinicDrugSets, "fetch_address")
-		clinicDrugValues = append(clinicDrugValues, "'"+fetchAddress+"'")
-	}
-	if dayWarning != "" {
-		clinicDrugSets = append(clinicDrugSets, "day_warning")
-		clinicDrugValues = append(clinicDrugValues, dayWarning)
-	}
-	if stockWarning != "" {
-		clinicDrugSets = append(clinicDrugSets, "stock_warning")
-		clinicDrugValues = append(clinicDrugValues, stockWarning)
-	}
+	clinicDrugSets := []string{"clinic_id", "ret_price", "status", "mini_dose", "mini_unit_name", "buy_price",
+		"is_discount", "is_bulk_sales", "bulk_sales_price", "fetch_address", "day_warning", "stock_warning", "drug_id"}
 
 	setStr := strings.Join(sets, ",")
-	valueStr := strings.Join(values, ",")
-	insertSQL := "insert into drug (" + setStr + ") values (" + valueStr + ") RETURNING id;"
-	fmt.Println("insertSQL===", insertSQL)
+	clinicDrugSetStr := strings.Join(clinicDrugSets, ",")
+
+	insertSQL := `insert into drug (` + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
+		$16,$17,$18,$19) RETURNING id;`
+	clinicDrugSQL := `insert into clinic_drug (` + clinicDrugSetStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`)
 
 	tx, err := model.DB.Begin()
 
 	if drugID == "" {
-		err = tx.QueryRow(insertSQL).Scan(&drugID)
+		err = tx.QueryRow(insertSQL,
+			ToNullString(name),
+			ToNullString(licenseNo),
+			ToNullString(pyCode),
+			ToNullString(printName),
+			ToNullString(specification),
+			ToNullString(manuFactoryName),
+			ToNullString(barcode),
+			ToNullString(doseFormName),
+			ToNullInt64(drugTypeID),
+			ToNullInt64(onceDose),
+			ToNullString(onceDoseUnitName),
+			ToNullString(routeAdministrationName),
+			ToNullString(frequencyName),
+			ToNullString(defaultRemark),
+			ToNullString(englishName),
+			ToNullString(syCode),
+			ToNullInt64(doseCount),
+			ToNullString(doseCountUnitName),
+			ToNullString(packingUnitName)).Scan(&drugID)
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
@@ -188,15 +101,20 @@ func DrugAdd(ctx iris.Context) {
 
 	fmt.Println("drugID====", drugID)
 
-	clinicDrugSets = append(clinicDrugSets, "drug_id")
-	clinicDrugValues = append(clinicDrugValues, drugID)
-
-	clinicDrugSetStr := strings.Join(clinicDrugSets, ",")
-	clinicDrugValueStr := strings.Join(clinicDrugValues, ",")
-	clinicDrugSQL := "insert into clinic_drug (" + clinicDrugSetStr + ") values (" + clinicDrugValueStr + ")"
-	fmt.Println("clinicDrugSQL===", clinicDrugSQL)
-
-	_, err1 := tx.Exec(clinicDrugSQL)
+	_, err1 := tx.Exec(clinicDrugSQL,
+		ToNullInt64(clinicID),
+		ToNullInt64(retPrice),
+		NullBool(status),
+		ToNullInt64(miniDose),
+		ToNullString(miniUnitName),
+		ToNullInt64(buyPrice),
+		NullBool(isDiscount),
+		NullBool(isBulkSales),
+		ToNullInt64(bulkSalesPrice),
+		ToNullString(fetchAddress),
+		ToNullInt64(dayWarning),
+		ToNullInt64(stockWarning),
+		ToNullInt64(drugID))
 	if err1 != nil {
 		fmt.Println(" err1====", err1)
 		tx.Rollback()
@@ -252,10 +170,7 @@ func DrugList(ctx iris.Context) {
 			from clinic_drug cd
 			left join drug d on cd.drug_id = d.id
 			left join drug_stock ds on ds.clinic_drug_id = cd.id
-			where cd.clinic_id=$1
-			group by cd.id,d.name,d.specification,d.packing_unit_name,d.type,
-			cd.ret_price,d.py_code,cd.is_discount,d.default_remark,cd.status, d.once_dose_unit_name, 
-			d.route_administration_name, d.frequency_name, cd.clinic_id`
+			where cd.clinic_id=$1`
 
 	if drugType != "" {
 		countSQL += " and d.type=" + drugType
@@ -273,6 +188,10 @@ func DrugList(ctx iris.Context) {
 		countSQL += " and d.drug_type_id=" + drugTypeID
 		selectSQL += " and d.drug_type_id=" + drugTypeID
 	}
+
+	selectSQL += ` group by cd.id,d.name,d.specification,d.packing_unit_name,d.type,
+	cd.ret_price,d.py_code,cd.is_discount,d.default_remark,cd.status, d.once_dose_unit_name, 
+	d.route_administration_name, d.frequency_name, cd.clinic_id`
 
 	total := model.DB.QueryRowx(countSQL, clinicID)
 	if err != nil {

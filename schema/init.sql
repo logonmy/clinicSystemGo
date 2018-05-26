@@ -1117,7 +1117,8 @@ CREATE TABLE clinic_laboratory_item
   is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE(clinic_id,laboratory_item_id)
 );
 
 --诊所检验医嘱关联的检验项
