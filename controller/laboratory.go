@@ -674,6 +674,18 @@ func LaboratoryItemCreate(ctx iris.Context) {
 			return
 		}
 
+	} else {
+		lrow := model.DB.QueryRowx("select id from clinic_laboratory_item where clinic_id=$1,laboratory_item_id=$2 limit 1", clinicID, laboratoryItemID)
+		if lrow == nil {
+			ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+			return
+		}
+		clinicLaboratoryItem := FormatSQLRowToMap(lrow)
+		_, lok := clinicLaboratoryItem["id"]
+		if lok {
+			ctx.JSON(iris.Map{"code": "1", "msg": "检验项目名称在该诊所已存在"})
+			return
+		}
 	}
 
 	clinicLaboratoryItemSets = append(clinicLaboratoryItemSets, "laboratory_item_id")
