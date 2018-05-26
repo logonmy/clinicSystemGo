@@ -226,7 +226,7 @@ func ClinicDrugList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(*) as total from clinic_drug where clinic_id=$1`
+	countSQL := `select count(*) as total from clinic_drug where clinic_id=:clinic_id`
 	selectSQL := `select 
 		cd.id as clinic_drug_id,
 		cd.name as drug_name,
@@ -278,16 +278,6 @@ func ClinicDrugList(ctx iris.Context) {
 		cd.frequency_name, 
 		cd.clinic_id `
 
-	total := model.DB.QueryRowx(countSQL, clinicID)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-		return
-	}
-
-	pageInfo := FormatSQLRowToMap(total)
-	pageInfo["offset"] = offset
-	pageInfo["limit"] = limit
-
 	var queryOption = map[string]interface{}{
 		"clinic_id":      ToNullInt64(clinicID),
 		"drug_type_code": ToNullString(drugTypeCode),
@@ -296,6 +286,16 @@ func ClinicDrugList(ctx iris.Context) {
 		"offset":         ToNullInt64(offset),
 		"limit":          ToNullInt64(limit),
 	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
 	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
