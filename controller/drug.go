@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -238,21 +239,21 @@ func ClinicDrugList(ctx iris.Context) {
 		sum(ds.stock_amount) as stock_amount
 		from clinic_drug cd
 		left join drug_stock ds on ds.clinic_drug_id = cd.id
-		where cd.clinic_id=$1`
+		where cd.clinic_id = :clinic_id`
 
 	if drugType != "" {
-		countSQL += " and cd.drug_type = $2"
-		selectSQL += " and cd.drug_type= $2"
+		countSQL += " and cd.drug_type = :drug_type"
+		selectSQL += " and cd.drug_type= :drug_type"
 	}
 
 	if status != "" {
-		countSQL += " and cd.status = $3"
-		selectSQL += " and cd.status = $3"
+		countSQL += " and cd.status = :status"
+		selectSQL += " and cd.status = :status"
 	}
 
 	if keyword != "" {
-		countSQL += " and (cd.barcode ~$4 or cd.name ~$4)"
-		selectSQL += " and (cd.barcode ~$4 or cd.name ~$4)"
+		countSQL += " and (cd.barcode ~:keyword or cd.name ~:keyword)"
+		selectSQL += " and (cd.barcode ~:keyword or cd.name ~:keyword)"
 	}
 
 	selectSQL += ` group by 
@@ -273,7 +274,7 @@ func ClinicDrugList(ctx iris.Context) {
 
 	total := model.DB.QueryRowx(countSQL, clinicID)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -281,8 +282,22 @@ func ClinicDrugList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
+	var queryOption = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"drug_type": ToNullString(drugType),
+		"status":    ToNullBool(status),
+		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+	}
+
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $5 limit $5", clinicID, drugType, status, keyword, offset, limit)
+	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
