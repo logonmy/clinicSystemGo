@@ -842,7 +842,7 @@ CREATE TABLE clinic_drug
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_id, name, specification, manufactory)
+  UNIQUE (clinic_id, name, specification, manu_factory_name)
 );
 
 --药品库存
