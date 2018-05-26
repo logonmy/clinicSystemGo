@@ -97,24 +97,22 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 		fmt.Println("clinicLaboratoryID====", clinicLaboratoryID)
 		var sl []string
 		var sm []string
-		laboratorySQL := `select cl.id as clinic_laboratory_id,cl.price,cl.is_discount,l.name,l.unit_name from clinic_laboratory cl
-			left join laboratory l on l.id = cl.laboratory_id
-			where cl.id=$1`
-		trow := model.DB.QueryRowx(laboratorySQL, clinicLaboratoryID)
+		clinicLaboratorySQL := `select id as clinic_laboratory_id,price,is_discount,name,unit_name from clinic_laboratory where id=$1`
+		trow := model.DB.QueryRowx(clinicLaboratorySQL, clinicLaboratoryID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "1", "msg": "检验项错误"})
 			return
 		}
-		laboratory := FormatSQLRowToMap(trow)
-		fmt.Println("====", laboratory)
-		_, ok := laboratory["clinic_laboratory_id"]
+		clinicLaboratory := FormatSQLRowToMap(trow)
+		fmt.Println("====", clinicLaboratory)
+		_, ok := clinicLaboratory["clinic_laboratory_id"]
 		if !ok {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的检验项错误"})
 			return
 		}
-		price := laboratory["price"].(int64)
-		name := laboratory["name"].(string)
-		unitName := laboratory["unit_name"].(string)
+		price := clinicLaboratory["price"].(int64)
+		name := clinicLaboratory["name"].(string)
+		unitName := clinicLaboratory["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
 
@@ -199,9 +197,8 @@ func LaboratoryPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select lp.*, l.name as laboratory_name from laboratory_patient lp 
+	rows, err := model.DB.Queryx(`select lp.*, cl.name as laboratory_name from laboratory_patient lp 
 		left join clinic_laboratory cl on lp.clinic_laboratory_id = cl.id 
-		left join laboratory l on cl.laboratory_id = l.id
 		where lp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

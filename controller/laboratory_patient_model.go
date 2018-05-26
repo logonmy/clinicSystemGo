@@ -172,11 +172,10 @@ func LaboratoryPatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from laboratory_patient_model where model_name ~$1`
-	selectSQL := `select lpm.id as laboratory_patient_model_id,l.name as laboratory_name,p.name as operation_name,
+	selectSQL := `select lpm.id as laboratory_patient_model_id,cl.name as laboratory_name,p.name as operation_name,
 	lpm.is_common,lpm.created_time,lpmi.clinic_laboratory_id, lpmi.illustration, lpm.model_name,lpmi.times from laboratory_patient_model lpm
 	left join laboratory_patient_model_item lpmi on lpmi.laboratory_patient_model_id = lpm.id
 	left join clinic_laboratory cl on lpmi.clinic_laboratory_id = cl.id
-	left join laboratory l on cl.laboratory_id = l.id
 	left join personnel p on lpm.operation_id = p.id
 	where lpm.model_name ~$1`
 
@@ -279,11 +278,10 @@ func LaboratoryPersonalPatientModelList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from laboratory_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
-	selectSQL := `select lpm.id as laboratory_patient_model_id,l.name as laboratory_name,p.name as operation_name,
+	selectSQL := `select lpm.id as laboratory_patient_model_id,cl.name as laboratory_name,p.name as operation_name,
 	lpm.is_common,lpm.created_time,lpmi.clinic_laboratory_id, lpmi.illustration, lpm.model_name,lpmi.times from laboratory_patient_model lpm
 	left join laboratory_patient_model_item lpmi on lpmi.laboratory_patient_model_id = lpm.id
 	left join clinic_laboratory cl on lpmi.clinic_laboratory_id = cl.id
-	left join laboratory l on cl.laboratory_id = l.id
 	left join personnel p on lpm.operation_id = p.id
 	where lpm.model_name ~$1 and (lpm.operation_id=$2 or lpm.is_common=true)`
 
@@ -363,11 +361,10 @@ func LaboratoryPatientModelDetail(ctx iris.Context) {
 	}
 	laboratoryModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select lpmi.clinic_laboratory_id,l.name,lpmi.times,lpmi.illustration 
+	selectiSQL := `select lpmi.clinic_laboratory_id,cl.name,lpmi.times,lpmi.illustration 
 		from laboratory_patient_model_item lpmi
 		left join laboratory_patient_model lpm on lpmi.laboratory_patient_model_id = lpm.id
 		left join clinic_laboratory cl on lpmi.clinic_laboratory_id = cl.id
-		left join laboratory l on cl.laboratory_id = l.id
 		where lpmi.laboratory_patient_model_id=$1`
 
 	rows, err := model.DB.Queryx(selectiSQL, laboratoryModelID)
