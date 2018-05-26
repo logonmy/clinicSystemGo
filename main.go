@@ -150,6 +150,7 @@ func main() {
 		charge.Post("/traigePatient/unpay", controller.GetUnChargeTraigePatients)
 		// 查询待缴费的项目列表
 		charge.Post("/unPay/list", controller.ChargeUnPayList)
+		charge.Post("/paid/list", controller.ChargePaidList)
 		// 查询已缴费的就诊记录
 		charge.Post("/traigePatient/paid", controller.GetPaidTraigePatients)
 
