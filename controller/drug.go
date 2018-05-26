@@ -13,13 +13,14 @@ import (
 //ClinicDrugCreate 添加药品
 func ClinicDrugCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
+	drugClassID := ctx.PostValue("drug_class_id")
 	name := ctx.PostValue("name")
 	specification := ctx.PostValue("specification")
 	manuFactoryName := ctx.PostValue("manu_factory_name")
 	doseFormName := ctx.PostValue("dose_form_name")
 	printName := ctx.PostValue("print_name")
 	licenseNo := ctx.PostValue("license_no")
-	drugTypeCode := ctx.PostValue("drug_type_code")
+	drugType := ctx.PostValue("type")
 	pyCode := ctx.PostValue("py_code")
 	barCode := ctx.PostValue("barcode")
 	status := ctx.PostValue("status")
@@ -48,8 +49,13 @@ func ClinicDrugCreate(ctx iris.Context) {
 	selfSlag := ctx.PostValue("self_flag")
 	drugDlag := ctx.PostValue("drug_flag")
 
-	if clinicID == "" || name == "" || retPrice == "" || isBulkSales == "" {
+	if clinicID == "" || name == "" || retPrice == "" || isBulkSales == "" || drugType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if drugType == "0" && drugClassID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "药品分类码不能为空"})
 		return
 	}
 
@@ -76,13 +82,14 @@ func ClinicDrugCreate(ctx iris.Context) {
 	// 插入数据
 	insertSQL := `insert into clinic_drug (
 		clinic_id,
+		type,
+		drug_class_id
 		name,
 		specification,
 		manu_factory_name,
 		dose_form_name,
 		print_name,
 		license_no,
-		drug_type_code,
 		py_code,
 		barcode,
 		status,
@@ -146,17 +153,19 @@ func ClinicDrugCreate(ctx iris.Context) {
 		$32,
 		$33,
 		$34,
+		$35,
 		$35
 	)`
 	_, err := model.DB.Exec(insertSQL,
 		ToNullInt64(clinicID),
+		ToNullInt64(drugType),
+		ToNullInt64(drugClassID),
 		ToNullString(name),
 		ToNullString(specification),
 		ToNullString(manuFactoryName),
 		ToNullString(doseFormName),
 		ToNullString(printName),
 		ToNullString(licenseNo),
-		ToNullString(drugTypeCode),
 		ToNullString(pyCode),
 		ToNullString(barCode),
 		ToNullBool(status),
@@ -198,7 +207,8 @@ func ClinicDrugCreate(ctx iris.Context) {
 //ClinicDrugList 药品列表
 func ClinicDrugList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	drugTypeCode := ctx.PostValue("drug_type_code")
+	drugType := ctx.PostValue("type")
+	drugClassID := ctx.PostValue("drug_class_id")
 	keyword := ctx.PostValue("keyword")
 	status := ctx.PostValue("status")
 	offset := ctx.PostValue("offset")
@@ -247,9 +257,9 @@ func ClinicDrugList(ctx iris.Context) {
 		left join drug_stock ds on ds.clinic_drug_id = cd.id
 		where cd.clinic_id = :clinic_id`
 
-	if drugTypeCode != "" {
-		countSQL += " and cd.drug_type_code = :drug_type_code"
-		selectSQL += " and cd.drug_type_code= :drug_type_code"
+	if drugType != "" {
+		countSQL += " and cd.type = :type"
+		selectSQL += " and cd.type= :type"
 	}
 
 	if status != "" {
@@ -260,6 +270,11 @@ func ClinicDrugList(ctx iris.Context) {
 	if keyword != "" {
 		countSQL += " and (cd.barcode ~:keyword or cd.name ~:keyword)"
 		selectSQL += " and (cd.barcode ~:keyword or cd.name ~:keyword)"
+	}
+
+	if drugClassID != "" {
+		countSQL += " and (cd.barcode ~:drug_class_id or cd.name ~:drug_class_id)"
+		selectSQL += " and (cd.barcode ~:drug_class_id or cd.name ~:drug_class_id)"
 	}
 
 	selectSQL += ` group by 
@@ -279,12 +294,13 @@ func ClinicDrugList(ctx iris.Context) {
 		cd.clinic_id `
 
 	var queryOption = map[string]interface{}{
-		"clinic_id":      ToNullInt64(clinicID),
-		"drug_type_code": ToNullString(drugTypeCode),
-		"status":         ToNullBool(status),
-		"keyword":        ToNullString(keyword),
-		"offset":         ToNullInt64(offset),
-		"limit":          ToNullInt64(limit),
+		"clinic_id":     ToNullInt64(clinicID),
+		"type":          ToNullString(drugType),
+		"status":        ToNullBool(status),
+		"keyword":       ToNullString(keyword),
+		"offset":        ToNullInt64(offset),
+		"limit":         ToNullInt64(limit),
+		"drug_class_id": ToNullInt64(drugClassID),
 	}
 
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
@@ -312,12 +328,12 @@ func ClinicDrugList(ctx iris.Context) {
 func ClinicDrugUpdate(ctx iris.Context) {
 	clinicDrugID := ctx.PostValue("clinic_drug_id")
 	name := ctx.PostValue("name")
+	drugClassID := ctx.PostValue("drug_class_id")
 	specification := ctx.PostValue("specification")
 	manuFactoryName := ctx.PostValue("manu_factory_name")
 	doseFormName := ctx.PostValue("dose_form_name")
 	printName := ctx.PostValue("print_name")
 	licenseNo := ctx.PostValue("license_no")
-	drugTypeCode := ctx.PostValue("drug_type_code")
 	pyCode := ctx.PostValue("py_code")
 	barCode := ctx.PostValue("barcode")
 	status := ctx.PostValue("status")
@@ -394,7 +410,7 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		dose_form_name = $5,
 		print_name = $6,
 		license_no = $7,
-		drug_type_code = $8,
+		drug_class_id = $8,
 		py_code = $9,
 		barcode = $10,
 		status = $11,
@@ -431,7 +447,7 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		ToNullString(doseFormName),
 		ToNullString(printName),
 		ToNullString(licenseNo),
-		ToNullString(drugTypeCode),
+		ToNullInt64(drugClassID),
 		ToNullString(pyCode),
 		ToNullString(barCode),
 		ToNullBool(status),
