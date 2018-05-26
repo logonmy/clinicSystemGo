@@ -148,7 +148,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 		$34,
 		$35
 	)`
-	model.DB.Exec(insertSQL,
+	_, err := model.DB.Exec(insertSQL,
 		ToNullInt64(clinicID),
 		ToNullString(name),
 		ToNullString(specification),
@@ -185,6 +185,12 @@ func ClinicDrugCreate(ctx iris.Context) {
 		ToNullBool(selfSlag),
 		ToNullBool(drugDlag),
 	)
+
+	if err != nil {
+		fmt.Println("err === ", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
 
 	ctx.JSON(iris.Map{"code": "200", "data": "1"})
 }
