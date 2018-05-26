@@ -717,7 +717,6 @@ CREATE TABLE drug
   route_administration_name varchar(50),--用药途径id/默认用法
   frequency_name varchar(20),--用药频率/默认频次
   default_remark varchar(20),--默认用量用法说明
-
   weight integer,--重量
   weight_unit_name varchar(10),--重量单位
   volum integer,--体积
@@ -810,23 +809,44 @@ CREATE TABLE clinic_drug
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  drug_id integer NOT NULL references drug(id),--诊所药品id
-  fix_price integer,--批发价
+  name varchar(50) NOT Null,--药名
+  specification varchar(50) NOT Null,--规格
+  manufactory varchar(50) NOT Null,--生产厂商
+  dose_form_name varchar(50) NOT Null,--剂型
+  print_name varchar(50) NOT Null,--商品名
+  license_no varchar(50) NOT Null,--国药准字
+  drug_type varchar(50) NOT Null,--药品分类
+  py_code varchar(50) NOT Null,--拼音码
+  bar_code varchar(50) NOT Null,--条形码
+  status boolean NOT NULL DEFAULT true,--是否启用
+  dose integer,--剂量
+  dose_unit varchar(10),--剂量单位
+  dose_count integer,--制剂数量/包装量
+  dose_count_unit_name varchar(10),--制剂数量单位/最小单位
+  packing_unit_name varchar(10),--药品包装单位
   ret_price integer,--零售价
   buy_price integer,--成本价
   mini_dose integer,--最小剂量
-  mini_unit_name varchar(20),--最小剂量单位id
+  is_discount boolean DEFAULT false,--是否允许折扣
   is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
   bulk_sales_price integer,--拆零售价/最小剂量售价
-  is_discount boolean DEFAULT false,--是否允许折扣
-  fetch_address varchar(10),--取药地点
+  fetch_address integer DEFAULT 0,--取药地点 0 本诊所，1外购 2， 代购
+  once_dose integer,--常用剂量
+  once_dose_unit_name varchar(10),--用量单位 常用剂量单位
+  route_administration_name varchar(50),--用药途径id/默认用法
+  frequency_name varchar(20),--用药频率/默认频次
+  illustration text,--说明
   day_warning integer,--效期预警天数
   stock_warning integer,--库存预警数
-  status boolean NOT NULL DEFAULT true,--是否启用
+  english_name varchar(30),--英文名称
+  sy_code varchar(30),--上药编码
+  country_flag boolean,--进口
+  self_flag boolean,--自费标识
+  drug_flag boolean,--毒麻标志
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_id, drug_id)
+  UNIQUE (clinic_id, name, specification, manufactory)
 );
 
 --药品库存

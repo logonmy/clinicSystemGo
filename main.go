@@ -171,14 +171,13 @@ func main() {
 		appointment.Post("/create", controller.AppointmentCreate)
 	}
 
-	drug := app.Party("/drug", crs).AllowMethods(iris.MethodOptions)
+	drug := app.Party("/clinic_drug", crs).AllowMethods(iris.MethodOptions)
 	{
-		drug.Post("/create", controller.DrugAdd)
-		drug.Post("/update", controller.DrugUpdate)
-		drug.Post("/list", controller.DrugList)
-		drug.Post("/detail", controller.DrugDetail)
-		drug.Post("/search", controller.DrugSearch)
-		drug.Post("/batchSetting", controller.BatchSetting)
+		drug.Post("/ClinicDrugCreate", controller.ClinicDrugCreate)
+		drug.Post("/ClinicDrugUpdate", controller.ClinicDrugUpdate)
+		drug.Post("/ClinicDrugList", controller.ClinicDrugList)
+		drug.Post("/ClinicDrugDetail", controller.ClinicDrugDetail)
+		drug.Post("/ClinicDrugBatchSetting", controller.ClinicDrugBatchSetting)
 		drug.Post("/instock", controller.DrugInstock)
 		drug.Post("/instockRecord", controller.DrugInstockRecord)
 		drug.Post("/instockRecordDetail", controller.DrugInstockRecordDetail)
