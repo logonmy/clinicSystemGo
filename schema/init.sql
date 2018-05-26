@@ -983,7 +983,7 @@ CREATE TABLE examination_organ
 CREATE TABLE examination
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(100) NOT NULL,--检查名称
+  name varchar(100) UNIQUE NOT NULL,--检查名称
   en_name varchar(100),--英文名称
   py_code varchar(100),--拼音码
   idc_code varchar(100),--国际编码
@@ -1000,15 +1000,21 @@ CREATE TABLE clinic_examination
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  examination_id integer NOT NULL references examination(id),--检查项目id
+  name varchar(100) NOT NULL,--检查名称
+  en_name varchar(100),--英文名称
+  py_code varchar(100),--拼音码
+  idc_code varchar(100),--国际编码
+  unit_name varchar(20),--单位名称
+  organ varchar(100),--检查部位
+  remark text,--备注
   cost integer, --成本价
   price integer NOT NULL,--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
-  remark text,
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE(clinic_id,name)
 );
 
 --检验医嘱标本种类
@@ -1060,17 +1066,27 @@ CREATE TABLE clinic_laboratory
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  laboratory_id INTEGER NOT NULL references laboratory(id),--检验医嘱id
+  name varchar(100) NOT NULL,--检验医嘱名称
+  en_name varchar(20),--英文名称
+  py_code varchar(20),--拼音码
+  idc_code varchar(20),--国际编码
+  unit_name varchar(20),--单位名称
+  time_report varchar(30),--报告所需时间
+  clinical_significance text,--临床意义
+  laboratory_sample varchar(30),--检验物
+  laboratory_sample_dosage varchar(30),--检验物计量
+  cuvette_color_name varchar(20),--试管颜色
   merge_flag integer,--合并标记
   cost integer, --成本价
   price integer NOT NULL,--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
-  remark text,
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
   is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
+  remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE(clinic_id,name)
 );
 
 --检验项目
@@ -1096,7 +1112,6 @@ CREATE TABLE laboratory_item_reference
   laboratory_item_id integer NOT NULL references laboratory_item(id),--检验项目id
   reference_max varchar(20), --定量/定性参考值最大值
   reference_min varchar(20), --定量/定性参考值最小值
-
   age_max integer, --参考值年龄段最大值
   age_min integer, --参考值年龄段最小值
   reference_sex varchar(5),--参考值性别 男、女、通用
@@ -1112,13 +1127,36 @@ CREATE TABLE clinic_laboratory_item
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  laboratory_item_id INTEGER references laboratory_item(id),--检验项目id
+  name varchar(100) UNIQUE NOT NULL,--检验名称
+  en_name varchar(100),--英文名称
+  instrument_code varchar(20),--仪器编码
+  unit_name varchar(20),--单位名称
+  clinical_significance text,--临床意义
+  data_type integer,--数据类型 1 定性 2 定量
+  is_special boolean,--参考值是否特殊
   status boolean NOT NULL DEFAULT true,--是否启用
   is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE(clinic_id,laboratory_item_id)
+  UNIQUE(clinic_id,name)
+);
+
+--诊所检验项目参考值
+CREATE TABLE clinic_laboratory_item_reference
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_laboratory_item_id integer NOT NULL references clinic_laboratory_item(id),--诊所检验项目id
+  reference_max varchar(20), --定量/定性参考值最大值
+  reference_min varchar(20), --定量/定性参考值最小值
+  age_max integer, --参考值年龄段最大值
+  age_min integer, --参考值年龄段最小值
+  reference_sex varchar(5),--参考值性别 男、女、通用
+  stomach_status varchar(5),--空腹、餐后 1h、餐后 2h
+  is_pregnancy boolean,--是否妊娠期
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
 );
 
 --诊所检验医嘱关联的检验项
