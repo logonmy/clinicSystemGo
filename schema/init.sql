@@ -816,7 +816,7 @@ CREATE TABLE clinic_drug
   dose_form_name varchar(50) NOT Null,--剂型
   print_name varchar(50),--商品名
   license_no varchar(50) NOT Null,--国药准字
-  drug_type varchar(50) NOT Null,--药品分类编码
+  drug_type_code varchar(50) NOT Null,--药品分类编码
   py_code varchar(50),--拼音码
   barcode varchar(50) NOT Null,--条形码
   status boolean NOT NULL DEFAULT true,--是否启用
