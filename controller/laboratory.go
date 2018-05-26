@@ -639,36 +639,44 @@ func LaboratoryItemList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from clinic_laboratory_item where clinic_id=$1`
+	countSQL := `select count(id) as total from clinic_laboratory_item where clinic_id=:clinic_id`
 	selectSQL := `select cli.id as clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cli.instrument_code,
 		cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status,cli.is_delivery
 		from clinic_laboratory_item cli
 		left join clinic_laboratory_item_reference clir on clir.clinic_laboratory_item_id = cli.id
-		where cli.clinic_id=$1`
+		where cli.clinic_id=:clinic_id`
 
 	if keyword != "" {
-		countSQL += " and cli.name ~'" + keyword + "'"
-		selectSQL += " and cli.name ~'" + keyword + "'"
+		countSQL += " and cli.name ~:keyword"
+		selectSQL += " and cli.name ~:keyword"
 	}
 	if status != "" {
-		countSQL += " and cli.status=" + status
-		selectSQL += " and cli.status=" + status
+		countSQL += " and cli.status=:status"
+		selectSQL += " and cli.status=:status"
+	}
+
+	var queryOption = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"keyword":   ToNullString(keyword),
+		"status":    ToNullBool(status),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
 	}
 
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
-	total := model.DB.QueryRowx(countSQL, clinicID)
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", clinicID, offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	laboratoryItems := FormatLaboratoryItem(results)

@@ -659,7 +659,7 @@ func LaboratoryItems(ctx iris.Context) {
 func Drugs(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	offset := ctx.PostValue("offset")
-	drugType := ctx.PostValue("drug_type")
+	drugType := ctx.PostValue("type")
 	limit := ctx.PostValue("limit")
 
 	if offset == "" {
@@ -669,8 +669,8 @@ func Drugs(ctx iris.Context) {
 		limit = "10"
 	}
 
-	if drugType == "" || (drugType != "W" && drugType != "C") {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "drug_type 必须为W 或 C"})
+	if drugType == "" || (drugType != "0" && drugType != "1") {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "drug_type 必须为0 或 1"})
 	}
 
 	_, err := strconv.Atoi(offset)
@@ -684,23 +684,10 @@ func Drugs(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(d.id) as total from drug d 
-	left join drug_type dt on d.drug_type_id = dt.id
-			where dt.code = '3' and d.name ~$1`
-	selectSQL := `select d.* from drug d 
-	left join drug_type dt on d.drug_type_id = dt.id
-			where dt.code = '3' and d.name ~$1`
+	countSQL := `select count(id) as total from drug where type =$1 and name ~$2`
+	selectSQL := `select * from drug where type =$1 and name ~$2`
 
-	if drugType == "W" {
-		countSQL = `select count(d.id) as total from drug d 
-	left join drug_type dt on d.drug_type_id = dt.id
-			where dt.code != '3' and d.name ~$1`
-		selectSQL = `select d.* from drug d 
-	left join drug_type dt on d.drug_type_id = dt.id
-			where dt.code != '3' and d.name ~$1`
-	}
-
-	total := model.DB.QueryRowx(countSQL, keyword)
+	total := model.DB.QueryRowx(countSQL, drugType, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -711,7 +698,7 @@ func Drugs(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $3 limit $4", drugType, keyword, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }

@@ -260,29 +260,37 @@ func TreatmentList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from clinic_treatment	where clinic_id=$1 and name ~$2`
+	countSQL := `select count(id) as total from clinic_treatment	where clinic_id=:clinic_id and name ~:keyword`
 	selectSQL := `select id as clinic_treatment_id,name as treatment_name,unit_name,py_code,remark,idc_code,
-		en_name,is_discount,price,status,cost from clinic_treatment where clinic_id=$1 and name ~$2`
+		en_name,is_discount,price,status,cost from clinic_treatment where clinic_id=:clinic_id and name ~:keyword`
 
 	if status != "" {
-		countSQL += " and status=" + status
-		selectSQL += " and status=" + status
+		countSQL += " and status=:status"
+		selectSQL += " and status=:status"
+	}
+
+	var queryOption = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"keyword":   ToNullString(keyword),
+		"status":    ToNullBool(status),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
 	}
 
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
-	total := model.DB.QueryRowx(countSQL, clinicID, keyword)
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $3 limit $4", clinicID, keyword, offset, limit)
+	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
