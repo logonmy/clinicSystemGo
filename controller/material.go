@@ -402,9 +402,7 @@ func MaterialList(ctx iris.Context) {
 		from clinic_material cm
 		left join material m on cm.material_id = m.id
 		left join material_stock ms on ms.clinic_material_id = cm.id
-		where cm.clinic_id=$1
-		group by cm.material_id,cm.id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_name,m.specification,
-		m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning`
+		where cm.clinic_id=$1`
 
 	if keyword != "" {
 		countSQL += " and m.name ~'" + keyword + "'"
@@ -414,6 +412,9 @@ func MaterialList(ctx iris.Context) {
 		countSQL += " and cm.status=" + status
 		selectSQL += " and cm.status=" + status
 	}
+
+	selectSQL += ` group by cm.material_id,cm.id,m.name,m.unit_name,m.py_code,m.remark,m.idc_code,m.manu_factory_name,m.specification,
+	m.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning`
 
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
