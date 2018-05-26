@@ -659,6 +659,7 @@ func LaboratoryItems(ctx iris.Context) {
 func Drugs(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	offset := ctx.PostValue("offset")
+	drugType := ctx.PostValue("drug_type")
 	limit := ctx.PostValue("limit")
 
 	if offset == "" {
@@ -666,6 +667,10 @@ func Drugs(ctx iris.Context) {
 	}
 	if limit == "" {
 		limit = "10"
+	}
+
+	if drugType == "" || (drugType != "W" && drugType != "C") {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "drug_type 必须为W 或 C"})
 	}
 
 	_, err := strconv.Atoi(offset)
@@ -679,8 +684,21 @@ func Drugs(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) from drug where name ~$1`
-	selectSQL := `select * from drug where name ~$1`
+	countSQL := `select count(d.id) as total from drug d 
+	left join drug_type dt on d.drug_type_id = dt.id
+			where dt.code = '3' and d.name ~$1`
+	selectSQL := `select d.* from drug d 
+	left join drug_type dt on d.drug_type_id = dt.id
+			where dt.code = '3' and d.name ~$1`
+
+	if drugType == "W" {
+		countSQL = `select count(d.id) as total from drug d 
+	left join drug_type dt on d.drug_type_id = dt.id
+			where dt.code != '3' and d.name ~$1`
+		selectSQL = `select d.* from drug d 
+	left join drug_type dt on d.drug_type_id = dt.id
+			where dt.code != '3' and d.name ~$1`
+	}
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
