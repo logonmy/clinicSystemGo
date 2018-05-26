@@ -1267,7 +1267,7 @@ CREATE TABLE clinic_material
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_id, material_id)
+  UNIQUE (clinic_id, name, manu_factory_name,specification)
 );
 
 --诊所材料库存
