@@ -531,18 +531,6 @@ func LaboratoryItemCreate(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from laboratory_item where name=$1 limit 1", name)
-	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
-		return
-	}
-	laboratoryItem := FormatSQLRowToMap(lrow)
-	_, lok := laboratoryItem["id"]
-	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "检验项目名称已存在"})
-		return
-	}
-
 	laboratoryItemSets := []string{"name", "data_type", "is_special"}
 	laboratoryItemValues := []string{"'" + name + "'", dataType, isSpecial}
 
