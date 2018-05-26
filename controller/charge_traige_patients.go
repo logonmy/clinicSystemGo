@@ -120,17 +120,18 @@ func GetPaidTraigePatients(ctx iris.Context) {
 	left join department d on d.id = ctp.department_id  
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
-	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,sum(fee) as charge_total_fee from mz_paid_orders group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
-	where up.charge_total_fee > 0 AND cp.clinic_id=$1 AND ctp.updated_time BETWEEN $2 and $3 AND (p.name ~$4 OR p.cert_no ~$4 OR p.phone ~$4) `
+	left join mz_paid_record mpr on mpr.clinic_triage_patient_id = ctp.id 
+	left join personnel triage_personnel on triage_personnel.id = mpr.operation_id 
+	where mpr.status in ('TRADE_SUCCESS','PART_REFUND') AND cp.clinic_id=$1 AND mpr.updated_time BETWEEN $2 and $3 AND (p.name ~$4 OR p.cert_no ~$4 OR p.phone ~$4) `
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
-	up.charge_total_fee,
+	mpr.total_money - mpr.refund_money as charge_total_fee,
 	ctp.id as clinic_triage_patient_id,
 	ctp.clinic_patient_id as clinic_patient_id,
-	ctp.updated_time,
-	ctp.created_time as register_time,
+	mpr.id as mz_paid_record_id,
+	mpr.updated_time,
+	mpr.created_time as register_time,
 	triage_personnel.name as register_personnel_name,
 	ctp.status,
 	ctp.visit_date,

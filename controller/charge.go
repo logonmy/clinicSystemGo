@@ -447,11 +447,11 @@ func ChargePaymentCreate(ctx iris.Context) {
 
 // ChargePaidList 根据预约编码查询已缴费缴费列表
 func ChargePaidList(ctx iris.Context) {
-	registrationid := ctx.PostValue("registration_id")
+	mzPaidRecordID := ctx.PostValue("mz_paid_record_id")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
-	if registrationid == "" {
+	if mzPaidRecordID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -475,23 +475,38 @@ func ChargePaidList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx(`select count(id) as total from mz_paid_orders where registration_id=$1`, registrationid)
-
-	pageInfo := FormatSQLRowToMap(total)
+	payment := model.DB.QueryRowx(`select * from mz_paid_record where id=$1`, mzPaidRecordID)
+	total := model.DB.QueryRowx(`select count(id) as total,sum(total) as charge_total,sum(discount) as discount_total,sum(fee) as charge_total_fee from mz_paid_orders where mz_paid_record_id=$1`, mzPaidRecordID)
+	pageInfo := FormatSQLRowToMap(payment)
+	totalMap := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
+	pageInfo["total"] = totalMap["total"]
+	pageInfo["charge_total"] = totalMap["charge_total"]
+	pageInfo["discount_total"] = totalMap["discount_total"]
+	pageInfo["charge_total_fee"] = totalMap["charge_total_fee"]
 
-	rowSQL := `select * from mz_paid_orders where registration_id=$1 offset $2 limit $3`
+	typesql := `select sum(total) as type_charge_total, charge_project_type_id from mz_paid_orders where mz_paid_record_id = $1 group by charge_project_type_id`
 
-	rows, err1 := model.DB.Queryx(rowSQL, registrationid, offset, limit)
+	typetotal, _ := model.DB.Queryx(typesql, mzPaidRecordID)
+
+	typetotalfomat := FormatSQLRowsToMapArray(typetotal)
+
+	rowSQL := `select m.id as mz_paid_orders_id,m.name,m.price,m.amount,m.total,m.discount,m.fee,p.name as doctor_name,d.name as department_name from mz_paid_orders m 
+	left join personnel p on p.id = m.operation_id 
+	left join department_personnel dp on dp.personnel_id = p.id 
+	left join department d on d.id = dp.department_id
+	where m.mz_paid_record_id=$1 order by m.created_time DESC offset $2 limit $3`
+
+	rows, err1 := model.DB.Queryx(rowSQL, mzPaidRecordID, offset, limit)
 
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return
 	}
-
 	result := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo, "type_total": typetotalfomat})
 
 }
 
