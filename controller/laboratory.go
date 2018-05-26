@@ -359,7 +359,7 @@ func LaboratoryUpdate(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id from clinic_laboratory where id=$1 limit 1", clinicLaboratoryID)
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_laboratory where id=$1 limit 1", clinicLaboratoryID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -370,8 +370,9 @@ func LaboratoryUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所检验医嘱数据错误"})
 		return
 	}
+	clinicID := clinicLaboratory["clinic_id"]
 
-	lrow := model.DB.QueryRowx("select id from clinic_laboratory where name=$1 and id!=$2 limit 1", name, clinicLaboratoryID)
+	lrow := model.DB.QueryRowx("select id from clinic_laboratory where name=$1 and id!=$2 and clinic_id=$3 limit 1", name, clinicLaboratoryID, clinicID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -639,19 +640,19 @@ func LaboratoryItemList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from clinic_laboratory_item where clinic_id=$1`
-	selectSQL := `select id as clinic_laboratory_item_id,name,en_name,unit_name,is_special,instrument_code,
-		data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,status,is_delivery
+	selectSQL := `select cli.id as clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cli.instrument_code,
+		cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status,cli.is_delivery
 		from clinic_laboratory_item cli
 		left join clinic_laboratory_item_reference clir on clir.clinic_laboratory_item_id = cli.id
-		where clinic_id=$1`
+		where cli.clinic_id=$1`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "'"
+		countSQL += " and cli.name ~'" + keyword + "'"
+		selectSQL += " and cli.name ~'" + keyword + "'"
 	}
 	if status != "" {
-		countSQL += " and status=" + status
-		selectSQL += " and status=" + status
+		countSQL += " and cli.status=" + status
+		selectSQL += " and cli.status=" + status
 	}
 
 	fmt.Println("countSQL===", countSQL)
@@ -696,7 +697,7 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
@@ -707,8 +708,9 @@ func LaboratoryItemUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所检验项数据错误"})
 		return
 	}
+	clinicID := clinicLaboratoryItem["clinic_id"]
 
-	lrow := model.DB.QueryRowx("select id from clinic_laboratory_item where name=$1 and id!=$2 limit 1", name, clinicLaboratoryItemID)
+	lrow := model.DB.QueryRowx("select id from clinic_laboratory_item where name=$1 and id!=$2 and clinic_id=$3 limit 1", name, clinicLaboratoryItemID, clinicID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return

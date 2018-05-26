@@ -18,7 +18,6 @@ func TreatmentCreate(ctx iris.Context) {
 	idcCode := ctx.PostValue("idc_code")
 	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
-
 	price := ctx.PostValue("price")
 	cost := ctx.PostValue("cost")
 	status := ctx.PostValue("status")
@@ -41,237 +40,133 @@ func TreatmentCreate(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from treatment where name=$1 limit 1", name)
+	lrow := model.DB.QueryRowx("select id from clinic_treatment where name=$1 and clinic_id=$2 limit 1", name, clinicID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
 		return
 	}
-	treatment := FormatSQLRowToMap(lrow)
-	_, lok := treatment["id"]
+	clinicTreatment := FormatSQLRowToMap(lrow)
+	_, lok := clinicTreatment["id"]
 	if lok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "治疗名称已存在"})
 		return
 	}
 
-	treatmentSets := []string{"name", "unit_name"}
-	treatmentValues := []string{"'" + name + "'", "'" + unitName + "'"}
+	clinicTreatmentSets := []string{
+		"clinic_id",
+		"name",
+		"en_name",
+		"py_code",
+		"idc_code",
+		"unit_name",
+		"remark",
+		"cost",
+		"price",
+		"status",
+		"is_discount"}
+	clinicTreatmentSetstr := strings.Join(clinicTreatmentSets, ",")
+	clinicTreatmentInsertSQL := "insert into clinic_treatment (" + clinicTreatmentSetstr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)"
 
-	clinictreatmentSets := []string{"clinic_id", "price"}
-	clinictreatmentValues := []string{clinicID, price}
-
-	if enName != "" {
-		treatmentSets = append(treatmentSets, "en_name")
-		treatmentValues = append(treatmentValues, "'"+enName+"'")
-	}
-	if pyCode != "" {
-		treatmentSets = append(treatmentSets, "py_code")
-		treatmentValues = append(treatmentValues, "'"+pyCode+"'")
-	}
-	if idcCode != "" {
-		treatmentSets = append(treatmentSets, "idc_code")
-		treatmentValues = append(treatmentValues, "'"+idcCode+"'")
-	}
-	if remark != "" {
-		treatmentSets = append(treatmentSets, "remark")
-		treatmentValues = append(treatmentValues, "'"+remark+"'")
-	}
-
-	if status != "" {
-		clinictreatmentSets = append(clinictreatmentSets, "status")
-		clinictreatmentValues = append(clinictreatmentValues, status)
-	}
-	if cost != "" {
-		clinictreatmentSets = append(clinictreatmentSets, "cost")
-		clinictreatmentValues = append(clinictreatmentValues, cost)
-	}
-	if isDiscount != "" {
-		clinictreatmentSets = append(clinictreatmentSets, "is_discount")
-		clinictreatmentValues = append(clinictreatmentValues, isDiscount)
-	}
-
-	treatmentSetstr := strings.Join(treatmentSets, ",")
-	treatmentValuestr := strings.Join(treatmentValues, ",")
-
-	treatmentInsertSQL := "insert into treatment (" + treatmentSetstr + ") values (" + treatmentValuestr + ") RETURNING id;"
-	fmt.Println("treatmentInsertSQL==", treatmentInsertSQL)
-
-	tx, err := model.DB.Begin()
-	var treatmentID string
-	err = tx.QueryRow(treatmentInsertSQL).Scan(&treatmentID)
+	_, err := model.DB.Exec(clinicTreatmentInsertSQL,
+		ToNullInt64(clinicID),
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(pyCode),
+		ToNullString(idcCode),
+		ToNullString(unitName),
+		ToNullString(remark),
+		ToNullInt64(cost),
+		ToNullInt64(price),
+		ToNullBool(status),
+		ToNullBool(isDiscount),
+	)
 	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
-	}
-	fmt.Println("treatmentID====", treatmentID)
-
-	clinictreatmentSets = append(clinictreatmentSets, "treatment_id")
-	clinictreatmentValues = append(clinictreatmentValues, treatmentID)
-
-	clinictreatmentSetstr := strings.Join(clinictreatmentSets, ",")
-	clinictreatmentValuestr := strings.Join(clinictreatmentValues, ",")
-
-	clinictreatmentInsertSQL := "insert into clinic_treatment (" + clinictreatmentSetstr + ") values (" + clinictreatmentValuestr + ")"
-	fmt.Println("clinictreatmentInsertSQL==", clinictreatmentInsertSQL)
-
-	_, err2 := tx.Exec(clinictreatmentInsertSQL)
-	if err2 != nil {
-		fmt.Println(" err2====", err2)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		fmt.Println(" err====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
-		return
-	}
-
-	ctx.JSON(iris.Map{"code": "200", "data": treatmentID})
-
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
 // TreatmentUpdate 更新治疗项目
 func TreatmentUpdate(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
 	clinicTreatmentID := ctx.PostValue("clinic_treatment_id")
-	treatmentID := ctx.PostValue("treatment_id")
-
 	name := ctx.PostValue("name")
 	enName := ctx.PostValue("en_name")
 	pyCode := ctx.PostValue("py_code")
 	idcCode := ctx.PostValue("idc_code")
 	unitName := ctx.PostValue("unit_name")
 	remark := ctx.PostValue("remark")
-
 	price := ctx.PostValue("price")
 	cost := ctx.PostValue("cost")
 	status := ctx.PostValue("status")
 	isDiscount := ctx.PostValue("is_discount")
 
-	if clinicID == "" || name == "" || clinicTreatmentID == "" || price == "" || treatmentID == "" {
+	if name == "" || clinicTreatmentID == "" || price == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
-		return
-	}
-	clinic := FormatSQLRowToMap(row)
-	_, ok := clinic["id"]
-	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
-		return
-	}
-
-	crow := model.DB.QueryRowx("select id,clinic_id,treatment_id from clinic_treatment where id=$1 limit 1", clinicTreatmentID)
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_treatment where id=$1 limit 1", clinicTreatmentID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	clinicTreatmentProject := FormatSQLRowToMap(crow)
-	_, rok := clinicTreatmentProject["id"]
+	clinicTreatment := FormatSQLRowToMap(crow)
+	_, rok := clinicTreatment["id"]
 	if !rok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "诊所治疗项目数据错误"})
 		return
 	}
-	streatmentID := strconv.FormatInt(clinicTreatmentProject["treatment_id"].(int64), 10)
-	fmt.Println("streatmentID====", streatmentID)
 
-	if clinicID != strconv.FormatInt(clinicTreatmentProject["clinic_id"].(int64), 10) {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
-		return
-	}
+	clinicID := clinicTreatment["clinic_id"]
 
-	if streatmentID != treatmentID {
-		ctx.JSON(iris.Map{"code": "1", "msg": "治疗项目数据id不匹配"})
-		return
-	}
-
-	lrow := model.DB.QueryRowx("select id from treatment where name=$1 and id!=$2 limit 1", name, treatmentID)
+	lrow := model.DB.QueryRowx("select id from clinic_treatment where name=$1 and id!=$2 and clinic_id=$3 limit 1", name, clinicTreatmentID, clinicID)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
 		return
 	}
-	laboratoryItem := FormatSQLRowToMap(lrow)
-	_, lok := laboratoryItem["id"]
+	clinicTreatmentu := FormatSQLRowToMap(lrow)
+	_, lok := clinicTreatmentu["id"]
 	if lok {
 		ctx.JSON(iris.Map{"code": "1", "msg": "治疗项目名称已存在"})
 		return
 	}
 
-	treatmentSets := []string{"name='" + name + "'"}
-	clinictreatmentSets := []string{"price=" + price}
+	clinicTreatmentUpdateSQL := `update clinic_treatment set 
+		name=$1,
+		en_name=$2,
+		py_code=$3,
+		idc_code=$4,
+		unit_name=$5,
+		remark=$6,
+		cost=$7,
+		price=$8,
+		status=$9,
+		is_discount=$10
+		where id=$11`
 
-	if enName != "" {
-		treatmentSets = append(treatmentSets, "en_name='"+enName+"'")
-	}
-	if pyCode != "" {
-		treatmentSets = append(treatmentSets, "py_code='"+pyCode+"'")
-	}
-	if unitName != "" {
-		treatmentSets = append(treatmentSets, "unit_name='"+unitName+"'")
-	}
-	if idcCode != "" {
-		treatmentSets = append(treatmentSets, "idc_code='"+idcCode+"'")
-	}
-	if remark != "" {
-		treatmentSets = append(treatmentSets, "remark='"+remark+"'")
-	}
-
-	if status != "" {
-		clinictreatmentSets = append(clinictreatmentSets, "status="+status)
-	}
-	if isDiscount != "" {
-		clinictreatmentSets = append(clinictreatmentSets, "is_discount="+isDiscount)
-	}
-	if cost != "" {
-		clinictreatmentSets = append(clinictreatmentSets, "cost="+cost)
-	}
-
-	treatmentSets = append(treatmentSets, "updated_time=LOCALTIMESTAMP")
-	treatmentSetstr := strings.Join(treatmentSets, ",")
-
-	treatmentUpdateSQL := "update treatment set " + treatmentSetstr + " where id=$1"
-	fmt.Println("treatmentUpdateSQL==", treatmentUpdateSQL)
-
-	tx, err := model.DB.Begin()
-	_, err = tx.Exec(treatmentUpdateSQL, treatmentID)
-	if err != nil {
-		fmt.Println("err ===", err)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
-		return
-	}
-
-	clinictreatmentSets = append(clinictreatmentSets, "updated_time=LOCALTIMESTAMP")
-	clinictreatmentSetstr := strings.Join(clinictreatmentSets, ",")
-
-	clinicTreatmentUpdateSQL := "update clinic_treatment set " + clinictreatmentSetstr + " where id=$1"
-	fmt.Println("clinicTreatmentUpdateSQL==", clinicTreatmentUpdateSQL)
-
-	_, err2 := tx.Exec(clinicTreatmentUpdateSQL, clinicTreatmentID)
+	_, err2 := model.DB.Exec(clinicTreatmentUpdateSQL,
+		ToNullString(name),
+		ToNullString(enName),
+		ToNullString(pyCode),
+		ToNullString(idcCode),
+		ToNullString(unitName),
+		ToNullString(remark),
+		ToNullInt64(cost),
+		ToNullInt64(price),
+		ToNullBool(status),
+		ToNullBool(isDiscount),
+		ToNullInt64(clinicTreatmentID),
+	)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
-		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 		return
 	}
 
-	err3 := tx.Commit()
-	if err3 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
-		return
-	}
-
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
-
 }
 
 // TreatmentOnOff 启用和停用
@@ -365,18 +260,13 @@ func TreatmentList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(ct.id) as total from clinic_treatment ct
-		left join treatment t on ct.treatment_id = t.id
-		where ct.clinic_id=$1 and t.name ~$2`
-	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name as treatment_name,t.unit_name,t.py_code,t.remark,t.idc_code,
-		t.en_name,ct.is_discount,ct.price,ct.status,ct.cost
-		from clinic_treatment ct
-		left join treatment t on ct.treatment_id = t.id
-		where ct.clinic_id=$1 and t.name ~$2`
+	countSQL := `select count(id) as total from clinic_treatment	where clinic_id=$1 and name ~$2`
+	selectSQL := `select id as clinic_treatment_id,name as treatment_name,unit_name,py_code,remark,idc_code,
+		en_name,is_discount,price,status,cost from clinic_treatment where clinic_id=$1 and name ~$2`
 
 	if status != "" {
-		countSQL += " and ct.status=" + status
-		selectSQL += " and ct.status=" + status
+		countSQL += " and status=" + status
+		selectSQL += " and status=" + status
 	}
 
 	fmt.Println("countSQL===", countSQL)
@@ -408,11 +298,10 @@ func TreatmentDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select ct.treatment_id,ct.id as clinic_treatment_id,t.name,t.unit_name,t.py_code,t.remark,t.idc_code,
-		t.en_name,ct.is_discount,ct.price,ct.status,ct.cost
-		from clinic_treatment ct
-		left join treatment t on ct.treatment_id = t.id
-		where ct.id=$1`
+	selectSQL := `select id as clinic_treatment_id,name,unit_name,py_code,remark,idc_code,
+		en_name,is_discount,price,status,cost
+		from clinic_treatment
+		where id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 

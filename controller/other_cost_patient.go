@@ -98,9 +98,7 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		fmt.Println("clinicOtherCostID====", clinicOtherCostID)
 		var sl []string
 		var sm []string
-		clinicOtherCostSQL := `select coc.id as clinic_other_cost_id,coc.price,coc.is_discount,oc.name,oc.unit_name from clinic_other_cost coc
-		left join other_cost oc on oc.id = coc.other_cost_id
-		where coc.id=$1`
+		clinicOtherCostSQL := `select id as clinic_other_cost_id,price,coc.is_discount,name,unit_name from clinic_other_cost where id=$1`
 		trow := model.DB.QueryRowx(clinicOtherCostSQL, clinicOtherCostID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "其它费用项错误"})
@@ -199,9 +197,8 @@ func OtherCostPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select ocp.*, oc.name, oc.unit_name from other_cost_patient ocp 
+	rows, err := model.DB.Queryx(`select ocp.*, coc.name, coc.unit_name from other_cost_patient ocp 
 		left join clinic_other_cost coc on ocp.clinic_other_cost_id = coc.id 
-		left join other_cost oc on coc.other_cost_id = oc.id
 		where ocp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

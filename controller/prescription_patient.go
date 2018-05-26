@@ -110,9 +110,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		fmt.Println("clinicDrugID====", clinicDrugID)
 		var sl []string
 		var sm []string
-		laboratorySQL := `select cd.id,d.name,cd.ret_price,d.packing_unit_name from clinic_drug cd
-			left join drug d on d.id = cd.drug_id
-			where cd.id=$1`
+		laboratorySQL := `select id,name,ret_price,packing_unit_name from clinic_drug where id=$1`
 		trow := model.DB.QueryRowx(laboratorySQL, clinicDrugID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "西/成药处方项错误"})
@@ -396,9 +394,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		fmt.Println("clinicDrugID====", clinicDrugID)
 		var sl []string
 		var sm []string
-		laboratorySQL := `select cd.id,d.name,cd.ret_price,d.packing_unit_name from clinic_drug cd
-			left join drug d on d.id = cd.drug_id
-			where cd.id=$1`
+		laboratorySQL := `select id,name,ret_price,packing_unit_name from clinic_drug	where id=$1`
 		trow := model.DB.QueryRowx(laboratorySQL, clinicDrugID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "中药处方项错误"})
@@ -482,17 +478,16 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 		pwp.clinic_triage_patient_id,pwp.clinic_drug_id,pwp.order_sn,pwp.soft_sn,pwp.once_dose,
 		pwp.once_dose_unit_name,pwp.route_administration_name,pwp.frequency_name,
 		pwp.amount,pwp.illustration,pwp.fetch_address,pwp.eff_day,pwp.operation_id,	
-		d.name as drug_name,d.specification,d.packing_unit_name, d.type,
+		cd.name as drug_name,cd.specification,cd.packing_unit_name, cd.drug_type,
 		sum(ds.stock_amount) as stock_amount
 		from prescription_western_patient pwp 
 				left join clinic_drug cd on pwp.clinic_drug_id = cd.id 
-				left join drug d on cd.drug_id = d.id
 				left join drug_stock ds on ds.clinic_drug_id = cd.id
 				where pwp.clinic_triage_patient_id = $1
 				group by pwp.id,pwp.clinic_triage_patient_id,pwp.clinic_drug_id,pwp.order_sn,pwp.soft_sn,pwp.once_dose,
 				pwp.once_dose_unit_name,pwp.route_administration_name,pwp.frequency_name,
 				pwp.amount,pwp.illustration,pwp.fetch_address,pwp.eff_day,pwp.operation_id,	
-				d.name,d.specification,d.packing_unit_name, d.type`, clinicTriagePatientID)
+				cd.name,cd.specification,cd.packing_unit_name, cd.drug_type`, clinicTriagePatientID)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -521,16 +516,15 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 
 		rows, err := model.DB.Queryx(`select pci.id,pci.prescription_chinese_patient_id,pci.clinic_drug_id,
 			pci.order_sn,pci.soft_sn,pci.once_dose,pci.once_dose_unit_name,pci.amount,pci.special_illustration,
-			d.name as drug_name,d.specification, d.type,
+			cd.name as drug_name,cd.specification, cd.drug_type,
 			sum(ds.stock_amount) as stock_amount
 			from prescription_chinese_item pci 
 			left join clinic_drug cd on pci.clinic_drug_id = cd.id 
-			left join drug d on cd.drug_id = d.id
 			left join drug_stock ds on ds.clinic_drug_id = cd.id
 			where pci.prescription_chinese_patient_id = $1
 			group by pci.id,pci.prescription_chinese_patient_id,pci.clinic_drug_id,
 			pci.order_sn,pci.soft_sn,pci.once_dose,pci.once_dose_unit_name,pci.amount,pci.special_illustration,
-			d.name,d.specification, d.type`, prescriptionChinesePatientID)
+			cd.name,cd.specification, cd.drug_type`, prescriptionChinesePatientID)
 
 		if err != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -590,11 +584,11 @@ func PrescriptionChinesePatientList(ctx iris.Context) {
 		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
 		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
 		where cp.id=$1`
-	selectSQL := `select ctp.id as clinic_triage_patient_id,pcp.id as prescription_chinese_patient_id,ctp.visit_type,d.name as department_name,p.name as personnel_name,
+	selectSQL := `select ctp.id as clinic_triage_patient_id,pcp.id as prescription_chinese_patient_id,ctp.visit_type,de.name as department_name,p.name as personnel_name,
 		mr.diagnosis,(select created_time from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id order by created_time DESC LIMIT 1) from prescription_chinese_patient pcp
 		left join clinic_triage_patient ctp on pcp.clinic_triage_patient_id = ctp.id
 		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
-		left join department d on ctp.department_id = d.id
+		left join department de on ctp.department_id = de.id
 		left join personnel p on ctp.doctor_id = p.id
 		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
 		where cp.id=$1`
@@ -686,11 +680,11 @@ func PrescriptionWesternPatientList(ctx iris.Context) {
 		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
 		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
 		where cp.id=$1`
-	selectSQL := `select ctp.id as clinic_triage_patient_id,pwp.id as prescription_chinese_patient_id,ctp.visit_type,d.name as department_name,p.name as personnel_name,
+	selectSQL := `select ctp.id as clinic_triage_patient_id,pwp.id as prescription_chinese_patient_id,ctp.visit_type,de.name as department_name,p.name as personnel_name,
 		mr.diagnosis,(select created_time from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id order by created_time DESC LIMIT 1) from prescription_western_patient pwp
 		left join clinic_triage_patient ctp on pwp.clinic_triage_patient_id = ctp.id
 		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
-		left join department d on ctp.department_id = d.id
+		left join department de on ctp.department_id = de.id
 		left join personnel p on ctp.doctor_id = p.id
 		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
 		where cp.id=$1`

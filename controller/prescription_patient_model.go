@@ -178,28 +178,27 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	p.name as operation_name,
 	pwpm.model_name,
 	pwpmi.clinic_drug_id,
-	d.name as drug_name,
-	d.specification,
+	cd.name as drug_name,
+	cd.specification,
 	pwpmi.once_dose,
 	pwpmi.once_dose_unit_name,
 	pwpmi.route_administration_name,
 	pwpmi.frequency_name, 
 	pwpmi.eff_day,
 	pwpmi.amount,
-	d.packing_unit_name, 
+	cd.packing_unit_name, 
 	pwpmi.fetch_address,
 	pwpmi.illustration,
-	d.type,sum(ds.stock_amount) as stock_amount
+	cd.drug_type,sum(ds.stock_amount) as stock_amount
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id 
-	left join drug d on cd.drug_id = d.id		
 	left join drug_stock ds on ds.clinic_drug_id = cd.id
   left join personnel p on pwpm.operation_id = p.id
 	where pwpm.model_name ~$1
 	group by pwpm.id,pwpm.is_common,pwpm.created_time,pwpm.updated_time,p.name,pwpm.model_name,pwpmi.clinic_drug_id,
-		d.name,d.specification,pwpmi.once_dose,pwpmi.once_dose_unit_name,pwpmi.route_administration_name,
-		pwpmi.frequency_name, pwpmi.eff_day,pwpmi.amount,d.packing_unit_name, pwpmi.fetch_address,pwpmi.illustration,d.type`
+		cd.name,cd.specification,pwpmi.once_dose,pwpmi.once_dose_unit_name,pwpmi.route_administration_name,
+		pwpmi.frequency_name, pwpmi.eff_day,pwpmi.amount,cd.packing_unit_name, pwpmi.fetch_address,pwpmi.illustration,cd.drug_type`
 
 	if isCommon != "" {
 		countSQL += ` and is_common =` + isCommon
@@ -268,8 +267,8 @@ func PrescriptionWesternPersonalPatientModelList(ctx iris.Context) {
 	p.name as operation_name,
 	pwpm.model_name,
 	pwpmi.clinic_drug_id,
-	d.name as drug_name,
-	d.specification,
+	cd.name as drug_name,
+	cd.specification,
 	cd.stock_amount,
 	pwpmi.once_dose,
 	pwpmi.once_dose_unit_name,
@@ -277,14 +276,13 @@ func PrescriptionWesternPersonalPatientModelList(ctx iris.Context) {
 	pwpmi.frequency_name, 
 	pwpmi.eff_day,
 	pwpmi.amount,
-	d.packing_unit_name, 
+	cd.packing_unit_name, 
 	pwpmi.fetch_address,
 	pwpmi.illustration,
-	d.type
+	cd.drug_type
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id 
-		left join drug d on cd.drug_id = d.id
     left join personnel p on pwpm.operation_id = p.id
 	where pwpm.model_name ~$1 and (pwpm.operation_id=$2 or pwpm.is_common=true)`
 
@@ -325,10 +323,9 @@ func PrescriptionWesternPatientModelDetail(ctx iris.Context) {
 	}
 	prescriptionModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select pwpmi.*,d.name as drug_name from prescription_western_patient_model_item pwpmi
+	selectiSQL := `select pwpmi.*,cd.name as drug_name from prescription_western_patient_model_item pwpmi
 		left join prescription_western_patient_model pwpm on pwpmi.prescription_western_patient_model_id = pwpm.id
 		left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id
-		left join drug d on cd.drug_id = d.id
 		where pwpmi.prescription_western_patient_model_id=$1`
 
 	rows, err := model.DB.Queryx(selectiSQL, prescriptionWesternPatientModelID)
@@ -672,8 +669,8 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	pcpm.fetch_address as info_fetch_address,
 	pcpm.medicine_illustration,
 	pcpmi.clinic_drug_id,
-	d.name as drug_name,
-	d.type,
+	cd.name as drug_name,
+	cd.drug_type,
 	pcpmi.once_dose,
 	pcpmi.once_dose_unit_name,
 	pcpmi.special_illustration,
@@ -681,13 +678,12 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	from prescription_chinese_patient_model pcpm
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join clinic_drug cd on pcpmi.clinic_drug_id = cd.id 
-	left join drug d on cd.drug_id = d.id
 	left join drug_stock ds on ds.clinic_drug_id = cd.id
 	left join personnel p on pcpm.operation_id = p.id
 	where pcpm.model_name ~$1
 	group by pcpm.id,pcpm.is_common,pcpm.created_time,pcpm.updated_time,p.name,pcpm.model_name,pcpm.route_administration_name,
 		pcpm.eff_day,pcpm.amount,pcpm.frequency_name,pcpm.fetch_address,pcpm.medicine_illustration,pcpmi.clinic_drug_id,
-		d.name,d.type,pcpmi.once_dose,pcpmi.once_dose_unit_name,pcpmi.special_illustration,pcpmi.amount`
+		cd.name,cd.drug_type,pcpmi.once_dose,pcpmi.once_dose_unit_name,pcpmi.special_illustration,pcpmi.amount`
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
 	if isCommon != "" {
@@ -763,8 +759,8 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 	pcpm.fetch_address as info_fetch_address,
 	pcpm.medicine_illustration,
 	pcpmi.clinic_drug_id,
-	d.name as drug_name,
-	d.type,
+	cd.name as drug_name,
+	cd.drug_type,
 	cd.stock_amount,
 	pcpmi.once_dose,
 	pcpmi.once_dose_unit_name,
@@ -773,7 +769,6 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 	from prescription_chinese_patient_model pcpm
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join clinic_drug cd on pcpmi.clinic_drug_id = cd.id 
-	left join drug d on cd.drug_id = d.id
 	left join personnel p on pcpm.operation_id = p.id
 	where pcpm.model_name ~$1 and (pcpm.operation_id=$2 or pcpm.is_common=true)`
 
@@ -818,11 +813,10 @@ func PrescriptionChinesePatientModelDetail(ctx iris.Context) {
 	}
 	prescriptionModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select pcpmi.*,d.name as drug_name
+	selectiSQL := `select pcpmi.*,cd.name as drug_name
 		from prescription_chinese_patient_model_item pcpmi
 		left join prescription_chinese_patient_model pwpm on pcpmi.prescription_chinese_patient_model_id = pwpm.id
 		left join clinic_drug cd on pcpmi.clinic_drug_id = cd.id
-		left join drug d on cd.drug_id = d.id
 		where pcpmi.prescription_chinese_patient_model_id=$1`
 
 	rows, err := model.DB.Queryx(selectiSQL, prescriptionChinesePatientModelID)
