@@ -16,14 +16,14 @@ func ToNullInt64(s string) sql.NullInt64 {
 	return sql.NullInt64{Int64: int64(i), Valid: err == nil}
 }
 
-// NullFloat64 处理 空float
-func NullFloat64(s string) sql.NullFloat64 {
+// ToNullFloat64 处理 空float
+func ToNullFloat64(s string) sql.NullFloat64 {
 	f, err := strconv.ParseFloat(s, 64)
 	return sql.NullFloat64{Float64: float64(f), Valid: err == nil}
 }
 
-// NullBool 处理 bool
-func NullBool(s string) sql.NullBool {
+// ToNullBool 处理 bool
+func ToNullBool(s string) sql.NullBool {
 	b, err := strconv.ParseBool(s)
 	return sql.NullBool{Bool: bool(b), Valid: err == nil}
 }
