@@ -809,6 +809,7 @@ func ImportDrug(ctx iris.Context) {
 		"a": "a",
 	}
 	sets := []string{
+		"type",
 		"license_no",
 		"name",
 		"manu_factory_name",
@@ -838,8 +839,7 @@ func ImportDrug(ctx iris.Context) {
 		"self_flag",
 		"separate_flag",
 		"suprice_flag",
-		"drug_flag",
-		"drug_type_id"}
+		"drug_flag"}
 	setStr := strings.Join(sets, ",")
 	insertSQL := `insert into drug (` + setStr + `) values ($1, $2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
 			$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)`
@@ -896,6 +896,9 @@ func ImportDrug(ctx iris.Context) {
 			continue
 		}
 		if specification == "" {
+			continue
+		}
+		if licenseNo == "" {
 			continue
 		}
 
@@ -976,16 +979,6 @@ func ImportDrug(ctx iris.Context) {
 			}
 		}
 
-		drugTypeID := ""
-		if drugTypeCode != "" {
-			dtrow := model.DB.QueryRowx("select id from drug_type where code=$1 limit 1", drugTypeCode)
-			drugType := FormatSQLRowToMap(dtrow)
-			name, dtok := drugType["id"]
-			if dtok {
-				drugTypeID = strconv.FormatInt(name.(int64), 10)
-			}
-		}
-
 		routeAdministrationName := ""
 		if routeAdministrationCode != "" {
 			rarow := model.DB.QueryRowx("select name from route_administration where code=$1 limit 1", routeAdministrationCode)
@@ -1016,7 +1009,13 @@ func ImportDrug(ctx iris.Context) {
 			}
 		}
 
+		drugType := "0"
+		if drugTypeCode == "3" {
+			drugType = "1"
+		}
+
 		_, err = model.DB.Exec(insertSQL,
+			ToNullInt64(drugType),
 			ToNullString(licenseNo),
 			ToNullString(name),
 			ToNullString(manuFactoryName),
@@ -1046,8 +1045,7 @@ func ImportDrug(ctx iris.Context) {
 			ToNullInt64(selfFlag),
 			ToNullInt64(separateFlag),
 			ToNullInt64(supriceFlag),
-			ToNullInt64(drugFlag),
-			ToNullInt64(drugTypeID))
+			ToNullInt64(drugFlag))
 
 		if err != nil {
 			fmt.Println(" index =====", index, name, manuFactoryCode, specification, licenseNo)

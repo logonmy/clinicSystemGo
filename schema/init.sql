@@ -691,7 +691,7 @@ CREATE TABLE route_administration
 CREATE TABLE drug
 (
   id serial PRIMARY KEY NOT NULL,--id
-  type INTEGER,--类型 0-西药 1-中药
+  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-西药 1-中药
   code varchar(20),--编码
   name varchar(30) NOT NULL,--药品名称
   py_code varchar(20),--拼音码
@@ -702,7 +702,6 @@ CREATE TABLE drug
   spe_comment varchar(40),--规格备注
   manu_factory_name varchar(100),--生产厂商
   drug_class_id integer references drug_class(id),--药品类型id
-  drug_type_id integer references drug_type(id),--药品类别id
   dose_form_name varchar(20),--药品剂型
   license_no varchar(100),--国药准字、文号
   once_dose integer,--常用剂量
@@ -804,6 +803,8 @@ CREATE TABLE storehouse
 CREATE TABLE clinic_drug
 (
   id serial PRIMARY KEY NOT NULL,--id
+  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-西药 1-中药
+  drug_class_id INTEGER references drug_class(id),--药品分类
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   name varchar(50) NOT Null,--药名
   specification varchar(50) NOT Null,--规格
@@ -811,7 +812,6 @@ CREATE TABLE clinic_drug
   dose_form_name varchar(50) NOT Null,--剂型
   print_name varchar(50),--商品名
   license_no varchar(50) NOT Null,--国药准字
-  drug_type_code varchar(50) NOT Null,--药品分类编码
   py_code varchar(50),--拼音码
   barcode varchar(50) NOT Null,--条形码
   status boolean NOT NULL DEFAULT true,--是否启用
