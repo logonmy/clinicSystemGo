@@ -282,39 +282,47 @@ func MaterialList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from clinic_material where clinic_id=$1`
+	countSQL := `select count(id) as total from clinic_material where clinic_id=:clinic_id`
 	selectSQL := `select cm.material_id,cm.id as clinic_material_id,cm.name,cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
 		cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning,sum(ms.stock_amount) as stock_amount
 		from clinic_material cm
 		left join material_stock ms on ms.clinic_material_id = cm.id
-		where cm.clinic_id=$1`
+		where cm.clinic_id=:clinic_id`
 
 	if keyword != "" {
-		countSQL += " and cm.name ~'" + keyword + "'"
-		selectSQL += " and cm.name ~'" + keyword + "'"
+		countSQL += " and cm.name ~:keyword"
+		selectSQL += " and cm.name ~':keyword"
 	}
 	if status != "" {
-		countSQL += " and cm.status=" + status
-		selectSQL += " and cm.status=" + status
+		countSQL += " and cm.status=:status"
+		selectSQL += " and cm.status=:status"
 	}
 
 	selectSQL += ` group by cm.material_id,cm.id,cm.name,cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
 	cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning`
 
+	var queryOption = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"keyword":   ToNullString(keyword),
+		"status":    ToNullBool(status),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+	}
+
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
-	total := model.DB.QueryRowx(countSQL, clinicID)
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", clinicID, offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})

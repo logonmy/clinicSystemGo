@@ -177,26 +177,35 @@ func ExaminationPatientModelList(ctx iris.Context) {
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
 	left join clinic_examination ce on epmi.clinic_examination_id = ce.id
 	left join personnel p on epm.operation_id = p.id
-	where epm.model_name ~$1`
+	where epm.model_name ~:keyword`
 
 	if isCommon != "" {
-		countSQL += ` and is_common =` + isCommon
-		selectSQL += ` and epm.is_common=` + isCommon
+		countSQL += ` and is_common =:is_common`
+		selectSQL += ` and epm.is_common=:is_common`
 	}
 
 	if operationID != "" {
-		countSQL += ` and operation_id =` + operationID
-		selectSQL += ` and epm.operation_id=` + operationID
+		countSQL += ` and operation_id =:operation_id`
+		selectSQL += ` and epm.operation_id=:operation_id`
 	}
+
+	var queryOption = map[string]interface{}{
+		"operation_id": ToNullInt64(operationID),
+		"keyword":      ToNullString(keyword),
+		"is_common":    ToNullBool(isCommon),
+		"offset":       ToNullInt64(offset),
+		"limit":        ToNullInt64(limit),
+	}
+
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
-	total := model.DB.QueryRowx(countSQL, keyword)
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $2 limit $3", keyword, offset, limit)
+	rows, err1 := model.DB.NamedQuery(selectSQL+" ORDER BY created_time DESC offset :offset limit :limit", queryOption)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return

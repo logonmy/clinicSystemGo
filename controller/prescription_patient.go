@@ -478,7 +478,7 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 		pwp.clinic_triage_patient_id,pwp.clinic_drug_id,pwp.order_sn,pwp.soft_sn,pwp.once_dose,
 		pwp.once_dose_unit_name,pwp.route_administration_name,pwp.frequency_name,
 		pwp.amount,pwp.illustration,pwp.fetch_address,pwp.eff_day,pwp.operation_id,	
-		cd.name as drug_name,cd.specification,cd.packing_unit_name, cd.drug_type_code,
+		cd.name as drug_name,cd.specification,cd.packing_unit_name,
 		sum(ds.stock_amount) as stock_amount
 		from prescription_western_patient pwp 
 				left join clinic_drug cd on pwp.clinic_drug_id = cd.id 
@@ -487,7 +487,7 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 				group by pwp.id,pwp.clinic_triage_patient_id,pwp.clinic_drug_id,pwp.order_sn,pwp.soft_sn,pwp.once_dose,
 				pwp.once_dose_unit_name,pwp.route_administration_name,pwp.frequency_name,
 				pwp.amount,pwp.illustration,pwp.fetch_address,pwp.eff_day,pwp.operation_id,	
-				cd.name,cd.specification,cd.packing_unit_name, cd.drug_type_code`, clinicTriagePatientID)
+				cd.name,cd.specification,cd.packing_unit_name`, clinicTriagePatientID)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -516,7 +516,7 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 
 		rows, err := model.DB.Queryx(`select pci.id,pci.prescription_chinese_patient_id,pci.clinic_drug_id,
 			pci.order_sn,pci.soft_sn,pci.once_dose,pci.once_dose_unit_name,pci.amount,pci.special_illustration,
-			cd.name as drug_name,cd.specification, cd.drug_type_code,
+			cd.name as drug_name,cd.specification,
 			sum(ds.stock_amount) as stock_amount
 			from prescription_chinese_item pci 
 			left join clinic_drug cd on pci.clinic_drug_id = cd.id 
@@ -524,7 +524,7 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 			where pci.prescription_chinese_patient_id = $1
 			group by pci.id,pci.prescription_chinese_patient_id,pci.clinic_drug_id,
 			pci.order_sn,pci.soft_sn,pci.once_dose,pci.once_dose_unit_name,pci.amount,pci.special_illustration,
-			cd.name,cd.specification, cd.drug_type_code`, prescriptionChinesePatientID)
+			cd.name,cd.specification`, prescriptionChinesePatientID)
 
 		if err != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
