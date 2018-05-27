@@ -266,7 +266,7 @@ func ClinicGetByID(ctx iris.Context) {
 
 // GetClinicCode 获取最新的诊所编码
 func GetClinicCode(ctx iris.Context) {
-	row := model.DB.QueryRowx("select code from clinic order by created_time DESC limit 1")
+	row := model.DB.QueryRowx("select code from clinic order by created_time DESC")
 	rowMap := FormatSQLRowToMap(row)
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": rowMap})
 }
