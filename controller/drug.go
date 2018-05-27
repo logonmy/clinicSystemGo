@@ -83,7 +83,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 	insertSQL := `insert into clinic_drug (
 		clinic_id,
 		type,
-		drug_class_id
+		drug_class_id,
 		name,
 		specification,
 		manu_factory_name,
@@ -154,8 +154,10 @@ func ClinicDrugCreate(ctx iris.Context) {
 		$33,
 		$34,
 		$35,
-		$35
+		$36
 	)`
+
+	fmt.Println("insertSQL ====", insertSQL)
 	_, err := model.DB.Exec(insertSQL,
 		ToNullInt64(clinicID),
 		ToNullInt64(drugType),
@@ -236,7 +238,7 @@ func ClinicDrugList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(*) as total from clinic_drug where clinic_id=:clinic_id`
+	countSQL := `select count(*) as total from clinic_drug cd where clinic_id=:clinic_id`
 	selectSQL := `select 
 		cd.id as clinic_drug_id,
 		cd.name as drug_name,
@@ -273,8 +275,8 @@ func ClinicDrugList(ctx iris.Context) {
 	}
 
 	if drugClassID != "" {
-		countSQL += " and (cd.barcode ~:drug_class_id or cd.name ~:drug_class_id)"
-		selectSQL += " and (cd.barcode ~:drug_class_id or cd.name ~:drug_class_id)"
+		countSQL += " and (cd.drug_class_id = :drug_class_id or cd.drug_class_id = :drug_class_id)"
+		selectSQL += " and (cd.drug_class_id = :drug_class_id or cd.drug_class_id = :drug_class_id)"
 	}
 
 	selectSQL += ` group by 
@@ -302,7 +304,6 @@ func ClinicDrugList(ctx iris.Context) {
 		"limit":         ToNullInt64(limit),
 		"drug_class_id": ToNullInt64(drugClassID),
 	}
-
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

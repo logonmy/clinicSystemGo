@@ -613,7 +613,7 @@ CREATE TABLE dose_unit
 CREATE TABLE drug_class
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(30) NOT NULL,--药品分类名称
+  name varchar(30) NOT NULL UNIQUE,--药品分类名称
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
