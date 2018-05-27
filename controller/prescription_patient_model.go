@@ -53,20 +53,6 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 		return
 	}
 
-	var itemValues []string
-	itemSets := []string{
-		"prescription_western_patient_model_id",
-		"clinic_drug_id",
-		"once_dose",
-		"once_dose_unit_name",
-		"route_administration_name",
-		"frequency_name",
-		"amount",
-		"fetch_address",
-		"eff_day",
-		"illustration",
-	}
-
 	tx, errb := model.DB.Begin()
 	if errb != nil {
 		fmt.Println("errb ===", errb)
@@ -89,12 +75,11 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 		onceDoseUnitName := v["once_dose_unit_name"]
 		routeAdministrationName := v["route_administration_name"]
 		frequencyName := v["frequency_name"]
-		times := v["amount"]
+		amount := v["amount"]
 		illustration := v["illustration"]
 		fetchAddress := v["fetch_address"]
 		effDay := v["eff_day"]
 
-		var s []string
 		clinicDrugSQL := `select id from clinic_drug where id=$1`
 		trow := model.DB.QueryRowx(clinicDrugSQL, clinicDrugID)
 		if trow == nil {
@@ -107,34 +92,31 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
 			return
 		}
-		s = append(s, prescriptionWesternPatientModelID, clinicDrugID, onceDose, onceDoseUnitName, routeAdministrationName, frequencyName, times, fetchAddress)
-		if effDay == "" {
-			s = append(s, `null`)
-		} else {
-			s = append(s, effDay)
+
+		inserttSQL := `insert into prescription_western_patient_model_item 
+		(prescription_western_patient_model_id,clinic_drug_id,once_dose,once_dose_unit_name,route_administration_name,frequency_name,amount,fetch_address,eff_day,illustration) 
+		values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`
+		fmt.Println("inserttSQL===", inserttSQL)
+
+		_, errt := tx.Exec(inserttSQL,
+			ToNullInt64(prescriptionWesternPatientModelID),
+			ToNullInt64(clinicDrugID),
+			ToNullInt64(onceDose),
+			ToNullString(onceDoseUnitName),
+			ToNullString(routeAdministrationName),
+			ToNullString(frequencyName),
+			ToNullInt64(amount),
+			ToNullInt64(fetchAddress),
+			ToNullInt64(effDay),
+			ToNullString(illustration))
+		if errt != nil {
+			fmt.Println("errt ===", errt)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			return
 		}
-
-		if illustration == "" {
-			s = append(s, `null`)
-		} else {
-			s = append(s, "'"+illustration+"'")
-		}
-		tstr := "(" + strings.Join(s, ",") + ")"
-		itemValues = append(itemValues, tstr)
 	}
-	tSetStr := strings.Join(itemSets, ",")
-	tValueStr := strings.Join(itemValues, ",")
 
-	inserttSQL := "insert into prescription_western_patient_model_item (" + tSetStr + ") values " + tValueStr
-	fmt.Println("inserttSQL===", inserttSQL)
-
-	_, errt := tx.Exec(inserttSQL)
-	if errt != nil {
-		fmt.Println("errt ===", errt)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
-		return
-	}
 	errc := tx.Commit()
 	if errc != nil {
 		tx.Rollback()
