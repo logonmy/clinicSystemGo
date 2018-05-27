@@ -241,6 +241,7 @@ func ClinicDrugList(ctx iris.Context) {
 	countSQL := `select count(*) as total from clinic_drug cd where clinic_id=:clinic_id`
 	selectSQL := `select 
 		cd.id as clinic_drug_id,
+		cd.manu_factory_name,
 		cd.name as drug_name,
 		cd.specification,
 		cd.packing_unit_name,
@@ -281,6 +282,7 @@ func ClinicDrugList(ctx iris.Context) {
 
 	selectSQL += ` group by 
 		cd.id,
+		cd.manu_factory_name,
 		cd.name,
 		cd.specification,
 		cd.packing_unit_name,
