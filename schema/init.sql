@@ -1367,9 +1367,9 @@ CREATE TABLE clinic_other_cost
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
-  name varchar(20) NOT NULL,--名称
-  en_name varchar(20),--英文名称
-  py_code varchar(20),--拼音码
+  name varchar(50) NOT NULL,--名称
+  en_name varchar(50),--英文名称
+  py_code varchar(50),--拼音码
   unit_name varchar(20),--单位名称
   remark text,--备注
   cost integer CHECK(cost > 0), --成本价
