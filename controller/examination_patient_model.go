@@ -171,7 +171,7 @@ func ExaminationPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from examination_patient_model where model_name ~$1`
+	countSQL := `select count(id) as total from examination_patient_model where model_name ~:keyword`
 	selectSQL := `select epm.id as examination_patient_model_id,ce.name as examination_name,p.name as operation_name,
 	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.times from examination_patient_model epm
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
@@ -198,8 +198,12 @@ func ExaminationPatientModelList(ctx iris.Context) {
 	}
 
 	fmt.Println("countSQL===", countSQL)
-	fmt.Println("selectSQL===", selectSQL)
+	fmt.Println("selectSQL===", selectSQL, queryOption)
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
 
 	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
@@ -207,10 +211,11 @@ func ExaminationPatientModelList(ctx iris.Context) {
 
 	rows, err1 := model.DB.NamedQuery(selectSQL+" ORDER BY created_time DESC offset :offset limit :limit", queryOption)
 	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 	result := FormatSQLRowsToMapArray(rows)
+	fmt.Println("result ====", result)
 	var models []ExaminationModel
 	for _, v := range result {
 		modelName := v["model_name"]
