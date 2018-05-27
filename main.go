@@ -297,6 +297,7 @@ func main() {
 		material.Post("/outstockUpdate", controller.MaterialOutstockUpdate)
 		material.Post("/outstockCheck", controller.MaterialOutstockCheck)
 		material.Post("/outstockDelete", controller.MaterialOutstockRecordDelete)
+		material.Post("/MaterialStockList", controller.MaterialStockList)
 	}
 
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
@@ -337,6 +338,9 @@ func main() {
 		dictionaries.Post("/Examinations", controller.Examinations)
 		dictionaries.Post("/LaboratoryItems", controller.LaboratoryItems)
 		dictionaries.Post("/Drugs", controller.Drugs)
+		dictionaries.Post("/SupplierList", controller.SupplierList)
+		dictionaries.Post("/InstockWayList", controller.InstockWayList)
+		dictionaries.Post("/OutstockWayList", controller.OutstockWayList)
 	}
 
 	dataImport := app.Party("/dataImport", crs).AllowMethods(iris.MethodOptions)
