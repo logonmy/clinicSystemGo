@@ -495,7 +495,7 @@ func ClinicDrugDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	sql := `select * from where id = $1`
+	sql := `select * clinic_drug from where id = $1`
 	arow := model.DB.QueryRowx(sql, clinicDrugID)
 	if arow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
