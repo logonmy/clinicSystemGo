@@ -706,8 +706,10 @@ CREATE TABLE drug
   license_no varchar(100),--国药准字、文号
   once_dose integer,--常用剂量
   once_dose_unit_name varchar(10),--用量单位 常用剂量单位
-  dose_count integer,--制剂数量/包装量
-  dose_count_unit_name varchar(10),--制剂数量单位/最小单位
+  dosage integer,--剂量
+  dosage_unit_name varchar(10),--剂量单位
+  preparation_count integer,--制剂数量/包装量
+  preparation_count_unit_name varchar(10),--制剂数量单位
   packing_unit_name varchar(10),--药品包装单位
   route_administration_name varchar(50),--用药途径id/默认用法
   frequency_name varchar(20),--用药频率/默认频次
@@ -815,10 +817,10 @@ CREATE TABLE clinic_drug
   py_code varchar(50),--拼音码
   barcode varchar(50) NOT Null,--条形码
   status boolean NOT NULL DEFAULT true,--是否启用
-  dose integer,--剂量
-  dose_unit varchar(10),--剂量单位
-  dose_count integer,--制剂数量/包装量
-  dose_count_unit_name varchar(10),--制剂数量单位/最小单位
+  dosage integer,--剂量
+  dosage_unit_name varchar(10),--剂量单位
+  preparation_count integer,--制剂数量/包装量
+  preparation_count_unit_name varchar(10),--制剂数量单位
   packing_unit_name varchar(10),--药品包装单位
   ret_price integer,--零售价
   buy_price integer,--成本价

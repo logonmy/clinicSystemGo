@@ -823,8 +823,8 @@ func ImportDrug(ctx iris.Context) {
 		"weight_unit_name",
 		"volum",
 		"vol_unit_name",
-		"dose_count_unit_name",
-		"dose_count",
+		"dosage_unit_name",
+		"dosage",
 		"packing_unit_name",
 		"specification",
 		"dcode",
@@ -873,8 +873,8 @@ func ImportDrug(ctx iris.Context) {
 		weightUnitCode := row.Cells[10].String()
 		volum := row.Cells[11].String()
 		volUnitCode := row.Cells[12].String()
-		doseCountUnitCode := row.Cells[13].String()
-		doseCount := row.Cells[14].String()
+		dosageUnitName := row.Cells[13].String()
+		dosage := row.Cells[14].String()
 		packingUnitCode := row.Cells[15].String()
 		specification := row.Cells[16].String()
 		dcode := row.Cells[17].String()
@@ -960,8 +960,8 @@ func ImportDrug(ctx iris.Context) {
 		}
 
 		doseCountUnitName := ""
-		if doseCountUnitCode != "" {
-			dcurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", doseCountUnitCode)
+		if dosageUnitName != "" {
+			dcurow := model.DB.QueryRowx("select name from dose_unit where code=$1 limit 1", dosageUnitName)
 			doseCountUnit := FormatSQLRowToMap(dcurow)
 			name, dcuok := doseCountUnit["name"]
 			if dcuok {
@@ -1030,7 +1030,7 @@ func ImportDrug(ctx iris.Context) {
 			ToNullInt64(volum),
 			ToNullString(volUnitName),
 			ToNullString(doseCountUnitName),
-			ToNullInt64(doseCount),
+			ToNullInt64(dosage),
 			ToNullString(packingUnitName),
 			ToNullString(specification),
 			ToNullString(dcode),
@@ -1067,6 +1067,9 @@ func ImportDrugClass(ctx iris.Context) {
 	}
 	count := 0
 	for index, row := range xlFile.Sheets[0].Rows {
+		if index == 0 {
+			continue
+		}
 		if count > 5 {
 			break
 		}

@@ -109,6 +109,11 @@ func DrugClassList(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
+	clinicID := ctx.PostValue("clinic_id")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
 
 	if offset == "" {
 		offset = "0"
@@ -129,7 +134,7 @@ func DrugClassList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from drug_class where id > 0`
-	selectSQL := `select * from drug_class where id > 0`
+	selectSQL := `select dc.id, dc.name, (select count(*) from clinic_drug where clinic_id = :clinic_id and drug_class_id = dc.id) as count from drug_class dc  where dc.id > 0`
 
 	if keyword != "" {
 		countSQL += " and name ~:keyword"
@@ -137,9 +142,10 @@ func DrugClassList(ctx iris.Context) {
 	}
 
 	var queryOptions = map[string]interface{}{
-		"keyword": ToNullString(keyword),
-		"offset":  ToNullInt64(offset),
-		"limit":   ToNullInt64(limit),
+		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+		"clinic_id": ToNullInt64(clinicID),
 	}
 
 	totalrow, err1 := model.DB.NamedQuery(countSQL, queryOptions)
@@ -685,7 +691,7 @@ func Drugs(ctx iris.Context) {
 	}
 
 	if drugType == "" || (drugType != "0" && drugType != "1") {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "drug_type 必须为0 或 1"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "type 必须为0 或 1"})
 		return
 	}
 
