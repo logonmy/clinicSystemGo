@@ -1134,3 +1134,107 @@ func DrugOutstockRecordDelete(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
 }
+
+//DrugStockList 库存列表
+func DrugStockList(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	keyword := ctx.PostValue("keyword")
+	supplierName := ctx.PostValue("supplier_name")
+	amount := ctx.PostValue("amount")
+	dateWarning := ctx.PostValue("date_warning")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	var storehouseID string
+	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
+	if errs != nil {
+		fmt.Println("errs ===", errs)
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
+		return
+	}
+
+	countSQL := `select count(*) as total from drug_stock ds 
+		left join clinic_drug cd on ds.clinic_drug_id = cd.id
+		where ds.storehouse_id=:storehouse_id`
+	selectSQL := `select 
+		cd.name,
+		cd.specification,
+		cd.packing_unit_name,
+		cd.manu_factory_name,
+		ds.supplier_name,
+		cd.ret_price,
+		ds.buy_price,
+		ds.serial,
+		ds.eff_date,
+		ds.stock_amount
+		from drug_stock ds
+		left join clinic_drug cd on ds.clinic_drug_id = cd.id
+		where ds.storehouse_id=:storehouse_id`
+
+	if supplierName != "" {
+		countSQL += " and ds.supplier_name = :supplier_name"
+		selectSQL += " and ds.supplier_name= :supplier_name"
+	}
+	if keyword != "" {
+		countSQL += " and (cd.name ~:keyword or cd.barcode ~:keyword)"
+		selectSQL += " and (cd.name ~:keyword or cd.barcode ~:keyword)"
+	}
+
+	if amount != "" {
+		countSQL += " and ds.stock_amount>0"
+		selectSQL += " and ds.stock_amount>0"
+	}
+	if dateWarning != "" {
+		countSQL += " and (ds.eff_date <= (CURRENT_DATE + cd.day_warning))"
+		selectSQL += " and (ds.eff_date <= (CURRENT_DATE + cd.day_warning))"
+	}
+
+	var queryOption = map[string]interface{}{
+		"storehouse_id": ToNullInt64(storehouseID),
+		"supplier_name": ToNullString(supplierName),
+		"keyword":       ToNullString(keyword),
+		"offset":        ToNullInt64(offset),
+		"limit":         ToNullInt64(limit),
+	}
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
