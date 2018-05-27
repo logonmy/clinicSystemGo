@@ -210,6 +210,7 @@ func main() {
 		role.Post("/update", controller.RoleUpdate)
 		role.Post("/listByClinicID", controller.RoleList)
 		role.Post("/roleDetail", controller.RoleDetail)
+		role.Post("/RoleAllocation", controller.RoleAllocation)
 	}
 
 	business := app.Party("/business", crs).AllowMethods(iris.MethodOptions)

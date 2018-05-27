@@ -213,7 +213,7 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(p.id) as total  from personnel p 
+	countSQL := `select count(p.id) as total  from personnel p
 	left join clinic c on p.clinic_id = c.id 
 	left join department_personnel dp on p.id = dp.personnel_id
 	left join department d on dp.department_id = d.id
@@ -223,10 +223,11 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 
 	var queryOption = map[string]interface{}{
 		"clinic_id": ToNullInt64(clinicID),
-		"keyword":   ToNullString(keyword),
+		"keyword":   keyword,
 		"offset":    ToNullInt64(offset),
 		"limit":     ToNullInt64(limit),
 	}
+	fmt.Println("===%&&&&", queryOption)
 
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
@@ -238,23 +239,44 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select p.id, p.code, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
+	rowSQL := `select p.id, p.code, p.name,p.weight,p.title,p.username,prc.status as personnel_role_status,p.is_appointment,
 	c.id as clinic_id, c.name as clinic_name,dp.type as personnel_type,d.code as department_code,
 	d.name as department_name, d.id as department_id from personnel p 
 	left join clinic c on p.clinic_id = c.id 
 	left join department_personnel dp on p.id = dp.personnel_id
 	left join department d on dp.department_id = d.id
-	left join (select count(pr.personnel_id) as total,pr.personnel_id from personnel_role pr 
-		left join personnel p on p.id=pr.personnel_id group by pr.personnel_id) prc on prc.personnel_id=p.id
+	left join (select count(pr.personnel_id) as total,pr.personnel_id,pr.status from personnel_role pr 
+		left join personnel p on p.id=pr.personnel_id group by pr.personnel_id,pr.status) prc on prc.personnel_id=p.id
 	where p.clinic_id=:clinic_id and prc.total>0 and (p.code ~:keyword or p.name ~:keyword) offset :offset limit :limit`
+
+	selectSQL := `select pr.personnel_id,pr.role_id,r.name as role_name from personnel_role pr
+		left join role r on r.id = pr.role_id`
 
 	rows, err1 := model.DB.NamedQuery(rowSQL, queryOption)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
 		return
 	}
-	result := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+	personnel := FormatSQLRowsToMapArray(rows)
+
+	prows, err2 := model.DB.NamedQuery(selectSQL, queryOption)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+		return
+	}
+	personnelRole := FormatSQLRowsToMapArray(prows)
+	for _, p := range personnel {
+		personnelID := p["id"]
+		var roles []interface{}
+		for _, pr := range personnelRole {
+			rolePersonnelID := pr["personnel_id"]
+			if personnelID == rolePersonnelID {
+				roles = append(roles, pr)
+			}
+		}
+		p["roles"] = roles
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": personnel, "page_info": pageInfo})
 }
 
 // PersonnelUpdate 修改人员
