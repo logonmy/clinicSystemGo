@@ -24,10 +24,10 @@ func ClinicDrugCreate(ctx iris.Context) {
 	pyCode := ctx.PostValue("py_code")
 	barCode := ctx.PostValue("barcode")
 	status := ctx.PostValue("status")
-	dose := ctx.PostValue("dose")
-	doseUnit := ctx.PostValue("dose_unit")
-	doseCount := ctx.PostValue("dose_count")
-	doseCountUnitName := ctx.PostValue("dose_count_unit_name")
+	dosage := ctx.PostValue("dosage")
+	dosageUnitName := ctx.PostValue("dosage_unit_name")
+	preparationCount := ctx.PostValue("preparation_count")
+	preparationCountUnitName := ctx.PostValue("preparation_count_unit_name")
 	packingUnitName := ctx.PostValue("packing_unit_name")
 	retPrice := ctx.PostValue("ret_price")
 	buyPrice := ctx.PostValue("buy_price")
@@ -83,7 +83,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 	insertSQL := `insert into clinic_drug (
 		clinic_id,
 		type,
-		drug_class_id
+		drug_class_id,
 		name,
 		specification,
 		manu_factory_name,
@@ -93,10 +93,10 @@ func ClinicDrugCreate(ctx iris.Context) {
 		py_code,
 		barcode,
 		status,
-		dose,
-		dose_unit,
-		dose_count,
-		dose_count_unit_name,
+		dosage,
+		dosage_unit_name,
+		preparation_count,
+		preparation_count_unit_name,
 		packing_unit_name,
 		ret_price,
 		buy_price,
@@ -154,8 +154,10 @@ func ClinicDrugCreate(ctx iris.Context) {
 		$33,
 		$34,
 		$35,
-		$35
+		$36
 	)`
+
+	fmt.Println("insertSQL ====", insertSQL)
 	_, err := model.DB.Exec(insertSQL,
 		ToNullInt64(clinicID),
 		ToNullInt64(drugType),
@@ -169,10 +171,10 @@ func ClinicDrugCreate(ctx iris.Context) {
 		ToNullString(pyCode),
 		ToNullString(barCode),
 		ToNullBool(status),
-		ToNullInt64(dose),
-		ToNullString(doseUnit),
-		ToNullInt64(doseCount),
-		ToNullString(doseCountUnitName),
+		ToNullInt64(dosage),
+		ToNullString(dosageUnitName),
+		ToNullInt64(preparationCount),
+		ToNullString(preparationCountUnitName),
 		ToNullString(packingUnitName),
 		ToNullInt64(retPrice),
 		ToNullInt64(buyPrice),
@@ -236,7 +238,7 @@ func ClinicDrugList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(*) as total from clinic_drug where clinic_id=:clinic_id`
+	countSQL := `select count(*) as total from clinic_drug cd where clinic_id=:clinic_id`
 	selectSQL := `select 
 		cd.id as clinic_drug_id,
 		cd.name as drug_name,
@@ -273,8 +275,8 @@ func ClinicDrugList(ctx iris.Context) {
 	}
 
 	if drugClassID != "" {
-		countSQL += " and (cd.barcode ~:drug_class_id or cd.name ~:drug_class_id)"
-		selectSQL += " and (cd.barcode ~:drug_class_id or cd.name ~:drug_class_id)"
+		countSQL += " and (cd.drug_class_id = :drug_class_id or cd.drug_class_id = :drug_class_id)"
+		selectSQL += " and (cd.drug_class_id = :drug_class_id or cd.drug_class_id = :drug_class_id)"
 	}
 
 	selectSQL += ` group by 
@@ -302,7 +304,6 @@ func ClinicDrugList(ctx iris.Context) {
 		"limit":         ToNullInt64(limit),
 		"drug_class_id": ToNullInt64(drugClassID),
 	}
-
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -337,10 +338,10 @@ func ClinicDrugUpdate(ctx iris.Context) {
 	pyCode := ctx.PostValue("py_code")
 	barCode := ctx.PostValue("barcode")
 	status := ctx.PostValue("status")
-	dose := ctx.PostValue("dose")
-	doseUnit := ctx.PostValue("dose_unit")
-	doseCount := ctx.PostValue("dose_count")
-	doseCountUnitName := ctx.PostValue("dose_count_unit_name")
+	dosage := ctx.PostValue("dosage")
+	dosageUnitName := ctx.PostValue("dosage_unit_name")
+	preparationCount := ctx.PostValue("preparation_count")
+	preparationCountUnitName := ctx.PostValue("preparation_count_unit_name")
 	packingUnitName := ctx.PostValue("packing_unit_name")
 	retPrice := ctx.PostValue("ret_price")
 	buyPrice := ctx.PostValue("buy_price")
@@ -414,10 +415,10 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		py_code = $9,
 		barcode = $10,
 		status = $11,
-		dose = $12,
-		dose_unit = $13,
-		dose_count = $14,
-		dose_count_unit_name = $15,
+		dosage = $12,
+		dosage_unit_name = $13,
+		preparation_count = $14,
+		preparation_count_unit_name = $15,
 		packing_unit_name = $16,
 		ret_price = $17,
 		buy_price = $18,
@@ -451,10 +452,10 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		ToNullString(pyCode),
 		ToNullString(barCode),
 		ToNullBool(status),
-		ToNullInt64(dose),
-		ToNullString(doseUnit),
-		ToNullInt64(doseCount),
-		ToNullString(doseCountUnitName),
+		ToNullInt64(dosage),
+		ToNullString(dosageUnitName),
+		ToNullInt64(preparationCount),
+		ToNullString(preparationCountUnitName),
 		ToNullString(packingUnitName),
 		ToNullInt64(retPrice),
 		ToNullInt64(buyPrice),

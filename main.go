@@ -340,16 +340,16 @@ func main() {
 
 	dataImport := app.Party("/dataImport", crs).AllowMethods(iris.MethodOptions)
 	{
-		dataImport.Post("/ImportLaboratory", controller.ImportLaboratory)
-		dataImport.Post("/ImportLaboratoryItem", controller.ImportLaboratoryItem)
 		dataImport.Post("/ImportFrequency", controller.ImportFrequency)
 		dataImport.Post("/ImportDoseUnit", controller.ImportDoseUnit)
 		dataImport.Post("/ImportDoseForm", controller.ImportDoseForm)
-		dataImport.Post("/ImportDrugType", controller.ImportDrugType)
 		dataImport.Post("/ImportManuFactory", controller.ImportManuFactory)
 		dataImport.Post("/ImportrRouteAdministration", controller.ImportrRouteAdministration)
 		dataImport.Post("/ImportrLaboratorySample", controller.ImportrLaboratorySample)
+		dataImport.Post("/ImportLaboratory", controller.ImportLaboratory)
+		dataImport.Post("/ImportLaboratoryItem", controller.ImportLaboratoryItem)
 		dataImport.Post("/ImportExamination", controller.ImportExamination)
+		// dataImport.Post("/ImportDrugType", controller.ImportDrugType)
 		dataImport.Post("/ImportDrug", controller.ImportDrug)
 		dataImport.Post("/ImportDrugClass", controller.ImportDrugClass)
 	}
