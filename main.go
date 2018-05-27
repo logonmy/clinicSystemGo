@@ -35,9 +35,10 @@ func main() {
 	{
 		clinic.Post("/add", controller.ClinicAdd)
 		clinic.Post("/list", controller.ClinicList)
+		clinic.Post("/update/status", controller.ClinicUpdateStatus)
 		clinic.Post("/update", controller.ClinicUpdate)
 		clinic.Post("/getByID", controller.ClinicGetByID)
-		// clinic.Post("/update", controller.ClinicUpdte)
+		clinic.Post("/code", controller.GetClinicCode)
 	}
 
 	department := app.Party("/department", crs).AllowMethods(iris.MethodOptions)
