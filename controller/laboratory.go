@@ -676,7 +676,7 @@ func LaboratoryItemList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	laboratoryItems := FormatLaboratoryItem(results)

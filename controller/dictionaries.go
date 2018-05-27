@@ -2,6 +2,7 @@ package controller
 
 import (
 	"clinicSystemGo/model"
+	"fmt"
 	"strconv"
 
 	"github.com/kataras/iris"
@@ -108,6 +109,11 @@ func DrugClassList(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
+	clinicID := ctx.PostValue("clinic_id")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
 
 	if offset == "" {
 		offset = "0"
@@ -128,25 +134,33 @@ func DrugClassList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from drug_class where id > 0`
-	selectSQL := `select * from drug_class where id > 0`
+	selectSQL := `select dc.id, dc.name, (select count(*) from clinic_drug where clinic_id = :clinic_id and drug_class_id = dc.id) as count from drug_class dc  where dc.id > 0`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		countSQL += " and name ~:keyword"
+		selectSQL += " and name ~:keyword"
 	}
 
-	total := model.DB.QueryRowx(countSQL)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+	var queryOptions = map[string]interface{}{
+		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+		"clinic_id": ToNullInt64(clinicID),
+	}
+
+	totalrow, err1 := model.DB.NamedQuery(countSQL, queryOptions)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	totals := FormatSQLRowsToMapArray(totalrow)
+	pageInfo := totals[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $1 limit $2", offset, limit)
+	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOptions)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -371,22 +385,29 @@ func RouteAdministrationList(ctx iris.Context) {
 	selectSQL := `select * from route_administration where id > 0`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "' or code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "' or code ~'" + keyword + "'"
+		countSQL += " and name ~:keyword or py_code ~:keyword or code ~:keyword"
+		selectSQL += " and name ~:keyword or py_code ~:keyword or code ~:keyword"
 	}
 
-	total := model.DB.QueryRowx(countSQL)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+	var queryOptions = map[string]interface{}{
+		"keyword": ToNullString(keyword),
+		"offset":  ToNullInt64(offset),
+		"limit":   ToNullInt64(limit),
+	}
+
+	totalrow, err1 := model.DB.NamedQuery(countSQL, queryOptions)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	totals := FormatSQLRowsToMapArray(totalrow)
+	pageInfo := totals[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $1 limit $2", offset, limit)
+	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOptions)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -670,7 +691,8 @@ func Drugs(ctx iris.Context) {
 	}
 
 	if drugType == "" || (drugType != "0" && drugType != "1") {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "drug_type 必须为0 或 1"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "type 必须为0 或 1"})
+		return
 	}
 
 	_, err := strconv.Atoi(offset)
@@ -689,6 +711,54 @@ func Drugs(ctx iris.Context) {
 
 	total := model.DB.QueryRowx(countSQL, drugType, keyword)
 	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, err := model.DB.Queryx(selectSQL+" offset $3 limit $4", drugType, keyword, offset, limit)
+	if err != nil {
+		fmt.Println("err =====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+// SupplierList 供应商列表
+func SupplierList(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) as total from supplier where name ~$1`
+	selectSQL := `select * from supplier where name ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
+	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
@@ -698,7 +768,93 @@ func Drugs(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $3 limit $4", drugType, keyword, offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+// InstockWayList 入库方式
+func InstockWayList(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) as total from instock_way where name ~$1`
+	selectSQL := `select * from instock_way where name ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+// OutstockWayList 出库方式
+func OutstockWayList(ctx iris.Context) {
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(id) as total from outstock_way where name ~$1`
+	selectSQL := `select * from outstock_way where name ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }

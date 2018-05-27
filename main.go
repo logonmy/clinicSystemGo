@@ -193,6 +193,7 @@ func main() {
 		drug.Post("/outstockUpdate", controller.DrugOutstockUpdate)
 		drug.Post("/outstockCheck", controller.DrugOutstockCheck)
 		drug.Post("/outstockDelete", controller.DrugOutstockRecordDelete)
+		drug.Post("/DrugStockList", controller.DrugStockList)
 		drug.Post("/PrescriptionWesternPatientModelCreate", controller.PrescriptionWesternPatientModelCreate)
 		drug.Post("/PrescriptionWesternPatientModelList", controller.PrescriptionWesternPatientModelList)
 		drug.Post("/PrescriptionWesternPersonalPatientModelList", controller.PrescriptionWesternPersonalPatientModelList)
@@ -211,6 +212,7 @@ func main() {
 		role.Post("/update", controller.RoleUpdate)
 		role.Post("/listByClinicID", controller.RoleList)
 		role.Post("/roleDetail", controller.RoleDetail)
+		role.Post("/RoleAllocation", controller.RoleAllocation)
 	}
 
 	business := app.Party("/business", crs).AllowMethods(iris.MethodOptions)
@@ -296,6 +298,7 @@ func main() {
 		material.Post("/outstockUpdate", controller.MaterialOutstockUpdate)
 		material.Post("/outstockCheck", controller.MaterialOutstockCheck)
 		material.Post("/outstockDelete", controller.MaterialOutstockRecordDelete)
+		material.Post("/MaterialStockList", controller.MaterialStockList)
 	}
 
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
@@ -336,6 +339,9 @@ func main() {
 		dictionaries.Post("/Examinations", controller.Examinations)
 		dictionaries.Post("/LaboratoryItems", controller.LaboratoryItems)
 		dictionaries.Post("/Drugs", controller.Drugs)
+		dictionaries.Post("/SupplierList", controller.SupplierList)
+		dictionaries.Post("/InstockWayList", controller.InstockWayList)
+		dictionaries.Post("/OutstockWayList", controller.OutstockWayList)
 	}
 
 	dataImport := app.Party("/dataImport", crs).AllowMethods(iris.MethodOptions)

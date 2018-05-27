@@ -191,7 +191,7 @@ func ExaminationPatientModelList(ctx iris.Context) {
 
 	var queryOption = map[string]interface{}{
 		"operation_id": ToNullInt64(operationID),
-		"keyword":      ToNullString(keyword),
+		"keyword":      keyword,
 		"is_common":    ToNullBool(isCommon),
 		"offset":       ToNullInt64(offset),
 		"limit":        ToNullInt64(limit),

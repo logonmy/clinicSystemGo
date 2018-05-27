@@ -271,7 +271,7 @@ func TreatmentList(ctx iris.Context) {
 
 	var queryOption = map[string]interface{}{
 		"clinic_id": ToNullInt64(clinicID),
-		"keyword":   ToNullString(keyword),
+		"keyword":   keyword,
 		"status":    ToNullBool(status),
 		"offset":    ToNullInt64(offset),
 		"limit":     ToNullInt64(limit),
