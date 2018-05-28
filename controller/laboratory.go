@@ -281,7 +281,7 @@ func LaboratoryList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from clinic_laboratory where clinic_id=$1`
-	selectSQL := `select id as clinic_laboratory_id,name as laboratory_name,unit_name,price,py_code,is_discount,
+	selectSQL := `select id as clinic_laboratory_id,name as laboratory_name,unit_name,price,py_code,is_discount,discount_price,
 		remark,status from clinic_laboratory where clinic_id=$1`
 
 	if keyword != "" {
@@ -321,7 +321,7 @@ func LaboratoryDetail(ctx iris.Context) {
 		return
 	}
 	sql := `select id as clinic_laboratory_id,name,en_name,unit_name,py_code,idc_code,remark,
-		time_report,clinical_significance,laboratory_sample,cuvette_color_name,
+		time_report,clinical_significance,laboratory_sample,cuvette_color_name,discount_price,
 		cost,is_discount,status,merge_flag,price,is_delivery
 		from clinic_laboratory where id=$1`
 	fmt.Println("sql==", sql)
