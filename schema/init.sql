@@ -823,7 +823,8 @@ CREATE TABLE clinic_drug
   preparation_count integer,--制剂数量/包装量
   preparation_count_unit_name varchar(10),--制剂数量单位
   packing_unit_name varchar(10),--药品包装单位
-  ret_price integer,--零售价
+  ret_price integer NOT NULL CHECK(ret_price >= 0),--零售价
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   buy_price integer,--成本价
   mini_dose integer,--最小剂量
   is_discount boolean DEFAULT false,--是否允许折扣
