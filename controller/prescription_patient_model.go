@@ -530,16 +530,6 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 		return
 	}
 
-	var itemValues []string
-	itemSets := []string{
-		"prescription_chinese_patient_model_id",
-		"clinic_drug_id",
-		"once_dose",
-		"once_dose_unit_name",
-		"amount",
-		"special_illustration",
-	}
-
 	tx, errb := model.DB.Begin()
 	if errb != nil {
 		fmt.Println("errb ===", errb)
@@ -563,9 +553,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 		clinicDrugID := v["clinic_drug_id"]
 		onceDose := v["once_dose"]
 		onceDoseUnitName := v["once_dose_unit_name"]
-		times := v["amount"]
 		illustration := v["special_illustration"]
-		var s []string
 		clinicDrugSQL := `select id from clinic_drug where id=$1`
 		trow := model.DB.QueryRowx(clinicDrugSQL, clinicDrugID)
 		if trow == nil {
@@ -578,28 +566,18 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
 			return
 		}
-		s = append(s, prescriptionChinesePatientModelID, clinicDrugID, onceDose, onceDoseUnitName, times)
-		if illustration == "" {
-			s = append(s, `null`)
-		} else {
-			s = append(s, "'"+illustration+"'")
+		inserttSQL := "insert into prescription_chinese_patient_model_item (prescription_chinese_patient_model_id, clinic_drug_id, once_dose, once_dose_unit_name, amount, special_illustration) values ($1,$2,$3,$4,$5,$6)"
+		fmt.Println("inserttSQL===", inserttSQL)
+
+		_, errt := tx.Exec(inserttSQL, prescriptionChinesePatientModelID, clinicDrugID, ToNullInt64(onceDose), ToNullString(onceDoseUnitName), ToNullInt64(amount), ToNullString(illustration))
+		if errt != nil {
+			fmt.Println("errt ===", errt)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			return
 		}
-		tstr := "(" + strings.Join(s, ",") + ")"
-		itemValues = append(itemValues, tstr)
 	}
-	tSetStr := strings.Join(itemSets, ",")
-	tValueStr := strings.Join(itemValues, ",")
 
-	inserttSQL := "insert into prescription_chinese_patient_model_item (" + tSetStr + ") values " + tValueStr
-	fmt.Println("inserttSQL===", inserttSQL)
-
-	_, errt := tx.Exec(inserttSQL)
-	if errt != nil {
-		fmt.Println("errt ===", errt)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
-		return
-	}
 	errc := tx.Commit()
 	if errc != nil {
 		tx.Rollback()
