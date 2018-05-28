@@ -256,7 +256,7 @@ func DrugInstockRecordDetail(ctx iris.Context) {
 	arow := model.DB.QueryRowx(sql, drugInstockRecordID)
 	result := FormatSQLRowToMap(arow)
 
-	isql := `select cd.name as drug_name,cd.packing_unit_name,cd.manu_factory_name,iri.instock_amount,
+	isql := `select iri.clinic_drug_id,cd.name as drug_name,cd.packing_unit_name,cd.manu_factory_name,iri.instock_amount,
 		iri.buy_price,iri.serial,iri.eff_date,cd.ret_price
 		from drug_instock_record_item iri
 		left join clinic_drug cd on iri.clinic_drug_id = cd.id
@@ -516,7 +516,7 @@ func DrugInstockCheck(ctx iris.Context) {
 		}
 	}
 
-	_, err3 := tx.Exec("update drug_instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP", "02", operationID)
+	_, err3 := tx.Exec("update drug_instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP where id=$3", "02", operationID, drugInstockRecordID)
 	if err3 != nil {
 		fmt.Println("err3 ===", err3)
 		tx.Rollback()
@@ -846,7 +846,7 @@ func DrugOutstockRecordDetail(ctx iris.Context) {
 	row := model.DB.QueryRowx(sql, drugOutstockRecordID)
 	result := FormatSQLRowToMap(row)
 
-	isql := `select cd.name as drug_name,ori.drug_stock_id,cd.packing_unit_name,cd.manu_factory_name,ori.outstock_amount,
+	isql := `select ori.drug_stock_id,cd.name as drug_name,ori.drug_stock_id,cd.packing_unit_name,cd.manu_factory_name,ori.outstock_amount,
 		cd.ret_price,ds.buy_price,ds.serial,ds.eff_date
 		from drug_outstock_record_item ori
 		left join drug_stock ds on ori.drug_stock_id = ds.id
@@ -1040,7 +1040,7 @@ func DrugOutstockCheck(ctx iris.Context) {
 		return
 	}
 
-	_, err2 := tx.Exec("update drug_outstock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP", "02", operationID)
+	_, err2 := tx.Exec("update drug_outstock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP where id=$3", "02", operationID, drugOutstockRecordID)
 	if err2 != nil {
 		fmt.Println("err2 ===", err2)
 		tx.Rollback()

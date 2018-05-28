@@ -262,7 +262,7 @@ func TreatmentList(ctx iris.Context) {
 
 	countSQL := `select count(id) as total from clinic_treatment	where clinic_id=:clinic_id and name ~:keyword`
 	selectSQL := `select id as clinic_treatment_id,name as treatment_name,unit_name,py_code,remark,idc_code,
-		en_name,is_discount,price,status,cost from clinic_treatment where clinic_id=:clinic_id and name ~:keyword`
+		en_name,is_discount,price,status,cost,discount_price from clinic_treatment where clinic_id=:clinic_id and name ~:keyword`
 
 	if status != "" {
 		countSQL += " and status=:status"
@@ -307,7 +307,7 @@ func TreatmentDetail(ctx iris.Context) {
 	}
 
 	selectSQL := `select id as clinic_treatment_id,name,unit_name,py_code,remark,idc_code,
-		en_name,is_discount,price,status,cost
+		en_name,is_discount,price,status,cost,discount_price
 		from clinic_treatment
 		where id=$1`
 
