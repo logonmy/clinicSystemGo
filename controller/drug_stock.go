@@ -429,7 +429,7 @@ func DrugInstockCheck(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "入库记录不存在"})
 		return
 	}
-	storehouseID := strconv.FormatInt(instockRecord["storehouse_id"].(int64), 10)
+	storehouseID := instockRecord["storehouse_id"].(int64)
 	verifyStatus := instockRecord["verify_status"]
 	if verifyStatus.(string) != "01" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "当前状态不能审核"})
@@ -455,12 +455,22 @@ func DrugInstockCheck(ctx iris.Context) {
 		return
 	}
 
+	sets := []string{
+		"storehouse_id",
+		"clinic_drug_id",
+		"supplier_name",
+		"serial",
+		"eff_date",
+		"buy_price",
+		"stock_amount"}
+	setStr := strings.Join(sets, ",")
+
 	for _, v := range instockRecordItems {
-		clinicDrugID := strconv.FormatInt(v["clinic_drug_id"].(int64), 10)
+		clinicDrugID := v["clinic_drug_id"].(int64)
 		instockAmount := v["instock_amount"].(int64)
 		supplierName := v["supplier_name"].(string)
 		serial := v["serial"].(string)
-		buyPrice := strconv.FormatInt(v["buy_price"].(int64), 10)
+		buyPrice := v["buy_price"].(int64)
 		effDate := v["eff_date"].(time.Time).Format("2006-01-02")
 
 		drow := model.DB.QueryRowx(`select id,stock_amount from drug_stock where storehouse_id=$1 and clinic_drug_id=$2 
@@ -472,24 +482,15 @@ func DrugInstockCheck(ctx iris.Context) {
 		drugStock := FormatSQLRowToMap(drow)
 		_, dok := drugStock["id"]
 		if !dok {
-			sets := []string{
-				"storehouse_id",
-				"clinic_drug_id",
-				"supplier_name",
-				"serial",
-				"eff_date",
-				"buy_price",
-				"stock_amount"}
-			setStr := strings.Join(sets, ",")
 			insertSQL := "insert into drug_stock (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
 			_, err1 := tx.Exec(insertSQL,
-				ToNullInt64(storehouseID),
-				ToNullInt64(clinicDrugID),
+				storehouseID,
+				clinicDrugID,
 				ToNullString(supplierName),
 				ToNullString(serial),
 				ToNullString(effDate),
-				ToNullInt64(buyPrice),
-				ToNullInt64(strconv.FormatInt(instockAmount, 10)),
+				buyPrice,
+				instockAmount,
 			)
 			if err1 != nil {
 				fmt.Println("err1 ===", err1)
@@ -498,14 +499,14 @@ func DrugInstockCheck(ctx iris.Context) {
 				return
 			}
 		} else {
-			drugStockID := strconv.FormatInt(drugStock["id"].(int64), 10)
+			drugStockID := drugStock["id"].(int64)
 			stockAmount := drugStock["stock_amount"].(int64) + instockAmount
 			updateSQL := "update drug_stock set stock_amount=$1,buy_price=$2,updated_time=LOCALTIMESTAMP where id=$3"
 			fmt.Println("updateSQL===", updateSQL)
 			_, err2 := tx.Exec(updateSQL,
-				ToNullInt64(strconv.FormatInt(stockAmount, 10)),
-				ToNullInt64(buyPrice),
-				ToNullInt64(drugStockID),
+				stockAmount,
+				buyPrice,
+				drugStockID,
 			)
 			if err2 != nil {
 				fmt.Println("err2 ===", err2)
@@ -1032,7 +1033,6 @@ func DrugOutstockCheck(ctx iris.Context) {
 	outstockRecordItems := FormatSQLRowsToMapArray(rows)
 
 	tx, err := model.DB.Begin()
-
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
@@ -1048,8 +1048,9 @@ func DrugOutstockCheck(ctx iris.Context) {
 		return
 	}
 
+	sql := "update drug_stock set stock_amount=$1, updated_time=LOCALTIMESTAMP where id=$2"
 	for _, v := range outstockRecordItems {
-		drugStockID := strconv.FormatInt(v["drug_stock_id"].(int64), 10)
+		drugStockID := v["drug_stock_id"].(int64)
 		outstockAmount := v["outstock_amount"].(int64)
 		drow := model.DB.QueryRowx("select id,stock_amount from drug_stock where id=$1 limit 1", drugStockID)
 		if drow == nil {
@@ -1063,12 +1064,8 @@ func DrugOutstockCheck(ctx iris.Context) {
 			return
 		}
 		stockAmount := drugStock["stock_amount"].(int64) - outstockAmount
-		sql := "update drug_stock set stock_amount=$1, updated_time=LOCALTIMESTAMP where id=$2"
 
-		_, err1 := tx.Exec(sql,
-			ToNullInt64(strconv.FormatInt(stockAmount, 10)),
-			ToNullInt64(drugStockID),
-		)
+		_, err1 := tx.Exec(sql, stockAmount, drugStockID)
 		if err1 != nil {
 			fmt.Println("err1 ===", err1)
 			tx.Rollback()
@@ -1197,7 +1194,8 @@ func DrugStockList(ctx iris.Context) {
 		ds.buy_price,
 		ds.serial,
 		ds.eff_date,
-		ds.stock_amount
+		ds.stock_amount,
+		ds.id as drug_stock_id
 		from drug_stock ds
 		left join clinic_drug cd on ds.clinic_drug_id = cd.id
 		where ds.storehouse_id=:storehouse_id`

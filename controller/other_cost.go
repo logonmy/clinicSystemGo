@@ -255,7 +255,7 @@ func OtherCostList(ctx iris.Context) {
 
 	countSQL := `select count(id) as total from clinic_other_cost where clinic_id=:clinic_id`
 	selectSQL := `select id as clinic_other_cost_id,name,py_code,remark,
-		en_name,is_discount,price,status,cost,unit_name
+		en_name,is_discount,price,status,cost,unit_name,discount_price
 		from clinic_other_cost coc
 		where clinic_id=:clinic_id`
 
@@ -306,16 +306,14 @@ func OtherCostDetail(ctx iris.Context) {
 	}
 
 	selectSQL := `select id as clinic_other_cost_id,name,py_code,remark,
-		en_name,is_discount,price,status,cost,unit_name
-		from clinic_other_cost coc
-		left join other_cost oc on other_cost_id = id
+		en_name,is_discount,price,status,cost,unit_name,discount_price
+		from clinic_other_cost
 		where id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 
-	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL, clinicOtherCostID)
-	results = FormatSQLRowsToMapArray(rows)
+	rows := model.DB.QueryRowx(selectSQL, clinicOtherCostID)
+	results := FormatSQLRowToMap(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }

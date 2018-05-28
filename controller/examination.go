@@ -322,9 +322,8 @@ func ExaminationDetail(ctx iris.Context) {
 
 	fmt.Println("selectSQL===", selectSQL)
 
-	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL, clinicExaminationID)
-	results = FormatSQLRowsToMapArray(rows)
+	rows := model.DB.QueryRowx(selectSQL, clinicExaminationID)
+	results := FormatSQLRowToMap(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }
