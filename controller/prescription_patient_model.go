@@ -160,6 +160,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	p.name as operation_name,
 	pwpm.model_name,
 	pwpmi.clinic_drug_id,
+	cd.type,
 	cd.name as drug_name,
 	cd.specification,
 	pwpmi.once_dose,
@@ -178,7 +179,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	left join drug_stock ds on ds.clinic_drug_id = cd.id
   left join personnel p on pwpm.operation_id = p.id
 	where pwpm.model_name ~$1
-	group by pwpm.id,pwpm.is_common,pwpm.created_time,pwpm.updated_time,p.name,pwpm.model_name,pwpmi.clinic_drug_id,
+	group by pwpm.id,pwpm.is_common,pwpm.created_time,pwpm.updated_time,p.name,pwpm.model_name,pwpmi.clinic_drug_id,cd.type,
 		cd.name,cd.specification,pwpmi.once_dose,pwpmi.once_dose_unit_name,pwpmi.route_administration_name,
 		pwpmi.frequency_name, pwpmi.eff_day,pwpmi.amount,cd.packing_unit_name, pwpmi.fetch_address,pwpmi.illustration`
 
@@ -201,7 +202,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 
 	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $2 limit $3", keyword, offset, limit)
 	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 	result := FormatSQLRowsToMapArray(rows)
@@ -249,6 +250,7 @@ func PrescriptionWesternPersonalPatientModelList(ctx iris.Context) {
 	p.name as operation_name,
 	pwpm.model_name,
 	pwpmi.clinic_drug_id,
+	cd.type,
 	cd.name as drug_name,
 	cd.specification,
 	cd.stock_amount,
@@ -628,6 +630,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	pcpm.fetch_address as info_fetch_address,
 	pcpm.medicine_illustration,
 	pcpmi.clinic_drug_id,
+	cd.type,
 	cd.name as drug_name,
 	pcpmi.once_dose,
 	pcpmi.once_dose_unit_name,
@@ -640,7 +643,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	left join personnel p on pcpm.operation_id = p.id
 	where pcpm.model_name ~$1
 	group by pcpm.id,pcpm.is_common,pcpm.created_time,pcpm.updated_time,p.name,pcpm.model_name,pcpm.route_administration_name,
-		pcpm.eff_day,pcpm.amount,pcpm.frequency_name,pcpm.fetch_address,pcpm.medicine_illustration,pcpmi.clinic_drug_id,
+		pcpm.eff_day,pcpm.amount,pcpm.frequency_name,pcpm.fetch_address,pcpm.medicine_illustration,pcpmi.clinic_drug_id,cd.type,
 		cd.name,pcpmi.once_dose,pcpmi.once_dose_unit_name,pcpmi.special_illustration,pcpmi.amount`
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
@@ -662,7 +665,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 
 	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $2 limit $3", keyword, offset, limit)
 	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 	result := FormatSQLRowsToMapArray(rows)
@@ -717,6 +720,7 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 	pcpm.fetch_address as info_fetch_address,
 	pcpm.medicine_illustration,
 	pcpmi.clinic_drug_id,
+	cd.type,
 	cd.name as drug_name,
 	cd.stock_amount,
 	pcpmi.once_dose,

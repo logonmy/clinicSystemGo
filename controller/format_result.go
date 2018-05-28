@@ -66,6 +66,7 @@ type PrescriptionModel struct {
 //PrescriptionModelItem 处方模板item
 type PrescriptionModelItem struct {
 	ClinicDrugID            interface{} `json:"clinic_drug_id"`
+	DrugType                interface{} `json:"type"`
 	DrugName                interface{} `json:"drug_name"`
 	Specification           interface{} `json:"specification"`
 	StockAmount             interface{} `json:"stock_amount"`
@@ -225,6 +226,7 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		has := false
 
 		clinicDrugID := v["clinic_drug_id"]
+		drugType := v["type"]
 		drugName := v["drug_name"]
 		specification := v["specification"]
 		stockAmount := v["stock_amount"]
@@ -241,6 +243,7 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 
 		item := PrescriptionModelItem{
 			ClinicDrugID:            clinicDrugID,
+			DrugType:                drugType,
 			DrugName:                drugName,
 			Specification:           specification,
 			StockAmount:             stockAmount,
