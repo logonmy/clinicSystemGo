@@ -112,11 +112,16 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 
 		price := int(clinicDrug["ret_price"].(int64))
 		discountPrice := int(clinicDrug["discount_price"].(int64))
+		isDiscount := clinicDrug["is_discount"].(bool)
 		name := clinicDrug["name"].(string)
 		unitName := clinicDrug["packing_unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
-		total := int(price) * amount
+		total := price * amount
 		fee := (price - discountPrice) * amount
+		if isDiscount {
+			fee = total
+		}
+		discount := total - fee
 
 		inserttSQL := `insert into prescription_western_patient (
 			clinic_triage_patient_id,
@@ -165,6 +170,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 				amount,
 				unit,
 				total,
+				discount,
 				fee,
 				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
 
@@ -180,6 +186,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 				unitName,
 				total,
 				fee,
+				discount,
 				personnelID)
 			if errm != nil {
 				fmt.Println("errm ===", errm)
@@ -363,11 +370,16 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 
 		price := int(clinicDrug["ret_price"].(int64))
 		discountPrice := int(clinicDrug["discount_price"].(int64))
+		isDiscount := clinicDrug["is_discount"].(bool)
 		name := clinicDrug["name"].(string)
 		unitName := clinicDrug["packing_unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
-		total := int(price) * amount
+		total := price * amount
 		fee := (price - discountPrice) * amount
+		if isDiscount {
+			fee = total
+		}
+		discount := total - fee
 
 		insertpSQL := `insert into prescription_chinese_item (
 			clinic_drug_id,
@@ -399,6 +411,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 				amount,
 				unit,
 				total,
+				discount,
 				fee,
 				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
 
@@ -413,6 +426,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 				amount,
 				unitName,
 				total,
+				discount,
 				fee,
 				personnelID)
 			if errm != nil {
