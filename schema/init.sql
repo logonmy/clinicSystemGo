@@ -285,7 +285,7 @@ CREATE TABLE clinic_diagnosis_treatment
   cost integer CHECK(cost >= 0), --成本价
   price integer NOT NULL CHECK(price >= 0), --诊疗费金额
   status boolean NOT NULL DEFAULT true,--是否启用
-  is_discount boolean DEFAULT false,--是否允许折扣
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
   discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -827,10 +827,10 @@ CREATE TABLE clinic_drug
   discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   buy_price integer,--成本价
   mini_dose integer,--最小剂量
-  is_discount boolean DEFAULT false,--是否允许折扣
-  is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  is_bulk_sales boolean NOT NULL DEFAULT false,--是否允许拆零销售
   bulk_sales_price integer,--拆零售价/最小剂量售价
-  fetch_address integer DEFAULT 0,--取药地点 0 本诊所，1外购 2， 代购
+  fetch_address integer NOT NULL DEFAULT 0,--取药地点 0 本诊所，1外购 2， 代购
   once_dose integer,--常用剂量
   once_dose_unit_name varchar(10),--用量单位 常用剂量单位
   route_administration_name varchar(50),--用药途径id/默认用法
