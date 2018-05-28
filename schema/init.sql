@@ -285,7 +285,7 @@ CREATE TABLE clinic_diagnosis_treatment
   cost integer CHECK(cost >= 0), --成本价
   price integer NOT NULL CHECK(price >= 0), --诊疗费金额
   status boolean NOT NULL DEFAULT true,--是否启用
-  is_discount boolean DEFAULT false,--是否允许折扣
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
   discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
