@@ -112,11 +112,16 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 
 		price := int(clinicDrug["ret_price"].(int64))
 		discountPrice := int(clinicDrug["discount_price"].(int64))
+		isDiscount := clinicDrug["is_discount"].(bool)
 		name := clinicDrug["name"].(string)
 		unitName := clinicDrug["packing_unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
-		total := int(price) * amount
+		total := price * amount
 		fee := (price - discountPrice) * amount
+		if isDiscount {
+			fee = total
+		}
+		discount := total - fee
 
 		inserttSQL := `insert into prescription_western_patient (
 			clinic_triage_patient_id,
@@ -165,8 +170,9 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 				amount,
 				unit,
 				total,
+				discount,
 				fee,
-				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 			_, errm := tx.Exec(insertmSQL,
 				clinicTriagePatientID,
@@ -180,6 +186,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 				unitName,
 				total,
 				fee,
+				discount,
 				personnelID)
 			if errm != nil {
 				fmt.Println("errm ===", errm)
@@ -363,11 +370,16 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 
 		price := int(clinicDrug["ret_price"].(int64))
 		discountPrice := int(clinicDrug["discount_price"].(int64))
+		isDiscount := clinicDrug["is_discount"].(bool)
 		name := clinicDrug["name"].(string)
 		unitName := clinicDrug["packing_unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
-		total := int(price) * amount
+		total := price * amount
 		fee := (price - discountPrice) * amount
+		if isDiscount {
+			fee = total
+		}
+		discount := total - fee
 
 		insertpSQL := `insert into prescription_chinese_item (
 			clinic_drug_id,
@@ -399,8 +411,9 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 				amount,
 				unit,
 				total,
+				discount,
 				fee,
-				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 			_, errm := tx.Exec(insertmSQL,
 				clinicTriagePatientID,
@@ -413,6 +426,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 				amount,
 				unitName,
 				total,
+				discount,
 				fee,
 				personnelID)
 			if errm != nil {
@@ -474,9 +488,11 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 		return
 	}
 
-	pcprows, err1 := model.DB.Queryx(`select * prescription_chinese_patient where clinic_triage_patient_id = $1`, clinicTriagePatientID)
+	pcprows, err1 := model.DB.Queryx(`select * from prescription_chinese_patient where clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	if err1 != nil {
+		fmt.Println("err1 ====== ", err1)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
 	}
 	prescriptionChinesePatients := FormatSQLRowsToMapArray(pcprows)
 
@@ -496,7 +512,9 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 			cd.name,cd.specification`, prescriptionChinesePatientID)
 
 		if err != nil {
+			fmt.Println("err =========", err)
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
 		}
 
 		result := FormatSQLRowsToMapArray(rows)
