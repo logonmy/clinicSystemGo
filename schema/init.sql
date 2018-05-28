@@ -282,10 +282,11 @@ CREATE TABLE clinic_diagnosis_treatment
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   name varchar(20) UNIQUE NOT NULL,--名称
   en_name varchar(20),--英文名称
-  cost integer CHECK(cost > 0), --成本价
-  price integer NOT NULL CHECK(price > 0), --诊疗费金额
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0), --诊疗费金额
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1025,10 +1026,11 @@ CREATE TABLE clinic_examination
   unit_name varchar(20),--单位名称
   organ varchar(100),--检查部位
   remark text,--备注
-  cost integer, --成本价
-  price integer NOT NULL,--销售价
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0),--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
@@ -1095,10 +1097,11 @@ CREATE TABLE clinic_laboratory
   laboratory_sample_dosage varchar(30),--检验物计量
   cuvette_color_name varchar(20),--试管颜色
   merge_flag integer,--合并标记
-  cost integer, --成本价
-  price integer NOT NULL,--销售价
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0),--零售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1215,10 +1218,11 @@ CREATE TABLE clinic_treatment
   idc_code varchar(20),--国际编码
   unit_name varchar(20),--单位名称
   remark text,--备注
-  cost integer CHECK(cost > 0), --成本价
-  price integer NOT NULL CHECK(price > 0), --销售价
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1255,8 +1259,9 @@ CREATE TABLE clinic_material
   specification varchar(30),--规格
   unit_name varchar(20),--单位
   remark text,--备注
-  ret_price integer,--零售价
-  buy_price integer,--成本价
+  ret_price integer NOT NULL CHECK(ret_price >= 0),--零售价
+  buy_price integer CHECK(buy_price >= 0),--成本价
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   is_discount boolean DEFAULT false,--是否允许折扣
   day_warning integer,--效期预警天数
   stock_warning integer,--库存预警数
@@ -1372,10 +1377,11 @@ CREATE TABLE clinic_other_cost
   py_code varchar(50),--拼音码
   unit_name varchar(20),--单位名称
   remark text,--备注
-  cost integer CHECK(cost > 0), --成本价
-  price integer NOT NULL CHECK(price > 0), --销售价
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

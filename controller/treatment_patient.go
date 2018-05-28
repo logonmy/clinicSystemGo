@@ -62,7 +62,6 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		return
 	}
 
-	var mzUnpaidOrdersValues []string
 	mzUnpaidOrdersSets := []string{
 		"clinic_triage_patient_id",
 		"charge_project_type_id",
@@ -77,8 +76,8 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		"fee",
 		"operation_id",
 	}
+	mSetStr := strings.Join(mzUnpaidOrdersSets, ",")
 
-	var treatmentPatientValues []string
 	treatmentPatientSets := []string{
 		"clinic_triage_patient_id",
 		"clinic_treatment_id",
@@ -88,54 +87,9 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		"operation_id",
 		"illustration",
 	}
-	orderSn := FormatPayOrderSn(clinicTriagePatientID, "7")
-
-	for index, v := range results {
-		clinicTreatmentID := v["clinic_treatment_id"]
-		times := v["times"]
-		illustration := v["illustration"]
-		fmt.Println("clinicTreatmentID====", clinicTreatmentID)
-		var st []string
-		var sm []string
-		treatmentSQL := `select id as clinic_treatment_id,price,is_discount,name,unit_name from clinic_treatment where id=$1`
-		trow := model.DB.QueryRowx(treatmentSQL, clinicTreatmentID)
-		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "治疗项错误"})
-			return
-		}
-		clinicTreatment := FormatSQLRowToMap(trow)
-		fmt.Println("====", clinicTreatment)
-		_, ok := clinicTreatment["clinic_treatment_id"]
-		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的治疗项错误"})
-			return
-		}
-		price := clinicTreatment["price"].(int64)
-		name := clinicTreatment["name"].(string)
-		unitName := clinicTreatment["unit_name"].(string)
-		amount, _ := strconv.Atoi(times)
-		total := int(price) * amount
-
-		st = append(st, clinicTriagePatientID, clinicTreatmentID, "'"+orderSn+"'", strconv.Itoa(index), times, personnelID)
-		sm = append(sm, clinicTriagePatientID, "7", clinicTreatmentID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(amount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
-
-		if illustration == "" {
-			st = append(st, `null`)
-		} else {
-			st = append(st, "'"+illustration+"'")
-		}
-
-		tstr := "(" + strings.Join(st, ",") + ")"
-		treatmentPatientValues = append(treatmentPatientValues, tstr)
-		mstr := "(" + strings.Join(sm, ",") + ")"
-		mzUnpaidOrdersValues = append(mzUnpaidOrdersValues, mstr)
-	}
 	tSetStr := strings.Join(treatmentPatientSets, ",")
-	tValueStr := strings.Join(treatmentPatientValues, ",")
 
-	mSetStr := strings.Join(mzUnpaidOrdersSets, ",")
-	mvValueStr := strings.Join(mzUnpaidOrdersValues, ",")
-
+	orderSn := FormatPayOrderSn(clinicTriagePatientID, "7")
 	tx, errb := model.DB.Begin()
 	if errb != nil {
 		fmt.Println("errb ===", errb)
@@ -159,27 +113,72 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		return
 	}
 
-	inserttSQL := "insert into treatment_patient (" + tSetStr + ") values " + tValueStr
-	fmt.Println("inserttSQL===", inserttSQL)
+	for index, v := range results {
+		clinicTreatmentID := v["clinic_treatment_id"]
+		times := v["times"]
+		illustration := v["illustration"]
+		fmt.Println("clinicTreatmentID====", clinicTreatmentID)
 
-	_, errt := tx.Exec(inserttSQL)
-	if errt != nil {
-		fmt.Println("errt ===", errt)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
-		return
+		treatmentSQL := `select id as clinic_treatment_id,price,is_discount,name,unit_name from clinic_treatment where id=$1`
+		trow := model.DB.QueryRowx(treatmentSQL, clinicTreatmentID)
+		if trow == nil {
+			ctx.JSON(iris.Map{"code": "1", "msg": "治疗项错误"})
+			return
+		}
+		clinicTreatment := FormatSQLRowToMap(trow)
+		fmt.Println("====", clinicTreatment)
+		_, ok := clinicTreatment["clinic_treatment_id"]
+		if !ok {
+			ctx.JSON(iris.Map{"code": "1", "msg": "选择的治疗项错误"})
+			return
+		}
+		price := clinicTreatment["price"].(int64)
+		name := clinicTreatment["name"].(string)
+		unitName := clinicTreatment["unit_name"].(string)
+		amount, _ := strconv.Atoi(times)
+		total := int(price) * amount
+
+		inserttSQL := "insert into treatment_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
+
+		_, errt := tx.Exec(inserttSQL,
+			ToNullInt64(clinicTriagePatientID),
+			ToNullInt64(clinicTreatmentID),
+			ToNullString(orderSn),
+			ToNullInt64(strconv.Itoa(index)),
+			ToNullInt64(times),
+			ToNullInt64(personnelID),
+			ToNullString(illustration),
+		)
+		if errt != nil {
+			fmt.Println("errt ===", errt)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			return
+		}
+
+		insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"
+
+		_, errm := tx.Exec(insertmSQL,
+			ToNullInt64(clinicTriagePatientID),
+			"7",
+			ToNullInt64(clinicTreatmentID),
+			ToNullString(orderSn),
+			ToNullInt64(strconv.Itoa(index)),
+			ToNullString(name),
+			ToNullInt64(strconv.FormatInt(price, 10)),
+			ToNullString(unitName),
+			ToNullInt64(strconv.Itoa(total)),
+			ToNullInt64(strconv.Itoa(total)),
+			ToNullInt64(personnelID),
+		)
+		if errm != nil {
+			fmt.Println("errm ===", errm)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+			return
+		}
 	}
 
-	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values " + mvValueStr
-	fmt.Println("insertmSQL===", insertmSQL)
-
-	_, errm := tx.Exec(insertmSQL)
-	if errm != nil {
-		fmt.Println("errm ===", errm)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
-		return
-	}
 	errc := tx.Commit()
 	if errc != nil {
 		tx.Rollback()
