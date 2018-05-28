@@ -172,7 +172,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 				total,
 				discount,
 				fee,
-				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 			_, errm := tx.Exec(insertmSQL,
 				clinicTriagePatientID,
@@ -413,7 +413,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 				total,
 				discount,
 				fee,
-				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`
+				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 			_, errm := tx.Exec(insertmSQL,
 				clinicTriagePatientID,
@@ -488,9 +488,11 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 		return
 	}
 
-	pcprows, err1 := model.DB.Queryx(`select * prescription_chinese_patient where clinic_triage_patient_id = $1`, clinicTriagePatientID)
+	pcprows, err1 := model.DB.Queryx(`select * from prescription_chinese_patient where clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	if err1 != nil {
+		fmt.Println("err1 ====== ", err1)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
 	}
 	prescriptionChinesePatients := FormatSQLRowsToMapArray(pcprows)
 
@@ -510,7 +512,9 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 			cd.name,cd.specification`, prescriptionChinesePatientID)
 
 		if err != nil {
+			fmt.Println("err =========", err)
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
 		}
 
 		result := FormatSQLRowsToMapArray(rows)
