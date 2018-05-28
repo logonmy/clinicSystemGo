@@ -73,6 +73,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		"amount",
 		"unit",
 		"total",
+		"discount",
 		"fee",
 		"operation_id",
 	}
@@ -119,7 +120,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		illustration := v["illustration"]
 		fmt.Println("clinicTreatmentID====", clinicTreatmentID)
 
-		treatmentSQL := `select id as clinic_treatment_id,price,is_discount,name,unit_name from clinic_treatment where id=$1`
+		treatmentSQL := `select id as clinic_treatment_id,price,discount_price,is_discount,name,unit_name from clinic_treatment where id=$1`
 		trow := model.DB.QueryRowx(treatmentSQL, clinicTreatmentID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "1", "msg": "治疗项错误"})
@@ -132,11 +133,19 @@ func TreatmentPatientCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1", "msg": "选择的治疗项错误"})
 			return
 		}
+		isDiscount := clinicTreatment["is_discount"].(bool)
 		price := clinicTreatment["price"].(int64)
+		discountPrice := clinicTreatment["discount_price"].(int64)
 		name := clinicTreatment["name"].(string)
 		unitName := clinicTreatment["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
+		discount := int(discountPrice) * amount
+		fee := total
+		if isDiscount {
+			discount = int(discountPrice) * amount
+			fee = total - discount
+		}
 
 		inserttSQL := "insert into treatment_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
 
@@ -156,20 +165,22 @@ func TreatmentPatientCreate(ctx iris.Context) {
 			return
 		}
 
-		insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"
+		insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 
 		_, errm := tx.Exec(insertmSQL,
 			ToNullInt64(clinicTriagePatientID),
 			"7",
 			ToNullInt64(clinicTreatmentID),
 			ToNullString(orderSn),
-			ToNullInt64(strconv.Itoa(index)),
+			index,
 			ToNullString(name),
-			ToNullInt64(strconv.FormatInt(price, 10)),
+			price,
+			amount,
 			ToNullString(unitName),
-			ToNullInt64(strconv.Itoa(total)),
-			ToNullInt64(strconv.Itoa(total)),
-			ToNullInt64(personnelID),
+			total,
+			discount,
+			fee,
+			personnelID,
 		)
 		if errm != nil {
 			fmt.Println("errm ===", errm)
