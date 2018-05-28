@@ -1042,7 +1042,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 		return
 	}
 
-	sql := "update material_outstock set stock_amount=$1, updated_time=LOCALTIMESTAMP where id=$2"
+	sql := "update material_stock set stock_amount=$1, updated_time=LOCALTIMESTAMP where id=$2"
 	for _, v := range outstockRecordItems {
 		materialStockID := v["material_stock_id"].(int64)
 		outstockAmount := v["outstock_amount"].(int64)
@@ -1182,7 +1182,7 @@ func MaterialStockList(ctx iris.Context) {
 	selectSQL := `select 
 		cm.name,
 		cm.specification,
-		cm.packing_unit_name,
+		cm.unit_name,
 		cm.manu_factory_name,
 		ms.supplier_name,
 		cm.ret_price,
