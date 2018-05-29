@@ -107,8 +107,8 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		amount,
 		unit,
 		total,
-		discount,
 		fee,
+		discount,
 		operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 	for index, v := range results {
