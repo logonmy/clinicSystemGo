@@ -32,7 +32,7 @@ func OnCreditRepay(ctx iris.Context) {
 	record := FormatSQLRowToMap(row)
 
 	if record["id"] == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "未找到指定的挂费记录"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "未找到指定的挂费记录"})
 		return
 	}
 

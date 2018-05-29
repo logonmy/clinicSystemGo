@@ -282,10 +282,11 @@ CREATE TABLE clinic_diagnosis_treatment
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   name varchar(20) UNIQUE NOT NULL,--名称
   en_name varchar(20),--英文名称
-  cost integer CHECK(cost > 0), --成本价
-  price integer NOT NULL CHECK(price > 0), --诊疗费金额
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0), --诊疗费金额
   status boolean NOT NULL DEFAULT true,--是否启用
-  is_discount boolean DEFAULT false,--是否允许折扣
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -509,7 +510,7 @@ CREATE TABLE admin
 );
 
 --一级菜单功能项
-CREATE TABLE parent_functionMenu
+CREATE TABLE parent_function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
   url varchar(20) NOT NULL,--功能路由
@@ -522,10 +523,10 @@ CREATE TABLE parent_functionMenu
 );
 
 --二级菜单功能项
-CREATE TABLE children_functionMenu
+CREATE TABLE children_function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
-  parent_functionMenu_id INTEGER references parent_functionMenu(id),--上级菜单id
+  parent_function_menu_id INTEGER references parent_function_menu(id),--上级菜单id
   url varchar(20) NOT NULL,--功能路由
   name varchar(20),--菜单名
   status boolean NOT NULL DEFAULT true,--是否启用
@@ -535,39 +536,42 @@ CREATE TABLE children_functionMenu
 );
 
 --诊所菜单项
-CREATE TABLE clinic_children_functionMenu
+CREATE TABLE clinic_children_function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
-  children_functionMenu_id INTEGER NOT NULL references children_functionMenu(id),--菜单id
+  children_function_menu_id INTEGER NOT NULL references children_function_menu(id),--菜单id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (children_functionMenu_id, clinic_id)
+  status boolean NOT NULL DEFAULT true,--是否启用
+  UNIQUE (children_function_menu_id, clinic_id)
 );
 
 --诊所角色菜单项
-CREATE TABLE role_clinic_functionMenu
+CREATE TABLE role_clinic_function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
-  clinic_children_functionMenu_id INTEGER NOT NULL references clinic_children_functionMenu(id),--诊所菜单id
+  clinic_children_function_menu_id INTEGER NOT NULL references clinic_children_function_menu(id),--诊所菜单id
   role_id integer NOT NULL references role(id),--所属角色
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_children_functionMenu_id, role_id)
+  status boolean NOT NULL DEFAULT true,--是否启用
+  UNIQUE (clinic_children_function_menu_id, role_id)
 );
 
 --平台管理员菜单项
-CREATE TABLE admin_functionMenu
+CREATE TABLE admin_function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
-  children_functionMenu_id INTEGER NOT NULL references children_functionMenu(id),--平台菜单id
+  children_function_menu_id INTEGER NOT NULL references children_function_menu(id),--平台菜单id
   admin_id integer NOT NULL references admin(id),--所属平台管理员
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (children_functionMenu_id, admin_id)
+  status boolean NOT NULL DEFAULT true,--是否启用
+  UNIQUE (children_function_menu_id, admin_id)
 );
 
 --用药频率
@@ -822,13 +826,14 @@ CREATE TABLE clinic_drug
   preparation_count integer,--制剂数量/包装量
   preparation_count_unit_name varchar(10),--制剂数量单位
   packing_unit_name varchar(10),--药品包装单位
-  ret_price integer,--零售价
+  ret_price integer NOT NULL CHECK(ret_price >= 0),--零售价
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   buy_price integer,--成本价
   mini_dose integer,--最小剂量
-  is_discount boolean DEFAULT false,--是否允许折扣
-  is_bulk_sales boolean DEFAULT false,--是否允许拆零销售
+  is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  is_bulk_sales boolean NOT NULL DEFAULT false,--是否允许拆零销售
   bulk_sales_price integer,--拆零售价/最小剂量售价
-  fetch_address integer DEFAULT 0,--取药地点 0 本诊所，1外购 2， 代购
+  fetch_address integer NOT NULL DEFAULT 0,--取药地点 0 本诊所，1外购 2， 代购
   once_dose integer,--常用剂量
   once_dose_unit_name varchar(10),--用量单位 常用剂量单位
   route_administration_name varchar(50),--用药途径id/默认用法
@@ -1025,10 +1030,11 @@ CREATE TABLE clinic_examination
   unit_name varchar(20),--单位名称
   organ varchar(100),--检查部位
   remark text,--备注
-  cost integer, --成本价
-  price integer NOT NULL,--销售价
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0),--销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
@@ -1095,10 +1101,11 @@ CREATE TABLE clinic_laboratory
   laboratory_sample_dosage varchar(30),--检验物计量
   cuvette_color_name varchar(20),--试管颜色
   merge_flag integer,--合并标记
-  cost integer, --成本价
-  price integer NOT NULL,--销售价
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0),--零售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   is_delivery boolean NOT NULL DEFAULT false,--是否允许外送
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1215,10 +1222,11 @@ CREATE TABLE clinic_treatment
   idc_code varchar(20),--国际编码
   unit_name varchar(20),--单位名称
   remark text,--备注
-  cost integer CHECK(cost > 0), --成本价
-  price integer NOT NULL CHECK(price > 0), --销售价
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1255,8 +1263,9 @@ CREATE TABLE clinic_material
   specification varchar(30),--规格
   unit_name varchar(20),--单位
   remark text,--备注
-  ret_price integer,--零售价
-  buy_price integer,--成本价
+  ret_price integer NOT NULL CHECK(ret_price >= 0),--零售价
+  buy_price integer CHECK(buy_price >= 0),--成本价
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   is_discount boolean DEFAULT false,--是否允许折扣
   day_warning integer,--效期预警天数
   stock_warning integer,--库存预警数
@@ -1372,10 +1381,11 @@ CREATE TABLE clinic_other_cost
   py_code varchar(50),--拼音码
   unit_name varchar(20),--单位名称
   remark text,--备注
-  cost integer CHECK(cost > 0), --成本价
-  price integer NOT NULL CHECK(price > 0), --销售价
+  cost integer CHECK(cost >= 0), --成本价
+  price integer NOT NULL CHECK(price >= 0), --销售价
   status boolean NOT NULL DEFAULT true,--是否启用
   is_discount boolean NOT NULL DEFAULT false,--是否允许折扣
+  discount_price integer NOT NULL DEFAULT 0 CHECK(discount_price >= 0),--折扣金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1638,6 +1648,7 @@ CREATE TABLE examination_patient_model_item
   examination_patient_model_id INTEGER NOT NULL references examination_patient_model(id),--检验模板id
   clinic_examination_id INTEGER NOT NULL references clinic_examination(id),--检查项目id
   times INTEGER NOT NULL CHECK(times > 0),--次数
+  organ varchar(100),--检查部位
   illustration text,--说明
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

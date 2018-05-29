@@ -28,32 +28,32 @@ func MaterialCreate(ctx iris.Context) {
 	stockWarning := ctx.PostValue("stock_warning")
 
 	if clinicID == "" || name == "" || retPrice == "" || unitName == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	if manuFactoryName != "" {
 		lrow := model.DB.QueryRowx("select id from clinic_material where name=$1 and manu_factory_name=$2 and clinic_id=$3 limit 1", name, manuFactoryName, clinicID)
 		if lrow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 			return
 		}
 		materialProject := FormatSQLRowToMap(lrow)
 		_, lok := materialProject["id"]
 		if lok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "该材料已存在"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "该材料已存在"})
 			return
 		}
 	}
@@ -129,26 +129,26 @@ func MaterialUpdate(ctx iris.Context) {
 
 	crow := model.DB.QueryRowx("select id,clinic_id from clinic_material where id=$1 limit 1", clinicMaterialID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicMaterial := FormatSQLRowToMap(crow)
 	_, rok := clinicMaterial["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所材料项目数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所材料项目数据错误"})
 		return
 	}
 	clinicID := clinicMaterial["clinic_id"]
 
 	lrow := model.DB.QueryRowx("select id from clinic_material where name=$1 and id!=$2 and manu_factory_name=$3 and clinic_id=$4 limit 1", name, clinicMaterialID, manuFactoryName, clinicID)
 	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicMaterialu := FormatSQLRowToMap(lrow)
 	_, lok := clinicMaterialu["id"]
 	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "材料项目名称已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "材料项目名称已存在"})
 		return
 	}
 
@@ -207,25 +207,25 @@ func MaterialOnOff(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	crow := model.DB.QueryRowx("select id from clinic_material where id=$1 limit 1", clinicMaterialID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicMaterialProject := FormatSQLRowToMap(crow)
 	_, rok := clinicMaterialProject["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
@@ -271,35 +271,35 @@ func MaterialList(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "所在诊所不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "所在诊所不存在"})
 		return
 	}
 
 	countSQL := `select count(id) as total from clinic_material where clinic_id=:clinic_id`
-	selectSQL := `select cm.id as clinic_material_id,cm.name,cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
-		cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning,sum(ms.stock_amount) as stock_amount
+	selectSQL := `select cm.id as clinic_material_id,cm.name, cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
+		cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.discount_price,cm.stock_warning,sum(ms.stock_amount) as stock_amount
 		from clinic_material cm
 		left join material_stock ms on ms.clinic_material_id = cm.id
 		where cm.clinic_id=:clinic_id`
 
 	if keyword != "" {
-		countSQL += " and cm.name ~:keyword"
-		selectSQL += " and cm.name ~':keyword"
+		countSQL += " and name ~:keyword"
+		selectSQL += " and cm.name ~:keyword"
 	}
 	if status != "" {
-		countSQL += " and cm.status=:status"
+		countSQL += " and status=:status"
 		selectSQL += " and cm.status=:status"
 	}
 
 	selectSQL += ` group by cm.id,cm.name,cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
-	cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.stock_warning`
+	cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.discount_price,cm.day_warning,cm.stock_warning`
 
 	var queryOption = map[string]interface{}{
 		"clinic_id": ToNullInt64(clinicID),
@@ -346,9 +346,8 @@ func MaterialDetail(ctx iris.Context) {
 
 	fmt.Println("selectSQL===", selectSQL)
 
-	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL, clinicMaterialID)
-	results = FormatSQLRowsToMapArray(rows)
+	rows := model.DB.QueryRowx(selectSQL, clinicMaterialID)
+	results := FormatSQLRowToMap(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }

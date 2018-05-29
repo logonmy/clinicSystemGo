@@ -23,31 +23,31 @@ func OtherCostCreate(ctx iris.Context) {
 	isDiscount := ctx.PostValue("is_discount")
 
 	if clinicID == "" || name == "" || price == "" || unitName == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	lrow := model.DB.QueryRowx("select id from clinic_other_cost where name=$1 and clinic_id=$2 limit 1", name, clinicID)
 	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	otherCost := FormatSQLRowToMap(lrow)
 	_, lok := otherCost["id"]
 	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "其它费用名称已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "其它费用名称已存在"})
 		return
 	}
 
@@ -106,26 +106,26 @@ func OtherCostUpdate(ctx iris.Context) {
 
 	crow := model.DB.QueryRowx("select id,clinic_id from clinic_other_cost where id=$1 limit 1", clinicOtherCostID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicOtherCost := FormatSQLRowToMap(crow)
 	_, rok := clinicOtherCost["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所其它费用项目数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所其它费用项目数据错误"})
 		return
 	}
 	clinicID := clinicOtherCost["clinic_id"]
 
 	lrow := model.DB.QueryRowx("select id from clinic_other_cost where name=$1 and id!=$2 and clinic_id=$3 limit 1", name, clinicOtherCostID, clinicID)
 	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicOtherCostu := FormatSQLRowToMap(lrow)
 	_, lok := clinicOtherCostu["id"]
 	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "其它费用项目名称已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "其它费用项目名称已存在"})
 		return
 	}
 
@@ -174,30 +174,30 @@ func OtherCostOnOff(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	crow := model.DB.QueryRowx("select id,clinic_id from clinic_other_cost where id=$1 limit 1", clinicOtherCostID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicOtherCostProject := FormatSQLRowToMap(crow)
 	_, rok := clinicOtherCostProject["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	if clinicID != strconv.FormatInt(clinicOtherCostProject["clinic_id"].(int64), 10) {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据不匹配"})
 		return
 	}
 	_, err1 := model.DB.Exec("update clinic_other_cost set status=$1 where id=$2", status, clinicOtherCostID)
@@ -242,20 +242,20 @@ func OtherCostList(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "所在诊所不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "所在诊所不存在"})
 		return
 	}
 
 	countSQL := `select count(id) as total from clinic_other_cost where clinic_id=:clinic_id`
 	selectSQL := `select id as clinic_other_cost_id,name,py_code,remark,
-		en_name,is_discount,price,status,cost,unit_name
+		en_name,is_discount,price,status,cost,unit_name,discount_price
 		from clinic_other_cost coc
 		where clinic_id=:clinic_id`
 
@@ -306,16 +306,14 @@ func OtherCostDetail(ctx iris.Context) {
 	}
 
 	selectSQL := `select id as clinic_other_cost_id,name,py_code,remark,
-		en_name,is_discount,price,status,cost,unit_name
-		from clinic_other_cost coc
-		left join other_cost oc on other_cost_id = id
+		en_name,is_discount,price,status,cost,unit_name,discount_price
+		from clinic_other_cost
 		where id=$1`
 
 	fmt.Println("selectSQL===", selectSQL)
 
-	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL, clinicOtherCostID)
-	results = FormatSQLRowsToMapArray(rows)
+	rows := model.DB.QueryRowx(selectSQL, clinicOtherCostID)
+	results := FormatSQLRowToMap(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }

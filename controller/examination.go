@@ -25,31 +25,31 @@ func ExaminationCreate(ctx iris.Context) {
 	isDiscount := ctx.PostValue("is_discount")
 
 	if clinicID == "" || name == "" || price == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	cerow := model.DB.QueryRowx("select id from clinic_examination where clinic_id=$1 and name=$2 limit 1", clinicID, name)
 	if cerow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	clinicExamination := FormatSQLRowToMap(cerow)
 	_, lok := clinicExamination["id"]
 	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "检查医嘱名称在该诊所已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "检查医嘱名称在该诊所已存在"})
 		return
 	}
 
@@ -116,26 +116,26 @@ func ExaminationUpdate(ctx iris.Context) {
 
 	crow := model.DB.QueryRowx("select id,clinic_id from clinic_examination where id=$1 limit 1", clinicExaminationID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicExamination := FormatSQLRowToMap(crow)
 	_, rok := clinicExamination["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所检查医嘱数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所检查医嘱数据错误"})
 		return
 	}
 	clinicID := clinicExamination["clinic_id"]
 
 	lrow := model.DB.QueryRowx("select id from clinic_examination where name=$1 and id!=$2 and clinic_id=$3 limit 1", name, clinicExaminationID, clinicID)
 	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicExaminationu := FormatSQLRowToMap(lrow)
 	_, lok := clinicExaminationu["id"]
 	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "检查医嘱名称已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "检查医嘱名称已存在"})
 		return
 	}
 
@@ -188,30 +188,30 @@ func ExaminationOnOff(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	crow := model.DB.QueryRowx("select id,clinic_id from clinic_examination where id=$1 limit 1", clinicExaminationID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicExamination := FormatSQLRowToMap(crow)
 	_, rok := clinicExamination["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	if clinicID != strconv.FormatInt(clinicExamination["clinic_id"].(int64), 10) {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据不匹配"})
 		return
 	}
 	_, err1 := model.DB.Exec("update clinic_examination set status=$1 where id=$2", status, clinicExaminationID)
@@ -256,14 +256,14 @@ func ExaminationList(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "所在诊所不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "所在诊所不存在"})
 		return
 	}
 
@@ -322,9 +322,8 @@ func ExaminationDetail(ctx iris.Context) {
 
 	fmt.Println("selectSQL===", selectSQL)
 
-	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL, clinicExaminationID)
-	results = FormatSQLRowsToMapArray(rows)
+	rows := model.DB.QueryRowx(selectSQL, clinicExaminationID)
+	results := FormatSQLRowToMap(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }

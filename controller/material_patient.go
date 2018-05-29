@@ -17,7 +17,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 	items := ctx.PostValue("items")
 
 	if clinicTriagePatientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	if items == "" {
@@ -34,13 +34,13 @@ func MaterialPatientCreate(ctx iris.Context) {
 	}
 	row := model.DB.QueryRowx(`select id,status from clinic_triage_patient where id=$1 limit 1`, clinicTriagePatientID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "保存检查失败,分诊记录错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存检查失败,分诊记录错误"})
 		return
 	}
 
 	prow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", personnelID)
 	if prow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "保存检查失败,操作员错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存检查失败,操作员错误"})
 		return
 	}
 	clinicTriagePatient := FormatSQLRowToMap(row)
@@ -48,21 +48,20 @@ func MaterialPatientCreate(ctx iris.Context) {
 
 	_, ok := clinicTriagePatient["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "分诊记录不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录不存在"})
 		return
 	}
 	status := clinicTriagePatient["status"]
 	if status.(int64) != 30 {
-		ctx.JSON(iris.Map{"code": "1", "msg": "分诊记录当前状态错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录当前状态错误"})
 		return
 	}
 	_, pok := personnel["id"]
 	if !pok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "操作员错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "操作员错误"})
 		return
 	}
 
-	var mzUnpaidOrdersValues []string
 	mzUnpaidOrdersSets := []string{
 		"clinic_triage_patient_id",
 		"charge_project_type_id",
@@ -74,11 +73,11 @@ func MaterialPatientCreate(ctx iris.Context) {
 		"amount",
 		"unit",
 		"total",
+		"discount",
 		"fee",
 		"operation_id",
 	}
 
-	var clinicMaterialValues []string
 	clinicMaterialSets := []string{
 		"clinic_triage_patient_id",
 		"clinic_material_id",
@@ -91,94 +90,105 @@ func MaterialPatientCreate(ctx iris.Context) {
 
 	orderSn := FormatPayOrderSn(clinicTriagePatientID, "5")
 
-	for index, v := range results {
-		clinicMaterialID := v["clinic_material_id"]
-		times := v["amount"]
-		illustration := v["illustration"]
-		fmt.Println("clinicMaterialID====", clinicMaterialID)
-		var sl []string
-		var sm []string
-		clinicMaterialSQL := `select id as clinic_material_id,price,is_discount,name,dose_unit_name from clinic_material where id=$1`
-		trow := model.DB.QueryRowx(clinicMaterialSQL, clinicMaterialID)
-		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "材料费项错误"})
-			return
-		}
-		clinicMaterial := FormatSQLRowToMap(trow)
-		fmt.Println("====", clinicMaterial)
-		_, ok := clinicMaterial["clinic_material_id"]
-		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的材料费项错误"})
-			return
-		}
-		price := clinicMaterial["price"].(int64)
-		name := clinicMaterial["name"].(string)
-		unitName := clinicMaterial["dose_unit_name"].(string)
-		amount, _ := strconv.Atoi(times)
-		total := int(price) * amount
-
-		sl = append(sl, clinicTriagePatientID, clinicMaterialID, "'"+orderSn+"'", strconv.Itoa(index), times, personnelID)
-		sm = append(sm, clinicTriagePatientID, "5", clinicMaterialID, "'"+orderSn+"'", strconv.Itoa(index), "'"+name+"'", strconv.FormatInt(price, 10), strconv.Itoa(amount), "'"+unitName+"'", strconv.Itoa(total), strconv.Itoa(total), personnelID)
-
-		if illustration == "" {
-			sl = append(sl, `null`)
-		} else {
-			sl = append(sl, "'"+illustration+"'")
-		}
-
-		tstr := "(" + strings.Join(sl, ",") + ")"
-		clinicMaterialValues = append(clinicMaterialValues, tstr)
-		mstr := "(" + strings.Join(sm, ",") + ")"
-		mzUnpaidOrdersValues = append(mzUnpaidOrdersValues, mstr)
-	}
 	tSetStr := strings.Join(clinicMaterialSets, ",")
-	tValueStr := strings.Join(clinicMaterialValues, ",")
-
 	mSetStr := strings.Join(mzUnpaidOrdersSets, ",")
-	mvValueStr := strings.Join(mzUnpaidOrdersValues, ",")
 
 	tx, errb := model.DB.Begin()
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 	_, errdlp := tx.Exec("delete from material_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
 	if errdlp != nil {
 		fmt.Println("errdlp ===", errdlp)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errdlp.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
 		return
 	}
 	_, errdm := tx.Exec("delete from mz_unpaid_orders where clinic_triage_patient_id=$1 and charge_project_type_id=5", clinicTriagePatientID)
 	if errdm != nil {
 		fmt.Println("errdm ===", errdm)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errdm.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
 		return
 	}
+	inserttSQL := "insert into material_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
+	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 
-	inserttSQL := "insert into material_patient (" + tSetStr + ") values " + tValueStr
-	fmt.Println("inserttSQL===", inserttSQL)
+	for index, v := range results {
+		clinicMaterialID := v["clinic_material_id"]
+		times := v["amount"]
+		illustration := v["illustration"]
+		fmt.Println("clinicMaterialID====", clinicMaterialID)
 
-	_, errt := tx.Exec(inserttSQL)
-	if errt != nil {
-		fmt.Println("errt ===", errt)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
-		return
+		clinicMaterialSQL := `select id as clinic_material_id,ret_price,discount_price,is_discount,name,unit_name from clinic_material where id=$1`
+		trow := model.DB.QueryRowx(clinicMaterialSQL, clinicMaterialID)
+		if trow == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "材料费项错误"})
+			return
+		}
+		clinicMaterial := FormatSQLRowToMap(trow)
+		fmt.Println("====", clinicMaterial)
+		_, ok := clinicMaterial["clinic_material_id"]
+		if !ok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的材料费项错误"})
+			return
+		}
+		isDiscount := clinicMaterial["is_discount"].(bool)
+		price := clinicMaterial["ret_price"].(int64)
+		discountPrice := clinicMaterial["discount_price"].(int64)
+		name := clinicMaterial["name"].(string)
+		unitName := clinicMaterial["unit_name"].(string)
+		amount, _ := strconv.Atoi(times)
+		total := int(price) * amount
+		discount := 0
+		fee := total
+		if isDiscount {
+			discount = int(discountPrice) * amount
+			fee = total - discount
+		}
+
+		_, errt := tx.Exec(inserttSQL,
+			ToNullInt64(clinicTriagePatientID),
+			ToNullInt64(clinicMaterialID),
+			ToNullString(orderSn),
+			index,
+			ToNullInt64(times),
+			ToNullInt64(personnelID),
+			ToNullString(illustration),
+		)
+		if errt != nil {
+			fmt.Println("errt ===", errt)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
+			return
+		}
+
+		_, errm := tx.Exec(insertmSQL,
+			ToNullInt64(clinicTriagePatientID),
+			5,
+			ToNullInt64(clinicMaterialID),
+			ToNullString(orderSn),
+			index,
+			ToNullString(name),
+			price,
+			amount,
+			ToNullString(unitName),
+			total,
+			discount,
+			fee,
+			personnelID,
+		)
+		if errm != nil {
+			fmt.Println("errm ===", errm)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
+			return
+		}
 	}
 
-	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values " + mvValueStr
-	fmt.Println("insertmSQL===", insertmSQL)
-	_, errm := tx.Exec(insertmSQL)
-	if errm != nil {
-		fmt.Println("errm ===", errm)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
-		return
-	}
 	errc := tx.Commit()
 	if errc != nil {
 		tx.Rollback()
@@ -193,12 +203,13 @@ func MaterialPatientCreate(ctx iris.Context) {
 func MaterialPatientGet(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	if clinicTriagePatientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name, cm.stock_amount from material_patient mp 
+	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name,ms.stock_amount from material_patient mp 
 		left join clinic_material cm on mp.clinic_material_id = cm.id 
+		left join material_stock ms on cm.id = ms.clinic_material_id
 		where mp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

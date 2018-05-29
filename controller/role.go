@@ -22,13 +22,13 @@ func RoleCreate(ctx iris.Context) {
 	var roleID string
 	row := model.DB.QueryRowx("select id from role name=$1 and clinic_id=$2 limit 1", name, clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	role := FormatSQLRowToMap(row)
 	_, ok := role["id"]
 	if ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "权限组名称已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "权限组名称已存在"})
 		return
 	}
 	tx, err := model.DB.Begin()
@@ -56,13 +56,13 @@ func RoleCreate(ctx iris.Context) {
 			clinicChildrenFunctionMenuID := v["functionMenu_id"]
 			crow := model.DB.QueryRowx("select id from clinic_children_functionMenu where id=$1 limit 1", clinicChildrenFunctionMenuID)
 			if crow == nil {
-				ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
 			}
 			clinicChildrenFunctionMenu := FormatSQLRowToMap(crow)
 			_, cok := clinicChildrenFunctionMenu["id"]
 			if !cok {
-				ctx.JSON(iris.Map{"code": "1", "msg": "诊所菜单项不存在"})
+				ctx.JSON(iris.Map{"code": "-1", "msg": "诊所菜单项不存在"})
 				return
 			}
 
@@ -70,7 +70,7 @@ func RoleCreate(ctx iris.Context) {
 			_, err = tx.Exec(sql, ToNullInt64(clinicChildrenFunctionMenuID), ToNullInt64(roleID))
 			if err != nil {
 				tx.Rollback()
-				ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 				return
 			}
 		}
@@ -95,25 +95,25 @@ func RoleUpdate(ctx iris.Context) {
 	}
 	row := model.DB.QueryRowx("select id from role where id=$1 limit 1", roleID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	role := FormatSQLRowToMap(row)
 	_, ok := role["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改的权限组不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改的权限组不存在"})
 		return
 	}
 
 	rrow := model.DB.QueryRowx("select id from role where name=$1 and id !=$2 limit 1", name, roleID)
 	if rrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	rrole := FormatSQLRowToMap(rrow)
 	_, rok := rrole["id"]
 	if rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "权限组名称已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "权限组名称已存在"})
 		return
 	}
 
@@ -142,7 +142,7 @@ func RoleUpdate(ctx iris.Context) {
 		_, errtx := tx.Exec(sql1)
 		if errtx != nil {
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": errtx.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": errtx.Error()})
 			return
 		}
 
@@ -150,13 +150,13 @@ func RoleUpdate(ctx iris.Context) {
 			clinicChildrenFunctionMenuID := v["functionMenu_id"]
 			crow := model.DB.QueryRowx("select id from clinic_children_functionMenu where id=$1 limit 1", clinicChildrenFunctionMenuID)
 			if crow == nil {
-				ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
 			}
 			clinicChildrenFunctionMenu := FormatSQLRowToMap(crow)
 			_, cok := clinicChildrenFunctionMenu["id"]
 			if !cok {
-				ctx.JSON(iris.Map{"code": "1", "msg": "诊所菜单项不存在"})
+				ctx.JSON(iris.Map{"code": "-1", "msg": "诊所菜单项不存在"})
 				return
 			}
 
@@ -164,7 +164,7 @@ func RoleUpdate(ctx iris.Context) {
 			_, err = tx.Exec(sql, ToNullInt64(clinicChildrenFunctionMenuID), ToNullInt64(roleID))
 			if err != nil {
 				tx.Rollback()
-				ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 				return
 			}
 		}
@@ -281,13 +281,13 @@ func RoleAllocation(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from role where id=$1 limit 1", roleID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "分配失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分配失败"})
 		return
 	}
 	role := FormatSQLRowToMap(row)
 	_, ok := role["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "权限组不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "权限组不存在"})
 		return
 	}
 
@@ -310,19 +310,19 @@ func RoleAllocation(ctx iris.Context) {
 		personnelID := personnel["personnel_id"]
 		prow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", personnelID)
 		if prow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "分配失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "分配失败"})
 			return
 		}
 		personneli := FormatSQLRowToMap(prow)
 		_, pok := personneli["id"]
 		if !pok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "所选用户不存在"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "所选用户不存在"})
 			return
 		}
 
 		prrow := model.DB.QueryRowx("select personnel_id from personnel_role where personnel_id=$1 and role_id=$2 limit 1", personnelID, roleID)
 		if prrow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "分配失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "分配失败"})
 			return
 		}
 		personnelRole := FormatSQLRowToMap(prrow)

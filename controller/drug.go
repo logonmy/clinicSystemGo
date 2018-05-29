@@ -64,7 +64,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 		return
 	}
 
-	if fetchAddress != "0" && fetchAddress != "1" && fetchAddress != "2" {
+	if fetchAddress != "0" && fetchAddress != "-1" && fetchAddress != "2" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "取药地点必须为 0， 1， 2"})
 		return
 	}
@@ -203,7 +203,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 		return
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": "1"})
+	ctx.JSON(iris.Map{"code": "200", "data": "-1"})
 }
 
 //ClinicDrugList 药品列表
@@ -241,6 +241,7 @@ func ClinicDrugList(ctx iris.Context) {
 	countSQL := `select count(*) as total from clinic_drug cd where clinic_id=:clinic_id`
 	selectSQL := `select 
 		cd.id as clinic_drug_id,
+		cd.type,
 		cd.manu_factory_name,
 		cd.name as drug_name,
 		cd.specification,
@@ -254,7 +255,8 @@ func ClinicDrugList(ctx iris.Context) {
 		cd.once_dose,
 		cd.once_dose_unit_name, 
 		cd.route_administration_name, 
-		cd.frequency_name, 
+		cd.frequency_name,
+		cd.fetch_address,
 		cd.clinic_id,
 		sum(ds.stock_amount) as stock_amount
 		from clinic_drug cd
@@ -283,6 +285,7 @@ func ClinicDrugList(ctx iris.Context) {
 
 	selectSQL += ` group by 
 		cd.id,
+		cd.type,
 		cd.manu_factory_name,
 		cd.name,
 		cd.specification,
@@ -297,6 +300,7 @@ func ClinicDrugList(ctx iris.Context) {
 		cd.once_dose_unit_name, 
 		cd.route_administration_name, 
 		cd.frequency_name, 
+		cd.fetch_address,
 		cd.clinic_id `
 
 	var queryOption = map[string]interface{}{
@@ -377,33 +381,33 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		return
 	}
 
-	if fetchAddress != "0" && fetchAddress != "1" && fetchAddress != "2" {
+	if fetchAddress != "0" && fetchAddress != "-1" && fetchAddress != "2" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "取药地点必须为 0， 1， 2"})
 		return
 	}
 
 	crow := model.DB.QueryRowx("select id,clinic_id from clinic_drug where id=$1 limit 1", clinicDrugID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicDrug := FormatSQLRowToMap(crow)
 	_, rok := clinicDrug["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所材料项目数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所材料项目数据错误"})
 		return
 	}
 	clinicID := clinicDrug["clinic_id"]
 
 	lrow := model.DB.QueryRowx("select id from clinic_drug where name=$1 and id!=$2 and manu_factory_name=$3 and clinic_id=$4 and specification=$5 limit 1", name, clinicDrugID, manuFactoryName, clinicID, specification)
 	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicDrugu := FormatSQLRowToMap(lrow)
 	_, lok := clinicDrugu["id"]
 	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "改药品已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "改药品已存在"})
 		return
 	}
 
@@ -491,7 +495,7 @@ func ClinicDrugDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	sql := `select * from where id = $1`
+	sql := `select * clinic_drug from where id = $1`
 	arow := model.DB.QueryRowx(sql, clinicDrugID)
 	if arow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})

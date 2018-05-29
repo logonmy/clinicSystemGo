@@ -358,13 +358,13 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 
 	lrow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", id)
 	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	personnel := FormatSQLRowToMap(lrow)
 	_, lok := personnel["id"]
 	if !lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "用户不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "用户不存在"})
 		return
 	}
 
@@ -389,13 +389,13 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 		roleID := v["role_id"]
 		rrow := model.DB.QueryRowx("select id from role where id=$1 limit 1", roleID)
 		if rrow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 			return
 		}
 		role := FormatSQLRowToMap(rrow)
 		_, rok := role["id"]
 		if !rok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "所选权限组不存在"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "所选权限组不存在"})
 			return
 		}
 		_, err3 := tx.Exec(insertSQL,

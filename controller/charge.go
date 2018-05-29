@@ -281,7 +281,7 @@ func ChargePay(ctx iris.Context) {
 	tx, err := model.DB.Beginx()
 
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -358,7 +358,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 	money, baerr := strconv.Atoi(ctx.PostValue("balance_money"))
 
 	if baerr != nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "无效的金额"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "无效的金额"})
 		return
 	}
 
@@ -370,7 +370,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 	outTradeNo := time.Now().Format("20060102150405")
 
 	if clinicTriagePatientID == "" || ordersIds == "" || operationID == "" || payMethodCode == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 

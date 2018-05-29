@@ -690,7 +690,7 @@ func Drugs(ctx iris.Context) {
 		limit = "10"
 	}
 
-	if drugType == "" || (drugType != "0" && drugType != "1") {
+	if drugType == "" || (drugType != "0" && drugType != "-1") {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "type 必须为0 或 1"})
 		return
 	}
