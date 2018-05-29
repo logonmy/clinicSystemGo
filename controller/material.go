@@ -283,18 +283,18 @@ func MaterialList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from clinic_material where clinic_id=:clinic_id`
-	selectSQL := `select cm.id as clinic_material_id,cm.name,cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
+	selectSQL := `select cm.id as clinic_material_id,cm.name, cm.unit_name,cm.py_code,cm.remark,cm.idc_code,cm.manu_factory_name,cm.specification,
 		cm.en_name,cm.is_discount,cm.ret_price,cm.status,cm.buy_price,cm.day_warning,cm.discount_price,cm.stock_warning,sum(ms.stock_amount) as stock_amount
 		from clinic_material cm
 		left join material_stock ms on ms.clinic_material_id = cm.id
 		where cm.clinic_id=:clinic_id`
 
 	if keyword != "" {
-		countSQL += " and cm.name ~:keyword"
-		selectSQL += " and cm.name ~':keyword"
+		countSQL += " and name ~:keyword"
+		selectSQL += " and cm.name ~:keyword"
 	}
 	if status != "" {
-		countSQL += " and cm.status=:status"
+		countSQL += " and status=:status"
 		selectSQL += " and cm.status=:status"
 	}
 

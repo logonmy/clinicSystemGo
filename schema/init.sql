@@ -1645,6 +1645,7 @@ CREATE TABLE examination_patient_model_item
   examination_patient_model_id INTEGER NOT NULL references examination_patient_model(id),--检验模板id
   clinic_examination_id INTEGER NOT NULL references clinic_examination(id),--检查项目id
   times INTEGER NOT NULL CHECK(times > 0),--次数
+  organ varchar(100),--检查部位
   illustration text,--说明
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

@@ -24,6 +24,7 @@ type ExaminationModel struct {
 //ExaminationModelItem 检查模板item
 type ExaminationModelItem struct {
 	ExaminationName     string      `json:"examination_name"`
+	Organ               interface{} `json:"organ"`
 	Times               int         `json:"times"`
 	ClinicExaminationID int         `json:"clinic_examination_id"`
 	Illustration        interface{} `json:"illustration"`
@@ -75,6 +76,7 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 	itemSets := []string{
 		"examination_patient_model_id",
 		"clinic_examination_id",
+		"organ",
 		"times",
 		"illustration",
 	}
@@ -96,11 +98,12 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 	}
 	clinicExaminationSQL := `select id from clinic_examination where id=$1`
 	tSetStr := strings.Join(itemSets, ",")
-	inserttSQL := "insert into examination_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4)"
+	inserttSQL := "insert into examination_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4,$5)"
 
 	for _, v := range results {
 		clinicExaminationID := v["clinic_examination_id"]
 		times := v["times"]
+		organ := v["organ"]
 		illustration := v["illustration"]
 
 		trow := model.DB.QueryRowx(clinicExaminationSQL, clinicExaminationID)
@@ -115,7 +118,7 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 			return
 		}
 
-		_, errt := tx.Exec(inserttSQL, examinationModelID, ToNullInt64(clinicExaminationID), ToNullInt64(times), ToNullString(illustration))
+		_, errt := tx.Exec(inserttSQL, examinationModelID, ToNullInt64(clinicExaminationID), ToNullString(organ), ToNullInt64(times), ToNullString(illustration))
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
@@ -161,7 +164,7 @@ func ExaminationPatientModelList(ctx iris.Context) {
 
 	countSQL := `select count(id) as total from examination_patient_model where id>0`
 	selectSQL := `select epm.id as examination_patient_model_id,ce.name as examination_name,p.name as operation_name,
-	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.times from examination_patient_model epm
+	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.organ, epmi.times from examination_patient_model epm
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
 	left join clinic_examination ce on epmi.clinic_examination_id = ce.id
 	left join personnel p on epm.operation_id = p.id
@@ -215,6 +218,7 @@ func ExaminationPatientModelList(ctx iris.Context) {
 		operationName := v["operation_name"]
 		isCommon := v["is_common"]
 		createdTime := v["created_time"]
+		organ := v["organ"]
 		times := v["times"]
 		clinicExaminationID := v["clinic_examination_id"]
 		illustration := v["illustration"]
@@ -225,6 +229,7 @@ func ExaminationPatientModelList(ctx iris.Context) {
 			if int(examinationPatientModelID.(int64)) == pexaminationPatientModelID {
 				item := ExaminationModelItem{
 					ExaminationName:     examinationName.(string),
+					Organ:               organ,
 					Times:               int(times.(int64)),
 					ClinicExaminationID: int(clinicExaminationID.(int64)),
 					Illustration:        illustration,
