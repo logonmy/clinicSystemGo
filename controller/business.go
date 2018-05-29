@@ -65,7 +65,6 @@ func MenubarList(ctx iris.Context) {
 	if ascription != "" {
 		selectSQL += " where p.ascription='" + ascription + "'"
 	}
-	fmt.Println("====", selectSQL)
 	rows, _ := model.DB.Queryx(selectSQL)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
@@ -75,6 +74,24 @@ func MenubarList(ctx iris.Context) {
 	menus := FormatFuntionmenus(parentFunctionMenu)
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
+}
+
+//MenubarListByClinicID 获取诊所未开通的菜单项
+func MenubarListByClinicID(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	selectSQL := `select p.id as parent_id,p.url as parent_url,c.url as menu_url,p.name as parent_name,c.name menu_name,c.id as function_menu_id from children_function_menu c 
+		left join parent_function_menu p on p.id = c.parent_function_menu_id 
+		left join clinic_children_function_menu r on r.children_function_menu_id = c.id and r.clinic_id = $1 where r.children_function_menu_id IS NULL`
+	rows, _ := model.DB.Queryx(selectSQL, clinicID)
+	if rows == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		return
+	}
+	parentFunctionMenu := FormatSQLRowsToMapArray(rows)
+	menus := FormatFuntionmenus(parentFunctionMenu)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
+
 }
 
 //BusinessAssign 诊所分配业务
