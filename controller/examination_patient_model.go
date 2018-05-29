@@ -75,6 +75,7 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 	itemSets := []string{
 		"examination_patient_model_id",
 		"clinic_examination_id",
+		"organ",
 		"times",
 		"illustration",
 	}
@@ -101,6 +102,7 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 	for _, v := range results {
 		clinicExaminationID := v["clinic_examination_id"]
 		times := v["times"]
+		organ := v["organ"]
 		illustration := v["illustration"]
 
 		trow := model.DB.QueryRowx(clinicExaminationSQL, clinicExaminationID)
@@ -115,7 +117,7 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 			return
 		}
 
-		_, errt := tx.Exec(inserttSQL, examinationModelID, ToNullInt64(clinicExaminationID), ToNullInt64(times), ToNullString(illustration))
+		_, errt := tx.Exec(inserttSQL, examinationModelID, ToNullInt64(clinicExaminationID), ToNullInt64(times), ToNullString(illustration), ToNullString(organ))
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
