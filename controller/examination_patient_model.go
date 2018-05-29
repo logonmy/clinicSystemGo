@@ -97,7 +97,7 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 	}
 	clinicExaminationSQL := `select id from clinic_examination where id=$1`
 	tSetStr := strings.Join(itemSets, ",")
-	inserttSQL := "insert into examination_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4)"
+	inserttSQL := "insert into examination_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4,$5)"
 
 	for _, v := range results {
 		clinicExaminationID := v["clinic_examination_id"]
@@ -117,7 +117,7 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 			return
 		}
 
-		_, errt := tx.Exec(inserttSQL, examinationModelID, ToNullInt64(clinicExaminationID), ToNullInt64(times), ToNullString(illustration), ToNullString(organ))
+		_, errt := tx.Exec(inserttSQL, examinationModelID, ToNullInt64(clinicExaminationID), ToNullString(organ), ToNullInt64(times), ToNullString(illustration))
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
