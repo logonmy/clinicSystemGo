@@ -843,7 +843,7 @@ func MaterialOutstockRecordDetail(ctx iris.Context) {
 	result := FormatSQLRowToMap(row)
 
 	isql := `select cm.name as material_name,ori.material_stock_id,cm.unit_name,cm.manu_factory_name,ori.outstock_amount,
-		cm.ret_price,ms.buy_price,ms.serial,ms.eff_date
+		cm.ret_price,ms.buy_price,ms.serial,ms.eff_date,ms.supplier_name,ms.stock_amount
 		from material_outstock_record_item ori
 		left join material_stock ms on ori.material_stock_id = ms.id
 		left join clinic_material cm on ms.clinic_material_id = cm.id

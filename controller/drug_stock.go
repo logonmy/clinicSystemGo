@@ -844,7 +844,7 @@ func DrugOutstockRecordDetail(ctx iris.Context) {
 	result := FormatSQLRowToMap(row)
 
 	isql := `select ori.drug_stock_id,cd.name as drug_name,ori.drug_stock_id,cd.packing_unit_name,cd.manu_factory_name,ori.outstock_amount,
-		cd.ret_price,ds.buy_price,ds.serial,ds.eff_date
+		cd.ret_price,ds.buy_price,ds.serial,ds.eff_date,ds.supplier_name,ds.stock_amount
 		from drug_outstock_record_item ori
 		left join drug_stock ds on ori.drug_stock_id = ds.id
 		left join clinic_drug cd on ds.clinic_drug_id = cd.id
