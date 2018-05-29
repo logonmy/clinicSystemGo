@@ -17,7 +17,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 	items := ctx.PostValue("items")
 
 	if clinicTriagePatientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	if items == "" {
@@ -34,13 +34,13 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 	}
 	row := model.DB.QueryRowx(`select id,status from clinic_triage_patient where id=$1 limit 1`, clinicTriagePatientID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "保存检验失败,分诊记录错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存检验失败,分诊记录错误"})
 		return
 	}
 
 	prow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", personnelID)
 	if prow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "保存检验失败,操作员错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存检验失败,操作员错误"})
 		return
 	}
 	clinicTriagePatient := FormatSQLRowToMap(row)
@@ -48,17 +48,17 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 
 	_, ok := clinicTriagePatient["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "分诊记录不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录不存在"})
 		return
 	}
 	status := clinicTriagePatient["status"]
 	if status.(int64) != 30 {
-		ctx.JSON(iris.Map{"code": "1", "msg": "分诊记录当前状态错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录当前状态错误"})
 		return
 	}
 	_, pok := personnel["id"]
 	if !pok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "操作员错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "操作员错误"})
 		return
 	}
 
@@ -96,21 +96,21 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 	_, errdlp := tx.Exec("delete from laboratory_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
 	if errdlp != nil {
 		fmt.Println("errdlp ===", errdlp)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errdlp.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
 		return
 	}
 	_, errdm := tx.Exec("delete from mz_unpaid_orders where clinic_triage_patient_id=$1 and charge_project_type_id=3", clinicTriagePatientID)
 	if errdm != nil {
 		fmt.Println("errdm ===", errdm)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errdm.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
 		return
 	}
 	inserttSQL := "insert into laboratory_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
@@ -124,14 +124,14 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 		clinicLaboratorySQL := `select id as clinic_laboratory_id,price,is_discount,name,unit_name,discount_price from clinic_laboratory where id=$1`
 		trow := model.DB.QueryRowx(clinicLaboratorySQL, clinicLaboratoryID)
 		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "检验项错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "检验项错误"})
 			return
 		}
 		clinicLaboratory := FormatSQLRowToMap(trow)
 		fmt.Println("====", clinicLaboratory)
 		_, ok := clinicLaboratory["clinic_laboratory_id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的检验项错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的检验项错误"})
 			return
 		}
 		isDiscount := clinicLaboratory["is_discount"].(bool)
@@ -160,7 +160,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
 			return
 		}
 
@@ -182,7 +182,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 		if errm != nil {
 			fmt.Println("errm ===", errm)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
 			return
 		}
 	}
@@ -201,7 +201,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 func LaboratoryPatientGet(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	if clinicTriagePatientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 

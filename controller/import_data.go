@@ -165,7 +165,7 @@ func ImportLaboratoryItem(ctx iris.Context) {
 				} else {
 					laboratoryItemValues = append(laboratoryItemValues, "false")
 					if m, _ := regexp.MatchString(".*性.*", cell.String()); m {
-						laboratoryItemValues = append(laboratoryItemValues, "1")
+						laboratoryItemValues = append(laboratoryItemValues, "-1")
 					} else {
 						laboratoryItemValues = append(laboratoryItemValues, "2")
 					}
@@ -1011,7 +1011,7 @@ func ImportDrug(ctx iris.Context) {
 
 		drugType := "0"
 		if drugTypeCode == "3" {
-			drugType = "1"
+			drugType = "-1"
 		}
 
 		_, err = model.DB.Exec(insertSQL,

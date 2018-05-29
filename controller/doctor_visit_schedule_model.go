@@ -46,21 +46,21 @@ func DoctorVisitScheduleModeAdd(ctx iris.Context) {
 	tx, err := model.DB.Beginx()
 
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
 	_, errtx := tx.Query(sql1)
 	if errtx != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errtx.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errtx.Error()})
 		return
 	}
 
 	_, errtx2 := tx.Query(sql)
 	if errtx2 != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errtx2.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errtx2.Error()})
 		return
 	}
 

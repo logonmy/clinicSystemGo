@@ -16,7 +16,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 	items := ctx.PostValue("items")
 
 	if clinicTriagePatientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	if items == "" {
@@ -62,12 +62,12 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		return
 	}
 
-	orderSn := FormatPayOrderSn(clinicTriagePatientID, "1")
+	orderSn := FormatPayOrderSn(clinicTriagePatientID, "-1")
 	tx, errb := model.DB.Begin()
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 
@@ -456,7 +456,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 func PrescriptionWesternPatientGet(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	if clinicTriagePatientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
@@ -489,7 +489,7 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 func PrescriptionChinesePatientGet(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	if clinicTriagePatientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
@@ -560,14 +560,14 @@ func PrescriptionChinesePatientList(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic_patient where id=$1 limit 1", clinicPatientID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
 		return
 	}
 	clinicPatient := FormatSQLRowToMap(row)
 
 	_, ok := clinicPatient["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "就诊人错误"})
 		return
 	}
 
@@ -656,14 +656,14 @@ func PrescriptionWesternPatientList(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic_patient where id=$1 limit 1", clinicPatientID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
 		return
 	}
 	clinicPatient := FormatSQLRowToMap(row)
 
 	_, ok := clinicPatient["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "就诊人错误"})
 		return
 	}
 
