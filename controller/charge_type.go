@@ -22,7 +22,7 @@ func ChargeTypeInit(ctx iris.Context) {
 
 	_, err := model.DB.Query(nsql)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
@@ -32,14 +32,14 @@ func ChargeTypeInit(ctx iris.Context) {
 func ChargeTypeCreate(ctx iris.Context) {
 	name := ctx.PostValue("name")
 	if name == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	var ID int
 	err := model.DB.QueryRow("INSERT INTO charge_project_type (name) VALUES ($1) RETURNING id", name).Scan(&ID)
 	if err != nil {
 		fmt.Println("err ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": ID})

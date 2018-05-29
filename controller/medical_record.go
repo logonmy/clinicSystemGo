@@ -28,7 +28,7 @@ func MedicalRecordCreate(ctx iris.Context) {
 	operationID := ctx.PostValue("operation_id")
 
 	if clinicTriagePatientID == "" || chiefComplaint == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
@@ -42,7 +42,7 @@ func MedicalRecordCreate(ctx iris.Context) {
 		var id int
 		err := model.DB.QueryRow(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files).Scan(&id)
 		if err != nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 	} else {
@@ -50,7 +50,7 @@ func MedicalRecordCreate(ctx iris.Context) {
 
 		_, err := model.DB.Exec(sql, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, clinicTriagePatientID)
 		if err != nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 
@@ -64,7 +64,7 @@ func MedicalRecordFindByTriageID(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 
 	if clinicTriagePatientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	row := model.DB.QueryRowx("select id as clinic_triage_patient_id,*  from medical_record where clinic_triage_patient_id=$1", clinicTriagePatientID)
@@ -93,7 +93,7 @@ func MedicalRecordModelCreate(ctx iris.Context) {
 	operationID := ctx.PostValue("operation_id")
 
 	if modelName == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
@@ -103,7 +103,7 @@ func MedicalRecordModelCreate(ctx iris.Context) {
 	var id int
 	err := model.DB.QueryRow(sql, modelName, isCommon, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID).Scan(&id)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": err.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": id})
@@ -116,7 +116,7 @@ func MedicalRecordListByPID(ctx iris.Context) {
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 

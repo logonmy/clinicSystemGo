@@ -57,7 +57,7 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 	var prescriptionWesternPatientModelID string
@@ -95,13 +95,13 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 
 		trow := model.DB.QueryRowx(clinicDrugSQL, clinicDrugID)
 		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "保存模板错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "保存模板错误"})
 			return
 		}
 		clinicDrug := FormatSQLRowToMap(trow)
 		_, ok := clinicDrug["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的药品错误"})
 			return
 		}
 		_, errt := tx.Exec(inserttSQL,
@@ -118,7 +118,7 @@ func PrescriptionWesternPatientModelCreate(ctx iris.Context) {
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
 			return
 		}
 	}
@@ -400,7 +400,7 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 	updateSQL := `update prescription_western_patient_model set model_name=$1,is_common=$2,
@@ -419,7 +419,7 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 	if errd != nil {
 		fmt.Println("errd ===", errd)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
 		return
 	}
 	tSetStr := strings.Join(itemSets, ",")
@@ -438,13 +438,13 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 
 		trow := model.DB.QueryRowx(clinicDrugSQL, clinicDrugID)
 		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "保存模板错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "保存模板错误"})
 			return
 		}
 		clinicDrug := FormatSQLRowToMap(trow)
 		_, ok := clinicDrug["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的药品错误"})
 			return
 		}
 
@@ -463,7 +463,7 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
 			return
 		}
 	}
@@ -535,7 +535,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 	var prescriptionChinesePatientModelID int
@@ -559,13 +559,13 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 		illustration := v["special_illustration"]
 		trow := model.DB.QueryRowx(clinicDrugSQL, clinicDrugID)
 		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "保存模板错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "保存模板错误"})
 			return
 		}
 		clinicDrug := FormatSQLRowToMap(trow)
 		_, ok := clinicDrug["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的药品错误"})
 			return
 		}
 
@@ -573,7 +573,7 @@ func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
 			return
 		}
 	}
@@ -869,7 +869,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 
@@ -890,7 +890,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 	if errd != nil {
 		fmt.Println("errd ===", errd)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
 		return
 	}
 	clinicDrugSQL := `select id from clinic_drug where id=$1`
@@ -905,13 +905,13 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 
 		trow := model.DB.QueryRowx(clinicDrugSQL, clinicDrugID)
 		if trow == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "保存模板错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "保存模板错误"})
 			return
 		}
 		clinicDrug := FormatSQLRowToMap(trow)
 		_, ok := clinicDrug["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "选择的药品错误"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的药品错误"})
 			return
 		}
 
@@ -926,7 +926,7 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
 			return
 		}
 	}

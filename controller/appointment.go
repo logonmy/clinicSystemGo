@@ -27,18 +27,18 @@ func AppointmentCreate(ctx iris.Context) {
 	visitType := ctx.PostValue("visit_type")
 	personnelID := ctx.PostValue("personnel_id")
 	if name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" || doctorVisitScheduleID == "" || visitType == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	row := model.DB.QueryRowx("select * from doctor_visit_schedule where id=$1 and open_flag = true and stop_flag = false and visit_date > CURRENT_DATE", doctorVisitScheduleID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "预约失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "预约失败"})
 		return
 	}
 	schedule := FormatSQLRowToMap(row)
 	_, ok := schedule["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "号源不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "号源不存在"})
 		return
 	}
 
@@ -52,22 +52,59 @@ func AppointmentCreate(ctx iris.Context) {
 	}
 
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "登记失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "登记失败"})
 		return
 	}
 	tx, err := model.DB.Begin()
 	patient := FormatSQLRowToMap(row)
 	_, ok = patient["id"]
 	patientID := patient["id"]
+	insertPatientSQL := `INSERT INTO patient (
+		cert_no,
+		name, 
+		birthday, 
+		sex, 
+		phone, 
+		address, 
+		profession, 
+		remark, 
+		patient_channel_id, 
+		province, 
+		city, 
+		district) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id`
+
+	updatePatientSQL := `update patient set 
+		cert_no=$1, 
+		name=$2,
+		birthday=$3,
+		sex=$4, 
+		phone=$5, 
+		address=$6,
+		profession=$7,
+		remark=$8,
+		patient_channel_id=$9  where id = $10`
+
 	if !ok {
-		insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id, province, city, district`
-		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`
-		if certNo != "" {
-			insertKeys += ", cert_no"
-			insertValues += ", " + certNo
-		}
-		err = tx.QueryRow(`INSERT INTO patient (`+insertKeys+`) 
-		VALUES (`+insertValues+`) RETURNING id`, name, birthday, sex, phone, address, profession, remark, patientChannelID, province, city, district).Scan(&patientID)
+		// insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id, province, city, district`
+		// insertValues := `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`
+		// if certNo != "" {
+		// 	insertKeys += ", cert_no"
+		// 	insertValues += ", " + certNo
+		// }
+		err = tx.QueryRow(insertPatientSQL,
+			ToNullString(certNo),
+			ToNullString(name),
+			ToNullString(birthday),
+			ToNullInt64(sex),
+			ToNullString(phone),
+			ToNullString(address),
+			ToNullString(profession),
+			ToNullString(remark),
+			ToNullInt64(patientChannelID),
+			ToNullString(province),
+			ToNullString(city),
+			ToNullString(district),
+		).Scan(&patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)
@@ -75,11 +112,21 @@ func AppointmentCreate(ctx iris.Context) {
 			return
 		}
 	} else {
-		updateSQL := `update patient set name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
-		if certNo != "" {
-			updateSQL = `update patient set cert_no = ` + certNo + `, name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
-		}
-		_, err = tx.Exec(updateSQL, name, birthday, sex, phone, address, profession, remark, patientChannelID, patientID)
+		// updateSQL := `update patient set name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
+		// if certNo != "" {
+		// 	updateSQL = `update patient set cert_no = ` + certNo + `, name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8  where id = $9`
+		// }
+		_, err = tx.Exec(updatePatientSQL,
+			ToNullString(certNo),
+			ToNullString(name),
+			ToNullString(birthday),
+			ToNullString(sex),
+			ToNullString(phone),
+			ToNullString(address),
+			ToNullString(profession),
+			ToNullString(remark),
+			ToNullInt64(patientChannelID),
+			patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err2 ===", err)
@@ -93,7 +140,7 @@ func AppointmentCreate(ctx iris.Context) {
 	row = model.DB.QueryRowx("select * from clinic_patient where patient_id= $1 and clinic_id = $2", patientID, clinicID)
 	if row == nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": "预约失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "预约失败"})
 		return
 	}
 	clinicPatient := FormatSQLRowToMap(row)
@@ -116,15 +163,24 @@ func AppointmentCreate(ctx iris.Context) {
 	doctorID := schedule["personnel_id"]
 	ampm := schedule["am_pm"]
 
-	insertKeys := `(clinic_patient_id, register_type, visit_type, department_id, doctor_id, visit_date, am_pm, status)`
-	insertValues := `($1, 1, $2, $3, $4, $5, $6, 10)`
+	insertClinicTriagePatientSQL := `INSERT INTO clinic_triage_patient (
+		clinic_patient_id, 
+		register_type, 
+		visit_type, 
+		department_id, 
+		doctor_id, 
+		visit_date, 
+		am_pm, 
+		status) VALUES ($1, 1, $2, $3, $4, $5, $6, 10) RETURNING id`
+	// insertKeys := `(clinic_patient_id, register_type, visit_type, department_id, doctor_id, visit_date, am_pm, status)`
+	// insertValues := `($1, 1, $2, $3, $4, $5, $6, 10)`
 
-	insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
+	// insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
 
-	fmt.Println("insertSQL ======", insertSQL)
+	// fmt.Println("insertSQL ======", insertSQL)
 
 	var clinicTriagePatientID int
-	err = tx.QueryRow(insertSQL, clinicPatientID, visitType, departmentID, doctorID, visitDate, ampm).Scan(&clinicTriagePatientID)
+	err = tx.QueryRow(insertClinicTriagePatientSQL, clinicPatientID, visitType, departmentID, doctorID, visitDate, ampm).Scan(&clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
 		tx.Rollback()

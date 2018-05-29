@@ -252,13 +252,13 @@ func ClinicGetByID(ctx iris.Context) {
 	}
 	row := model.DB.QueryRowx("select id as clinic_id,code,name,phone,area,responsible_person,status,created_time from clinic where id=$1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["clinic_id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所不存在"})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": clinic})

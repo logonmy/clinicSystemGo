@@ -20,31 +20,31 @@ func DiagnosisTreatmentCreate(ctx iris.Context) {
 	isDiscount := ctx.PostValue("is_discount")
 
 	if clinicID == "" || name == "" || price == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	lrow := model.DB.QueryRowx("select id from clinic_diagnosis_treatment where name=$1 and clinic_id=$2 limit 1", name, clinicID)
 	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	diagnosisTreatment := FormatSQLRowToMap(lrow)
 	_, lok := diagnosisTreatment["id"]
 	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊疗名称已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊疗名称已存在"})
 		return
 	}
 
@@ -94,26 +94,26 @@ func DiagnosisTreatmentUpdate(ctx iris.Context) {
 
 	crow := model.DB.QueryRowx("select id,clinic_id from clinic_diagnosis_treatment where id=$1 limit 1", clinicDiagnosisTreatmentID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicDiagnosisTreatment := FormatSQLRowToMap(crow)
 	_, rok := clinicDiagnosisTreatment["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所诊疗项目数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所诊疗项目数据错误"})
 		return
 	}
 	clinicID := clinicDiagnosisTreatment["clinic_id"]
 
 	lrow := model.DB.QueryRowx("select id from clinic_diagnosis_treatment where name=$1 and id!=$2 limit 1", name, clinicDiagnosisTreatmentID, clinicID)
 	if lrow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	laboratoryItem := FormatSQLRowToMap(lrow)
 	_, lok := laboratoryItem["id"]
 	if lok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊疗项目名称已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊疗项目名称已存在"})
 		return
 	}
 
@@ -156,30 +156,30 @@ func DiagnosisTreatmentOnOff(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	crow := model.DB.QueryRowx("select id,clinic_id from clinic_diagnosis_treatment where id=$1 limit 1", clinicDiagnosisTreatmentID)
 	if crow == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	clinicDiagnosisTreatmentProject := FormatSQLRowToMap(crow)
 	_, rok := clinicDiagnosisTreatmentProject["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
 		return
 	}
 
 	if clinicID != strconv.FormatInt(clinicDiagnosisTreatmentProject["clinic_id"].(int64), 10) {
-		ctx.JSON(iris.Map{"code": "1", "msg": "诊所数据不匹配"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据不匹配"})
 		return
 	}
 	_, err1 := model.DB.Exec("update clinic_diagnosis_treatment set status=$1 where id=$2", status, clinicDiagnosisTreatmentID)
@@ -224,14 +224,14 @@ func DiagnosisTreatmentList(ctx iris.Context) {
 
 	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
 		return
 	}
 	clinic := FormatSQLRowToMap(row)
 
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "所在诊所不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "所在诊所不存在"})
 		return
 	}
 

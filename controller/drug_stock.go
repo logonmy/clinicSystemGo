@@ -125,7 +125,7 @@ func DrugInstock(ctx iris.Context) {
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
 			return
 		}
 	}
@@ -183,7 +183,7 @@ func DrugInstockRecord(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
 
@@ -300,24 +300,24 @@ func DrugInstockUpdate(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
 
 	row := model.DB.QueryRowx("select * from drug_instock_record where id=$1 limit 1", drugInstockRecordID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	instockRecord := FormatSQLRowToMap(row)
 	_, ok := instockRecord["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "入库记录不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "入库记录不存在"})
 		return
 	}
 	verifyStatus := instockRecord["verify_status"]
 	if verifyStatus.(string) == "02" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "入库记录已审核，不能修改"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "入库记录已审核，不能修改"})
 		return
 	}
 
@@ -390,7 +390,7 @@ func DrugInstockUpdate(ctx iris.Context) {
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
 			return
 		}
 	}
@@ -449,7 +449,7 @@ func DrugInstockCheck(ctx iris.Context) {
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 
@@ -494,7 +494,7 @@ func DrugInstockCheck(ctx iris.Context) {
 			if err1 != nil {
 				fmt.Println("err1 ===", err1)
 				tx.Rollback()
-				ctx.JSON(iris.Map{"code": "1", "msg": err1.Error()})
+				ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 				return
 			}
 		} else {
@@ -518,7 +518,7 @@ func DrugInstockCheck(ctx iris.Context) {
 	if err3 != nil {
 		fmt.Println("err3 ===", err3)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err3.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
 		return
 	}
 
@@ -563,7 +563,7 @@ func DrugInstockRecordDelete(ctx iris.Context) {
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 	_, erri := tx.Exec("delete from drug_instock_record_item where drug_instock_record_id=$1", drugInstockRecordID)
@@ -901,24 +901,24 @@ func DrugOutstockUpdate(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
 
 	row := model.DB.QueryRowx("select * from drug_outstock_record where id=$1 and storehouse_id=$2 limit 1", drugOutstockRecordID, storehouseID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	outstockRecord := FormatSQLRowToMap(row)
 	_, ok := outstockRecord["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "出库记录不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "出库记录不存在"})
 		return
 	}
 	verifyStatus := outstockRecord["verify_status"]
 	if verifyStatus.(string) == "02" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "出库记录已审核，不能修改"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "出库记录已审核，不能修改"})
 		return
 	}
 
@@ -931,7 +931,7 @@ func DrugOutstockUpdate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 
@@ -947,7 +947,7 @@ func DrugOutstockUpdate(ctx iris.Context) {
 	if errd != nil {
 		fmt.Println("errd ===", errd)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
 		return
 	}
 

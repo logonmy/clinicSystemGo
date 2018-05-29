@@ -469,7 +469,7 @@ func TreatmentPatientModelUpdate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 	updateSQL := `update treatment_patient_model set model_name=$1,is_common=$2,
@@ -487,7 +487,7 @@ func TreatmentPatientModelUpdate(ctx iris.Context) {
 	if errd != nil {
 		fmt.Println("errd ===", errd)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
 		return
 	}
 	tSetStr := strings.Join(itemSets, ",")

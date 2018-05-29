@@ -458,7 +458,7 @@ func ExaminationPatientModelUpdate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 	updateSQL := `update examination_patient_model set model_name=$1,is_common=$2,
@@ -476,7 +476,7 @@ func ExaminationPatientModelUpdate(ctx iris.Context) {
 	if errd != nil {
 		fmt.Println("errd ===", errd)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
 		return
 	}
 	clinicExaminationSQL := `select id from clinic_examination where id=$1`
@@ -503,7 +503,7 @@ func ExaminationPatientModelUpdate(ctx iris.Context) {
 		if errt != nil {
 			fmt.Println("errt ===", errt)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
 			return
 		}
 	}

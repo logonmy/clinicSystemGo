@@ -23,19 +23,19 @@ func PatientAdd(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	personnelID := ctx.PostValue("personnel_id")
 	if certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
 	row := model.DB.QueryRowx("select id from patient where cert_no = $1 limit 1", certNo)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	patient := FormatSQLRowToMap(row)
 	_, ok := patient["id"]
 	if ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "就诊人身份证已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "就诊人身份证已存在"})
 		return
 	}
 
@@ -202,7 +202,7 @@ func PatientUpdate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	personnelID := ctx.PostValue("personnel_id")
 	if id == "" || certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || clinicID == "" || personnelID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 

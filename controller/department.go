@@ -16,19 +16,19 @@ func DepartmentCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	weight := ctx.PostValue("weight")
 	if code == "" || name == "" || clinicID == "" || weight == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
 	row := model.DB.QueryRowx("select id from department where clinic_id = $1 and code=$2 limit 1", clinicID, code)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "新增失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
 	department := FormatSQLRowToMap(row)
 	_, ok := department["id"]
 	if ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "科室编码已存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "科室编码已存在"})
 		return
 	}
 
@@ -36,7 +36,7 @@ func DepartmentCreate(ctx iris.Context) {
 	err := model.DB.QueryRow("INSERT INTO department (code, name, clinic_id, weight) VALUES ($1, $2, $3, $4) RETURNING id", code, name, clinicID, weight).Scan(&departmentID)
 	if err != nil {
 		fmt.Println("err ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": departmentID})
@@ -49,7 +49,7 @@ func DepartmentList(ctx iris.Context) {
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	if clinicID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
@@ -92,19 +92,19 @@ func DepartmentList(ctx iris.Context) {
 func DepartmentDelete(ctx iris.Context) {
 	departmentID := ctx.PostValue("departmentID")
 	if departmentID == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	stmt, err := model.DB.Prepare("DELETE from department WHERE id=$1")
 	if err != nil {
 		fmt.Println("Perr ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 	res, err := stmt.Exec(departmentID)
 	if err != nil {
 		fmt.Println("Eerr ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": res})
 }
@@ -117,19 +117,19 @@ func DepartmentUpdate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	weight := ctx.PostValue("weight")
 	if departmentID == "" || code == "" || name == "" || clinicID == "" || weight == "" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "缺少参数"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 	stmt, err := model.DB.Prepare("UPDATE department SET code=$2, name=$3, clinic_id=$4, weight=$5,updated_time=$6 WHERE id=$1")
 	if err != nil {
 		fmt.Println("Perr ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 	res, err := stmt.Exec(departmentID, code, name, clinicID, weight, time.Now())
 	if err != nil {
 		fmt.Println("Eerr ===", err)
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": res})

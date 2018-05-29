@@ -125,7 +125,7 @@ func MaterialInstock(ctx iris.Context) {
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
 			return
 		}
 	}
@@ -183,7 +183,7 @@ func MaterialInstockRecord(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
 
@@ -300,24 +300,24 @@ func MaterialInstockUpdate(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
 
 	row := model.DB.QueryRowx("select * from material_instock_record where id=$1 limit 1", materialInstockRecordID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	instockRecord := FormatSQLRowToMap(row)
 	_, ok := instockRecord["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "入库记录不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "入库记录不存在"})
 		return
 	}
 	verifyStatus := instockRecord["verify_status"]
 	if verifyStatus.(string) == "02" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "入库记录已审核，不能修改"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "入库记录已审核，不能修改"})
 		return
 	}
 
@@ -447,7 +447,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 
@@ -492,7 +492,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 			if err1 != nil {
 				fmt.Println("err1 ===", err1)
 				tx.Rollback()
-				ctx.JSON(iris.Map{"code": "1", "msg": err1.Error()})
+				ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 				return
 			}
 		} else {
@@ -506,7 +506,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 			if err2 != nil {
 				fmt.Println("err2 ===", err2)
 				tx.Rollback()
-				ctx.JSON(iris.Map{"code": "1", "msg": err2.Error()})
+				ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 				return
 			}
 		}
@@ -516,7 +516,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 	if err3 != nil {
 		fmt.Println("err3 ===", err3)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err3.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
 		return
 	}
 
@@ -561,7 +561,7 @@ func MaterialInstockRecordDelete(ctx iris.Context) {
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 	_, erri := tx.Exec("delete from material_instock_record_item where material_instock_record_id=$1", materialInstockRecordID)
@@ -688,13 +688,13 @@ func MaterialOutstock(ctx iris.Context) {
 		}
 		row := model.DB.QueryRowx("select id from material_stock where id=$1 limit 1", materialStockID)
 		if row == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "新增出库失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "新增出库失败"})
 			return
 		}
 		materialStock := FormatSQLRowToMap(row)
 		_, ok := materialStock["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "新增出库药品不存在"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "新增出库药品不存在"})
 			return
 		}
 
@@ -900,24 +900,24 @@ func MaterialOutstockUpdate(ctx iris.Context) {
 	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
 	if errs != nil {
 		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "1", "msg": errs.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
 		return
 	}
 
 	row := model.DB.QueryRowx("select * from material_outstock_record where id=$1 and storehouse_id=$2 limit 1", materialOutstockRecordID, storehouseID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
 	outstockRecord := FormatSQLRowToMap(row)
 	_, ok := outstockRecord["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "1", "msg": "出库记录不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "出库记录不存在"})
 		return
 	}
 	verifyStatus := outstockRecord["verify_status"]
 	if verifyStatus.(string) == "02" {
-		ctx.JSON(iris.Map{"code": "1", "msg": "出库记录已审核，不能修改"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "出库记录已审核，不能修改"})
 		return
 	}
 
@@ -930,7 +930,7 @@ func MaterialOutstockUpdate(ctx iris.Context) {
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 
@@ -946,7 +946,7 @@ func MaterialOutstockUpdate(ctx iris.Context) {
 	if errd != nil {
 		fmt.Println("errd ===", errd)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
 		return
 	}
 	setStr := strings.Join(sets, ",")
@@ -957,13 +957,13 @@ func MaterialOutstockUpdate(ctx iris.Context) {
 		outstockAmount := v["outstock_amount"]
 		row := model.DB.QueryRowx("select id from material_stock where id=$1 limit 1", materialStockID)
 		if row == nil {
-			ctx.JSON(iris.Map{"code": "1", "msg": "修改失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 			return
 		}
 		materialStock := FormatSQLRowToMap(row)
 		_, ok := materialStock["id"]
 		if !ok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "修改的出库药品不存在"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "修改的出库药品不存在"})
 			return
 		}
 
@@ -975,7 +975,7 @@ func MaterialOutstockUpdate(ctx iris.Context) {
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": "请检查是否漏填"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请检查是否漏填"})
 			return
 		}
 	}
@@ -1027,7 +1027,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 
@@ -1035,7 +1035,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 	if err2 != nil {
 		fmt.Println("err2 ===", err2)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": err2.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 		return
 	}
 
@@ -1052,7 +1052,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 		materialStock := FormatSQLRowToMap(drow)
 		_, dok := materialStock["id"]
 		if !dok {
-			ctx.JSON(iris.Map{"code": "1", "msg": "入库失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "入库失败"})
 			return
 		}
 		stockAmount := materialStock["stock_amount"].(int64) - outstockAmount
@@ -1061,7 +1061,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 		if err1 != nil {
 			fmt.Println("err1 ===", err1)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "1", "msg": err1.Error()})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 			return
 		}
 	}
