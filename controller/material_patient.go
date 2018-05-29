@@ -114,6 +114,8 @@ func MaterialPatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
 		return
 	}
+	inserttSQL := "insert into material_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
+	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 
 	for index, v := range results {
 		clinicMaterialID := v["clinic_material_id"]
@@ -141,14 +143,12 @@ func MaterialPatientCreate(ctx iris.Context) {
 		unitName := clinicMaterial["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
-		discount := int(discountPrice) * amount
+		discount := 0
 		fee := total
 		if isDiscount {
 			discount = int(discountPrice) * amount
 			fee = total - discount
 		}
-
-		inserttSQL := "insert into material_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
 
 		_, errt := tx.Exec(inserttSQL,
 			ToNullInt64(clinicTriagePatientID),
@@ -166,7 +166,6 @@ func MaterialPatientCreate(ctx iris.Context) {
 			return
 		}
 
-		insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 		_, errm := tx.Exec(insertmSQL,
 			ToNullInt64(clinicTriagePatientID),
 			5,

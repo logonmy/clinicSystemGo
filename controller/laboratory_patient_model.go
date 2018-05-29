@@ -72,7 +72,6 @@ func LaboratoryPatientModelCreate(ctx iris.Context) {
 		return
 	}
 
-	var itemValues []string
 	itemSets := []string{
 		"laboratory_patient_model_id",
 		"clinic_laboratory_id",
@@ -87,7 +86,7 @@ func LaboratoryPatientModelCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
-	var laboratoryModelID string
+	var laboratoryModelID int
 	err := tx.QueryRow("insert into laboratory_patient_model (model_name,is_common,operation_id) values ($1,$2,$3) RETURNING id", modelName, isCommon, personnelID).Scan(&laboratoryModelID)
 	if err != nil {
 		fmt.Println("err ===", err)
@@ -95,14 +94,15 @@ func LaboratoryPatientModelCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
+	tSetStr := strings.Join(itemSets, ",")
+	inserttSQL := "insert into laboratory_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4)"
+	clinicLaboratorySQL := `select id from clinic_laboratory where id=$1`
 
 	for _, v := range results {
 		clinicLaboratoryID := v["clinic_laboratory_id"]
 		times := v["times"]
 		illustration := v["illustration"]
 
-		var s []string
-		clinicLaboratorySQL := `select id from clinic_laboratory where id=$1`
 		trow := model.DB.QueryRowx(clinicLaboratorySQL, clinicLaboratoryID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "保存模板错误"})
@@ -114,27 +114,19 @@ func LaboratoryPatientModelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的检验医嘱错误"})
 			return
 		}
-		s = append(s, laboratoryModelID, clinicLaboratoryID, times)
-		if illustration == "" {
-			s = append(s, `null`)
-		} else {
-			s = append(s, "'"+illustration+"'")
+
+		_, errt := tx.Exec(inserttSQL,
+			laboratoryModelID,
+			ToNullInt64(clinicLaboratoryID),
+			ToNullInt64(times),
+			ToNullString(illustration),
+		)
+		if errt != nil {
+			fmt.Println("errt ===", errt)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
+			return
 		}
-		tstr := "(" + strings.Join(s, ",") + ")"
-		itemValues = append(itemValues, tstr)
-	}
-	tSetStr := strings.Join(itemSets, ",")
-	tValueStr := strings.Join(itemValues, ",")
-
-	inserttSQL := "insert into laboratory_patient_model_item (" + tSetStr + ") values " + tValueStr
-	fmt.Println("inserttSQL===", inserttSQL)
-
-	_, errt := tx.Exec(inserttSQL)
-	if errt != nil {
-		fmt.Println("errt ===", errt)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
-		return
 	}
 	errc := tx.Commit()
 	if errc != nil {
@@ -171,34 +163,51 @@ func LaboratoryPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from laboratory_patient_model where model_name ~$1`
+	countSQL := `select count(id) as total from laboratory_patient_model where id>0`
 	selectSQL := `select lpm.id as laboratory_patient_model_id,cl.name as laboratory_name,p.name as operation_name,
 	lpm.is_common,lpm.created_time,lpmi.clinic_laboratory_id, lpmi.illustration, lpm.model_name,lpmi.times from laboratory_patient_model lpm
 	left join laboratory_patient_model_item lpmi on lpmi.laboratory_patient_model_id = lpm.id
 	left join clinic_laboratory cl on lpmi.clinic_laboratory_id = cl.id
 	left join personnel p on lpm.operation_id = p.id
-	where lpm.model_name ~$1`
+	where lpm.id>0`
+
+	if keyword != "" {
+		countSQL += ` and model_name ~:keyword`
+		selectSQL += ` and lpm.model_name ~:keyword`
+	}
 
 	if isCommon != "" {
-		countSQL += ` and is_common =` + isCommon
-		selectSQL += ` and lpm.is_common=` + isCommon
+		countSQL += ` and is_common = :is_common`
+		selectSQL += ` and lpm.is_common= :is_common`
 	}
 
 	if operationID != "" {
-		countSQL += ` and operation_id =` + operationID
-		selectSQL += ` and lpm.operation_id=` + operationID
+		countSQL += ` and operation_id = :operation_id`
+		selectSQL += ` and lpm.operation_id=:operation_id`
+	}
+
+	var queryOption = map[string]interface{}{
+		"keyword":      ToNullInt64(keyword),
+		"is_common":    ToNullString(isCommon),
+		"operation_id": ToNullBool(operationID),
+		"offset":       ToNullInt64(offset),
+		"limit":        ToNullInt64(limit),
 	}
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
-	total := model.DB.QueryRowx(countSQL, keyword)
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.Queryx(selectSQL+" ORDER BY created_time DESC offset $2 limit $3", keyword, offset, limit)
+	rows, err1 := model.DB.NamedQuery(selectSQL+" ORDER BY created_time DESC offset :offset limit :limit", queryOption)
 	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 	result := FormatSQLRowsToMapArray(rows)
@@ -433,19 +442,19 @@ func LaboratoryPatientModelUpdate(ctx iris.Context) {
 		return
 	}
 
-	var itemValues []string
 	itemSets := []string{
 		"laboratory_patient_model_id",
 		"clinic_laboratory_id",
 		"times",
 		"illustration",
 	}
+	tSetStr := strings.Join(itemSets, ",")
 
 	tx, errb := model.DB.Begin()
 	if errb != nil {
 		fmt.Println("errb ===", errb)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errb})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
 	updateSQL := `update laboratory_patient_model set model_name=$1,is_common=$2,
@@ -458,12 +467,22 @@ func LaboratoryPatientModelUpdate(ctx iris.Context) {
 		return
 	}
 
+	deleteSQL := "delete from laboratory_patient_model_item where laboratory_patient_model_id=$1"
+	fmt.Println("deleteSQL===", deleteSQL)
+	_, errd := tx.Exec(deleteSQL, laboratoryModelID)
+	if errd != nil {
+		fmt.Println("errd ===", errd)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
+		return
+	}
+	inserttSQL := "insert into laboratory_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4)"
+
 	for _, v := range results {
 		clinicLaboratoryID := v["clinic_laboratory_id"]
 		times := v["times"]
 		illustration := v["illustration"]
 
-		var s []string
 		clinicLaboratorySQL := `select id from clinic_laboratory where id=$1`
 		trow := model.DB.QueryRowx(clinicLaboratorySQL, clinicLaboratoryID)
 		if trow == nil {
@@ -476,36 +495,19 @@ func LaboratoryPatientModelUpdate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的检验医嘱错误"})
 			return
 		}
-		s = append(s, laboratoryModelID, clinicLaboratoryID, times)
-		if illustration == "" {
-			s = append(s, `null`)
-		} else {
-			s = append(s, "'"+illustration+"'")
+
+		_, errt := tx.Exec(inserttSQL,
+			ToNullInt64(laboratoryModelID),
+			ToNullInt64(clinicLaboratoryID),
+			ToNullInt64(times),
+			ToNullString(illustration),
+		)
+		if errt != nil {
+			fmt.Println("errt ===", errt)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
+			return
 		}
-		tstr := "(" + strings.Join(s, ",") + ")"
-		itemValues = append(itemValues, tstr)
-	}
-	tSetStr := strings.Join(itemSets, ",")
-	tValueStr := strings.Join(itemValues, ",")
-
-	deleteSQL := "delete from laboratory_patient_model_item where laboratory_patient_model_id=$1"
-	fmt.Println("deleteSQL===", deleteSQL)
-	_, errd := tx.Exec(deleteSQL, laboratoryModelID)
-	if errd != nil {
-		fmt.Println("errd ===", errd)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
-		return
-	}
-
-	inserttSQL := "insert into laboratory_patient_model_item (" + tSetStr + ") values " + tValueStr
-	fmt.Println("inserttSQL===", inserttSQL)
-	_, errt := tx.Exec(inserttSQL)
-	if errt != nil {
-		fmt.Println("errt ===", errt)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
-		return
 	}
 	errc := tx.Commit()
 	if errc != nil {

@@ -72,7 +72,6 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 		return
 	}
 
-	var itemValues []string
 	itemSets := []string{
 		"examination_patient_model_id",
 		"clinic_examination_id",
@@ -87,7 +86,7 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
-	var examinationModelID string
+	var examinationModelID int
 	err := tx.QueryRow("insert into examination_patient_model (model_name,is_common,operation_id) values ($1,$2,$3) RETURNING id", modelName, isCommon, personnelID).Scan(&examinationModelID)
 	if err != nil {
 		fmt.Println("err ===", err)
@@ -95,14 +94,15 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
+	clinicExaminationSQL := `select id from clinic_examination where id=$1`
+	tSetStr := strings.Join(itemSets, ",")
+	inserttSQL := "insert into examination_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4)"
 
 	for _, v := range results {
 		clinicExaminationID := v["clinic_examination_id"]
 		times := v["times"]
 		illustration := v["illustration"]
 
-		var s []string
-		clinicExaminationSQL := `select id from clinic_examination where id=$1`
 		trow := model.DB.QueryRowx(clinicExaminationSQL, clinicExaminationID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "保存模板错误"})
@@ -114,28 +114,16 @@ func ExaminationPatientModelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的检查医嘱错误"})
 			return
 		}
-		s = append(s, examinationModelID, clinicExaminationID, times)
-		if illustration == "" {
-			s = append(s, `null`)
-		} else {
-			s = append(s, "'"+illustration+"'")
+
+		_, errt := tx.Exec(inserttSQL, examinationModelID, ToNullInt64(clinicExaminationID), ToNullInt64(times), ToNullString(illustration))
+		if errt != nil {
+			fmt.Println("errt ===", errt)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
+			return
 		}
-		tstr := "(" + strings.Join(s, ",") + ")"
-		itemValues = append(itemValues, tstr)
 	}
-	tSetStr := strings.Join(itemSets, ",")
-	tValueStr := strings.Join(itemValues, ",")
 
-	inserttSQL := "insert into examination_patient_model_item (" + tSetStr + ") values " + tValueStr
-	fmt.Println("inserttSQL===", inserttSQL)
-
-	_, errt := tx.Exec(inserttSQL)
-	if errt != nil {
-		fmt.Println("errt ===", errt)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": errt.Error()})
-		return
-	}
 	errc := tx.Commit()
 	if errc != nil {
 		tx.Rollback()
@@ -171,19 +159,22 @@ func ExaminationPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from examination_patient_model where model_name ~:keyword`
+	countSQL := `select count(id) as total from examination_patient_model where id>0`
 	selectSQL := `select epm.id as examination_patient_model_id,ce.name as examination_name,p.name as operation_name,
 	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.times from examination_patient_model epm
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
 	left join clinic_examination ce on epmi.clinic_examination_id = ce.id
 	left join personnel p on epm.operation_id = p.id
-	where epm.model_name ~:keyword`
+	where epm.id >0`
 
+	if keyword != "" {
+		countSQL += ` and model_name ~:keyword`
+		selectSQL += ` and epm.model_name ~:keyword`
+	}
 	if isCommon != "" {
 		countSQL += ` and is_common =:is_common`
 		selectSQL += ` and epm.is_common=:is_common`
 	}
-
 	if operationID != "" {
 		countSQL += ` and operation_id =:operation_id`
 		selectSQL += ` and epm.operation_id=:operation_id`
@@ -453,13 +444,13 @@ func ExaminationPatientModelUpdate(ctx iris.Context) {
 		return
 	}
 
-	var itemValues []string
 	itemSets := []string{
 		"examination_patient_model_id",
 		"clinic_examination_id",
 		"times",
 		"illustration",
 	}
+	tSetStr := strings.Join(itemSets, ",")
 
 	tx, errb := model.DB.Begin()
 	if errb != nil {
@@ -478,13 +469,22 @@ func ExaminationPatientModelUpdate(ctx iris.Context) {
 		return
 	}
 
+	deleteSQL := "delete from examination_patient_model_item where examination_patient_model_id=$1"
+	_, errd := tx.Exec(deleteSQL, examinationModelID)
+	if errd != nil {
+		fmt.Println("errd ===", errd)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
+		return
+	}
+	clinicExaminationSQL := `select id from clinic_examination where id=$1`
+	inserttSQL := "insert into examination_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4)"
+
 	for _, v := range results {
 		clinicExaminationID := v["clinic_examination_id"]
 		times := v["times"]
 		illustration := v["illustration"]
 
-		var s []string
-		clinicExaminationSQL := `select id from clinic_examination where id=$1`
 		trow := model.DB.QueryRowx(clinicExaminationSQL, clinicExaminationID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "保存模板错误"})
@@ -496,36 +496,14 @@ func ExaminationPatientModelUpdate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "选择的检查医嘱错误"})
 			return
 		}
-		s = append(s, examinationModelID, clinicExaminationID, times)
-		if illustration == "" {
-			s = append(s, `null`)
-		} else {
-			s = append(s, "'"+illustration+"'")
+
+		_, errt := tx.Exec(inserttSQL, ToNullInt64(examinationModelID), ToNullInt64(clinicExaminationID), ToNullInt64(times), ToNullString(illustration))
+		if errt != nil {
+			fmt.Println("errt ===", errt)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
+			return
 		}
-		tstr := "(" + strings.Join(s, ",") + ")"
-		itemValues = append(itemValues, tstr)
-	}
-	tSetStr := strings.Join(itemSets, ",")
-	tValueStr := strings.Join(itemValues, ",")
-
-	deleteSQL := "delete from examination_patient_model_item where examination_patient_model_id=$1"
-	fmt.Println("deleteSQL===", deleteSQL)
-	_, errd := tx.Exec(deleteSQL, examinationModelID)
-	if errd != nil {
-		fmt.Println("errd ===", errd)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errd.Error()})
-		return
-	}
-
-	inserttSQL := "insert into examination_patient_model_item (" + tSetStr + ") values " + tValueStr
-	fmt.Println("inserttSQL===", inserttSQL)
-	_, errt := tx.Exec(inserttSQL)
-	if errt != nil {
-		fmt.Println("errt ===", errt)
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "1", "msg": errt.Error()})
-		return
 	}
 	errc := tx.Commit()
 	if errc != nil {

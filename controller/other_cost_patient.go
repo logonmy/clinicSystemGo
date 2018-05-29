@@ -112,6 +112,9 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
 		return
 	}
+	clinicOtherCostSQL := `select id as clinic_other_cost_id,price,is_discount,name,unit_name,discount_price from clinic_other_cost where id=$1`
+	inserttSQL := "insert into other_cost_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
+	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 
 	for index, v := range results {
 		clinicOtherCostID := v["clinic_other_cost_id"]
@@ -119,7 +122,6 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		illustration := v["illustration"]
 		fmt.Println("clinicOtherCostID====", clinicOtherCostID)
 
-		clinicOtherCostSQL := `select id as clinic_other_cost_id,price,is_discount,name,unit_name,discount_price from clinic_other_cost where id=$1`
 		trow := model.DB.QueryRowx(clinicOtherCostSQL, clinicOtherCostID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "其它费用项错误"})
@@ -139,14 +141,13 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		unitName := clinicOtherCost["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
-		discount := int(discountPrice) * amount
+		discount := 0
 		fee := total
 		if isDiscount {
 			discount = int(discountPrice) * amount
 			fee = total - discount
 		}
 
-		inserttSQL := "insert into other_cost_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
 		_, errt := tx.Exec(inserttSQL,
 			ToNullInt64(clinicTriagePatientID),
 			ToNullInt64(clinicOtherCostID),
@@ -163,7 +164,6 @@ func OtherCostPatientCreate(ctx iris.Context) {
 			return
 		}
 
-		insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 		_, errm := tx.Exec(insertmSQL,
 			ToNullInt64(clinicTriagePatientID),
 			6,

@@ -64,6 +64,7 @@ func MaterialInstock(ctx iris.Context) {
 	itemSetStr := strings.Join(itemSets, ",")
 	setStr := strings.Join(sets, ",")
 	insertSQL := "insert into material_instock_record (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7) RETURNING id"
+	insertiSQL := "insert into material_instock_record_item (" + itemSetStr + ") values ($1,$2,$3,$4,$5,$6)"
 
 	tx, errb := model.DB.Begin()
 	if errb != nil {
@@ -112,8 +113,6 @@ func MaterialInstock(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "入库药品不存在"})
 			return
 		}
-
-		insertiSQL := "insert into material_instock_record_item (" + itemSetStr + ") values ($1,$2,$3,$4,$5,$6)"
 
 		_, err := tx.Exec(insertiSQL,
 			ToNullInt64(clinicMaterialID),
@@ -355,6 +354,7 @@ func MaterialInstockUpdate(ctx iris.Context) {
 		return
 	}
 	setStr := strings.Join(sets, ",")
+	insertSQL := "insert into material_instock_record_item (" + setStr + ") values ($1,$2,$3,$4,$5,$6)"
 
 	for _, v := range results {
 		clinicMaterialID := v["clinic_material_id"]
@@ -378,7 +378,6 @@ func MaterialInstockUpdate(ctx iris.Context) {
 			return
 		}
 
-		insertSQL := "insert into material_instock_record_item (" + setStr + ") values ($1,$2,$3,$4,$5,$6)"
 		_, err := tx.Exec(insertSQL,
 			ToNullInt64(clinicMaterialID),
 			ToNullInt64(instockAmount),
@@ -460,7 +459,10 @@ func MaterialInstockCheck(ctx iris.Context) {
 		"eff_date",
 		"buy_price",
 		"stock_amount"}
+
+	updateSQL := "update drug_stock set stock_amount=$1,buy_price=$2,updated_time=LOCALTIMESTAMP where id=$3"
 	setStr := strings.Join(sets, ",")
+	insertSQL := "insert into material_stock (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
 
 	for _, v := range instockRecordItems {
 		clinicMaterialID := v["clinic_material_id"].(int64)
@@ -478,7 +480,6 @@ func MaterialInstockCheck(ctx iris.Context) {
 		materialStock := FormatSQLRowToMap(drow)
 		_, dok := materialStock["id"]
 		if !dok {
-			insertSQL := "insert into material_stock (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
 			_, err1 := tx.Exec(insertSQL,
 				storehouseID,
 				clinicMaterialID,
@@ -497,8 +498,6 @@ func MaterialInstockCheck(ctx iris.Context) {
 		} else {
 			materialStockID := strconv.FormatInt(materialStock["id"].(int64), 10)
 			stockAmount := materialStock["stock_amount"].(int64) + instockAmount
-			updateSQL := "update drug_stock set stock_amount=$1,buy_price=$2,updated_time=LOCALTIMESTAMP where id=$3"
-			fmt.Println("updateSQL===", updateSQL)
 			_, err2 := tx.Exec(updateSQL,
 				stockAmount,
 				buyPrice,
@@ -649,8 +648,9 @@ func MaterialOutstock(ctx iris.Context) {
 		"material_outstock_record_id"}
 
 	setStr := strings.Join(sets, ",")
-
 	insertSQL := "insert into material_outstock_record (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id"
+	itemSetStr := strings.Join(itemSets, ",")
+	insertiSQL := "insert into material_outstock_record_item (" + itemSetStr + ") values ($1,$2,$3)"
 
 	tx, errb := model.DB.Begin()
 	if errb != nil {
@@ -678,7 +678,6 @@ func MaterialOutstock(ctx iris.Context) {
 		return
 	}
 	fmt.Println("materialOutstockRecordID====", materialOutstockRecordID)
-	itemSetStr := strings.Join(itemSets, ",")
 
 	for _, v := range results {
 		materialStockID := v["material_stock_id"]
@@ -699,7 +698,6 @@ func MaterialOutstock(ctx iris.Context) {
 			return
 		}
 
-		insertiSQL := "insert into material_outstock_record_item (" + itemSetStr + ") values ($1,$2,$3)"
 		_, err := tx.Exec(insertiSQL,
 			ToNullInt64(materialStockID),
 			ToNullInt64(outstockAmount),
@@ -735,7 +733,6 @@ func MaterialOutstockRecord(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-
 	if startDate != "" && endDate == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
@@ -953,6 +950,7 @@ func MaterialOutstockUpdate(ctx iris.Context) {
 		return
 	}
 	setStr := strings.Join(sets, ",")
+	insertSQL := "insert into material_outstock_record_item (" + setStr + ") values ($1,$2,$3)"
 
 	for _, v := range results {
 		materialStockID := v["material_stock_id"]
@@ -969,7 +967,6 @@ func MaterialOutstockUpdate(ctx iris.Context) {
 			return
 		}
 
-		insertSQL := "insert into material_outstock_record_item (" + setStr + ") values ($1,$2,$3)"
 		_, err := tx.Exec(insertSQL,
 			ToNullInt64(materialStockID),
 			ToNullInt64(outstockAmount),

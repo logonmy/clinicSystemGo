@@ -64,6 +64,7 @@ func DrugInstock(ctx iris.Context) {
 	itemSetStr := strings.Join(itemSets, ",")
 
 	insertSQL := "insert into drug_instock_record (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7) RETURNING id"
+	insertiSQL := "insert into drug_instock_record_item (" + itemSetStr + ") values ($1,$2,$3,$4,$5,$6)"
 
 	tx, errb := model.DB.Begin()
 	if errb != nil {
@@ -112,8 +113,6 @@ func DrugInstock(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "入库药品不存在"})
 			return
 		}
-
-		insertiSQL := "insert into drug_instock_record_item (" + itemSetStr + ") values ($1,$2,$3,$4,$5,$6)"
 
 		_, err := tx.Exec(insertiSQL,
 			ToNullInt64(clinicDrugID),
@@ -356,6 +355,7 @@ func DrugInstockUpdate(ctx iris.Context) {
 	}
 
 	setStr := strings.Join(sets, ",")
+	insertiSQL := "insert into drug_instock_record_item (" + setStr + ") values ($1,$2,$3,$4,$5,$6)"
 
 	for _, v := range results {
 		clinicDrugID := v["clinic_drug_id"]
@@ -378,8 +378,6 @@ func DrugInstockUpdate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "入库药品不存在"})
 			return
 		}
-
-		insertiSQL := "insert into drug_instock_record_item (" + setStr + ") values ($1,$2,$3,$4,$5,$6)"
 
 		_, err := tx.Exec(insertiSQL,
 			ToNullInt64(clinicDrugID),
@@ -464,6 +462,8 @@ func DrugInstockCheck(ctx iris.Context) {
 		"buy_price",
 		"stock_amount"}
 	setStr := strings.Join(sets, ",")
+	insertSQL := "insert into drug_stock (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
+	updateSQL := "update drug_stock set stock_amount=$1,buy_price=$2,updated_time=LOCALTIMESTAMP where id=$3"
 
 	for _, v := range instockRecordItems {
 		clinicDrugID := v["clinic_drug_id"].(int64)
@@ -482,7 +482,6 @@ func DrugInstockCheck(ctx iris.Context) {
 		drugStock := FormatSQLRowToMap(drow)
 		_, dok := drugStock["id"]
 		if !dok {
-			insertSQL := "insert into drug_stock (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
 			_, err1 := tx.Exec(insertSQL,
 				storehouseID,
 				clinicDrugID,
@@ -501,8 +500,6 @@ func DrugInstockCheck(ctx iris.Context) {
 		} else {
 			drugStockID := drugStock["id"].(int64)
 			stockAmount := drugStock["stock_amount"].(int64) + instockAmount
-			updateSQL := "update drug_stock set stock_amount=$1,buy_price=$2,updated_time=LOCALTIMESTAMP where id=$3"
-			fmt.Println("updateSQL===", updateSQL)
 			_, err2 := tx.Exec(updateSQL,
 				stockAmount,
 				buyPrice,
@@ -653,7 +650,9 @@ func DrugOutstock(ctx iris.Context) {
 		"drug_outstock_record_id"}
 
 	setStr := strings.Join(sets, ",")
+	itemSetStr := strings.Join(itemSets, ",")
 	insertSQL := "insert into drug_outstock_record (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id"
+	insertiSQL := "insert into drug_outstock_record_item (" + itemSetStr + ") values ($1,$2,$3)"
 
 	tx, errb := model.DB.Begin()
 	if errb != nil {
@@ -681,7 +680,6 @@ func DrugOutstock(ctx iris.Context) {
 		return
 	}
 	fmt.Println("drugOutstockRecordID====", drugOutstockRecordID)
-	itemSetStr := strings.Join(itemSets, ",")
 
 	for _, v := range results {
 		drugStockID := v["drug_stock_id"]
@@ -701,8 +699,6 @@ func DrugOutstock(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1-", "msg": "新增出库药品不存在"})
 			return
 		}
-		insertiSQL := "insert into drug_outstock_record_item (" + itemSetStr + ") values ($1,$2,$3)"
-		fmt.Println("insertiSQL===", insertiSQL)
 		_, err := tx.Exec(insertiSQL,
 			ToNullInt64(drugStockID),
 			ToNullInt64(outstockAmount),
@@ -956,6 +952,7 @@ func DrugOutstockUpdate(ctx iris.Context) {
 	}
 
 	setStr := strings.Join(sets, ",")
+	insertiSQL := "insert into drug_outstock_record_item (" + setStr + ") values ($1,$2,$3)"
 
 	for _, v := range results {
 		drugStockID := v["drug_stock_id"]
@@ -975,8 +972,7 @@ func DrugOutstockUpdate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "1-", "msg": "新增出库药品不存在"})
 			return
 		}
-		insertiSQL := "insert into drug_outstock_record_item (" + setStr + ") values ($1,$2,$3)"
-		fmt.Println("insertiSQL===", insertiSQL)
+
 		_, err := tx.Exec(insertiSQL,
 			ToNullInt64(drugStockID),
 			ToNullInt64(outstockAmount),

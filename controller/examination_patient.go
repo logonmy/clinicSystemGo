@@ -86,6 +86,31 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		return
 	}
 
+	inserttSQL := `insert into examination_patient (
+		clinic_triage_patient_id,
+		clinic_examination_id,
+		order_sn,
+		soft_sn,
+		times,
+		organ,
+		operation_id,
+		illustration
+	) values ($1, $2, $3, $4, $5, $6, $7, $8)`
+
+	insertmSQL := `insert into mz_unpaid_orders (clinic_triage_patient_id,
+		charge_project_type_id,
+		charge_project_id,
+		order_sn,
+		soft_sn,
+		name,
+		price,
+		amount,
+		unit,
+		total,
+		discount,
+		fee,
+		operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+
 	for index, v := range results {
 		clinicExaminationID := v["clinic_examination_id"]
 		times := v["times"]
@@ -105,17 +130,6 @@ func ExaminationPatientCreate(ctx iris.Context) {
 			return
 		}
 
-		inserttSQL := `insert into examination_patient (
-			clinic_triage_patient_id,
-			clinic_examination_id,
-			order_sn,
-			soft_sn,
-			times,
-			organ,
-			operation_id,
-			illustration
-		) values ($1, $2, $3, $4, $5, $6, $7, $8)`
-
 		_, errt := tx.Exec(inserttSQL, clinicTriagePatientID, clinicExaminationID, orderSn, index, times, ToNullString(organ), personnelID, ToNullString(illustration))
 		if errt != nil {
 			fmt.Println("errt ===", errt)
@@ -131,27 +145,13 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		unitName := clinicExamination["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := price * amount
-		fee := (price - discountPrice) * amount
+		discount := 0
+		fee := total
 		if isDiscount {
-			fee = total
+			discount = int(discountPrice) * amount
+			fee = total - discount
 		}
-		discount := total - fee
-
 		chargeProjectTypeID := 4
-		insertmSQL := `insert into mz_unpaid_orders (
-				clinic_triage_patient_id,
-				charge_project_type_id,
-				charge_project_id,
-				order_sn,
-				soft_sn,
-				name,
-				price,
-				amount,
-				unit,
-				total,
-				discount,
-				fee,
-				operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
 
 		_, errm := tx.Exec(insertmSQL,
 			clinicTriagePatientID,
