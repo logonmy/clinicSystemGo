@@ -256,7 +256,7 @@ func MaterialInstockRecordDetail(ctx iris.Context) {
 	result := FormatSQLRowToMap(arow)
 
 	isql := `select cm.name as material_name,cm.unit_name,cm.manu_factory_name,iri.instock_amount,
-		iri.buy_price,iri.serial,iri.eff_date,cm.ret_price
+		iri.buy_price,iri.serial,iri.eff_date,cm.ret_price,iri.clinic_material_id
 		from material_instock_record_item iri
 		left join clinic_material cm on iri.clinic_material_id = cm.id
 		where iri.material_instock_record_id=$1`
