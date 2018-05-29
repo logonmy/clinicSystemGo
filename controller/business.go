@@ -56,6 +56,10 @@ func MenubarCreate(ctx iris.Context) {
 //MenubarList 获取所有菜单项
 func MenubarList(ctx iris.Context) {
 	ascription := ctx.PostValue("ascription")
+	if ascription == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
 	selectSQL := `select p.id as parent_id,p.url as parent_url,c.url as menu_url,p.name as parent_name,c.name menu_name,c.id as function_menu_id from children_function_menu c 
 		left join parent_function_menu p on p.id = c.parent_function_menu_id`
 	if ascription != "" {
@@ -121,7 +125,7 @@ func BusinessAssign(ctx iris.Context) {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "菜单项不存在"})
 				return
 			}
-			sql := "INSERT INTO clinic_children_functionMenu( children_function_menu_id, clinic_id ) VALUES ($1,$2)"
+			sql := "INSERT INTO clinic_children_functionMenu (children_function_menu_id, clinic_id) VALUES ($1,$2)"
 			_, errtx2 := tx.Exec(sql, ToNullInt64(childrenFunctionMenuID), ToNullInt64(clinicID))
 			if errtx2 != nil {
 				tx.Rollback()
