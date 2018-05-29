@@ -219,6 +219,7 @@ func main() {
 	{
 		business.Post("/menubar/create", controller.MenubarCreate)
 		business.Post("/menubar/list", controller.MenubarList)
+		business.Post("/menubar/list/clinicUnset", controller.MenubarListByClinicID)
 		business.Post("/clinic/assign", controller.BusinessAssign)
 		business.Post("/clinic/menubar", controller.MenuGetByClinicID)
 		business.Post("/admin/create", controller.AdminCreate)
