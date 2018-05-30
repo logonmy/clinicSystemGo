@@ -31,6 +31,11 @@ func main() {
 		ctx.HTML("<h1>Welcome</h1>")
 	})
 
+	file := app.Party("/file", crs).AllowMethods(iris.MethodOptions)
+	{
+		file.Post("/upload", controller.FileUpload)
+	}
+
 	clinic := app.Party("/clinic", crs).AllowMethods(iris.MethodOptions)
 	{
 		clinic.Post("/add", controller.ClinicAdd)
