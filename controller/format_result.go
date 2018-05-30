@@ -8,9 +8,10 @@ import (
 
 //Menu 子菜单
 type Menu struct {
-	FunctionmenuID interface{} `json:"functionmenu_id"`
-	MenuName       interface{} `json:"menu_name"`
-	MenuURL        interface{} `json:"menu_url"`
+	ClinicFunctionmenuID interface{} `json:"clinic_function_menu_id"`
+	FunctionmenuID       interface{} `json:"function_menu_id"`
+	MenuName             interface{} `json:"menu_name"`
+	MenuURL              interface{} `json:"menu_url"`
 }
 
 //Funtionmenus 菜单
@@ -166,15 +167,17 @@ func FormatFuntionmenus(functionMenus []map[string]interface{}) []Funtionmenus {
 	for _, v := range functionMenus {
 		childenURL := v["menu_url"]
 		childenName := v["menu_name"]
-		functionmenuID := v["functionmenu_id"]
+		functionmenuID := v["function_menu_id"]
+		clinicFunctionmenuID := v["clinic_function_menu_id"]
 		parentID := v["parent_id"]
 		parentURL := v["parent_url"]
 		parentName := v["parent_name"]
 		has := false
 		children := Menu{
-			FunctionmenuID: functionmenuID,
-			MenuName:       childenName,
-			MenuURL:        childenURL,
+			ClinicFunctionmenuID: clinicFunctionmenuID,
+			FunctionmenuID:       functionmenuID,
+			MenuName:             childenName,
+			MenuURL:              childenURL,
 		}
 		for k, menu := range menus {
 			parentMenuID := menu.ParentID
