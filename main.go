@@ -19,6 +19,9 @@ func main() {
 		AllowCredentials: true,
 	})
 
+	// 设置静态文件
+	app.StaticServe("./uploads", "/uploads")
+
 	// Optionally, add two built'n handlers
 	// that can recover from any http-relative panics
 	// and log the requests to the terminal.
