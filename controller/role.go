@@ -4,7 +4,6 @@ import (
 	"clinicSystemGo/model"
 	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/kataras/iris"
 )
@@ -53,8 +52,8 @@ func RoleCreate(ctx iris.Context) {
 		}
 
 		for _, v := range results {
-			clinicChildrenFunctionMenuID := v["functionMenu_id"]
-			crow := model.DB.QueryRowx("select id from clinic_children_functionMenu where id=$1 limit 1", clinicChildrenFunctionMenuID)
+			clinicChildrenFunctionMenuID := v["function_menu_id"]
+			crow := model.DB.QueryRowx("select id from clinic_children_function_menu where id=$1 limit 1", clinicChildrenFunctionMenuID)
 			if crow == nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
@@ -66,7 +65,7 @@ func RoleCreate(ctx iris.Context) {
 				return
 			}
 
-			sql := "INSERT INTO role_clinic_functionMenu (clinic_children_functionMenu_id, role_id) VALUES ($1,$2)"
+			sql := "INSERT INTO role_clinic_function_menu (clinic_children_function_menu_id, role_id) VALUES ($1,$2)"
 			_, err = tx.Exec(sql, ToNullInt64(clinicChildrenFunctionMenuID), ToNullInt64(roleID))
 			if err != nil {
 				tx.Rollback()
@@ -138,7 +137,7 @@ func RoleUpdate(ctx iris.Context) {
 			return
 		}
 
-		sql1 := "delete from role_clinic_functionMenu WHERE role_id=" + roleID
+		sql1 := "delete from role_clinic_function_menu WHERE role_id=" + roleID
 		_, errtx := tx.Exec(sql1)
 		if errtx != nil {
 			tx.Rollback()
@@ -147,8 +146,8 @@ func RoleUpdate(ctx iris.Context) {
 		}
 
 		for _, v := range results {
-			clinicChildrenFunctionMenuID := v["functionMenu_id"]
-			crow := model.DB.QueryRowx("select id from clinic_children_functionMenu where id=$1 limit 1", clinicChildrenFunctionMenuID)
+			clinicChildrenFunctionMenuID := v["clinic_function_menu_id"]
+			crow := model.DB.QueryRowx("select id from clinic_children_function_menu where id=$1 limit 1", clinicChildrenFunctionMenuID)
 			if crow == nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
@@ -160,7 +159,7 @@ func RoleUpdate(ctx iris.Context) {
 				return
 			}
 
-			sql := "INSERT INTO role_clinic_functionMenu (clinic_children_functionMenu_id, role_id) VALUES ($1,$2)"
+			sql := "INSERT INTO role_clinic_function_menu (clinic_children_function_menu_id, role_id) VALUES ($1,$2)"
 			_, err = tx.Exec(sql, ToNullInt64(clinicChildrenFunctionMenuID), ToNullInt64(roleID))
 			if err != nil {
 				tx.Rollback()
@@ -209,11 +208,12 @@ func RoleDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 		return
 	}
-	selectSQL := `select rcf.clinic_children_functionMenu_id as functionMenu_id,pf.id as parent_id,pf.url as parent_url,
-	pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from role_clinic_functionMenu rcf
-	left join clinic_children_functionMenu ccf on ccf.id = rcf.clinic_children_functionMenu_id
-	left join children_functionMenu cf on cf.id = ccf.children_functionMenu_id
-	left join parent_functionMenu pf on pf.id = cf.parent_functionMenu_id
+	selectSQL := `select rcf.clinic_children_function_menu_id as clinic_function_menu_id,
+	ccf.children_function_menu_id as function_menu_id,pf.id as parent_id,pf.url as parent_url,
+	pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from role_clinic_function_menu rcf
+	left join clinic_children_function_menu ccf on ccf.id = rcf.clinic_children_function_menu_id and ccf.status=true
+	left join children_function_menu cf on cf.id = ccf.children_function_menu_id
+	left join parent_function_menu pf on pf.id = cf.parent_function_menu_id
 	where rcf.role_id=$1`
 	rows, err2 := model.DB.Queryx(selectSQL, roleID)
 	if err2 != nil {
@@ -222,46 +222,7 @@ func RoleDetail(ctx iris.Context) {
 	}
 	role := FormatSQLRowToMap(arows)
 	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
-	var menus []Funtionmenus
-	for _, v := range clinicFunctionMenu {
-		childenURL := v["menu_url"]
-		childenName := v["menu_name"]
-		functionmenuID := v["functionmenu_id"]
-		parentID := v["parent_id"]
-		parentURL := v["parent_url"]
-		parentName := v["parent_name"]
-		has := false
-		for k, menu := range menus {
-			parentMenuID := menu.ParentID
-			childrenMenus := menu.ChildrensMenus
-			if strconv.FormatInt(parentID.(int64), 10) == parentMenuID {
-				childrens := Menu{
-					FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
-					MenuName:       childenName.(string),
-					MenuURL:        childenURL.(string),
-				}
-				menus[k].ChildrensMenus = append(childrenMenus, childrens)
-				has = true
-			}
-		}
-		if !has {
-			var childrens []Menu
-			children := Menu{
-				FunctionmenuID: strconv.FormatInt(functionmenuID.(int64), 10),
-				MenuName:       childenName.(string),
-				MenuURL:        childenURL.(string),
-			}
-			childrens = append(childrens, children)
-
-			functionMenu := Funtionmenus{
-				ParentID:       strconv.FormatInt(parentID.(int64), 10),
-				ParentName:     parentName.(string),
-				ParentURL:      parentURL.(string),
-				ChildrensMenus: childrens,
-			}
-			menus = append(menus, functionMenu)
-		}
-	}
+	menus := FormatFuntionmenus(clinicFunctionMenu)
 	role["funtionMenus"] = menus
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": role})
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/kataras/iris"
 )
@@ -81,7 +82,8 @@ func MenubarListByClinicID(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	selectSQL := `select p.id as parent_id,p.url as parent_url,c.url as menu_url,p.name as parent_name,c.name menu_name,c.id as function_menu_id from children_function_menu c 
 		left join parent_function_menu p on p.id = c.parent_function_menu_id 
-		left join clinic_children_function_menu r on r.children_function_menu_id = c.id and r.clinic_id = $1 where r.children_function_menu_id IS NULL`
+		left join clinic_children_function_menu r on r.children_function_menu_id = c.id and r.clinic_id = $1 and r.status=true
+		where r.children_function_menu_id IS NULL`
 	rows, _ := model.DB.Queryx(selectSQL, clinicID)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
@@ -127,7 +129,7 @@ func BusinessAssign(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-
+	var sets []string
 	if len(results) > 0 {
 		for _, v := range results {
 			childrenFunctionMenuID := v["function_menu_id"]
@@ -142,13 +144,34 @@ func BusinessAssign(ctx iris.Context) {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "菜单项不存在"})
 				return
 			}
-			sql := "INSERT INTO clinic_children_functionMenu (children_function_menu_id, clinic_id) VALUES ($1,$2)"
-			_, errtx2 := tx.Exec(sql, ToNullInt64(childrenFunctionMenuID), ToNullInt64(clinicID))
-			if errtx2 != nil {
-				tx.Rollback()
-				ctx.JSON(iris.Map{"code": "-1", "msg": errtx2.Error()})
-				return
-			}
+			sets = append(sets, childrenFunctionMenuID)
+		}
+		setStr := strings.Join(sets, ",")
+		insertSQL := `insert into clinic_children_function_menu (clinic_id, children_function_menu_id) 
+		select ` + clinicID + `, id from children_function_menu 
+		where id in (` + setStr +
+			`)and id not in (select children_function_menu_id from clinic_children_function_menu where clinic_id = ` + clinicID + `);`
+
+		_, errtx1 := tx.Exec(insertSQL)
+		if errtx1 != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errtx1.Error()})
+			return
+		}
+
+		_, errtx2 := tx.Exec("update clinic_children_function_menu set status=false where clinic_id=$1", clinicID)
+		if errtx2 != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errtx2.Error()})
+			return
+		}
+		updateSQL := "update clinic_children_function_menu set status=true where clinic_id=$1 and children_function_menu_id in (" + setStr + ")"
+		fmt.Println("updateSQL===", updateSQL)
+		_, errtx3 := tx.Exec(updateSQL, clinicID)
+		if errtx3 != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errtx3.Error()})
+			return
 		}
 	}
 
@@ -223,7 +246,6 @@ func AdminCreate(ctx iris.Context) {
 				return
 			}
 			sql := "INSERT INTO admin_function_menu (children_function_menu_id, admin_id) VALUES ($1,$2)"
-			fmt.Println(sql)
 			_, err = tx.Exec(sql, ToNullInt64(childrenFunctionMenuID), ToNullInt64(adminID))
 			if err != nil {
 				tx.Rollback()
@@ -366,27 +388,34 @@ func AdminList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from admin where name ~:$1 or username ~:$1`
+	countSQL := `select count(id) as total from admin where id>0`
+	rowSQL := `select id as admin_id,created_time,name,username,phone,status from admin where id>0`
+	if keyword != "" {
+		countSQL += " and name ~:keyword"
+		rowSQL += " and name ~:keyword"
+	}
 
-	total := model.DB.QueryRowx(countSQL, keyword)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+	var queryOptions = map[string]interface{}{
+		"keyword": ToNullString(keyword),
+		"offset":  ToNullInt64(offset),
+		"limit":   ToNullInt64(limit),
+	}
+
+	totalrow, err1 := model.DB.NamedQuery(countSQL, queryOptions)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	totals := FormatSQLRowsToMapArray(totalrow)
+	pageInfo := totals[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rowSQL := `select id as admin_id,created_time,name,username,phone,status from admin where name ~:$1 or username ~:$1 offset $2 limit $3`
-
-	rows, err1 := model.DB.Queryx(rowSQL, keyword, offset, limit)
-	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
-		return
-	}
-	result := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+	var results []map[string]interface{}
+	rows, _ := model.DB.NamedQuery(rowSQL+" offset :offset limit :limit", queryOptions)
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //AdminGetByID 获取平台账号信息
@@ -426,11 +455,11 @@ func MenuGetByClinicID(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select ccf.id as function_menu_id,pf.id as parent_id,pf.url as parent_url,
-	pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from clinic_children_functionMenu ccf
+	selectSQL := `select ccf.id as clinic_function_menu_id,ccf.children_function_menu_id as function_menu_id,pf.id as parent_id,pf.url as parent_url,
+	pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from clinic_children_function_menu ccf
 	left join children_function_menu cf on cf.id = ccf.children_function_menu_id
 	left join parent_function_menu pf on pf.id = cf.parent_function_menu_id
-	where ccf.clinic_id=$1`
+	where ccf.clinic_id=$1 and ccf.status=true`
 	rows, err2 := model.DB.Queryx(selectSQL, clinicID)
 	if err2 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
