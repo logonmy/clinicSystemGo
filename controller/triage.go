@@ -68,11 +68,11 @@ func TriageRegister(ctx iris.Context) {
 			return
 		}
 	} else {
-		updateSQL := `update patient set name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8 , province = $9, city = $10, district = $11 where id = $12`
+		updateSQL := `update patient set name=$1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8 , province = $9, city = $10, district = $11 where id = $12`
 		if certNo != "" {
 			updateSQL = `update patient set cert_no = ` + certNo + `, name= $1,birthday=$2,sex=$3, phone=$4, address=$5,profession = $6,remark= $7 ,patient_channel_id = $8, province = $9, city = $10, district = $11  where id = $12`
 		}
-		_, err = tx.Exec(updateSQL, name, birthday, sex, phone, address, profession, remark, patientChannelID, province, city, district, patientID)
+		_, err = tx.Exec(updateSQL, ToNullString(name), ToNullString(birthday), ToNullInt64(sex), ToNullString(phone), ToNullString(address), ToNullString(profession), ToNullString(remark), ToNullInt64(patientChannelID), ToNullString(province), ToNullString(city), ToNullString(district), patientID)
 		if err != nil {
 			tx.Rollback()
 			fmt.Println("err3 ===", err)
