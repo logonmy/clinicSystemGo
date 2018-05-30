@@ -1196,8 +1196,8 @@ func MaterialStockList(ctx iris.Context) {
 		selectSQL += " and ms.supplier_name= :supplier_name"
 	}
 	if keyword != "" {
-		countSQL += " and (cm.name ~:keyword or cm.barcode ~:keyword)"
-		selectSQL += " and (cm.name ~:keyword or cm.barcode ~:keyword)"
+		countSQL += " and cm.name ~:keyword"
+		selectSQL += " and cm.name ~:keyword"
 	}
 
 	if amount != "" {
