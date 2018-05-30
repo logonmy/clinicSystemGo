@@ -1176,7 +1176,8 @@ func MaterialStockList(ctx iris.Context) {
 	countSQL := `select count(*) as total from material_stock ms 
 		left join clinic_material cm on ms.clinic_material_id = cm.id
 		where ms.storehouse_id=:storehouse_id`
-	selectSQL := `select 
+	selectSQL := `select
+		ms.id as material_stock_id,
 		cm.name,
 		cm.specification,
 		cm.unit_name,
