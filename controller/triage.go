@@ -398,7 +398,7 @@ func TriagePersonnelList(ctx iris.Context) {
 	from doctor_visit_schedule dvs 
 	left join department d on dvs.department_id = d.id 
 	left join personnel p on dvs.personnel_id = p.id
-	where p.clinic_id = $1 and (p.name like '%' || $2 || '%') and dvs.am_pm=$3 and dvs.visit_date=current_date`
+	where p.clinic_id = $1 and p.name ~$2 and dvs.am_pm=$3 and dvs.visit_date=current_date`
 
 	if deparmentID != "" {
 		countSQL += " and dvs.department_id=" + deparmentID
