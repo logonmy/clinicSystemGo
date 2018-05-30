@@ -124,7 +124,7 @@ CREATE TABLE patient
   birthday varchar(8) NOT NULL,--身份证号
   sex integer NOT NULL CHECK(sex = 0 OR sex = 1),--性别 0：女，1：男
   phone varchar(11) not NULL,--手机号
-  patient_channel_id INTEGER NOT Null references patient_channel(id),
+  patient_channel_id INTEGER references patient_channel(id),
   province varchar(30),--省
   city varchar(30),--市
   district varchar(30),--区
@@ -233,7 +233,7 @@ CREATE TABLE body_sign
   height FLOAT,--升高（m）
   bmi FLOAT,--体重（千克）/（身高（米）*身高（米））
   blood_type VARCHAR(2) CHECK(blood_type = 'A' OR blood_type = 'B' OR blood_type = 'O' OR blood_type = 'AB' OR blood_type = 'UC' ),--血型 uc: 未查
-  rh_blood_type integer CHECK(rh_blood_type = 0 or rh_blood_type = 1),--RH血型 0: 阴性，1阳性
+  rh_blood_type integer CHECK(rh_blood_type = -1 or rh_blood_type = 1 or rh_blood_type = 0),--RH血型 -1: 阴性，1阳性, 0: 未查
   temperature_type integer CHECK(temperature_type >0 AND temperature_type <6),--RH血型 1: 口温，2：耳温，3：额温，4：腋温，5：肛温
   temperature FLOAT,--温度
   breathe integer,--呼吸(次/分钟)
