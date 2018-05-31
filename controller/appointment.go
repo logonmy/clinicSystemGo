@@ -82,7 +82,11 @@ func AppointmentCreate(ctx iris.Context) {
 		address=$6,
 		profession=$7,
 		remark=$8,
-		patient_channel_id=$9  where id = $10`
+		patient_channel_id=$9,
+		province=$10, 
+		city=$11, 
+		district=$12 
+		where id = $13`
 
 	if !ok {
 		// insertKeys := `name, birthday, sex, phone, address, profession, remark, patient_channel_id, province, city, district`
@@ -126,6 +130,9 @@ func AppointmentCreate(ctx iris.Context) {
 			ToNullString(profession),
 			ToNullString(remark),
 			ToNullInt64(patientChannelID),
+			ToNullString(province),
+			ToNullString(city),
+			ToNullString(district),
 			patientID)
 		if err != nil {
 			tx.Rollback()
