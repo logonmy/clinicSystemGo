@@ -370,6 +370,11 @@ func main() {
 		dataImport.Post("/ImportDrugClass", controller.ImportDrugClass)
 	}
 
+	chiefComplaint := app.Party("/chiefComplaint", crs).AllowMethods(iris.MethodOptions)
+	{
+		chiefComplaint.Post("/list",controller.ChiefComplaintList)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
