@@ -236,3 +236,49 @@ func PatientsGetByKeyword(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": result})
 	return
 }
+
+// MemberPateintList 会员，就诊人列表
+func MemberPateintList(ctx iris.Context) {
+	// clinicID := ctx.PostValue("clinic_id")
+	// keyword := ctx.PostValue("keyword")
+	// offset := ctx.PostValue("offset")
+	// limit := ctx.PostValue("limit")
+	// startDate := ctx.PostValue("start_date")
+	// endDate := ctx.PostValue("end_date")
+	// if clinicID == "" {
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+	// 	return
+	// }
+
+	// if offset == "" {
+	// 	offset = "0"
+	// }
+
+	// if limit == "" {
+	// 	limit = "10"
+	// }
+
+	// _, err := strconv.Atoi(offset)
+	// if err != nil {
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+	// 	return
+	// }
+	// _, err = strconv.Atoi(limit)
+	// if err != nil {
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+	// 	return
+	// }
+
+	// var queryOptions = map[string]interface{}{
+	// 	"keyword":    ToNullString(keyword),
+	// 	"offset":     ToNullInt64(offset),
+	// 	"limit":      ToNullInt64(limit),
+	// 	"start_date": ToNullInt64(startDate),
+	// 	"end_date":   ToNullInt64(endDate),
+	// }
+
+	// patientSQL := `select p.name, p.phone, p.birthday, p.sex, p.created_time from patient p where p.p.deleted_time is null`
+
+	// if
+
+}
