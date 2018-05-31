@@ -97,7 +97,9 @@ func FormatSQLRowsToMapArray(rows *sqlx.Rows) []map[string]interface{} {
 // FormatSQLRowToMap 格式化数据库返回的数组数据
 func FormatSQLRowToMap(row *sqlx.Row) map[string]interface{} {
 	result := make(map[string]interface{})
-	row.MapScan(result)
+	if row != nil {
+		row.MapScan(result)
+	}
 	return result
 }
 

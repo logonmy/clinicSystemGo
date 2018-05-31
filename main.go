@@ -19,6 +19,9 @@ func main() {
 		AllowCredentials: true,
 	})
 
+	// 设置静态文件
+	app.StaticServe("./uploads", "/uploads")
+
 	// Optionally, add two built'n handlers
 	// that can recover from any http-relative panics
 	// and log the requests to the terminal.
@@ -30,6 +33,11 @@ func main() {
 	app.Handle("GET", "/", func(ctx iris.Context) {
 		ctx.HTML("<h1>Welcome</h1>")
 	})
+
+	file := app.Party("/file", crs).AllowMethods(iris.MethodOptions)
+	{
+		file.Post("/upload", controller.FileUpload)
+	}
 
 	clinic := app.Party("/clinic", crs).AllowMethods(iris.MethodOptions)
 	{
@@ -104,6 +112,7 @@ func main() {
 		triage.Post("/completeBodySign", controller.TriageCompleteBodySign)
 		triage.Post("/completePreMedicalRecord", controller.TriageCompletePreMedicalRecord)
 		triage.Post("/completePreDiagnosis", controller.TriageCompletePreDiagnosis)
+		triage.Post("/GetHealthRecord", controller.GetHealthRecord)
 		triage.Post("/chooseDoctor", controller.PersonnelChoose)
 		triage.Post("/reception", controller.TriageReception)
 		triage.Post("/complete", controller.TriageComplete)
