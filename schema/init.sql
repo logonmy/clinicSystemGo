@@ -1679,3 +1679,9 @@ CREATE TABLE treatment_patient_model_item
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
+
+CREATE TABLE chief_complaint 
+(
+  name varchar(20) NOT NULL UNIQUE --主诉名称
+);
+ 

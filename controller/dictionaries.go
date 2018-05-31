@@ -80,26 +80,21 @@ func DoseFormList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from dose_form where deleted_flag is null`
-	selectSQL := `select * from dose_form where deleted_flag is null`
+	countSQL := `select count(id) as total from dose_form where name ~$1 or py_code ~$1`
+	selectSQL := `select * from dose_form where name ~$1 or py_code ~$1`
 
-	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
-	}
-
-	total := model.DB.QueryRowx(countSQL)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
-		return
-	}
+	total := model.DB.QueryRowx(countSQL, keyword)
 
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $1 limit $2", offset, limit)
+	rows, err := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
