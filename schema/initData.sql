@@ -62,4 +62,9 @@ insert into children_function_menu (parent_function_menu_id,url,name) VALUES
 (4,'/setting/chargeItemSetting/testItems','检验项目'),
 (4,'/setting/chargeItemSetting/checkAdvice','检查医嘱'),
 (5,'/platform','诊所管理'),
-(5,'/platform/business','业务管理')
+(5,'/platform/business','业务管理');
+
+insert into chief_complaint (name) values 
+('发热'),('头痛'),('头晕'),('鼻塞'),('流涕'),('声嘶'),('咽痛'),('咽充血'),('咳嗽'),('咳喘'),('咳痰'),('呼吸困难'),
+('恶心'),('乏力'),('反酸'),('腹痛'),('腹胀'),('便秘'),('胸闷'),('腹泻'),('胸痛'),('心悸'),('腰痛'),('腰背痛'),('关节痛'),('尿频'),('尿急'),('尿痛'),('多尿'),
+('排尿困难'),('水肿'),('皮疹'),('疱疹'),('红疹');
