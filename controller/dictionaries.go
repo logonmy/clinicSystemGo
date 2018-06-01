@@ -4,6 +4,7 @@ import (
 	"clinicSystemGo/model"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/kataras/iris"
 )
@@ -31,16 +32,14 @@ func DoseUnitList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-
-	countSQL := `select count(id) as total from dose_unit where id > 0`
-	selectSQL := `select * from dose_unit where id > 0`
-
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		keyword = strings.ToUpper(keyword)
 	}
 
-	total := model.DB.QueryRowx(countSQL)
+	countSQL := `select count(id) as total from dose_unit where id > 0 and name ~$1 or py_code ~$1`
+	selectSQL := `select * from dose_unit where id > 0 and name ~$1 or py_code ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -51,7 +50,7 @@ func DoseUnitList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $1 limit $2", offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -79,9 +78,12 @@ func DoseFormList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
+	if keyword != "" {
+		keyword = strings.ToUpper(keyword)
+	}
 
-	countSQL := `select count(id) as total from dose_form where name ~$1 or py_code ~$1`
-	selectSQL := `select * from dose_form where name ~$1 or py_code ~$1`
+	countSQL := `select count(id) as total from dose_form where id > 0 and name ~$1 or py_code ~$1`
+	selectSQL := `select * from dose_form where id > 0 and name ~$1 or py_code ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 
@@ -183,16 +185,14 @@ func DrugTypeList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-
-	countSQL := `select count(id) as total from drug_type where id > 0`
-	selectSQL := `select * from drug_type where id > 0`
-
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		keyword = strings.ToUpper(keyword)
 	}
 
-	total := model.DB.QueryRowx(countSQL)
+	countSQL := `select count(id) as total from drug_type where id > 0 and name ~$1 or py_code ~$1`
+	selectSQL := `select * from drug_type where id > 0 and name ~$1 or py_code ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -203,7 +203,7 @@ func DrugTypeList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $1 limit $2", offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -231,16 +231,14 @@ func DrugPrintList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-
-	countSQL := `select count(id) as total from drug_print where id > 0`
-	selectSQL := `select * from drug_print where id > 0`
-
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "'"
+		keyword = strings.ToUpper(keyword)
 	}
 
-	total := model.DB.QueryRowx(countSQL)
+	countSQL := `select count(id) as total from drug_print where id > 0 and name ~$1 or py_code ~$1`
+	selectSQL := `select * from drug_print where id > 0 and name ~$1 or py_code ~$1`
+
+	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -251,7 +249,7 @@ func DrugPrintList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $1 limit $2", offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -280,15 +278,10 @@ func ExaminationOrganList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from examination_organ where id > 0`
-	selectSQL := `select * from examination_organ where id > 0`
+	countSQL := `select count(id) as total from examination_organ where id > 0 and name ~$1`
+	selectSQL := `select * from examination_organ where id > 0 and name ~$1`
 
-	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "'"
-	}
-
-	total := model.DB.QueryRowx(countSQL)
+	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -299,7 +292,7 @@ func ExaminationOrganList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $1 limit $2", offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", keyword, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -327,14 +320,12 @@ func FrequencyList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-
-	countSQL := `select count(id) as total from frequency where id > 0`
-	selectSQL := `select * from frequency where id > 0`
-
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "' or code ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "' or py_code ~'" + keyword + "' or code ~'" + keyword + "'"
+		keyword = strings.ToUpper(keyword)
 	}
+
+	countSQL := `select count(id) as total from frequency where id > 0 and name ~$1 or py_code ~$1 or code ~$1`
+	selectSQL := `select * from frequency where id > 0 and name ~$1 or py_code ~$1 or code ~$1`
 
 	total := model.DB.QueryRowx(countSQL)
 	if err != nil {
@@ -380,6 +371,7 @@ func RouteAdministrationList(ctx iris.Context) {
 	selectSQL := `select * from route_administration where id > 0`
 
 	if keyword != "" {
+		keyword = strings.ToUpper(keyword)
 		countSQL += " and name ~:keyword or py_code ~:keyword or code ~:keyword"
 		selectSQL += " and name ~:keyword or py_code ~:keyword or code ~:keyword"
 	}
@@ -429,6 +421,9 @@ func LaboratorySampleList(ctx iris.Context) {
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
+	}
+	if keyword != "" {
+		keyword = strings.ToUpper(keyword)
 	}
 
 	countSQL := `select count(id) as total from laboratory_sample where status=true and name ~$1 or py_code ~$1`
@@ -516,9 +511,12 @@ func ManuFactoryList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
+	if keyword != "" {
+		keyword = strings.ToUpper(keyword)
+	}
 
-	countSQL := `select count(id) from manu_factory where name ~$1`
-	selectSQL := `select * from manu_factory where name ~$1`
+	countSQL := `select count(id) from manu_factory where id > 0 and name ~$1 or py_code ~$1`
+	selectSQL := `select * from manu_factory where id > 0 and name ~$1 or py_code ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -559,9 +557,12 @@ func Laboratorys(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
+	if keyword != "" {
+		keyword = strings.ToUpper(keyword)
+	}
 
-	countSQL := `select count(id) from laboratory where name ~$1`
-	selectSQL := `select * from laboratory where name ~$1`
+	countSQL := `select count(id) from laboratory where id > 0 and name ~$1 or py_code ~$1`
+	selectSQL := `select * from laboratory where id > 0 and name ~$1 or py_code ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -602,9 +603,12 @@ func Examinations(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
+	if keyword != "" {
+		keyword = strings.ToUpper(keyword)
+	}
 
-	countSQL := `select count(id) from examination where name ~$1`
-	selectSQL := `select * from examination where name ~$1`
+	countSQL := `select count(id) from examination where id > 0 and name ~$1 or py_code ~$1`
+	selectSQL := `select * from examination where id > 0 and name ~$1 or py_code ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -646,12 +650,12 @@ func LaboratoryItems(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) from laboratory_item where name ~$1`
+	countSQL := `select count(id) from laboratory_item where id > 0 and name ~$1`
 	selectSQL := `select li.id as laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,li.instrument_code,
 	li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min
 	from laboratory_item li
 	left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
-	where name ~$1`
+	where id > 0 and name ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -700,9 +704,12 @@ func Drugs(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
+	if keyword != "" {
+		keyword = strings.ToUpper(keyword)
+	}
 
-	countSQL := `select count(id) as total from drug where type =$1 and name ~$2`
-	selectSQL := `select * from drug where type =$1 and name ~$2`
+	countSQL := `select count(id) as total from drug where type =$1 and name ~$2 or py_code ~$2`
+	selectSQL := `select * from drug where type =$1 and name ~$2 or py_code ~$2`
 
 	total := model.DB.QueryRowx(countSQL, drugType, keyword)
 	if err != nil {
@@ -749,8 +756,8 @@ func SupplierList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from supplier where name ~$1`
-	selectSQL := `select * from supplier where name ~$1`
+	countSQL := `select count(id) as total from supplier where id > 0 and name ~$1`
+	selectSQL := `select * from supplier where id > 0 and name ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -792,8 +799,8 @@ func InstockWayList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from instock_way where name ~$1`
-	selectSQL := `select * from instock_way where name ~$1`
+	countSQL := `select count(id) as total from instock_way where id > 0 and name ~$1`
+	selectSQL := `select * from instock_way where id > 0 and name ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -835,8 +842,8 @@ func OutstockWayList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from outstock_way where name ~$1`
-	selectSQL := `select * from outstock_way where name ~$1`
+	countSQL := `select count(id) as total from outstock_way where id > 0 and name ~$1`
+	selectSQL := `select * from outstock_way where id > 0 and name ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
