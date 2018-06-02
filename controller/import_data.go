@@ -1089,3 +1089,60 @@ func ImportDrugClass(ctx iris.Context) {
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
+
+//ImportDiagnosis 导入诊断
+func ImportDiagnosis(ctx iris.Context) {
+	excelFileName := "diagnosis.xlsx"
+	xlFile, err := xlsx.OpenFile(excelFileName)
+	if err != nil {
+		fmt.Printf("open failed: %s\n", err)
+		return
+	}
+
+	count := 0
+	keymap := map[string]string{
+		"a": "a",
+	}
+	for index, row := range xlFile.Sheets[0].Rows {
+		fmt.Println("index===", index)
+		if index < 1 {
+			continue
+		}
+		if count > 5 {
+			break
+		}
+		name := row.Cells[0].String()
+		pyCode := row.Cells[1].String()
+
+		if name == "" {
+			count++
+			continue
+		}
+
+		_, keyok := keymap[name]
+		if keyok {
+			fmt.Println("name====", name)
+			continue
+		}
+
+		keymap[name] = name
+		lrow := model.DB.QueryRowx("select id from laboratory where name=$1 limit 1", name)
+		if lrow == nil {
+			continue
+		}
+		diagnosis := FormatSQLRowToMap(lrow)
+		_, lok := diagnosis["id"]
+		if lok {
+			continue
+		}
+
+		diagnosisInsertSQL := "insert into diagnosis (name,py_code) values ($1, $2);"
+		_, err = model.DB.Exec(diagnosisInsertSQL, name, pyCode)
+		if err != nil {
+			fmt.Println("err ===", err, index)
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}

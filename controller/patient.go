@@ -239,46 +239,85 @@ func PatientsGetByKeyword(ctx iris.Context) {
 
 // MemberPateintList 会员，就诊人列表
 func MemberPateintList(ctx iris.Context) {
-	// clinicID := ctx.PostValue("clinic_id")
-	// keyword := ctx.PostValue("keyword")
-	// offset := ctx.PostValue("offset")
-	// limit := ctx.PostValue("limit")
-	// startDate := ctx.PostValue("start_date")
-	// endDate := ctx.PostValue("end_date")
-	// if clinicID == "" {
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
-	// 	return
-	// }
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	startDateStr := ctx.PostValue("start_date")
+	endDateStr := ctx.PostValue("end_date")
 
-	// if offset == "" {
-	// 	offset = "0"
-	// }
+	if offset == "" {
+		offset = "0"
+	}
 
-	// if limit == "" {
-	// 	limit = "10"
-	// }
+	if limit == "" {
+		limit = "10"
+	}
 
-	// _, err := strconv.Atoi(offset)
-	// if err != nil {
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
-	// 	return
-	// }
-	// _, err = strconv.Atoi(limit)
-	// if err != nil {
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
-	// 	return
-	// }
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
 
-	// var queryOptions = map[string]interface{}{
-	// 	"keyword":    ToNullString(keyword),
-	// 	"offset":     ToNullInt64(offset),
-	// 	"limit":      ToNullInt64(limit),
-	// 	"start_date": ToNullInt64(startDate),
-	// 	"end_date":   ToNullInt64(endDate),
-	// }
+	patientSQL := `select p.id, p.name, p.phone, p.birthday, p.sex, p.created_time,max(ctpo.created_time) as visited_time
+	from patient p
+	left join clinic_patient cp on p.id = cp.patient_id
+	left join clinic_triage_patient ctp on cp.id = ctp.clinic_patient_id and ctp.status > 30
+	left join clinic_triage_patient_operation ctpo on ctp.id = ctpo.clinic_triage_patient_id and ctpo.type=40  and ctpo.times = 1 where p.deleted_time is null`
 
-	// patientSQL := `select p.name, p.phone, p.birthday, p.sex, p.created_time from patient p where p.p.deleted_time is null`
+	groupBySQL := ` group by p.id, p.phone, p.birthday, p.sex, p.created_time`
 
-	// if
+	if keyword != "" {
+		patientSQL += " and p.name ~:keyword or p.phone ~:keyword or p.cert_no ~:keyword"
+	}
 
+	var queryOptions = map[string]interface{}{
+		"keyword": ToNullString(keyword),
+		"offset":  ToNullInt64(offset),
+		"limit":   ToNullInt64(limit),
+	}
+
+	if startDateStr != "" {
+		startDate, errs := time.Parse("2006-01-02", startDateStr)
+		if errs != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+			return
+		}
+		queryOptions["start_date"] = startDate
+		patientSQL += " and ctpo.created_time > :start_date"
+	}
+	if endDateStr != "" {
+		endDate, erre := time.Parse("2006-01-02", endDateStr)
+		if erre != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+			return
+		}
+		endDate = endDate.AddDate(0, 0, 1)
+		queryOptions["end_date"] = endDate
+		patientSQL += " and ctpo.created_time < :end_date"
+	}
+
+	countSQL := "select count(*) as total from (" + patientSQL + groupBySQL + ") counttable"
+	pageInfoRows, err := model.DB.NamedQuery(countSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	pageInfoArray := FormatSQLRowsToMapArray(pageInfoRows)
+	pageInfo := pageInfoArray[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.NamedQuery(patientSQL+groupBySQL+" order by p.id desc offset :offset limit :limit", queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	array := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": array, "page_info": pageInfo})
 }

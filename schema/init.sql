@@ -938,8 +938,8 @@ CREATE TABLE drug_outstock_record_item
 CREATE TABLE diagnosis
 (
   id serial PRIMARY KEY NOT NULL,--id
-  py_code varchar(10) NOT NULL,--拼音码
-  name varchar(20) NOT NULL,--诊断名称
+  py_code varchar(50) NOT NULL,--拼音码
+  name varchar(100) NOT NULL,--诊断名称
   icd_code varchar(10) ,--国际疾病分类
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

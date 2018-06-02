@@ -274,8 +274,9 @@ func ClinicDrugList(ctx iris.Context) {
 	}
 
 	if keyword != "" {
-		countSQL += " and (cd.barcode ~:keyword or cd.name ~:keyword)"
-		selectSQL += " and (cd.barcode ~:keyword or cd.name ~:keyword)"
+		keyword = strings.ToUpper(keyword)
+		countSQL += " and (cd.py_code ~:keyword or cd.name ~:keyword)"
+		selectSQL += " and (cd.py_code ~:keyword or cd.name ~:keyword)"
 	}
 
 	if drugClassID != "" {
