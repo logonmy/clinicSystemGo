@@ -4,10 +4,20 @@ import (
 	"clinicSystemGo/model"
 	"fmt"
 	"strconv"
-	"time"
+	"strings"
 
 	"github.com/kataras/iris"
 )
+
+//Department 科室
+type Department struct {
+	DepartmentID  interface{} `json:"department_id" db:"department_id"`
+	Code          interface{} `json:"code" db:"code"`
+	Name          interface{} `json:"name" db:"name"`
+	ClinicID      interface{} `json:"clinic_id" db:"clinic_id"`
+	Weight        interface{} `json:"weight" db:"weight"`
+	IsAppointment interface{} `json:"is_appointment" db:"is_appointment"`
+}
 
 //DepartmentCreate 创建科室
 func DepartmentCreate(ctx iris.Context) {
@@ -20,14 +30,26 @@ func DepartmentCreate(ctx iris.Context) {
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from department where clinic_id = $1 and code=$2 limit 1", clinicID, code)
+	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
 	}
-	department := FormatSQLRowToMap(row)
-	_, ok := department["id"]
-	if ok {
+	clinic := FormatSQLRowToMap(row)
+	_, ok := clinic["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
+		return
+	}
+
+	drow := model.DB.QueryRowx("select id from department where clinic_id = $1 and code=$2 limit 1", clinicID, code)
+	if drow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
+		return
+	}
+	department := FormatSQLRowToMap(drow)
+	_, dok := department["id"]
+	if dok {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "科室编码已存在"})
 		return
 	}
@@ -72,7 +94,7 @@ func DepartmentList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx("SELECT count(id) as total FROM department WHERE (code LIKE '%' || $1 || '%' OR name LIKE '%' || $1 || '%') AND clinic_id=$2", keyword, clinicID)
+	total := model.DB.QueryRowx("SELECT count(id) as total FROM department WHERE (code ~*$1 OR name ~*$1) AND clinic_id=$2 and deleted_time is null", keyword, clinicID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -83,7 +105,7 @@ func DepartmentList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code LIKE '%' || $1 || '%' OR name LIKE '%' || $1 || '%') AND clinic_id=$2 offset $3 limit $4", keyword, clinicID, offset, limit)
+	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code ~*$1 OR name ~*$1) AND clinic_id=$2 and deleted_time is null order by weight asc offset $3 limit $4", keyword, clinicID, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -95,7 +117,7 @@ func DepartmentDelete(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	stmt, err := model.DB.Prepare("DELETE from department WHERE id=$1")
+	stmt, err := model.DB.Prepare("update department set deleted_time=LOCALTIMESTAMP WHERE id=$1")
 	if err != nil {
 		fmt.Println("Perr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -111,26 +133,64 @@ func DepartmentDelete(ctx iris.Context) {
 
 //DepartmentUpdate 编辑科室
 func DepartmentUpdate(ctx iris.Context) {
-	departmentID := ctx.PostValue("departmentID")
-	code := ctx.PostValue("code")
-	name := ctx.PostValue("name")
-	clinicID := ctx.PostValue("clinic_id")
-	weight := ctx.PostValue("weight")
-	if departmentID == "" || code == "" || name == "" || clinicID == "" || weight == "" {
+	var department Department
+	err := ctx.ReadJSON(&department)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	if department.DepartmentID == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	stmt, err := model.DB.Prepare("UPDATE department SET code=$2, name=$3, clinic_id=$4, weight=$5,updated_time=$6 WHERE id=$1")
-	if err != nil {
-		fmt.Println("Perr ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+	var s []string
+
+	crow := model.DB.QueryRowx("select id,clinic_id from department where id=$1 limit 1", department.DepartmentID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
 	}
-	res, err := stmt.Exec(departmentID, code, name, clinicID, weight, time.Now())
-	if err != nil {
-		fmt.Println("Eerr ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+	sdepartment := FormatSQLRowToMap(crow)
+	_, rok := sdepartment["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "科室数据错误"})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "200", "data": res})
+	clinicID := sdepartment["clinic_id"]
+
+	if department.Code != nil {
+		lrow := model.DB.QueryRowx("select id from department where code=$1 and id!=$2 and clinic_id=$3 limit 1", department.Code, department.DepartmentID, clinicID)
+		if lrow == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+			return
+		}
+		udepartment := FormatSQLRowToMap(lrow)
+		_, dok := udepartment["id"]
+		if dok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "科室编码已存在"})
+			return
+		}
+		s = append(s, "code=:code")
+	}
+	if department.Name != nil {
+		s = append(s, "name=:name")
+	}
+	if department.IsAppointment != nil {
+		s = append(s, "is_appointment=:is_appointment")
+	}
+	if department.Weight != nil {
+		s = append(s, "weight=:weight")
+	}
+	s = append(s, "updated_time=LOCALTIMESTAMP")
+	joinSQL := strings.Join(s, ",")
+	updateSQL := "update department set " + joinSQL + " WHERE id=:department_id"
+
+	_, errn := model.DB.NamedExec(updateSQL, department)
+
+	if errn != nil {
+		fmt.Println("Eerr ===", errn)
+		ctx.JSON(iris.Map{"code": "-1", "msg": errn.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
