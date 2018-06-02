@@ -376,6 +376,13 @@ func main() {
 		chiefComplaint.Post("/list", controller.ChiefComplaintList)
 	}
 
+	drugDelivery := app.Party("/drugDelivery", crs).AllowMethods(iris.MethodOptions)
+	{
+		drugDelivery.Post("/traige/waiting/list", controller.DrugDeliveryWaiting)
+		drugDelivery.Post("/traige/issued/list", controller.DrugDeliveryIssued)
+		drugDelivery.Post("/traige/refund/list", controller.DrugDeliveryRefund)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
