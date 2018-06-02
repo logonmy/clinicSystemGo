@@ -408,10 +408,11 @@ CREATE TABLE mz_paid_record_detail
   deleted_time timestamp with time zone
 );
 
---门诊已缴费缴费
+--门诊已缴费项目
 CREATE TABLE mz_paid_orders
 (
   id serial PRIMARY KEY NOT NULL,--id
+  order_status varchar(2)  NOT NULL DEFAULT '01',  --状态，01-待使用，02-已使用， 03-已退回
   mz_paid_record_id INTEGER NOT NULL references mz_paid_record(id),
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
