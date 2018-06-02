@@ -325,7 +325,6 @@ func main() {
 		laboratory.Post("/item/update", controller.LaboratoryItemUpdate)
 		laboratory.Post("/item/onOff", controller.LaboratoryItemStatus)
 		laboratory.Post("/item/list", controller.LaboratoryItemList)
-		laboratory.Post("/item/searchByName", controller.LaboratoryItemSearch)
 		laboratory.Post("/LaboratoryPatientModelCreate", controller.LaboratoryPatientModelCreate)
 		laboratory.Post("/LaboratoryPatientModelList", controller.LaboratoryPatientModelList)
 		laboratory.Post("/LaboratoryPersonalPatientModelList", controller.LaboratoryPersonalPatientModelList)

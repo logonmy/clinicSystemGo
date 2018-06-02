@@ -1201,8 +1201,8 @@ func DrugStockList(ctx iris.Context) {
 		selectSQL += " and ds.supplier_name= :supplier_name"
 	}
 	if keyword != "" {
-		countSQL += " and (cd.name ~:keyword or cd.barcode ~:keyword)"
-		selectSQL += " and (cd.name ~:keyword or cd.barcode ~:keyword)"
+		countSQL += ` and (cd.name ~*:keyword or cd.barcode ~*:keyword)`
+		selectSQL += ` and (cd.name ~*:keyword or cd.barcode ~*:keyword)`
 	}
 
 	if amount != "" {

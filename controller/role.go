@@ -182,15 +182,25 @@ func RoleList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 
-	sql := `SELECT id as role_id,name,status,created_time FROM role where clinic_id=$1`
+	sql := `SELECT id as role_id,name,status,created_time FROM role where clinic_id=:clinic_id`
 
 	if keyword != "" {
-		sql += " and name ~'" + keyword + "'"
+		sql += ` and name ~*:keyword`
 	}
 
-	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(sql, clinicID)
-	results = FormatSQLRowsToMapArray(rows)
+	var queryOptions = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"keyword":   ToNullString(keyword),
+	}
+
+	rows, err := model.DB.NamedQuery(sql, queryOptions)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	results := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }

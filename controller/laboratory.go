@@ -276,38 +276,45 @@ func LaboratoryList(ctx iris.Context) {
 
 	_, ok := clinic["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "所在诊所不存在"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "所查诊所不存在"})
 		return
 	}
 
-	countSQL := `select count(id) as total from clinic_laboratory where clinic_id=$1`
+	countSQL := `select count(id) as total from clinic_laboratory where clinic_id=:clinic_id`
 	selectSQL := `select id as clinic_laboratory_id,name as laboratory_name,unit_name,price,py_code,is_discount,discount_price,
-		remark,status from clinic_laboratory where clinic_id=$1`
+		remark,status from clinic_laboratory where clinic_id=:clinic_id`
 
 	if keyword != "" {
-		countSQL += " and name ~'" + keyword + "'"
-		selectSQL += " and name ~'" + keyword + "'"
+		countSQL += ` and (name ~*:keyword or py_code ~*:keyword or en_name ~*:keyword)`
+		selectSQL += ` and (name ~*:keyword or py_code ~*:keyword or en_name ~*:keyword)`
 	}
 	if status != "" {
-		countSQL += " and status=" + status
-		selectSQL += " and status=" + status
+		countSQL += " and status=:status"
+		selectSQL += " and status=:status"
+	}
+
+	var queryOptions = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+		"status":    ToNullBool(status),
 	}
 
 	fmt.Println("countSQL===", countSQL)
 	fmt.Println("selectSQL===", selectSQL)
-	total := model.DB.QueryRowx(countSQL, clinicID)
+	pageInfoRows, err := model.DB.NamedQuery(countSQL, queryOptions)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfoArray := FormatSQLRowsToMapArray(pageInfoRows)
+	pageInfo := pageInfoArray[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL+" offset $2 limit $3", clinicID, offset, limit)
-	results = FormatSQLRowsToMapArray(rows)
+	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOptions)
+	results := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -647,8 +654,8 @@ func LaboratoryItemList(ctx iris.Context) {
 		where cli.clinic_id=:clinic_id`
 
 	if keyword != "" {
-		countSQL += " and cli.name ~:keyword"
-		selectSQL += " and cli.name ~:keyword"
+		countSQL += ` and cli.name ~*:keyword`
+		selectSQL += ` and cli.name ~*:keyword`
 	}
 	if status != "" {
 		countSQL += " and cli.status=:status"
@@ -899,48 +906,6 @@ func LaboratoryItemStatus(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
-}
-
-//LaboratoryItemSearch 搜索检验项目
-func LaboratoryItemSearch(ctx iris.Context) {
-	clinicID := ctx.PostValue("clinic_id")
-	keyword := ctx.PostValue("name")
-
-	if clinicID == "" {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
-		return
-	}
-
-	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
-	if row == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
-		return
-	}
-	clinic := FormatSQLRowToMap(row)
-	_, ok := clinic["id"]
-	if !ok {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "所在诊所不存在"})
-		return
-	}
-
-	selectSQL := `select cli.id as clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cli.instrument_code,
-		cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status,cli.is_delivery
-		from clinic_laboratory_item cli
-		left join clinic_laboratory_item_reference clir on clir.clinic_laboratory_item_id = cli.id
-		where cli.clinic_id=$1 and cli.status=true`
-
-	if keyword != "" {
-		selectSQL += " and cli.name ~'" + keyword + "'"
-	}
-	fmt.Println("selectSQL===", selectSQL)
-
-	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx(selectSQL, clinicID)
-	results = FormatSQLRowsToMapArray(rows)
-
-	laboratoryItems := FormatLaboratoryItem(results)
-
-	ctx.JSON(iris.Map{"code": "200", "data": laboratoryItems})
 }
 
 //LaboratoryItemDetail 检验项目详情
