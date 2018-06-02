@@ -7,6 +7,54 @@ import (
 	"github.com/kataras/iris"
 )
 
+// DrugDeliveryList 获取药品记录（包括 待发药，已发药，已退药）
+func DrugDeliveryList(ctx iris.Context) {
+	status := ctx.PostValue("order_status")
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicTriagePatientID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	SQL := `FROM mz_paid_orders mpo 
+	left join clinic_drug cd on cd.id = mpo.charge_project_id 
+	where mpo.clinic_triage_patient_id = $1 and mpo.order_status = $2 and mpo.charge_project_type_id in (1,2)`
+	countsql := "select count(mpo.*) as total,string_agg(cast ( mpo.id as TEXT ),',') as ids " + SQL
+
+	total := model.DB.QueryRowx(countsql, clinicTriagePatientID, status)
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+	querysql := "select mpo.id,mpo.name,mpo.amount,cd.specification,cd.manu_factory_name,cd.dose_form_name " + SQL + " offset $3 limit $4"
+
+	rows, _ := model.DB.Queryx(querysql, clinicTriagePatientID, status, offset, limit)
+
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+
+}
+
 // DrugDeliveryWaiting 获取用户待发药的分诊记录
 func DrugDeliveryWaiting(ctx iris.Context) {
 	drugDeliveryTriageList(ctx, "01")
