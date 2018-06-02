@@ -178,8 +178,8 @@ func TreatmentPatientModelList(ctx iris.Context) {
 	where tpm.id >0`
 
 	if keyword != "" {
-		countSQL += ` and model_name ~:keyword`
-		selectSQL += ` and tpm.model_name ~:keyword`
+		countSQL += ` and model_name ~*:keyword`
+		selectSQL += ` and tpm.model_name ~*:keyword`
 	}
 	if isCommon != "" {
 		countSQL += ` and is_common =:is_common`

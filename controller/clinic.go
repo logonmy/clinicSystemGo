@@ -13,8 +13,8 @@ import (
 //ClinicList 获取诊所列表
 func ClinicList(ctx iris.Context) {
 	keyword := ctx.PostValue("keyword")
-	startDate := ctx.PostValue("start_date")
-	endDate := ctx.PostValue("end_date")
+	startDateStr := ctx.PostValue("start_date")
+	endDateStr := ctx.PostValue("end_date")
 	status := ctx.PostValue("status")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
@@ -27,35 +27,56 @@ func ClinicList(ctx iris.Context) {
 		limit = "10"
 	}
 
-	if startDate == "" || endDate == "" {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "请填写正确的查询日期"})
-		return
+	queryMap := map[string]interface{}{
+		"keyword": ToNullString(keyword),
+		"status":  ToNullBool(status),
+		"offset":  ToNullInt64(offset),
+		"limit":   ToNullInt64(limit),
 	}
 
 	sql := `FROM clinic c
 	left join personnel p on p.clinic_id = c.id and p.is_clinic_admin = true
-	where c.created_time between :startDate and :endDate`
+	where c.deleted_time is null `
+
+	if startDateStr != "" {
+		startDate, errs := time.Parse("2006-01-02", startDateStr)
+		if errs != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+			return
+		}
+		queryMap["start_date"] = startDate
+		sql += " and c.created_time > :start_date"
+	}
+	if endDateStr != "" {
+		endDate, erre := time.Parse("2006-01-02", endDateStr)
+		if erre != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+			return
+		}
+		endDate = endDate.AddDate(0, 0, 1)
+		queryMap["end_date"] = endDate
+		sql += " and c.created_time < :end_date"
+	}
 
 	if keyword != "" {
-		sql = sql + " AND (c.code ~:keyword or c.name ~:keyword) "
+		sql = sql + ` AND (c.code ~*:keyword or c.name ~*:keyword) `
 	}
 
 	if status != "" {
 		sql = sql + " AND c.status = :status"
 	}
 
-	queryMap := map[string]interface{}{
-		"keyword":   ToNullString(keyword),
-		"startDate": ToNullString(startDate),
-		"endDate":   ToNullString(endDate),
-		"status":    ToNullBool(status),
-		"offset":    ToNullInt64(offset),
-		"limit":     ToNullInt64(limit),
-	}
-
 	var results []map[string]interface{}
-	rows, _ := model.DB.NamedQuery("SELECT c.*,p.phone,p.username,p.clinic_id "+sql+" offset :offset limit :limit", queryMap)
-	total, _ := model.DB.NamedQuery("SELECT COUNT (*) as total "+sql, queryMap)
+	rows, err1 := model.DB.NamedQuery("SELECT c.*,p.phone,p.username,p.clinic_id "+sql+" offset :offset limit :limit", queryMap)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+	total, err2 := model.DB.NamedQuery("SELECT COUNT (*) as total "+sql, queryMap)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		return
+	}
 	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit

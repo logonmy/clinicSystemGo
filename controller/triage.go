@@ -662,7 +662,7 @@ func ReceiveRecord(ctx iris.Context) {
 
 	countSQL := `select count (*) as total from clinic_triage_patient ctp
 	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id
-	where ctp.status > 30 and ctp.clinic_patient_id = $1`
+	where ctp.status > 30 and ctp.clinic_patient_id = :clinic_patient_id`
 
 	querySQL := `select 
 	ctp.id as clinic_triage_patient_id,
@@ -683,20 +683,31 @@ func ReceiveRecord(ctx iris.Context) {
 	left join department d on ctp.department_id = d.id
 	left join personnel p on ctp.doctor_id = p.id
 	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id
-	where ctp.status > 30 and ctp.clinic_patient_id = $1`
+	where ctp.status > 30 and ctp.clinic_patient_id = :clinic_patient_id`
 
 	if keyword != "" {
-		countSQL += `  and mr.diagnosis ~'` + keyword + `'`
-		querySQL += `  and mr.diagnosis ~'` + keyword + `'`
+		countSQL += ` and mr.diagnosis ~*:keyword`
+		querySQL += ` and mr.diagnosis ~*:keyword`
 	}
 
-	total := model.DB.QueryRowx(countSQL, clinicPatientID)
+	var queryOptions = map[string]interface{}{
+		"clinic_patient_id": ToNullInt64(clinicPatientID),
+		"keyword":           ToNullString(keyword),
+		"offset":            ToNullInt64(offset),
+		"limit":             ToNullInt64(limit),
+	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfoRows, err := model.DB.NamedQuery(countSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	pageInfoArray := FormatSQLRowsToMapArray(pageInfoRows)
+	pageInfo := pageInfoArray[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err := model.DB.Queryx(querySQL+` order by ctpo.created_time DESC offset $2 limit $3`, clinicPatientID, offset, limit)
+	rows, err := model.DB.NamedQuery(querySQL+` order by ctpo.created_time DESC offset :offset limit :limit`, queryOptions)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

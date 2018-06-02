@@ -171,8 +171,8 @@ func ExaminationPatientModelList(ctx iris.Context) {
 	where epm.id >0`
 
 	if keyword != "" {
-		countSQL += ` and model_name ~:keyword`
-		selectSQL += ` and epm.model_name ~:keyword`
+		countSQL += ` and model_name ~*:keyword`
+		selectSQL += ` and epm.model_name ~*:keyword`
 	}
 	if isCommon != "" {
 		countSQL += ` and is_common =:is_common`

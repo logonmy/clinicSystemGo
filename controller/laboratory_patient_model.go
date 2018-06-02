@@ -172,8 +172,8 @@ func LaboratoryPatientModelList(ctx iris.Context) {
 	where lpm.id>0`
 
 	if keyword != "" {
-		countSQL += ` and model_name ~:keyword`
-		selectSQL += ` and lpm.model_name ~:keyword`
+		countSQL += ` and model_name ~*:keyword`
+		selectSQL += ` and lpm.model_name ~*:keyword`
 	}
 
 	if isCommon != "" {

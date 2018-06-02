@@ -273,7 +273,7 @@ func MemberPateintList(ctx iris.Context) {
 	groupBySQL := ` group by p.id, p.phone, p.birthday, p.sex, p.created_time`
 
 	if keyword != "" {
-		patientSQL += " and p.name ~:keyword or p.phone ~:keyword or p.cert_no ~:keyword"
+		patientSQL += ` and p.name ~*:keyword or p.phone ~*:keyword or p.cert_no ~*:keyword`
 	}
 
 	var queryOptions = map[string]interface{}{

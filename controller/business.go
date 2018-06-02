@@ -391,8 +391,8 @@ func AdminList(ctx iris.Context) {
 	countSQL := `select count(id) as total from admin where id>0`
 	rowSQL := `select id as admin_id,created_time,name,username,phone,status from admin where id>0`
 	if keyword != "" {
-		countSQL += " and name ~:keyword"
-		rowSQL += " and name ~:keyword"
+		countSQL += ` and name ~*:keyword`
+		rowSQL += ` and name ~*:keyword`
 	}
 
 	var queryOptions = map[string]interface{}{
