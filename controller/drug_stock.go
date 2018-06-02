@@ -193,7 +193,8 @@ func DrugInstockRecord(ctx iris.Context) {
 		from drug_instock_record ir
 		left join personnel p on ir.instock_operation_id = p.id
 		left join personnel vp on ir.verify_operation_id = vp.id
-		where storehouse_id=:storehouse_id`
+		where storehouse_id=:storehouse_id
+		order by ir.instock_date desc`
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
@@ -777,7 +778,8 @@ func DrugOutstockRecord(ctx iris.Context) {
 		left join personnel p on outr.personnel_id = p.id
 		left join personnel op on outr.outstock_operation_id = op.id
 		left join personnel vp on outr.verify_operation_id = vp.id
-		where storehouse_id=:storehouse_id`
+		where storehouse_id=:storehouse_id
+		order by outr.outstock_date desc`
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {

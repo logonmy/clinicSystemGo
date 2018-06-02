@@ -7,11 +7,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-
 	"strings"
 
 	"github.com/kataras/iris"
 )
+
+//Personnel 人员
+type Personnel struct {
+	PersonnelID   interface{} `json:"personnel_id" db:"personnel_id"`
+	DepartmentID  interface{} `json:"department_id" db:"department_id"`
+	Title         interface{} `json:"title" db:"title"`
+	Code          interface{} `json:"code" db:"code"`
+	Name          interface{} `json:"name" db:"name"`
+	Username      interface{} `json:"username" db:"username"`
+	Password      interface{} `json:"password" db:"password"`
+	PersonnelType interface{} `json:"personnel_type" db:"personnel_type"`
+	ClinicID      interface{} `json:"clinic_id" db:"clinic_id"`
+	Weight        interface{} `json:"weight" db:"weight"`
+	IsAppointment interface{} `json:"is_appointment" db:"is_appointment"`
+}
 
 // PersonnelLogin 创建医院管理员
 func PersonnelLogin(ctx iris.Context) {
@@ -56,6 +70,30 @@ func PersonnelCreate(ctx iris.Context) {
 	isClinicAdmin := false
 
 	if code != "" && name != "" && clinicID != "" && departmentID != "" && weight != "" && title != "" && username != "" && password != "" && personnelType != "" {
+		row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
+		if row == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
+			return
+		}
+		clinic := FormatSQLRowToMap(row)
+		_, ok := clinic["id"]
+		if !ok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
+			return
+		}
+
+		drow := model.DB.QueryRowx("select id from personnel where clinic_id = $1 and code=$2 limit 1", clinicID, code)
+		if drow == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
+			return
+		}
+		personnel := FormatSQLRowToMap(drow)
+		_, pok := personnel["id"]
+		if pok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "人员编码已存在"})
+			return
+		}
+
 		tx, err := model.DB.Begin()
 		if err != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -71,8 +109,8 @@ func PersonnelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
 			return
 		}
-		var resultID int
-		err = tx.QueryRow("insert into department_personnel(department_id, personnel_id, type) values ($1, $2, $3) RETURNING id", departmentID, personnelID, personnelType).Scan(&resultID)
+
+		_, err = tx.Exec("insert into department_personnel(department_id, personnel_id, type) values ($1, $2, $3)", departmentID, personnelID, personnelType)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -84,7 +122,7 @@ func PersonnelCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
 			return
 		}
-		ctx.JSON(iris.Map{"code": "200", "data": iris.Map{"id": personnelID}})
+		ctx.JSON(iris.Map{"code": "200", "data": nil})
 		return
 	}
 
@@ -150,7 +188,7 @@ func PersonnelList(ctx iris.Context) {
 	left join clinic c on p.clinic_id = c.id 
 	left join department_personnel dp on p.id = dp.personnel_id
 	left join department d on dp.department_id = d.id
-	where p.clinic_id = $1 and (p.code ~$2 or p.name ~$2)`
+	where p.clinic_id = $1 and p.deleted_time is null and (p.code ~$2 or p.name ~$2)`
 	if deparmentID != "" {
 		jionSQL += " and d.id = " + deparmentID
 	}
@@ -172,7 +210,7 @@ func PersonnelList(ctx iris.Context) {
 	rowSQL := `select p.id, p.code, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
 	c.id as clinic_id, c.name as clinic_name,
 	dp.type as personnel_type,
-	d.code as department_code, d.name as department_name, d.id as department_id ` + jionSQL + " offset $3 limit $4"
+	d.code as department_code, d.name as department_name, d.id as department_id ` + jionSQL + "order by weight asc offset $3 limit $4"
 
 	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, offset, limit)
 	if err1 != nil {
@@ -219,7 +257,7 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 	left join department d on dp.department_id = d.id
 	left join (select count(pr.personnel_id) as total,pr.personnel_id from personnel_role pr 
 		left join personnel p on p.id=pr.personnel_id group by pr.personnel_id) prc on prc.personnel_id=p.id
-	where p.clinic_id=:clinic_id and prc.total>0 and (p.code ~:keyword or p.name ~:keyword)`
+	where p.clinic_id=:clinic_id and p.deleted_time is null and prc.total>0 and (p.code ~:keyword or p.name ~:keyword)`
 
 	var queryOption = map[string]interface{}{
 		"clinic_id": ToNullInt64(clinicID),
@@ -247,7 +285,7 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 	left join department d on dp.department_id = d.id
 	left join (select count(pr.personnel_id) as total,pr.personnel_id,pr.status from personnel_role pr 
 		left join personnel p on p.id=pr.personnel_id group by pr.personnel_id,pr.status) prc on prc.personnel_id=p.id
-	where p.clinic_id=:clinic_id and prc.total>0 and (p.code ~:keyword or p.name ~:keyword) offset :offset limit :limit`
+	where p.clinic_id=:clinic_id and p.deleted_time is null and prc.total>0 and (p.code ~:keyword or p.name ~:keyword) offset :offset limit :limit`
 
 	selectSQL := `select pr.personnel_id,pr.role_id,r.name as role_name from personnel_role pr
 		left join role r on r.id = pr.role_id`
@@ -281,59 +319,89 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 
 // PersonnelUpdate 修改人员
 func PersonnelUpdate(ctx iris.Context) {
-	id := ctx.PostValue("id")
-	departmentID := ctx.PostValue("department_id")
-	weight := ctx.PostValue("weight")
-	title := ctx.PostValue("title")
-	username := ctx.PostValue("username")
-	password := ctx.PostValue("password")
-	personnelType := ctx.PostValue("personnel_type")
-	isAppointment := ctx.PostValue("is_appointment")
-	status := ctx.PostValue("status")
-	if id == "" || personnelType == "" {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+	var personnel Personnel
+	err := ctx.ReadJSON(&personnel)
+	fmt.Println("personnel===", personnel)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	var sets []string
-	if weight != "" {
-		sets = append(sets, "weight="+weight)
+	if personnel.PersonnelID == nil || personnel.PersonnelType == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
 	}
-	if title != "" {
-		sets = append(sets, "title='"+title+"'")
+	var s []string
+
+	crow := model.DB.QueryRowx("select id,clinic_id from personnel where id=$1 limit 1", personnel.PersonnelID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
 	}
-	if username != "" {
-		sets = append(sets, "username='"+username+"'")
+	spersonnel := FormatSQLRowToMap(crow)
+	_, rok := spersonnel["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "人员数据错误"})
+		return
 	}
-	if status != "" {
-		sets = append(sets, "status="+status)
+	clinicID := spersonnel["clinic_id"]
+
+	if personnel.Code != nil {
+		lrow := model.DB.QueryRowx("select id from personnel where code=$1 and id!=$2 and clinic_id=$3 limit 1", personnel.Code, personnel.PersonnelID, clinicID)
+		if lrow == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+			return
+		}
+		upersonnel := FormatSQLRowToMap(lrow)
+		_, dok := upersonnel["id"]
+		if dok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "人员编码已存在"})
+			return
+		}
+		s = append(s, "code=:code")
 	}
-	if isAppointment != "" {
-		sets = append(sets, "is_appointment="+isAppointment)
+	if personnel.Name != nil {
+		s = append(s, "name=:name")
 	}
-	if password != "" {
+	if personnel.Title != nil {
+		s = append(s, "title=:title")
+	}
+	if personnel.Username != nil {
+		s = append(s, "username=:username")
+	}
+	if personnel.IsAppointment != nil {
+		s = append(s, "is_appointment=:is_appointment")
+	}
+	if personnel.Weight != nil {
+		s = append(s, "weight=:weight")
+	}
+	if personnel.Password != nil {
 		md5Ctx := md5.New()
-		md5Ctx.Write([]byte(password))
-		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
-		sets = append(sets, "password='"+passwordMd5+"'")
+		md5Ctx.Write([]byte(personnel.Password.(string)))
+		personnel.Password = hex.EncodeToString(md5Ctx.Sum(nil))
+		s = append(s, "password=:password")
 	}
-	setStr := strings.Join(sets, ",")
-	psql := "update personnel set " + setStr + " where id=" + id
-	fmt.Println("===", psql)
-	tx, err := model.DB.Begin()
+
+	tx, err := model.DB.Beginx()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
 
-	if departmentID != "" {
-		_, err := tx.Exec("update department_personnel set department_id= $1,updated_time=LOCALTIMESTAMP where personnel_id = $2 and type= $3", departmentID, id, personnelType)
+	if personnel.DepartmentID != nil {
+		_, err := tx.NamedExec("update department_personnel set department_id=:department_id,updated_time=LOCALTIMESTAMP where personnel_id=:personnel_id and type=:personnel_type", personnel)
 		if err != nil {
+			fmt.Println("5")
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
 			return
 		}
 	}
-	_, err = tx.Exec(psql)
+
+	s = append(s, "updated_time=LOCALTIMESTAMP")
+	joinSQL := strings.Join(s, ",")
+	psql := "update personnel set " + joinSQL + " where id=:personnel_id"
+	fmt.Println("psql", psql)
+	_, err = tx.NamedExec(psql, personnel)
 	if err != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -415,5 +483,22 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+//PersonnelDelete 删除人员
+func PersonnelDelete(ctx iris.Context) {
+	personnelID := ctx.PostValue("personnel_id")
+	if personnelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	_, err := model.DB.Exec("update personnel set deleted_time=LOCALTIMESTAMP WHERE id=$1", personnelID)
+	if err != nil {
+		fmt.Println("Perr ===", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
