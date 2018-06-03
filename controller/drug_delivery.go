@@ -3,7 +3,6 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"encoding/json"
-	"fmt"
 	"strconv"
 
 	"github.com/kataras/iris"
@@ -156,8 +155,6 @@ func DrugDeliveryRecordCreate(ctx iris.Context) {
 	operation := ctx.PostValue("operation_id")
 	items := ctx.PostValue("items")
 
-	fmt.Println(triagePatient, operation, items)
-
 	var results []map[string]interface{}
 	err := json.Unmarshal([]byte(items), &results)
 
@@ -185,12 +182,9 @@ func DrugDeliveryRecordCreate(ctx iris.Context) {
 		return
 	}
 
-	fmt.Println(recordID)
-
 	for _, item := range results {
 		orderID := item["mz_paid_orders_id"]
 		item["drug_delivery_record_id"] = recordID
-		fmt.Println(item)
 		_, err := tx.NamedExec(`INSERT INTO drug_delivery_record_item (drug_delivery_record_id, mz_paid_orders_id,remark) VALUES (:drug_delivery_record_id, :mz_paid_orders_id, :remark)`, item)
 		if err != nil {
 			tx.Rollback()
@@ -223,5 +217,47 @@ func DrugDeliveryRecordCreate(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "操作成功"})
+
+}
+
+// DrugDeliveryRecordList 查询发药记录
+func DrugDeliveryRecordList(ctx iris.Context) {
+	triagePatient := ctx.PostValue("clinic_triage_patient_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	SQL := ` from drug_delivery_record ddc 
+	left join clinic_triage_patient ctp on ctp.id = ddc.clinic_triage_patient_id 
+	left join personnel doc on doc.id = ctp.doctor_id 
+	left join personnel op on op.id = ddc.operation_id 
+	left join (select drug_delivery_record_id,min(mz_paid_orders_id) as order_id from drug_delivery_record_item group by drug_delivery_record_id) mp on mp.drug_delivery_record_id = ddc.id
+	left join mz_paid_orders mpo on mpo.id = mp.order_id 
+	where ddc.clinic_triage_patient_id = $1`
+
+	countsql := "select count(ddc.*) as total " + SQL
+	total := model.DB.QueryRowx(countsql, triagePatient)
+
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	querysql := `select ctp.visit_date,
+	 doc.name as doctor_name,
+	 op.name as opration_name,
+	 ddc.created_time,
+	 mpo.name as project_name 
+	` + SQL + " offset $2 limit $3"
+
+	rows, err := model.DB.Queryx(querysql, triagePatient, offset, limit)
+
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 
 }
