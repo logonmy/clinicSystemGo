@@ -255,7 +255,7 @@ func DrugDeliveryRecordList(ctx iris.Context) {
 	 mpo.name as project_name 
 	` + SQL + " offset $2 limit $3"
 
-	rows, err := model.DB.Queryx(querysql, triagePatient, offset, limit)
+	rows, _ := model.DB.Queryx(querysql, triagePatient, offset, limit)
 
 	results := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
