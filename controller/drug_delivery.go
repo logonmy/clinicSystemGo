@@ -39,6 +39,7 @@ func DrugDeliveryList(ctx iris.Context) {
 
 	SQL := `FROM mz_paid_orders mpo 
 	left join clinic_drug cd on cd.id = mpo.charge_project_id 
+	left join drug_stock ds on ds.clinic_drug_id = cd.id 
 	where mpo.clinic_triage_patient_id = $1 and mpo.order_status = $2 and mpo.charge_project_type_id in (1,2)`
 	countsql := "select count(mpo.*) as total,string_agg(cast ( mpo.id as TEXT ),',') as ids " + SQL
 
@@ -46,28 +47,32 @@ func DrugDeliveryList(ctx iris.Context) {
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
-	querysql := "select mpo.id,mpo.name,mpo.amount,cd.specification,cd.manu_factory_name,cd.dose_form_name " + SQL + " offset $3 limit $4"
+	querysql := "select mpo.id,mpo.name,mpo.amount,mpo.charge_project_type_id,cd.specification,cd.manu_factory_name,cd.dose_form_name,ds.stock_amount " + SQL + " offset $3 limit $4"
 
 	rows, _ := model.DB.Queryx(querysql, clinicTriagePatientID, status, offset, limit)
-
+	allSelectStatus := true
 	results := FormatSQLRowsToMapArray(rows)
+	for _, item := range results {
+		allSelectStatus = item["stock_amount"].(int64) >= item["amount"].(int64) && allSelectStatus
+	}
+	pageInfo["allSelectStatus"] = allSelectStatus
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 
 }
 
 // DrugDeliveryWaiting 获取用户待发药的分诊记录
 func DrugDeliveryWaiting(ctx iris.Context) {
-	drugDeliveryTriageList(ctx, "01")
+	drugDeliveryTriageList(ctx, "10")
 }
 
 // DrugDeliveryIssued 获取用户已发药的分诊记录
 func DrugDeliveryIssued(ctx iris.Context) {
-	drugDeliveryTriageList(ctx, "02")
+	drugDeliveryTriageList(ctx, "30")
 }
 
 // DrugDeliveryRefund 获取用户已退药的分诊记录
 func DrugDeliveryRefund(ctx iris.Context) {
-	drugDeliveryTriageList(ctx, "03")
+	drugDeliveryTriageList(ctx, "40")
 }
 
 // 获取用户各状态的分诊记录
@@ -111,7 +116,7 @@ func drugDeliveryTriageList(ctx iris.Context, status string) {
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,count(*) as total_count from mz_paid_orders where charge_project_type_id in (0,1) and order_status = '` + status + `' group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
+	left join (select clinic_triage_patient_id,count(*) as total_count from mz_paid_orders where charge_project_type_id in (1,2) and order_status = '` + status + `' group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
 	where up.total_count > 0 AND cp.clinic_id=$1 AND ctp.updated_time BETWEEN $2 and $3 AND (p.name ~$4 OR p.cert_no ~$4 OR p.phone ~$4) `
 
 	countsql := `select count(*) as total` + sql
