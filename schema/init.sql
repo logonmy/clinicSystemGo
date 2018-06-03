@@ -20,7 +20,7 @@ CREATE TABLE clinic
 CREATE TABLE department
 (
 	id serial PRIMARY KEY NOT NULL,--id
-	code varchar(20) NOT NULL,--科室编码
+	code varchar(50) NOT NULL,--科室编码
 	name varchar(20) NOT NULL,--科室名称
 	clinic_id integer NOT NULL references clinic(id),--所属诊所
 	status boolean NOT NULL DEFAULT true,--是否启用
@@ -36,7 +36,7 @@ CREATE TABLE department
 CREATE TABLE personnel
 (
   id serial PRIMARY KEY NOT NULL,--id
-  code varchar(10) NOT NULL,--编码
+  code varchar(50) NOT NULL,--编码
   name varchar(10) NOT NULL,--名称
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   weight integer NOT NULL DEFAULT 1,--权重
@@ -1416,6 +1416,7 @@ CREATE TABLE laboratory_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   clinic_laboratory_id INTEGER NOT NULL references clinic_laboratory(id),--检验项目id
+  order_status varchar(2)  NOT NULL DEFAULT '10',  --状态，10-待使用，20-使用中， 30-已使用 40-已退回
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   times INTEGER NOT NULL CHECK(times > 0),--次数

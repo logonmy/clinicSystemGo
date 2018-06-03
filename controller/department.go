@@ -124,18 +124,33 @@ func DepartmentList(ctx iris.Context) {
 
 //DepartmentDelete 删除科室
 func DepartmentDelete(ctx iris.Context) {
-	departmentID := ctx.PostValue("departmentID")
+	departmentID := ctx.PostValue("department_id")
 	if departmentID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	stmt, err := model.DB.Prepare("update department set deleted_time=LOCALTIMESTAMP WHERE id=$1")
+
+	crow := model.DB.QueryRowx("select id,code from department where id=$1 limit 1", departmentID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除失败"})
+		return
+	}
+	department := FormatSQLRowToMap(crow)
+	_, rok := department["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "科室数据错误"})
+		return
+	}
+	code := department["code"]
+	code = code.(string) + "#del"
+
+	stmt, err := model.DB.Prepare("update department set code=$1,deleted_time=LOCALTIMESTAMP WHERE id=$2")
 	if err != nil {
 		fmt.Println("Perr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-	res, err := stmt.Exec(departmentID)
+	res, err := stmt.Exec(code, departmentID)
 	if err != nil {
 		fmt.Println("Eerr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})

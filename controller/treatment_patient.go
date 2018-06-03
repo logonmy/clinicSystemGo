@@ -166,7 +166,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		}
 		_, errm := tx.Exec(insertmSQL,
 			ToNullInt64(clinicTriagePatientID),
-			3,
+			7,
 			ToNullInt64(clinicTreatmentID),
 			ToNullString(orderSn),
 			index,

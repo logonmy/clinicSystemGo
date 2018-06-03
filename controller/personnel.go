@@ -493,7 +493,22 @@ func PersonnelDelete(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	_, err := model.DB.Exec("update personnel set deleted_time=LOCALTIMESTAMP WHERE id=$1", personnelID)
+
+	crow := model.DB.QueryRowx("select id,code from personnel where id=$1 limit 1", personnelID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除失败"})
+		return
+	}
+	personnel := FormatSQLRowToMap(crow)
+	_, rok := personnel["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "科室数据错误"})
+		return
+	}
+	code := personnel["code"]
+	code = code.(string) + "#del"
+
+	_, err := model.DB.Exec("update personnel set code=$1,deleted_time=LOCALTIMESTAMP WHERE id=$2", code, personnelID)
 	if err != nil {
 		fmt.Println("Perr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
