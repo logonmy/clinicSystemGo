@@ -64,6 +64,7 @@ func main() {
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
 		personnel.Post("/update", controller.PersonnelUpdate)
+		personnel.Post("/delete", controller.PersonnelDelete)
 		personnel.Post("/PersonnelWithAuthorizationList", controller.PersonnelWithAuthorizationList)
 	}
 
@@ -382,6 +383,14 @@ func main() {
 		drugDelivery.Post("/traige/issued/list", controller.DrugDeliveryIssued)
 		drugDelivery.Post("/traige/refund/list", controller.DrugDeliveryRefund)
 		drugDelivery.Post("/list", controller.DrugDeliveryList)
+	}
+
+	laboratoryTriage := app.Party("/laboratoryTriage", crs).AllowMethods(iris.MethodOptions)
+	{
+		laboratoryTriage.Post("/LaboratoryTriageList", controller.LaboratoryTriageList)
+		laboratoryTriage.Post("/LaboratoryTriageWaiting", controller.LaboratoryTriageWaiting)
+		laboratoryTriage.Post("/LaboratoryTriageChecked", controller.LaboratoryTriageChecked)
+		laboratoryTriage.Post("/LaboratoryTriageChecking", controller.LaboratoryTriageChecking)
 	}
 
 	// http://localhost:8080
