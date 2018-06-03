@@ -382,6 +382,8 @@ func main() {
 		drugDelivery.Post("/traige/issued/list", controller.DrugDeliveryIssued)
 		drugDelivery.Post("/traige/refund/list", controller.DrugDeliveryRefund)
 		drugDelivery.Post("/list", controller.DrugDeliveryList)
+		drugDelivery.Post("/record/create", controller.DrugDeliveryRecordCreate)
+		drugDelivery.Post("/record/list", controller.DrugDeliveryRecordCreate)
 	}
 
 	// http://localhost:8080
