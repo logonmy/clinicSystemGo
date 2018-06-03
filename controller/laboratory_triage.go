@@ -36,21 +36,19 @@ func LaboratoryTriageList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-	// selectSQL := `select from clinic_triage_patient
-	// 	left join
-	// 	where id=$1`
-	SQL := `FROM mz_paid_orders mpo 
-	left join clinic_examination cm on cm.id = mpo.charge_project_id 
-	left join medical_record mr on mr.clinic_triage_patient_id = mpo.clinic_triage_patient_id
-	where mpo.clinic_triage_patient_id = $1 and mpo.order_status = $2 and mpo.charge_project_type_id = 3`
-	countsql := "select count(mpo.*) as total " + SQL
+
+	SQL := `FROM laboratory_patient lp 
+	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
+	left join 
+	where lp.clinic_triage_patient_id = $1 and lp.order_status = $2 and lp.charge_project_type_id = 3`
+	countsql := "select count(lp.*) as total " + SQL
 
 	total := model.DB.QueryRowx(countsql, clinicTriagePatientID, status)
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
-	querysql := `select mpo.id,mpo.name,mpo.amount,mpo.charge_project_type_id,
-	cm.specification,cm.manu_factory_name,cm.dose_form_name,ds.stock_amount ` + SQL + `offset $3 limit $4`
+	querysql := `select lp.id,lp.name,lp.amount,lp.charge_project_type_id,
+	cl.specification,cl.manu_factory_name,cl.dose_form_name,ds.stock_amount ` + SQL + `offset $3 limit $4`
 
 	rows, _ := model.DB.Queryx(querysql, clinicTriagePatientID, status, offset, limit)
 	results := FormatSQLRowsToMapArray(rows)
@@ -147,4 +145,9 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 	rows, _ := model.DB.Queryx(querysql, status, clinicID, startDate, endDate, keyword, offset, limit)
 	results := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+//LaboratoryTriageReportSave 保存检验报告
+func LaboratoryTriageReportSave(ctx iris.Context) {
+	// clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 }
