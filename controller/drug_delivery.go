@@ -207,6 +207,7 @@ func DrugDeliveryRecordCreate(ctx iris.Context) {
 		row := tx.QueryRowx(`select * from mz_paid_orders where id = $1`, orderID)
 		rowMap := FormatSQLRowToMap(row)
 
+		// 这里有个坑 ， 发药没有指定药房。
 		_, err2 := tx.Exec(`UPDATE drug_stock set stock_amount = stock_amount - $1 where clinic_drug_id = $2`, rowMap["amount"], rowMap["charge_project_id"])
 		if err2 != nil {
 			tx.Rollback()
