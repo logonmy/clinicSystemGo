@@ -1,1 +1,1 @@
-scp main.go root@47.93.206.157:/root/projects/clinicSystemGo/
+scp main root@47.93.206.157:/root/projects/clinicSystemGo/
