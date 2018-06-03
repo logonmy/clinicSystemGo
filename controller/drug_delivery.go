@@ -54,6 +54,13 @@ func DrugDeliveryList(ctx iris.Context) {
 	allSelectStatus := true
 	results := FormatSQLRowsToMapArray(rows)
 	for _, item := range results {
+		if item["stock_amount"] == nil {
+			item["stock_amount"] = int64(0)
+		}
+		if item["amount"] == nil {
+			item["amount"] = int64(0)
+		}
+
 		allSelectStatus = item["stock_amount"].(int64) >= item["amount"].(int64) && allSelectStatus
 	}
 	pageInfo["allSelectStatus"] = allSelectStatus
