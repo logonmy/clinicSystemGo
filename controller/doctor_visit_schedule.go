@@ -164,144 +164,113 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	departmentID := ctx.PostValue("department_id")
 	personnelID := ctx.PostValue("personnel_id")
-	startDate := ctx.PostValue("start_date")
-	endDate := ctx.PostValue("end_date")
+	startDateStr := ctx.PostValue("start_date")
+	endDateStr := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
-	if clinicID == "" || startDate == "" || endDate == "" || offset == "" || limit == "" {
+	if clinicID == "" || startDateStr == "" || endDateStr == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	countSQL := `select count (dp.id) as total from department_personnel dp left join personnel p on p.id = dp.personnel_id where type = 2 and p.clinic_id = $1`
-	if departmentID != "" {
-		countSQL += " and dp.department_id = " + departmentID
-	}
-	if personnelID != "" {
-		countSQL += " and dp.personnel_id = " + personnelID
-	}
-	total := model.DB.QueryRowx(countSQL, clinicID)
-	pageInfo := FormatSQLRowToMap(total)
-	pageInfo["offset"] = offset
-	pageInfo["limit"] = limit
 
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	startDate, errs := time.Parse("2006-01-02", startDateStr)
+	if errs != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+		return
+	}
+	endDate, erre := time.Parse("2006-01-02", endDateStr)
+	if erre != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+		return
+	}
+	var queryOptions = map[string]interface{}{
+		"clinic_id":     ToNullInt64(clinicID),
+		"offset":        ToNullInt64(offset),
+		"limit":         ToNullInt64(limit),
+		"department_id": ToNullInt64(departmentID),
+		"personnel_id":  ToNullInt64(personnelID),
+		"start_date":    startDate,
+		"end_date":      endDate,
+	}
+
+	countSQL := `select count (dp.id) as total from department_personnel dp left join personnel p on p.id = dp.personnel_id where type = 2 and p.clinic_id = :clinic_id`
 	doctorsSQL := `select p.id as personnel_id, dp.department_id, p.name as personnel_name, d.name as department_name
 	from department_personnel dp
 	left join department d on dp.department_id = d.id
 	left join personnel p on dp.personnel_id = p.id
-	where dp.type = 2 and p.clinic_id = $1 `
+	where dp.type = 2 and d.clinic_id = :clinic_id `
 	if departmentID != "" {
-		doctorsSQL += " and dp.department_id = " + departmentID
+		countSQL += " and dp.department_id =:department_id "
+		doctorsSQL += " and dp.department_id =:department_id "
 	}
 	if personnelID != "" {
-		doctorsSQL += " and dp.personnel_id = " + personnelID
+		countSQL += " and dp.personnel_id =:personnel_id "
+		doctorsSQL += " and dp.personnel_id =:personnel_id "
 	}
-	rows, err := model.DB.Queryx(doctorsSQL+" offset $2 limit $3;", clinicID, offset, limit)
-
+	pageInfoRows, err := model.DB.NamedQuery(countSQL, queryOptions)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败，请重试"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	pageInfoArray := FormatSQLRowsToMapArray(pageInfoRows)
+	pageInfo := pageInfoArray[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.NamedQuery(doctorsSQL+" order by department_id, personnel_id ASC offset :offset limit :limit;", queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	doctors := FormatSQLRowsToMapArray(rows)
 
-	existSQL := `select * from department_personnel idp left join personnel ip  on idp.personnel_id = ip.id where ip.clinic_id = $3 `
-
-	if departmentID != "" {
-		existSQL += " and idp.department_id = " + departmentID
-	}
-	if personnelID != "" {
-		existSQL += " and idp.personnel_id = " + personnelID
-	}
-	scheduleSQL := `select dvs.id as doctor_visit_schedule_id, 
-	dvs.visit_date, 
-	dvs.am_pm, 
+	scheduleSQL := `select 
+	dvs.id as doctor_visit_schedule_id, 
+	dvs.id,
+	dvs.department_id, 
+	dvs.personnel_id,
+	dvs.visit_date,
+	dvs.am_pm,
 	dvs.stop_flag,
-	dvs.open_flag,
-	dvs.personnel_id, 
-	dvs.department_id from department_personnel dp, doctor_visit_schedule dvs 
-	where dp.personnel_id = dvs.personnel_id and dp.department_id = dvs.department_id 
-	and dvs.visit_date BETWEEN $1 AND $2
-	and exists(select 1 from (` + existSQL + ` offset $4 limit $5) ldp 
-			 where ldp.personnel_id = dp.personnel_id and ldp.department_id = dp.department_id )
-			 order by dp.id, dvs.visit_date, dvs.am_pm asc; `
+	dvs.open_flag 
+	from doctor_visit_schedule dvs where exists (
+	select null from (` + doctorsSQL + ` offset :offset limit :limit) edp where dvs.department_id = edp.department_id and dvs.personnel_id = edp.personnel_id
+	) and dvs.visit_date between :start_date and :end_date order by department_id, personnel_id, visit_date, am_pm ASC`
 
-	fmt.Println("scheduleSQL ======", scheduleSQL)
-
-	rows, err = model.DB.Queryx(scheduleSQL, startDate, endDate, clinicID, offset, limit)
-
+	rows, err = model.DB.NamedQuery(scheduleSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
 	schedules := FormatSQLRowsToMapArray(rows)
 
-	fmt.Println("schedules ===", schedules)
-
-	type Schedule struct {
-		DoctorVisitScheduleID int    `json:"doctor_visit_schedule_id"`
-		AmPm                  string `json:"am_pm"`
-		StopFlag              bool   `json:"stop_flag"`
-		OpenFlag              bool   `json:"open_flag"`
-	}
-
-	type DateSchedule struct {
-		VisitDate string     `json:"visit_date"`
-		Schedules []Schedule `json:"schedules"`
-	}
-
-	type Doctor struct {
-		PersonnelID    int            `json:"personnel_id"`
-		DepartmentID   int            `json:"department_id"`
-		PersonnelName  string         `json:"personnel_name"`
-		DepartmentName string         `json:"department_name"`
-		DateSchedules  []DateSchedule `json:"date"`
-	}
-
-	var results []Doctor
-
-	for _, d := range doctors {
-		PersonnelID := int(d["personnel_id"].(int64))
-		DepartmentID := int(d["department_id"].(int64))
-		lastDate := ""
-		var DateSchedules []DateSchedule
-		var dateSchedule DateSchedule
-		has := false
-		for _, s := range schedules {
-			if int(s["personnel_id"].(int64)) != PersonnelID || int(s["department_id"].(int64)) != DepartmentID {
-				continue
-			}
-			VisitDate := s["visit_date"].(time.Time).Format("2006-01-02")
-			schedule := Schedule{
-				DoctorVisitScheduleID: int(s["doctor_visit_schedule_id"].(int64)),
-				AmPm:     s["am_pm"].(string),
-				StopFlag: s["stop_flag"].(bool),
-				OpenFlag: s["open_flag"].(bool),
-			}
-
-			if lastDate == VisitDate {
-				dateSchedule.Schedules = append(dateSchedule.Schedules, schedule)
-				has = true
-			} else {
-				has = false
-				if lastDate != "" {
-					DateSchedules = append(DateSchedules, dateSchedule)
-				}
-				Ss := []Schedule{schedule}
-				dateSchedule = DateSchedule{
-					VisitDate: VisitDate,
-					Schedules: Ss,
-				}
-				lastDate = VisitDate
+	for _, doctor := range doctors {
+		var array []map[string]interface{}
+		for _, schedule := range schedules {
+			if schedule["personnel_id"] == doctor["personnel_id"] && schedule["department_id"] == doctor["department_id"] {
+				array = append(array, schedule)
 			}
 		}
-
-		if !has {
-			DateSchedules = append(DateSchedules, dateSchedule)
-		}
-
-		doctor := Doctor{
-			PersonnelID:    PersonnelID,
-			DepartmentID:   DepartmentID,
-			PersonnelName:  d["personnel_name"].(string),
-			DepartmentName: d["department_name"].(string),
-			DateSchedules:  DateSchedules,
-		}
-		results = append(results, doctor)
+		doctor["schedules"] = array
 	}
 
 	hasOpenCountSQL := `select count(*) as count from doctor_visit_schedule dvs left join department d on dvs.department_id = d.id
@@ -332,7 +301,7 @@ func DoctorsWithSchedule(ctx iris.Context) {
 		needOpen = true
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo, "canOverride": canOverride, "needOpen": needOpen})
+	ctx.JSON(iris.Map{"code": "200", "data": doctors, "page_info": pageInfo, "canOverride": canOverride, "needOpen": needOpen})
 }
 
 // CopyScheduleByDate 复制排版

@@ -102,6 +102,7 @@ func main() {
 		patient.Post("/update", controller.PatientUpdate)
 		patient.Post("/getByCertNo", controller.PatientGetByCertNo)
 		patient.Post("/getByKeyword", controller.PatientsGetByKeyword)
+		patient.Post("/MemberPateintList", controller.MemberPateintList)
 	}
 
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
@@ -135,7 +136,6 @@ func main() {
 		triage.Post("/MaterialPatientCreate", controller.MaterialPatientCreate)
 		triage.Post("/MaterialPatientGet", controller.MaterialPatientGet)
 		triage.Post("/ReceiveRecord", controller.ReceiveRecord)
-		triage.Post("/MemberPateintList", controller.MemberPateintList)
 	}
 
 	diagnosisTreatment := app.Party("/diagnosisTreatment", crs).AllowMethods(iris.MethodOptions)
