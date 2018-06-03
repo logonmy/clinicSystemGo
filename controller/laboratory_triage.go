@@ -9,51 +9,21 @@ import (
 
 // LaboratoryTriageList 获取检验记录（包括 待检验，已检验，检验中）
 func LaboratoryTriageList(ctx iris.Context) {
-	status := ctx.PostValue("order_status")
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
-	offset := ctx.PostValue("offset")
-	limit := ctx.PostValue("limit")
 
-	if clinicTriagePatientID == "" || status == "" {
+	if clinicTriagePatientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	if offset == "" {
-		offset = "0"
-	}
-	if limit == "" {
-		limit = "10"
-	}
-
-	_, err := strconv.Atoi(offset)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
-		return
-	}
-	_, err = strconv.Atoi(limit)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
-		return
-	}
-
-	SQL := `FROM laboratory_patient lp 
+	selectSQL := `select lp.clinic_triage_patient_id,cl.name,cl.remark,lp.clinic_laboratory_id FROM laboratory_patient lp 
 	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
-	left join 
-	where lp.clinic_triage_patient_id = $1 and lp.order_status = $2 and lp.charge_project_type_id = 3`
-	countsql := "select count(lp.*) as total " + SQL
+	where lp.clinic_triage_patient_id = $1`
 
-	total := model.DB.QueryRowx(countsql, clinicTriagePatientID, status)
-	pageInfo := FormatSQLRowToMap(total)
-	pageInfo["offset"] = offset
-	pageInfo["limit"] = limit
-	querysql := `select lp.id,lp.name,lp.amount,lp.charge_project_type_id,
-	cl.specification,cl.manu_factory_name,cl.dose_form_name,ds.stock_amount ` + SQL + `offset $3 limit $4`
-
-	rows, _ := model.DB.Queryx(querysql, clinicTriagePatientID, status, offset, limit)
+	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID)
 	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results})
 }
 
 // LaboratoryTriageWaiting 获取待检验的分诊记录
