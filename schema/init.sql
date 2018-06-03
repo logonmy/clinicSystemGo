@@ -1685,4 +1685,21 @@ CREATE TABLE chief_complaint
 (
   name varchar(20) NOT NULL UNIQUE --主诉名称
 );
+
+CREATE TABLE drug_delivery_record --发药记录
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
  
+CREATE TABLE drug_delivery_record_item --发药记录子表
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  drug_delivery_record_id INTEGER NOT NULL references drug_delivery_record(id),
+  mz_paid_orders_id INTEGER NOT NULL UNIQUE references mz_paid_orders(id),
+  remark varchar(20)
+);
