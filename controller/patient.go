@@ -227,7 +227,7 @@ func PatientsGetByKeyword(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 		return
 	}
-	rows, err := model.DB.Queryx(`select * from patient where name like '%' || $1 || '%' or cert_no like '%' || $1 || '%' or phone like '%' || $1 || '%' limit 20`, keyword)
+	rows, err := model.DB.Queryx(`select * from patient where name ~*$1  or cert_no ~*$1  or phone ~*$1 limit 20`, keyword)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 		return
@@ -273,7 +273,7 @@ func MemberPateintList(ctx iris.Context) {
 	groupBySQL := ` group by p.id, p.phone, p.birthday, p.sex, p.created_time`
 
 	if keyword != "" {
-		patientSQL += ` and p.name ~*:keyword or p.phone ~*:keyword or p.cert_no ~*:keyword`
+		patientSQL += ` and (p.name ~*:keyword or p.phone ~*:keyword or p.cert_no ~*:keyword)`
 	}
 
 	var queryOptions = map[string]interface{}{

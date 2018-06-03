@@ -31,8 +31,8 @@ func DoseUnitList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-	countSQL := `select count(id) as total from dose_unit where id > 0 and name ~*$1 or py_code ~*$1`
-	selectSQL := `select * from dose_unit where id > 0 and name ~*$1 or py_code ~*$1`
+	countSQL := `select count(id) as total from dose_unit where id > 0 and (name ~*$1 or py_code ~*$1)`
+	selectSQL := `select * from dose_unit where id > 0 and (name ~*$1 or py_code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -74,8 +74,8 @@ func DoseFormList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from dose_form where id > 0 and name ~*$1 or py_code ~*$1`
-	selectSQL := `select * from dose_form where id > 0 and name ~*$1 or py_code ~*$1`
+	countSQL := `select count(id) as total from dose_form where id > 0 and (name ~*$1 or py_code ~*$1)`
+	selectSQL := `select * from dose_form where id > 0 and (name ~*$1 or py_code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 
@@ -177,8 +177,8 @@ func DrugTypeList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-	countSQL := `select count(id) as total from drug_type where id > 0 and name ~*$1 or py_code ~*$1`
-	selectSQL := `select * from drug_type where id > 0 and name ~*$1 or py_code ~*$1`
+	countSQL := `select count(id) as total from drug_type where id > 0 and (name ~*$1 or py_code ~*$1)`
+	selectSQL := `select * from drug_type where id > 0 and (name ~*$1 or py_code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -220,8 +220,8 @@ func DrugPrintList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from drug_print where id > 0 and name ~*$1 or py_code ~*$1`
-	selectSQL := `select * from drug_print where id > 0 and name ~*$1 or py_code ~*$1`
+	countSQL := `select count(id) as total from drug_print where id > 0 (and name ~*$1 or py_code ~*$1)`
+	selectSQL := `select * from drug_print where id > 0 and (name ~*$1 or py_code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -306,8 +306,8 @@ func FrequencyList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from frequency where id > 0 and name ~$1 or py_code ~*$1 or code ~*$1`
-	selectSQL := `select * from frequency where id > 0 and name ~$1 or py_code ~*$1 or code ~*$1`
+	countSQL := `select count(id) as total from frequency where id > 0 and (name ~$1 or py_code ~*$1 or code ~*$1)`
+	selectSQL := `select * from frequency where id > 0 and (name ~$1 or py_code ~*$1 or code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -358,8 +358,8 @@ func RouteAdministrationList(ctx iris.Context) {
 	selectSQL := `select * from route_administration where id > 0`
 
 	if keyword != "" {
-		countSQL += " and name ~*:keyword or py_code ~*:keyword or code ~*:keyword"
-		selectSQL += " and name ~*:keyword or py_code ~*:keyword or code ~*:keyword"
+		countSQL += " and (name ~*:keyword or py_code ~*:keyword or code ~*:keyword)"
+		selectSQL += " and (name ~*:keyword or py_code ~*:keyword or code ~*:keyword)"
 	}
 
 	var queryOptions = map[string]interface{}{
@@ -408,8 +408,8 @@ func LaboratorySampleList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
-	countSQL := `select count(id) as total from laboratory_sample where status=true and name ~*$1 or py_code ~*$1`
-	selectSQL := `select * from laboratory_sample where status=true and name ~*$1 or py_code ~*$1`
+	countSQL := `select count(id) as total from laboratory_sample where status=true and (name ~*$1 or py_code ~*$1)`
+	selectSQL := `select * from laboratory_sample where status=true and (name ~*$1 or py_code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -494,8 +494,8 @@ func ManuFactoryList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) from manu_factory where id > 0 and name ~*$1 or py_code ~*$1`
-	selectSQL := `select * from manu_factory where id > 0 and name ~*$1 or py_code ~*$1`
+	countSQL := `select count(id) from manu_factory where id > 0 and (name ~*$1 or py_code ~*$1)`
+	selectSQL := `select * from manu_factory where id > 0 and (name ~*$1 or py_code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -537,8 +537,8 @@ func Laboratorys(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) from laboratory where id > 0 and name ~*$1 or py_code ~*$1`
-	selectSQL := `select * from laboratory where id > 0 and name ~*$1 or py_code ~*$1`
+	countSQL := `select count(id) from laboratory where id > 0 and (name ~*$1 or py_code ~*$1)`
+	selectSQL := `select * from laboratory where id > 0 and (name ~*$1 or py_code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -580,8 +580,8 @@ func Examinations(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) from examination where id > 0 and name ~*$1 or py_code ~*$1`
-	selectSQL := `select * from examination where id > 0 and name ~*$1 or py_code ~*$1`
+	countSQL := `select count(id) from examination where id > 0 and (name ~*$1 or py_code ~*$1)`
+	selectSQL := `select * from examination where id > 0 and (name ~*$1 or py_code ~*$1)`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {
@@ -662,7 +662,7 @@ func Drugs(ctx iris.Context) {
 		limit = "10"
 	}
 
-	if drugType == "" || (drugType != "0" && drugType != "-1") {
+	if drugType == "" || (drugType != "0" && drugType != "1") {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "type 必须为0 或 1"})
 		return
 	}
@@ -678,8 +678,8 @@ func Drugs(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from drug where type =$1 and name ~*$2 or py_code ~*$2`
-	selectSQL := `select * from drug where type =$1 and name ~*$2 or py_code ~*$2`
+	countSQL := `select count(id) as total from drug where type =$1 and (name ~*$2 or py_code ~*$2)`
+	selectSQL := `select * from drug where type =$1 and (name ~*$2 or py_code ~*$2)`
 
 	total := model.DB.QueryRowx(countSQL, drugType, keyword)
 	if err != nil {
