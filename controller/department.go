@@ -70,7 +70,7 @@ func DepartmentCreate(ctx iris.Context) {
 	err := model.DB.QueryRow("INSERT INTO department (code, name, clinic_id, weight) VALUES ($1, $2, $3, $4) RETURNING id", code, name, clinicID, weight).Scan(&departmentID)
 	if err != nil {
 		fmt.Println("err ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": departmentID})
@@ -108,7 +108,7 @@ func DepartmentList(ctx iris.Context) {
 
 	total := model.DB.QueryRowx("SELECT count(id) as total FROM department WHERE (code ~*$1 OR name ~*$1) AND clinic_id=$2 and deleted_time is null", keyword, clinicID)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -147,13 +147,13 @@ func DepartmentDelete(ctx iris.Context) {
 	stmt, err := model.DB.Prepare("update department set code=$1,deleted_time=LOCALTIMESTAMP WHERE id=$2")
 	if err != nil {
 		fmt.Println("Perr ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	res, err := stmt.Exec(code, departmentID)
 	if err != nil {
 		fmt.Println("Eerr ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": res})
 }
