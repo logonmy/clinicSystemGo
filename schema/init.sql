@@ -1539,6 +1539,23 @@ CREATE TABLE other_cost_patient
   UNIQUE (order_sn, soft_sn)
 );
 
+--开诊疗费用
+CREATE TABLE diagnosis_treatment_patient
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  clinic_diagnosis_treatment_id INTEGER NOT NULL references clinic_diagnosis_treatment(id),--诊疗项目id
+  order_sn varchar(20) NOT NULL,--单号
+  soft_sn INTEGER NOT NULL,--序号
+  amount INTEGER NOT NULL CHECK(amount > 0),--数量
+  illustration text,--说明
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (order_sn, soft_sn)
+);
+
 --西药处方模板
 CREATE TABLE prescription_western_patient_model
 (
