@@ -279,8 +279,8 @@ func ClinicDrugList(ctx iris.Context) {
 	}
 
 	if drugClassID != "" {
-		countSQL += " and (cd.drug_class_id = :drug_class_id or cd.drug_class_id = :drug_class_id)"
-		selectSQL += " and (cd.drug_class_id = :drug_class_id or cd.drug_class_id = :drug_class_id)"
+		countSQL += " and cd.drug_class_id = :drug_class_id "
+		selectSQL += " and cd.drug_class_id = :drug_class_id "
 	}
 
 	selectSQL += ` group by 
