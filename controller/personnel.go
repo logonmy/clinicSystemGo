@@ -210,7 +210,7 @@ func PersonnelList(ctx iris.Context) {
 	rowSQL := `select p.id, p.code, p.name,p.weight,p.title,p.username,p.status,p.is_appointment,
 	c.id as clinic_id, c.name as clinic_name,
 	dp.type as personnel_type,
-	d.code as department_code, d.name as department_name, d.id as department_id ` + jionSQL + "order by weight asc offset $3 limit $4"
+	d.code as department_code, d.name as department_name, d.id as department_id ` + jionSQL + "order by weight DESC offset $3 limit $4"
 
 	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, offset, limit)
 	if err1 != nil {
