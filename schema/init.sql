@@ -1721,3 +1721,28 @@ CREATE TABLE drug_delivery_record_item --发药记录子表
   mz_paid_orders_id INTEGER NOT NULL UNIQUE references mz_paid_orders(id),
   remark varchar(20)
 );
+
+--检验记录
+CREATE TABLE laboratory_patient_record
+(
+  laboratory_patient_id INTEGER NOT NULL references laboratory_patient(id),--所开检验id
+  clinic_laboratory_item_id integer NOT NULL references clinic_laboratory_item(id),--诊所检验项目id
+  result_inspection text, --检验结果
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检查记录
+CREATE TABLE examination_patient_record
+(
+  examination_patient_id INTEGER NOT NULL references examination_patient(id),--所开检查id
+  picture_examination text, --检查图片
+  result_examination text, --检查结果
+  conclusion_examination text, --检查结论
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);

@@ -110,7 +110,7 @@ func PersonnelCreate(ctx iris.Context) {
 
 		tx, err := model.DB.Begin()
 		if err != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 		passwordMd5 := ""
@@ -219,7 +219,7 @@ func PersonnelList(ctx iris.Context) {
 
 	total := model.DB.QueryRowx(`select count(p.id) as total `+jionSQL, clinicID, keyword)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -234,7 +234,7 @@ func PersonnelList(ctx iris.Context) {
 
 	rows, err1 := model.DB.Queryx(rowSQL, clinicID, keyword, offset, limit)
 	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 	result := FormatSQLRowsToMapArray(rows)
@@ -289,7 +289,7 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -312,14 +312,14 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 
 	rows, err1 := model.DB.NamedQuery(rowSQL, queryOption)
 	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
 	}
 	personnel := FormatSQLRowsToMapArray(rows)
 
 	prows, err2 := model.DB.NamedQuery(selectSQL, queryOption)
 	if err2 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 		return
 	}
 	personnelRole := FormatSQLRowsToMapArray(prows)
@@ -403,7 +403,7 @@ func PersonnelUpdate(ctx iris.Context) {
 
 	tx, err := model.DB.Beginx()
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -412,7 +412,7 @@ func PersonnelUpdate(ctx iris.Context) {
 		if err != nil {
 			fmt.Println("5")
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 	}
@@ -424,12 +424,12 @@ func PersonnelUpdate(ctx iris.Context) {
 	_, err = tx.NamedExec(psql, personnel)
 	if err != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	err = tx.Commit()
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
@@ -469,7 +469,7 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 
 	tx, err := model.DB.Begin()
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	insertSQL := `insert into personnel_role (personnel_id,role_id) values ($1,$2)`
@@ -491,7 +491,7 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 			ToNullInt64(roleID),
 		)
 		if err3 != nil {
-			fmt.Println(" err3====", err3)
+			fmt.Println(" err3====", err3.Error())
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
 			return
@@ -500,7 +500,7 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 
 	err = tx.Commit()
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
@@ -531,7 +531,7 @@ func PersonnelDelete(ctx iris.Context) {
 	_, err := model.DB.Exec("update personnel set code=$1,deleted_time=LOCALTIMESTAMP WHERE id=$2", code, personnelID)
 	if err != nil {
 		fmt.Println("Perr ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
