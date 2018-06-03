@@ -40,7 +40,7 @@ func DrugDeliveryList(ctx iris.Context) {
 
 	SQL := `FROM mz_paid_orders mpo 
 	left join clinic_drug cd on cd.id = mpo.charge_project_id 
-	left join drug_stock ds on ds.clinic_drug_id = cd.id 
+	left join (select clinic_drug_id, sum(stock_amount) as stock_amount from drug_stock group by clinic_drug_id ) ds on ds.clinic_drug_id = cd.id 
 	where mpo.clinic_triage_patient_id = $1 and mpo.order_status = $2 and mpo.charge_project_type_id in (1,2)`
 	countsql := "select count(mpo.*) as total,string_agg(cast ( mpo.id as TEXT ),',') as ids " + SQL
 
