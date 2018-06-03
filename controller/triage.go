@@ -262,7 +262,6 @@ func TriagePatientList(ctx iris.Context) {
 	}
 
 	pageInfo := FormatSQLRowToMap(total)
-	fmt.Println("pageInfo ====", pageInfo)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
