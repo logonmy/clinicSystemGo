@@ -69,7 +69,7 @@ func PersonnelCreate(ctx iris.Context) {
 	password := ctx.PostValue("password")
 	isClinicAdmin := false
 
-	if code != "" && name != "" && clinicID != "" && departmentID != "" && weight != "" && title != "" && username != "" && password != "" && personnelType != "" {
+	if code != "" && name != "" && clinicID != "" && departmentID != "" && title != "" && personnelType != "" {
 		row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
@@ -94,32 +94,52 @@ func PersonnelCreate(ctx iris.Context) {
 			return
 		}
 
+		if username != "" {
+			urow := model.DB.QueryRowx("select id from personnel where clinic_id = $1 and username=$2 limit 1", clinicID, username)
+			if urow == nil {
+				ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
+				return
+			}
+			personnel := FormatSQLRowToMap(urow)
+			_, uok := personnel["id"]
+			if uok {
+				ctx.JSON(iris.Map{"code": "-1", "msg": "账号已存在"})
+				return
+			}
+		}
+
 		tx, err := model.DB.Begin()
 		if err != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err})
 			return
 		}
-		md5Ctx := md5.New()
-		md5Ctx.Write([]byte(password))
-		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
+		passwordMd5 := ""
+		if password != "" {
+			md5Ctx := md5.New()
+			md5Ctx.Write([]byte(password))
+			passwordMd5 = hex.EncodeToString(md5Ctx.Sum(nil))
+		}
 		var personnelID int
-		err = tx.QueryRow("insert into personnel(code, name, clinic_id, weight, title, username, password, is_clinic_admin) values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", code, name, clinicID, weight, title, username, passwordMd5, isClinicAdmin).Scan(&personnelID)
+		if weight == "" {
+			weight = "1"
+		}
+		err = tx.QueryRow("insert into personnel(code, name, clinic_id, weight, title, username, password, is_clinic_admin) values ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id", code, name, clinicID, ToNullInt64(weight), ToNullString(title), ToNullString(username), ToNullString(passwordMd5), isClinicAdmin).Scan(&personnelID)
 		if err != nil {
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 
 		_, err = tx.Exec("insert into department_personnel(department_id, personnel_id, type) values ($1, $2, $3)", departmentID, personnelID, personnelType)
 		if err != nil {
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 
 		err = tx.Commit()
 		if err != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 		ctx.JSON(iris.Map{"code": "200", "data": nil})
