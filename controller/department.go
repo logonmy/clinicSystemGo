@@ -54,6 +54,18 @@ func DepartmentCreate(ctx iris.Context) {
 		return
 	}
 
+	dnrow := model.DB.QueryRowx("select id from department where clinic_id = $1 and name=$2 limit 1", clinicID, name)
+	if dnrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
+		return
+	}
+	departmentn := FormatSQLRowToMap(dnrow)
+	_, dnok := departmentn["id"]
+	if dnok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "科室名称已存在"})
+		return
+	}
+
 	var departmentID int
 	err := model.DB.QueryRow("INSERT INTO department (code, name, clinic_id, weight) VALUES ($1, $2, $3, $4) RETURNING id", code, name, clinicID, weight).Scan(&departmentID)
 	if err != nil {
@@ -105,7 +117,7 @@ func DepartmentList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code ~*$1 OR name ~*$1) AND clinic_id=$2 and deleted_time is null order by weight asc offset $3 limit $4", keyword, clinicID, offset, limit)
+	rows, _ := model.DB.Queryx("SELECT * FROM department WHERE (code ~*$1 OR name ~*$1) AND clinic_id=$2 and deleted_time is null order by weight DESC offset $3 limit $4", keyword, clinicID, offset, limit)
 	results = FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -173,6 +185,17 @@ func DepartmentUpdate(ctx iris.Context) {
 		s = append(s, "code=:code")
 	}
 	if department.Name != nil {
+		dnrow := model.DB.QueryRowx("select id from department where clinic_id = $1 and name=$2 and id!=$3 limit 1", clinicID, department.Name, department.DepartmentID)
+		if dnrow == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
+			return
+		}
+		departmentn := FormatSQLRowToMap(dnrow)
+		_, dnok := departmentn["id"]
+		if dnok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "科室名称已存在"})
+			return
+		}
 		s = append(s, "name=:name")
 	}
 	if department.IsAppointment != nil {
