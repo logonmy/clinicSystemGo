@@ -389,12 +389,26 @@ func main() {
 		drugDelivery.Post("/record/list", controller.DrugDeliveryRecordList)
 	}
 
+	examinationTriage := app.Party("/examinationTriage", crs).AllowMethods(iris.MethodOptions)
+	{
+		examinationTriage.Post("/ExaminationTriageList", controller.ExaminationTriageList)
+		examinationTriage.Post("/ExaminationTriageWaiting", controller.ExaminationTriageWaiting)
+		examinationTriage.Post("/ExaminationTriageChecked", controller.ExaminationTriageChecked)
+		examinationTriage.Post("/ExaminationTriageChecking", controller.ExaminationTriageChecking)
+		examinationTriage.Post("/ExaminationTriageRecordCreate", controller.ExaminationTriageRecordCreate)
+		examinationTriage.Post("/ExaminationTriageRecordList", controller.ExaminationTriageRecordList)
+	}
+
 	laboratoryTriage := app.Party("/laboratoryTriage", crs).AllowMethods(iris.MethodOptions)
 	{
 		laboratoryTriage.Post("/LaboratoryTriageList", controller.LaboratoryTriageList)
+		laboratoryTriage.Post("/LaboratoryTriageDetail", controller.LaboratoryTriageDetail)
 		laboratoryTriage.Post("/LaboratoryTriageWaiting", controller.LaboratoryTriageWaiting)
 		laboratoryTriage.Post("/LaboratoryTriageChecked", controller.LaboratoryTriageChecked)
 		laboratoryTriage.Post("/LaboratoryTriageChecking", controller.LaboratoryTriageChecking)
+		laboratoryTriage.Post("/LaboratoryTriageRecordCreate", controller.LaboratoryTriageRecordCreate)
+		laboratoryTriage.Post("/LaboratoryTriageRecordList", controller.LaboratoryTriageRecordList)
+		laboratoryTriage.Post("/LaboratoryTriageRecordDetail", controller.LaboratoryTriageRecordDetail)
 	}
 
 	// http://localhost:8080

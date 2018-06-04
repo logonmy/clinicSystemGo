@@ -1725,10 +1725,22 @@ CREATE TABLE drug_delivery_record_item --发药记录子表
 --检验记录
 CREATE TABLE laboratory_patient_record
 (
+  id serial PRIMARY KEY NOT NULL,--检验记录id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   laboratory_patient_id INTEGER NOT NULL references laboratory_patient(id),--所开检验id
+  remark text, --备注
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--检验记录子表
+CREATE TABLE laboratory_patient_record_item
+(
+  laboratory_patient_record_id INTEGER NOT NULL references laboratory_patient_record(id),--检验记录id
   clinic_laboratory_item_id integer NOT NULL references clinic_laboratory_item(id),--诊所检验项目id
   result_inspection text, --检验结果
-  operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1737,6 +1749,7 @@ CREATE TABLE laboratory_patient_record
 --检查记录
 CREATE TABLE examination_patient_record
 (
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   examination_patient_id INTEGER NOT NULL references examination_patient(id),--所开检查id
   picture_examination text, --检查图片
   result_examination text, --检查结果
