@@ -387,6 +387,7 @@ func main() {
 		drugDelivery.Post("/list", controller.DrugDeliveryList)
 		drugDelivery.Post("/record/create", controller.DrugDeliveryRecordCreate)
 		drugDelivery.Post("/record/list", controller.DrugDeliveryRecordList)
+		drugDelivery.Post("/record/detail", controller.DrugDeliveryRecordDetail)
 	}
 
 	laboratoryTriage := app.Party("/laboratoryTriage", crs).AllowMethods(iris.MethodOptions)

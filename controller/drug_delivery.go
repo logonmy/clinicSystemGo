@@ -256,6 +256,7 @@ func DrugDeliveryRecordList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	querysql := `select ctp.visit_date,
+	 ddc.id as drug_delivery_record_id,
 	 doc.name as doctor_name,
 	 op.name as opration_name,
 	 ddc.created_time,
@@ -267,4 +268,42 @@ func DrugDeliveryRecordList(ctx iris.Context) {
 	results := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 
+}
+
+// DrugDeliveryRecordDetail 查询发药记录详情
+func DrugDeliveryRecordDetail(ctx iris.Context) {
+	recordID := ctx.PostValue("drug_delivery_record_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if recordID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	SQL := ` from drug_delivery_record_item ddri
+	left join mz_paid_orders mpo on mpo.id = ddri.mz_paid_orders_id 
+	left join clinic_drug cd on mpo.charge_project_id = cd.id 
+	where drug_delivery_record_id = $1`
+
+	query := `select mpo.name,mpo.amount,mpo.charge_project_type_id,ddri.remark,
+	cd.specification,cd.manu_factory_name 
+	` + SQL + ` offset $2 limit $3`
+	countsql := `select count(*) as total ` + SQL
+
+	total := model.DB.QueryRowx(countsql, recordID)
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, _ := model.DB.Queryx(query, recordID, offset, limit)
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
