@@ -10,9 +10,10 @@ import (
 
 // LaboratoryTriageList 获取检验列表
 func LaboratoryTriageList(ctx iris.Context) {
+	status := ctx.PostValue("order_status")
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 
-	if clinicTriagePatientID == "" {
+	if clinicTriagePatientID == "" || status == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -21,9 +22,10 @@ func LaboratoryTriageList(ctx iris.Context) {
 	cl.name as clinic_laboratory_name,lp.clinic_laboratory_id 
 	FROM laboratory_patient lp 
 	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
-	where lp.clinic_triage_patient_id = $1`
+	left join mz_paid_orders mo on mo.clinic_triage_patient_id = lp.clinic_triage_patient_id and mo.charge_project_type_id=3 and lp.clinic_laboratory_id=mo.charge_project_id
+	where lp.clinic_triage_patient_id = $1 and lp.order_status=$2`
 
-	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID)
+	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID, status)
 	results := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
@@ -123,7 +125,8 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
 	left join (select clinic_triage_patient_id,count(*) as total_count from laboratory_patient where order_status = $1 group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
-	where up.total_count > 0 AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
+	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ctp.id and mo.charge_project_type_id=4 and up.clinic_examination_id=mo.charge_project_id
+	where up.total_count > 0 AND mo.id is not NULL AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
@@ -232,7 +235,7 @@ func LaboratoryTriageRecordCreate(ctx iris.Context) {
 			return
 		}
 
-		_, err1 := tx.Exec(`UPDATE laboratory_patient set order_status = '20' and updated_time=LOCALTIMESTAMP where id = $1`, laboratoryPatientID)
+		_, err1 := tx.Exec(`UPDATE laboratory_patient set order_status = '20', updated_time=LOCALTIMESTAMP where id = $1`, laboratoryPatientID)
 		if err1 != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})

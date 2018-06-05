@@ -1493,6 +1493,7 @@ CREATE TABLE examination_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   clinic_examination_id INTEGER NOT NULL references clinic_examination(id),--检查项目id
+  order_status varchar(2)  NOT NULL DEFAULT '10',  --状态，10-待使用，20-使用中， 30-已使用 40-已退回
   order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   times INTEGER NOT NULL CHECK(times > 0),--次数
@@ -1749,6 +1750,7 @@ CREATE TABLE laboratory_patient_record_item
 --检查记录
 CREATE TABLE examination_patient_record
 (
+  id serial PRIMARY KEY NOT NULL,--检验记录id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   examination_patient_id INTEGER NOT NULL references examination_patient(id),--所开检查id
   picture_examination text, --检查图片

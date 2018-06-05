@@ -9,9 +9,10 @@ import (
 
 // ExaminationTriageList 获取检查列表
 func ExaminationTriageList(ctx iris.Context) {
+	status := ctx.PostValue("order_status")
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 
-	if clinicTriagePatientID == "" {
+	if clinicTriagePatientID == "" || status == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -20,9 +21,10 @@ func ExaminationTriageList(ctx iris.Context) {
 	ce.name as clinic_examination_name,ep.clinic_examination_id 
 	FROM examination_patient ep 
 	left join clinic_examination ce on ce.id = ep.clinic_examination_id
-	where ep.clinic_triage_patient_id = $1`
+	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ep.clinic_triage_patient_id and mo.charge_project_type_id=4 and ep.clinic_examination_id=mo.charge_project_id
+	where mo.id is not NULL and ep.clinic_triage_patient_id = $1 and ep.order_status=$2`
 
-	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID)
+	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID, status)
 	results := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results})
@@ -33,14 +35,14 @@ func ExaminationTriageWaiting(ctx iris.Context) {
 	examinationTriageList(ctx, "10")
 }
 
-// ExaminationTriageChecked 获取已检查的分诊记录
-func ExaminationTriageChecked(ctx iris.Context) {
-	examinationTriageList(ctx, "30")
-}
-
 // ExaminationTriageChecking 获取检查中的分诊记录
 func ExaminationTriageChecking(ctx iris.Context) {
 	examinationTriageList(ctx, "20")
+}
+
+// ExaminationTriageChecked 获取已检查的分诊记录
+func ExaminationTriageChecked(ctx iris.Context) {
+	examinationTriageList(ctx, "30")
 }
 
 // 获取各状态的分诊记录
@@ -84,8 +86,10 @@ func examinationTriageList(ctx iris.Context, status string) {
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,count(*) as total_count from examination_patient where order_status = $1 group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
-	where up.total_count > 0 AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
+	left join (select clinic_triage_patient_id,clinic_examination_id,count(*) as total_count 
+		from examination_patient where order_status = $1 group by(clinic_triage_patient_id,clinic_examination_id)) up on up.clinic_triage_patient_id = ctp.id 
+	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ctp.id and mo.charge_project_type_id=4 and up.clinic_examination_id=mo.charge_project_id
+	where up.total_count > 0 AND mo.id is not NULL AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
@@ -116,7 +120,7 @@ func examinationTriageList(ctx iris.Context, status string) {
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
-// ExaminationTriageRecordCreate 创建检验记录
+// ExaminationTriageRecordCreate 创建检查记录
 func ExaminationTriageRecordCreate(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	examinationPatientID := ctx.PostValue("examination_patient_id")
@@ -148,6 +152,12 @@ func ExaminationTriageRecordCreate(ctx iris.Context) {
 		VALUES ($1,$2,$3,$4,$5,$6)`, clinicTriagePatientID, examinationPatientID, operationID, pictureExamination, resultExamination, conclusionExamination)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	_, err2 := model.DB.Exec(`UPDATE examination_patient set order_status = '20', updated_time=LOCALTIMESTAMP where id = $1`, examinationPatientID)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 		return
 	}
 
