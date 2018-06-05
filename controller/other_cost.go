@@ -260,8 +260,8 @@ func OtherCostList(ctx iris.Context) {
 		where clinic_id=:clinic_id`
 
 	if keyword != "" {
-		countSQL += ` and name ~*:keyword`
-		selectSQL += ` and name ~*:keyword`
+		countSQL += " and (name ~*:keyword or en_name ~*:keyword or py_code ~*:keyword) "
+		selectSQL += " and (name ~*:keyword or en_name ~*:keyword or py_code ~*:keyword) "
 	}
 	if status != "" {
 		countSQL += " and status=:status"
