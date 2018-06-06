@@ -1717,9 +1717,26 @@ CREATE TABLE drug_delivery_record --发药记录
 CREATE TABLE drug_delivery_record_item --发药记录子表
 (
   id serial PRIMARY KEY NOT NULL,--id
-  drug_delivery_record_id INTEGER NOT NULL references drug_delivery_record(id),
-  mz_paid_orders_id INTEGER NOT NULL UNIQUE references mz_paid_orders(id),
+  drug_delivery_record_id INTEGER NOT NULL references drug_delivery_record(id),--发药记录id
+  mz_paid_orders_id INTEGER NOT NULL UNIQUE references mz_paid_orders(id),--门诊缴费单id
   remark varchar(20)
+);
+
+CREATE TABLE drug_delivery_refund_record --退药记录
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+ 
+CREATE TABLE drug_delivery_refund_record_item --退药记录子表
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  drug_delivery_refund_record_id INTEGER NOT NULL references drug_delivery_refund_record(id),--退药记录id
+  mz_paid_orders_id INTEGER NOT NULL UNIQUE references mz_paid_orders(id)--门诊缴费单id
 );
 
 --检验记录
