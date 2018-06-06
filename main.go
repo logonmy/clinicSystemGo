@@ -411,6 +411,16 @@ func main() {
 		laboratoryTriage.Post("/LaboratoryTriageRecordDetail", controller.LaboratoryTriageRecordDetail)
 	}
 
+	treatmentTriage := app.Party("/treatmentTriage", crs).AllowMethods(iris.MethodOptions)
+	{
+		treatmentTriage.Post("/TreatmentTriageList", controller.TreatmentTriageList)
+		treatmentTriage.Post("/TreatmentTriageWaiting", controller.TreatmentTriageWaiting)
+		treatmentTriage.Post("/TreatmentTriageChecked", controller.TreatmentTriageChecked)
+		treatmentTriage.Post("/TreatmentTriageChecking", controller.TreatmentTriageChecking)
+		treatmentTriage.Post("/TreatmentTriageRecordCreate", controller.TreatmentTriageRecordCreate)
+		treatmentTriage.Post("/TreatmentTriageRecordList", controller.TreatmentTriageRecordList)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello

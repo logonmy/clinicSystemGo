@@ -1399,9 +1399,11 @@ CREATE TABLE treatment_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   clinic_treatment_id INTEGER NOT NULL references clinic_treatment(id),--治疗项目id
+  order_status varchar(2)  NOT NULL DEFAULT '10',  --状态，10-待使用，20-使用中， 30-已使用 40-已退回
   order_sn varchar(20) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   times INTEGER NOT NULL CHECK(times > 0),--次数
+  left_times INTEGER NOT NULL CHECK(left_times >= 0),--剩余次数
   illustration text,--说明
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1756,6 +1758,20 @@ CREATE TABLE examination_patient_record
   picture_examination text, --检查图片
   result_examination text, --检查结果
   conclusion_examination text, --检查结论
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--治疗记录
+CREATE TABLE treatment_patient_record
+(
+  id serial PRIMARY KEY NOT NULL,--治疗记录id
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
+  treatment_patient_id INTEGER NOT NULL references treatment_patient(id),--所开治疗id
+  times INTEGER NOT NULL CHECK(times > 0), --本次治疗次数
+  remark text, --备注
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

@@ -86,10 +86,11 @@ func examinationTriageList(ctx iris.Context, status string) {
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,clinic_examination_id,count(*) as total_count 
-		from examination_patient where order_status = $1 group by(clinic_triage_patient_id,clinic_examination_id)) up on up.clinic_triage_patient_id = ctp.id 
-	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ctp.id and mo.charge_project_type_id=4 and up.clinic_examination_id=mo.charge_project_id
-	where up.total_count > 0 AND mo.id is not NULL AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
+	left join (select clinic_triage_patient_id,count(*) as total_count 
+		from examination_patient where order_status = $1 group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
+	left join (select clinic_triage_patient_id,count(*) as mz_count 
+		from mz_paid_orders where charge_project_type_id = 4 group by(clinic_triage_patient_id)) mzup on mzup.clinic_triage_patient_id = ctp.id	
+	where up.total_count > 0 AND mzup.mz_count > 0 AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
