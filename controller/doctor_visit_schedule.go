@@ -236,7 +236,9 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err := model.DB.NamedQuery(doctorsSQL+" order by department_id, personnel_id ASC offset :offset limit :limit;", queryOptions)
+	doctorsSQL += ` order by department_id, personnel_id ASC offset :offset limit :limit`
+
+	rows, err := model.DB.NamedQuery(doctorsSQL, queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
@@ -253,7 +255,7 @@ func DoctorsWithSchedule(ctx iris.Context) {
 	dvs.stop_flag,
 	dvs.open_flag 
 	from doctor_visit_schedule dvs where exists (
-	select null from (` + doctorsSQL + ` offset :offset limit :limit) edp where dvs.department_id = edp.department_id and dvs.personnel_id = edp.personnel_id
+	select null from (` + doctorsSQL + `) edp where dvs.department_id = edp.department_id and dvs.personnel_id = edp.personnel_id
 	) and dvs.visit_date between :start_date and :end_date order by department_id, personnel_id, visit_date, am_pm ASC`
 
 	rows, err = model.DB.NamedQuery(scheduleSQL, queryOptions)

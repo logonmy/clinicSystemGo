@@ -207,7 +207,7 @@ func FormatFuntionmenus(functionMenus []map[string]interface{}) []Funtionmenus {
 // FormatPayOrderSn 格式化单号
 func FormatPayOrderSn(clinicTriagePatientID string, chargeProjectTypeID string) string {
 	var orderSn string
-	orderSn = time.Now().Format("20060102") + chargeProjectTypeID + clinicTriagePatientID
+	orderSn = time.Now().Format("20060102150405") + chargeProjectTypeID + clinicTriagePatientID
 	return orderSn
 }
 
