@@ -860,7 +860,7 @@ CREATE TABLE drug_stock
   storehouse_id integer NOT NULL references storehouse(id),--库房id
   clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--诊所药品id
   supplier_name varchar(100),--供应商
-  stock_amount INTEGER NOT NULL DEFAULT 0,--库存数量
+  stock_amount INTEGER NOT NULL DEFAULT 0 CHECK(stock_amount >= 0),--库存数量
   serial varchar(20),--批号
   eff_date DATE NOT NULL,--有效日期
   buy_price integer,--成本价

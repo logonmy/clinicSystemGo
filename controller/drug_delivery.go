@@ -460,3 +460,36 @@ func DrugDeliveryRecordRefundDetail(ctx iris.Context) {
 	results := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
+
+// DrugDeliveryStockList 获取药品库存记录
+func DrugDeliveryStockList(ctx iris.Context) {
+	status := ctx.PostValue("order_status")
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+
+	if clinicTriagePatientID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	querysql := `select mpo.id as mz_paid_orders_id,mpo.name,mpo.amount,mpo.charge_project_type_id,
+	cd.specification,cd.manu_factory_name,cd.dose_form_name,
+	ds.stock_amount,ds.eff_date,ds.serial,ds.id as drug_stock_id
+	FROM mz_paid_orders mpo 
+	left join clinic_drug cd on cd.id = mpo.charge_project_id 
+	left join drug_stock ds on ds.clinic_drug_id = mpo.charge_project_id
+	where mpo.clinic_triage_patient_id = $1 and mpo.order_status = $2 and mpo.charge_project_type_id in (1,2)`
+
+	rows, _ := model.DB.Queryx(querysql, clinicTriagePatientID, status)
+	results := FormatSQLRowsToMapArray(rows)
+
+	for _, item := range results {
+		if item["stock_amount"] == nil {
+			item["stock_amount"] = int64(0)
+		}
+		if item["amount"] == nil {
+			item["amount"] = int64(0)
+		}
+	}
+	ctx.JSON(iris.Map{"code": "200", "data": results})
+
+}

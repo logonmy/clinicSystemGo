@@ -315,3 +315,22 @@ func LaboratoryTriageRecordDetail(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": laboratoryResult, "page_info": pageInfo})
 
 }
+
+//LaboratoryTriageUpdate 更新检验状态
+func LaboratoryTriageUpdate(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	status := ctx.PostValue("order_status")
+
+	if clinicTriagePatientID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	_, err := model.DB.Exec(`UPDATE laboratory_patient set order_status=$1,updated_time=LOCALTIMESTAMP where id = $1`, status, clinicTriagePatientID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "操作成功"})
+}
