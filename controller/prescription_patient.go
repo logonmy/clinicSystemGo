@@ -124,8 +124,42 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		frequencyName := v["frequency_name"]
 		times := v["amount"]
 		illustration := v["illustration"]
-		fetchAddress, _ := strconv.Atoi(v["fetch_address"])
+		fetchAddress, ferr := strconv.Atoi(v["fetch_address"])
 		effDay := v["eff_day"]
+
+		if clinicDrugID == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "药品不能为空"})
+			return
+		}
+		if ferr != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "取药地点不能为空"})
+			return
+		}
+		if times == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "总量不能为空"})
+			return
+		}
+		if onceDose == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "单次剂量不能为空"})
+			return
+		}
+		if onceDoseUnitName == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "剂量单位不能为空"})
+			return
+		}
+		if routeAdministrationName == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "用法不能为空"})
+			return
+		}
+		if effDay == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "用法不能为空"})
+			return
+		}
+		if frequencyName == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "用药频次不能为空"})
+			return
+		}
+
 		trow := model.DB.QueryRowx(selectSQL, clinicDrugID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "西/成药处方项错误"})
@@ -223,8 +257,27 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	items := ctx.PostValue("items")
 
 	fmt.Println("prescriptionChinesePatientID, ========", prescriptionChinesePatientID)
-
-	if clinicTriagePatientID == "" || routeAdministrationName == "" || frequencyName == "" || amount == "" || fetchAddressStr == "" {
+	if fetchAddressStr == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "取药地点不能为空"})
+		return
+	}
+	if amount == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "副数不能为空"})
+		return
+	}
+	if routeAdministrationName == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "用法不能为空"})
+		return
+	}
+	if effDay == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "用法不能为空"})
+		return
+	}
+	if frequencyName == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "用药频次不能为空"})
+		return
+	}
+	if clinicTriagePatientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -372,6 +425,24 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		onceDoseUnitName := v["once_dose_unit_name"]
 		times := v["amount"]
 		specialIllustration := v["special_illustration"]
+
+		if clinicDrugID == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "药品不能为空"})
+			return
+		}
+		if times == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "总量不能为空"})
+			return
+		}
+		if onceDose == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "单次剂量不能为空"})
+			return
+		}
+		if onceDoseUnitName == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "剂量单位不能为空"})
+			return
+		}
+
 		trow := model.DB.QueryRowx(selectSQL, clinicDrugID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "中药处方项错误"})
