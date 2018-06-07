@@ -85,6 +85,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		"order_sn",
 		"soft_sn",
 		"times",
+		"left_times",
 		"operation_id",
 		"illustration",
 	}
@@ -154,6 +155,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 			ToNullInt64(clinicTreatmentID),
 			ToNullString(orderSn),
 			index,
+			ToNullInt64(times),
 			ToNullInt64(times),
 			ToNullInt64(personnelID),
 			ToNullString(illustration),
