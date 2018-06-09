@@ -18,10 +18,12 @@ func ExaminationTriageList(ctx iris.Context) {
 	}
 
 	selectSQL := `select ep.id as examination_patient_id,ep.clinic_triage_patient_id,
-	ce.name as clinic_examination_name,ep.clinic_examination_id 
+	ce.name as clinic_examination_name,ep.clinic_examination_id,
+	mpr.picture_examination,mpr.result_examination,mpr.conclusion_examination
 	FROM examination_patient ep 
 	left join clinic_examination ce on ce.id = ep.clinic_examination_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ep.clinic_triage_patient_id and mo.charge_project_type_id=4 and ep.clinic_examination_id=mo.charge_project_id
+	left join examination_patient_record mpr on mpr.examination_patient_id = ep.id
 	where mo.id is not NULL and ep.clinic_triage_patient_id = $1 and ep.order_status=$2`
 
 	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID, status)
