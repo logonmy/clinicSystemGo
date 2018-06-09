@@ -402,6 +402,7 @@ func main() {
 		examinationTriage.Post("/ExaminationTriageChecking", controller.ExaminationTriageChecking)
 		examinationTriage.Post("/ExaminationTriageRecordCreate", controller.ExaminationTriageRecordCreate)
 		examinationTriage.Post("/ExaminationTriageRecordList", controller.ExaminationTriageRecordList)
+		examinationTriage.Post("/ExaminationTriageUpdate", controller.ExaminationTriageUpdate)
 	}
 
 	laboratoryTriage := app.Party("/laboratoryTriage", crs).AllowMethods(iris.MethodOptions)
@@ -414,6 +415,7 @@ func main() {
 		laboratoryTriage.Post("/LaboratoryTriageRecordCreate", controller.LaboratoryTriageRecordCreate)
 		laboratoryTriage.Post("/LaboratoryTriageRecordList", controller.LaboratoryTriageRecordList)
 		laboratoryTriage.Post("/LaboratoryTriageRecordDetail", controller.LaboratoryTriageRecordDetail)
+		laboratoryTriage.Post("/LaboratoryTriageUpdate", controller.LaboratoryTriageUpdate)
 	}
 
 	treatmentTriage := app.Party("/treatmentTriage", crs).AllowMethods(iris.MethodOptions)
@@ -424,6 +426,7 @@ func main() {
 		treatmentTriage.Post("/TreatmentTriageChecking", controller.TreatmentTriageChecking)
 		treatmentTriage.Post("/TreatmentTriageRecordCreate", controller.TreatmentTriageRecordCreate)
 		treatmentTriage.Post("/TreatmentTriageRecordList", controller.TreatmentTriageRecordList)
+		treatmentTriage.Post("/TreatmentTriageUpdate", controller.TreatmentTriageUpdate)
 	}
 
 	// http://localhost:8080
