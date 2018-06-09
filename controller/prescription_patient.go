@@ -127,6 +127,8 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		fetchAddress, ferr := strconv.Atoi(v["fetch_address"])
 		effDay := v["eff_day"]
 
+		fmt.Println("打印保存药品 ========")
+
 		if clinicDrugID == "" {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "药品不能为空"})
 			return
@@ -152,13 +154,15 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 			return
 		}
 		if effDay == "" {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "用法不能为空"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": "处方天数不能为空"})
 			return
 		}
 		if frequencyName == "" {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "用药频次不能为空"})
 			return
 		}
+
+		fmt.Println("打印保存药品结束 ========")
 
 		trow := model.DB.QueryRowx(selectSQL, clinicDrugID)
 		if trow == nil {
@@ -262,7 +266,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		return
 	}
 	if amount == "" {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "副数不能为空"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "付数不能为空"})
 		return
 	}
 	if routeAdministrationName == "" {
@@ -270,7 +274,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 		return
 	}
 	if effDay == "" {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "用法不能为空"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "处方天数不能为空"})
 		return
 	}
 	if frequencyName == "" {

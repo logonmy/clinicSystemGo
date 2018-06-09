@@ -12,29 +12,9 @@ import (
 func DrugDeliveryList(ctx iris.Context) {
 	status := ctx.PostValue("order_status")
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
-	offset := ctx.PostValue("offset")
-	limit := ctx.PostValue("limit")
 
 	if clinicTriagePatientID == "" || status == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
-		return
-	}
-
-	if offset == "" {
-		offset = "0"
-	}
-	if limit == "" {
-		limit = "10"
-	}
-
-	_, err := strconv.Atoi(offset)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
-		return
-	}
-	_, err = strconv.Atoi(limit)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
 
@@ -43,29 +23,13 @@ func DrugDeliveryList(ctx iris.Context) {
 	left join (select clinic_drug_id, sum(stock_amount) as stock_amount from drug_stock group by clinic_drug_id ) ds on ds.clinic_drug_id = cd.id 
 	left join drug_delivery_record_item ddri on ddri.mz_paid_orders_id = mpo.id 
 	where mpo.clinic_triage_patient_id = $1 and mpo.order_status = $2 and mpo.charge_project_type_id in (1,2)`
-	countsql := "select count(mpo.*) as total,string_agg(cast ( mpo.id as TEXT ),',') as ids " + SQL
 
-	total := model.DB.QueryRowx(countsql, clinicTriagePatientID, status)
-	pageInfo := FormatSQLRowToMap(total)
-	pageInfo["offset"] = offset
-	pageInfo["limit"] = limit
-	querysql := "select ddri.remark,mpo.order_status,mpo.id,mpo.name,mpo.amount,mpo.charge_project_type_id,cd.specification,cd.manu_factory_name,cd.dose_form_name,ds.stock_amount " + SQL + " offset $3 limit $4"
+	querysql := "select mpo.order_sn,ddri.remark,mpo.order_status,mpo.id,mpo.name,mpo.amount,mpo.charge_project_type_id,cd.specification,cd.manu_factory_name,cd.dose_form_name,ds.stock_amount " + SQL
 
-	rows, _ := model.DB.Queryx(querysql, clinicTriagePatientID, status, offset, limit)
-	allSelectStatus := true
+	rows, _ := model.DB.Queryx(querysql, clinicTriagePatientID, status)
 	results := FormatSQLRowsToMapArray(rows)
-	for _, item := range results {
-		if item["stock_amount"] == nil {
-			item["stock_amount"] = int64(0)
-		}
-		if item["amount"] == nil {
-			item["amount"] = int64(0)
-		}
 
-		allSelectStatus = item["stock_amount"].(int64) >= item["amount"].(int64) && allSelectStatus
-	}
-	pageInfo["allSelectStatus"] = allSelectStatus
-	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results})
 
 }
 
