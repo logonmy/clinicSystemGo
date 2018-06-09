@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -210,7 +212,7 @@ func FormatFuntionmenus(functionMenus []map[string]interface{}) []Funtionmenus {
 // FormatPayOrderSn 格式化单号
 func FormatPayOrderSn(clinicTriagePatientID string, chargeProjectTypeID string) string {
 	var orderSn string
-	orderSn = time.Now().Format("20060102150405") + chargeProjectTypeID + clinicTriagePatientID
+	orderSn = time.Now().Format("20060102150405") + chargeProjectTypeID + clinicTriagePatientID + strconv.Itoa(rand.Intn(1000))
 	return orderSn
 }
 
