@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/kataras/iris"
@@ -320,15 +321,44 @@ func LaboratoryTriageRecordDetail(ctx iris.Context) {
 func LaboratoryTriageUpdate(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	status := ctx.PostValue("order_status")
+	items := ctx.PostValue("items")
 
-	if clinicTriagePatientID == "" || status == "" {
+	if clinicTriagePatientID == "" || status == "" || items == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	_, err := model.DB.Exec(`UPDATE laboratory_patient set order_status=$1,updated_time=LOCALTIMESTAMP where id = $1`, status, clinicTriagePatientID)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	var results []map[string]string
+	errj := json.Unmarshal([]byte(items), &results)
+	fmt.Println("===", results)
+
+	if errj != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
+		return
+	}
+
+	tx, errb := model.DB.Begin()
+	if errb != nil {
+		fmt.Println("errb ===", errb)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
+		return
+	}
+
+	for _, v := range results {
+		laboratoryPatientID := v["laboratory_patient_id"]
+
+		_, err := tx.Exec(`UPDATE laboratory_patient set order_status=$1,updated_time=LOCALTIMESTAMP where id=$2 and clinic_triage_patient_id=$3`, status, laboratoryPatientID, clinicTriagePatientID)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	errc := tx.Commit()
+	if errc != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": errc.Error()})
 		return
 	}
 
