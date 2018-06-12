@@ -155,10 +155,11 @@ func ClinicDrugCreate(ctx iris.Context) {
 		$34,
 		$35,
 		$36
-	)`
+	) RETURNING id`
 
 	fmt.Println("insertSQL ====", insertSQL)
-	_, err := model.DB.Exec(insertSQL,
+	var clinicDrugID string
+	err := model.DB.QueryRow(insertSQL,
 		ToNullInt64(clinicID),
 		ToNullInt64(drugType),
 		ToNullInt64(drugClassID),
@@ -195,7 +196,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 		ToNullBool(countryFlag),
 		ToNullBool(selfSlag),
 		ToNullBool(drugDlag),
-	)
+	).Scan(&clinicDrugID)
 
 	if err != nil {
 		fmt.Println("err === ", err)
@@ -203,7 +204,39 @@ func ClinicDrugCreate(ctx iris.Context) {
 		return
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": "-1"})
+	selectDrugSQL := `select 
+		cd.id as clinic_drug_id,
+		cd.type,
+		cd.manu_factory_name,
+		cd.name as drug_name,
+		cd.specification,
+		cd.packing_unit_name,
+		cd.ret_price,
+		cd.buy_price,
+		cd.py_code,
+		cd.is_discount,
+		cd.illustration,
+		cd.status, 
+		cd.once_dose,
+		cd.once_dose_unit_name, 
+		cd.route_administration_name, 
+		cd.frequency_name,
+		cd.fetch_address,
+		cd.clinic_id,
+		sum(ds.stock_amount) as stock_amount
+		from clinic_drug cd
+		left join drug_stock ds on ds.clinic_drug_id = cd.id
+		where id=$1`
+
+	row := model.DB.QueryRowx(selectDrugSQL, clinicDrugID)
+
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "预约失败"})
+		return
+	}
+	clinicDrug := FormatSQLRowToMap(row)
+
+	ctx.JSON(iris.Map{"code": "200", "data": clinicDrug})
 }
 
 //ClinicDrugList 药品列表
@@ -543,7 +576,7 @@ func ClinicDrugDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	sql := `select * clinic_drug from where id = $1`
+	sql := `select * from clinic_drug where id = $1`
 	arow := model.DB.QueryRowx(sql, clinicDrugID)
 	if arow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
