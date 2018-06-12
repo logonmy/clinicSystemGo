@@ -488,6 +488,54 @@ func ClinicDrugUpdate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": clinicDrugID})
 }
 
+// ClinicDrugOnOff 启用和停用
+func ClinicDrugOnOff(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	clinicDrugID := ctx.PostValue("clinic_drug_id")
+	status := ctx.PostValue("status")
+	if clinicID == "" || clinicDrugID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	clinic := FormatSQLRowToMap(row)
+	_, ok := clinic["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
+		return
+	}
+
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_drug where id=$1 limit 1", clinicDrugID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	clinicDrug := FormatSQLRowToMap(crow)
+	_, rok := clinicDrug["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
+		return
+	}
+
+	if clinicID != strconv.FormatInt(clinicDrug["clinic_id"].(int64), 10) {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据不匹配"})
+		return
+	}
+	_, err1 := model.DB.Exec("update clinic_drug set status=$1 where id=$2", status, clinicDrugID)
+	if err1 != nil {
+		fmt.Println(" err1====", err1)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
 //ClinicDrugDetail 药品详情
 func ClinicDrugDetail(ctx iris.Context) {
 	clinicDrugID := ctx.PostValue("clinic_drug_id")
