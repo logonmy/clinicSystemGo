@@ -205,27 +205,25 @@ func ClinicDrugCreate(ctx iris.Context) {
 	}
 
 	selectDrugSQL := `select 
-		cd.id as clinic_drug_id,
-		cd.type,
-		cd.manu_factory_name,
-		cd.name as drug_name,
-		cd.specification,
-		cd.packing_unit_name,
-		cd.ret_price,
-		cd.buy_price,
-		cd.py_code,
-		cd.is_discount,
-		cd.illustration,
-		cd.status, 
-		cd.once_dose,
-		cd.once_dose_unit_name, 
-		cd.route_administration_name, 
-		cd.frequency_name,
-		cd.fetch_address,
-		cd.clinic_id,
-		sum(ds.stock_amount) as stock_amount
-		from clinic_drug cd
-		left join drug_stock ds on ds.clinic_drug_id = cd.id
+		id as clinic_drug_id,
+		type,
+		manu_factory_name,
+		name as drug_name,
+		specification,
+		packing_unit_name,
+		ret_price,
+		buy_price,
+		py_code,
+		is_discount,
+		illustration,
+		status, 
+		once_dose,
+		once_dose_unit_name, 
+		route_administration_name, 
+		frequency_name,
+		fetch_address,
+		clinic_id
+		from clinic_drug
 		where id=$1`
 
 	row := model.DB.QueryRowx(selectDrugSQL, clinicDrugID)
