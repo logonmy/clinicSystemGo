@@ -443,7 +443,7 @@ func ClinicDrugUpdate(ctx iris.Context) {
 	}
 
 	// 修改数据
-	updateSQL := `udpate clinic_drug set
+	updateSQL := `update clinic_drug set
 		name = $2,
 		specification = $3,
 		manu_factory_name = $4,
