@@ -97,8 +97,13 @@ func treatmentTriageList(ctx iris.Context, status string) {
 	where up.total_count > 0 AND mzup.mz_count > 0 AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
 
 	countsql := `select count(*) as total` + sql
-	querysql := `select 
-	up.total_count,
+	querysql := `select
+	((select count(*) 
+	from treatment_patient where order_status = '10' and clinic_triage_patient_id = ctp.id )) as waiting_total_count,
+	((select count(*) 
+	from treatment_patient where order_status = '20' and clinic_triage_patient_id = ctp.id )) as checking_total_count,
+	((select count(*) 
+	from treatment_patient where order_status = '30' and clinic_triage_patient_id = ctp.id )) as checked_total_count,
 	ctp.id as clinic_triage_patient_id,
 	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time,

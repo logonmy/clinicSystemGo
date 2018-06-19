@@ -89,7 +89,7 @@ func examinationTriageList(ctx iris.Context, status string) {
 	left join department d on d.id = ctp.department_id  
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
-	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
+	left join personnel triage_personnel on triage_personnel.id = register.personnel_id
 	left join (select clinic_triage_patient_id,count(*) as total_count 
 		from examination_patient where order_status = $1 group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
 	left join (select clinic_triage_patient_id,count(*) as mz_count 
@@ -98,7 +98,12 @@ func examinationTriageList(ctx iris.Context, status string) {
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
-	up.total_count,
+	((select count(*) 
+	from examination_patient where order_status = '10' and clinic_triage_patient_id = ctp.id )) as waiting_total_count,
+	((select count(*) 
+	from examination_patient where order_status = '20' and clinic_triage_patient_id = ctp.id )) as checking_total_count,
+	((select count(*) 
+	from examination_patient where order_status = '30' and clinic_triage_patient_id = ctp.id )) as checked_total_count,
 	ctp.id as clinic_triage_patient_id,
 	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time,

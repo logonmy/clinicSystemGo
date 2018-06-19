@@ -133,7 +133,12 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
-	up.total_count,
+	((select count(*) 
+	from laboratory_patient where order_status = '10' and clinic_triage_patient_id = ctp.id )) as waiting_total_count,
+	((select count(*) 
+	from laboratory_patient where order_status = '20' and clinic_triage_patient_id = ctp.id )) as checking_total_count,
+	((select count(*) 
+	from laboratory_patient where order_status = '30' and clinic_triage_patient_id = ctp.id )) as checked_total_count,
 	ctp.id as clinic_triage_patient_id,
 	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time,
