@@ -516,7 +516,38 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		ToNullBool(selfSlag),
 		ToNullBool(drugDlag),
 	)
-	ctx.JSON(iris.Map{"code": "200", "data": clinicDrugID})
+
+	selectDrugSQL := `select 
+		id as clinic_drug_id,
+		type,
+		manu_factory_name,
+		name as drug_name,
+		specification,
+		packing_unit_name,
+		ret_price,
+		buy_price,
+		py_code,
+		is_discount,
+		illustration,
+		status, 
+		once_dose,
+		once_dose_unit_name, 
+		route_administration_name, 
+		frequency_name,
+		fetch_address,
+		clinic_id
+		from clinic_drug
+		where id=$1`
+
+	row := model.DB.QueryRowx(selectDrugSQL, clinicDrugID)
+
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改错误"})
+		return
+	}
+	clinicUpdatedDrug := FormatSQLRowToMap(row)
+
+	ctx.JSON(iris.Map{"code": "200", "data": clinicUpdatedDrug})
 }
 
 // ClinicDrugOnOff 启用和停用
