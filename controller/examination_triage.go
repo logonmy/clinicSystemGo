@@ -169,7 +169,7 @@ func ExaminationTriageRecordCreate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "操作成功"})
 }
 
-// ExaminationTriageRecordList 查询检验记录
+// ExaminationTriageRecordList 查询检查记录
 func ExaminationTriageRecordList(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 
@@ -196,7 +196,7 @@ func ExaminationTriageRecordList(ctx iris.Context) {
 
 }
 
-//ExaminationTriageUpdate 更新检验状态
+//ExaminationTriageUpdate 更新检查状态
 func ExaminationTriageUpdate(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	status := ctx.PostValue("order_status")
