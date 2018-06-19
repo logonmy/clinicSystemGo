@@ -114,7 +114,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
 		return
 	}
-	inserttSQL := "insert into treatment_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
+	inserttSQL := "insert into treatment_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8)"
 	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
 
 	for index, v := range results {
