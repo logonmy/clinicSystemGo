@@ -157,18 +157,36 @@ func ExaminationTriageRecordCreate(ctx iris.Context) {
 		return
 	}
 
-	_, err1 := model.DB.Exec(`INSERT INTO examination_patient_record 
-		(clinic_triage_patient_id, examination_patient_id, operation_id, picture_examination,result_examination,conclusion_examination) 
-		VALUES ($1,$2,$3,$4,$5,$6)`, clinicTriagePatientID, examinationPatientID, operationID, pictureExamination, resultExamination, conclusionExamination)
-	if err1 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+	rrow := model.DB.QueryRowx("select id from examination_patient_record where clinic_triage_patient_id=$1 and examination_patient_id=$2 limit 1", clinicTriagePatientID, examinationPatientID)
+	if rrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "创建失败"})
 		return
 	}
+	examinationPatientRecord := FormatSQLRowToMap(rrow)
 
-	_, err2 := model.DB.Exec(`UPDATE examination_patient set order_status = '20', updated_time=LOCALTIMESTAMP where id = $1`, examinationPatientID)
-	if err2 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
-		return
+	examinationPatientRecordID, rok := examinationPatientRecord["id"]
+	if !rok {
+		_, err1 := model.DB.Exec(`INSERT INTO examination_patient_record 
+			(clinic_triage_patient_id, examination_patient_id, operation_id, picture_examination,result_examination,conclusion_examination) 
+			VALUES ($1,$2,$3,$4,$5,$6)`, clinicTriagePatientID, examinationPatientID, operationID, pictureExamination, resultExamination, conclusionExamination)
+		if err1 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+			return
+		}
+
+		_, err2 := model.DB.Exec(`UPDATE examination_patient set order_status = '30', updated_time=LOCALTIMESTAMP where id = $1`, examinationPatientID)
+		if err2 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+			return
+		}
+
+	} else {
+		_, err3 := model.DB.Exec(`update examination_patient_record set
+			operation_id=$2, picture_examination=$3,result_examination=$4,conclusion_examination=$5, updated_time=LOCALTIMESTAMP where id=$1`, examinationPatientRecordID, operationID, ToNullString(pictureExamination), ToNullString(resultExamination), ToNullString(conclusionExamination))
+		if err3 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+			return
+		}
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "操作成功"})

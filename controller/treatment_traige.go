@@ -140,7 +140,7 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-
+	orderStatus := "20"
 	var results []map[string]interface{}
 	err := json.Unmarshal([]byte(items), &results)
 
@@ -163,7 +163,7 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "请填写次数"})
 			return
 		}
-		row := model.DB.QueryRowx("select id from treatment_patient where id=$1 and clinic_triage_patient_id=$2 limit 1", treatmentPatientID, clinicTriagePatientID)
+		row := model.DB.QueryRowx("select id,left_times from treatment_patient where id=$1 and clinic_triage_patient_id=$2 limit 1", treatmentPatientID, clinicTriagePatientID)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "创建失败"})
 			return
@@ -176,6 +176,16 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 			return
 		}
 
+		leftTimes := treatmentPatient["left_times"].(int64)
+		if leftTimes == times.(int64) {
+			orderStatus = "30"
+		}
+
+		if leftTimes < times.(int64) {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "治疗剩余次数不足"})
+			return
+		}
+
 		_, err := tx.Exec(`INSERT INTO treatment_patient_record 
 			(clinic_triage_patient_id, treatment_patient_id, times, remark,operation_id) 
 			VALUES ($1,$2,$3)`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
@@ -185,7 +195,7 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 			return
 		}
 
-		_, err1 := tx.Exec(`UPDATE treatment_patient set left_times=left_times-$2 ,updated_time=LOCALTIMESTAMP where id = $1`, treatmentPatientID, times)
+		_, err1 := tx.Exec(`UPDATE treatment_patient set left_times=left_times-$2, order_status=$3, updated_time=LOCALTIMESTAMP where id = $1`, treatmentPatientID, times, orderStatus)
 		if err1 != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
