@@ -1761,6 +1761,7 @@ CREATE TABLE laboratory_patient_record_item
   laboratory_patient_record_id INTEGER NOT NULL references laboratory_patient_record(id),--检验记录id
   clinic_laboratory_item_id integer NOT NULL references clinic_laboratory_item(id),--诊所检验项目id
   result_inspection text, --检验结果
+  property_inspection text, --检验性质
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

@@ -20,7 +20,7 @@ func ExaminationTriageList(ctx iris.Context) {
 	}
 
 	selectSQL := `select ep.id as examination_patient_id,ep.clinic_triage_patient_id,
-	ce.name as clinic_examination_name,ep.clinic_examination_id,
+	ce.name as clinic_examination_name,ep.clinic_examination_id,mpr.id as examination_patient_record_id,
 	mpr.picture_examination,mpr.result_examination,mpr.conclusion_examination
 	FROM examination_patient ep 
 	left join clinic_examination ce on ce.id = ep.clinic_examination_id

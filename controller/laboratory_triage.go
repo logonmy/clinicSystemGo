@@ -20,10 +20,11 @@ func LaboratoryTriageList(ctx iris.Context) {
 	}
 
 	selectSQL := `select lp.id as laboratory_patient_id,lp.clinic_triage_patient_id,
-	cl.name as clinic_laboratory_name,lp.clinic_laboratory_id 
+	cl.name as clinic_laboratory_name,lp.clinic_laboratory_id,lpr.id as laboratory_patient_record_id
 	FROM laboratory_patient lp 
 	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = lp.clinic_triage_patient_id and mo.charge_project_type_id=3 and lp.clinic_laboratory_id=mo.charge_project_id
+	left join laboratory_patient_record lpr on lpr.laboratory_patient_id = lp.id
 	where lp.clinic_triage_patient_id = $1 and lp.order_status=$2`
 
 	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID, status)
@@ -53,7 +54,7 @@ func LaboratoryTriageDetail(ctx iris.Context) {
 	aresults := FormatSQLRowsToMapArray(arows)
 	laboratoryItems := FormatLaboratoryItem(aresults)
 
-	selectSQL := `select lpri.clinic_laboratory_item_id,lpri.result_inspection,cli.name,cli.en_name,cli.unit_name,cli.is_special,
+	selectSQL := `select lpri.clinic_laboratory_item_id,lpri.result_inspection,lpri.property_inspection,cli.name,cli.en_name,cli.unit_name,cli.is_special,
 	cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status
 	FROM laboratory_patient_record_item lpri 
 	left join clinic_laboratory_item cli on lpri.clinic_laboratory_item_id = cli.id
@@ -254,6 +255,7 @@ func LaboratoryTriageRecordCreate(ctx iris.Context) {
 	for _, item := range results {
 		clinicLaboratoryItemID := item["clinic_laboratory_item_id"]
 		resultInspection := item["result_inspection"]
+		propertyInspection := item["property_inspection"]
 
 		row := model.DB.QueryRowx("select id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
 		if row == nil {
@@ -269,8 +271,8 @@ func LaboratoryTriageRecordCreate(ctx iris.Context) {
 		}
 
 		_, err := tx.Exec(`INSERT INTO laboratory_patient_record_item 
-			(laboratory_patient_record_id, clinic_laboratory_item_id,result_inspection) 
-			VALUES ($1,$2,$3)`, recordID, clinicLaboratoryItemID, resultInspection)
+			(laboratory_patient_record_id, clinic_laboratory_item_id,result_inspection,property_inspection) 
+			VALUES ($1,$2,$3,$4)`, recordID, clinicLaboratoryItemID, resultInspection, propertyInspection)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

@@ -426,6 +426,7 @@ func main() {
 		treatmentTriage.Post("/TreatmentTriageChecked", controller.TreatmentTriageChecked)
 		treatmentTriage.Post("/TreatmentTriageChecking", controller.TreatmentTriageChecking)
 		treatmentTriage.Post("/TreatmentTriageRecordCreate", controller.TreatmentTriageRecordCreate)
+		treatmentTriage.Post("/TreatmentTriageRecordUpdate", controller.TreatmentTriageRecordUpdate)
 		treatmentTriage.Post("/TreatmentTriageRecordList", controller.TreatmentTriageRecordList)
 		treatmentTriage.Post("/TreatmentTriageUpdate", controller.TreatmentTriageUpdate)
 	}
