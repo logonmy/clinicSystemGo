@@ -435,7 +435,7 @@ CREATE TABLE mz_paid_orders
   UNIQUE (order_sn, soft_sn)
 );
 
---记录盈利详情，产生的支付和退费都得插入这个表
+--记录交易详情，产生的支付和退费都得插入这个表
 CREATE TABLE charge_detail
 (
   id serial PRIMARY KEY NOT NULL,--id
@@ -446,16 +446,25 @@ CREATE TABLE charge_detail
   patient_id INTEGER references patient(id),--关联的患者
   department_id INTEGER references department(id),--关联的科室
   doctor_id INTEGER references personnel(id),--关联的医生信息
-  pay_type_code varchar(2) NOT NULL,--支付类型编码 01-门诊缴费，02-挂号费，03-挂账还款，04-住院缴费
-  pay_type_code_name varchar(10) NOT NULL,--支付类型名称
-  pay_method_code varchar(2) NOT NULL,--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
-  pay_method_code_name varchar(10) NOT NULL,--支付方式名称
+
+  traditional_medical_fee INTEGER NOT NULL DEFAULT 0, --中药费
+  western_medicine_fee INTEGER NOT NULL DEFAULT 0, --西/成药费
+  examination_fee INTEGER NOT NULL DEFAULT 0, --检查费
+  labortory_fee INTEGER NOT NULL DEFAULT 0, --检验费
+  treatment_fee INTEGER NOT NULL DEFAULT 0, --治疗费
+  diagnosis_treatment INTEGER NOT NULL DEFAULT 0, --诊疗费
+  material_fee INTEGER NOT NULL DEFAULT 0, --材料费
+  retail_fee INTEGER NOT NULL DEFAULT 0, --零售费
+  other_fee INTEGER NOT NULL DEFAULT 0, --其他费用
+
+
   discount_money INTEGER NOT NULL DEFAULT 0 ,--折扣金额
   derate_money INTEGER NOT NULL DEFAULT 0 ,--减免金额
   medical_money INTEGER NOT NULL DEFAULT 0 ,--医保金额
   voucher_money INTEGER NOT NULL DEFAULT 0 ,--抵金券金额
   bonus_points_money INTEGER NOT NULL DEFAULT 0,--积分兑换金额
   on_credit_money INTEGER NOT NULL,--挂账金额
+
   total_money  INTEGER NOT NULL ,--应收金额
   balance_money INTEGER NOT NULL,--实收金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
