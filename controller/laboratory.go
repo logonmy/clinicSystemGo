@@ -438,6 +438,39 @@ func LaboratoryUpdate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": clinicLaboratoryID})
 }
 
+//LaboratoryOnOff 检验医嘱启用、停用
+func LaboratoryOnOff(ctx iris.Context) {
+	clinicLaboratoryID := ctx.PostValue("clinic_laboratory_id")
+	status := ctx.PostValue("status")
+
+	if clinicLaboratoryID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	crow := model.DB.QueryRowx("select id from clinic_laboratory where id=$1 limit 1", clinicLaboratoryID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	clinicLaboratory := FormatSQLRowToMap(crow)
+	_, rok := clinicLaboratory["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所检验医嘱数据错误"})
+		return
+	}
+
+	_, err := model.DB.Exec(`update clinic_laboratory set status=$2 where id=$1`, clinicLaboratoryID, status)
+
+	if err != nil {
+		fmt.Println(" err====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": clinicLaboratoryID})
+}
+
 //LaboratoryItemCreate 检验项目创建
 func LaboratoryItemCreate(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
