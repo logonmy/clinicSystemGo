@@ -318,14 +318,16 @@ func ExaminationTriagePatientRecordList(ctx iris.Context) {
 	ep.clinic_triage_patient_id, 
 	ctp.clinic_patient_id, 
 	ctpo.created_time as finish_time,
-	cp.patient_id 
+	cp.patient_id,
+	c.name as clinic_name 
 	from examination_patient ep
 	left join clinic_examination ce on ce.id = ep.clinic_examination_id
 	left join clinic_triage_patient ctp on ep.clinic_triage_patient_id = ctp.id
 	left join clinic_triage_patient_operation ctpo on ctp.id = ctpo.clinic_triage_patient_id and ctpo.type = 40 and ctpo.times = 1
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+	left join clinic c on c.id = cp.clinic_id
 	where cp.patient_id = $1 and ep.order_status = '30'
-	group by (ep.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, ctpo.created_time)
+	group by (ep.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, ctpo.created_time, c.name)
 	order by ctpo.created_time DESC
 	offset $2 limit $3`
 
