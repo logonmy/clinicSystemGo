@@ -447,7 +447,7 @@ CREATE TABLE charge_detail
   department_id INTEGER references department(id),--关联的科室
   doctor_id INTEGER references personnel(id),--关联的医生信息
 
-  traditional_medical_fee INTEGER NOT NULL DEFAULT 0, --中药费
+  traditional_medical_fee INTEGER NOT NULL DEFAULT 0, --中药费
   western_medicine_fee INTEGER NOT NULL DEFAULT 0, --西/成药费
   examination_fee INTEGER NOT NULL DEFAULT 0, --检查费
   labortory_fee INTEGER NOT NULL DEFAULT 0, --检验费
@@ -467,6 +467,7 @@ CREATE TABLE charge_detail
 
   total_money  INTEGER NOT NULL ,--应收金额
   balance_money INTEGER NOT NULL,--实收金额
+
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1770,7 +1771,6 @@ CREATE TABLE laboratory_patient_record_item
   laboratory_patient_record_id INTEGER NOT NULL references laboratory_patient_record(id),--检验记录id
   clinic_laboratory_item_id integer NOT NULL references clinic_laboratory_item(id),--诊所检验项目id
   result_inspection text, --检验结果
-  property_inspection text, --检验性质
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
