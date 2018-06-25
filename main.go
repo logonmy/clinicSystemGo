@@ -190,6 +190,7 @@ func main() {
 	{
 		drug.Post("/ClinicDrugCreate", controller.ClinicDrugCreate)
 		drug.Post("/ClinicDrugUpdate", controller.ClinicDrugUpdate)
+		drug.Post("/ClinicDrugOnOff", controller.ClinicDrugOnOff)
 		drug.Post("/ClinicDrugList", controller.ClinicDrugList)
 		drug.Post("/ClinicDrugDetail", controller.ClinicDrugDetail)
 		drug.Post("/ClinicDrugBatchSetting", controller.ClinicDrugBatchSetting)
@@ -425,6 +426,7 @@ func main() {
 		treatmentTriage.Post("/TreatmentTriageChecked", controller.TreatmentTriageChecked)
 		treatmentTriage.Post("/TreatmentTriageChecking", controller.TreatmentTriageChecking)
 		treatmentTriage.Post("/TreatmentTriageRecordCreate", controller.TreatmentTriageRecordCreate)
+		treatmentTriage.Post("/TreatmentTriageRecordUpdate", controller.TreatmentTriageRecordUpdate)
 		treatmentTriage.Post("/TreatmentTriageRecordList", controller.TreatmentTriageRecordList)
 		treatmentTriage.Post("/TreatmentTriageUpdate", controller.TreatmentTriageUpdate)
 	}

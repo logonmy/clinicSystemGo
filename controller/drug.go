@@ -155,10 +155,11 @@ func ClinicDrugCreate(ctx iris.Context) {
 		$34,
 		$35,
 		$36
-	)`
+	) RETURNING id`
 
 	fmt.Println("insertSQL ====", insertSQL)
-	_, err := model.DB.Exec(insertSQL,
+	var clinicDrugID string
+	err := model.DB.QueryRow(insertSQL,
 		ToNullInt64(clinicID),
 		ToNullInt64(drugType),
 		ToNullInt64(drugClassID),
@@ -195,7 +196,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 		ToNullBool(countryFlag),
 		ToNullBool(selfSlag),
 		ToNullBool(drugDlag),
-	)
+	).Scan(&clinicDrugID)
 
 	if err != nil {
 		fmt.Println("err === ", err)
@@ -203,7 +204,37 @@ func ClinicDrugCreate(ctx iris.Context) {
 		return
 	}
 
-	ctx.JSON(iris.Map{"code": "200", "data": "-1"})
+	selectDrugSQL := `select 
+		id as clinic_drug_id,
+		type,
+		manu_factory_name,
+		name as drug_name,
+		specification,
+		packing_unit_name,
+		ret_price,
+		buy_price,
+		py_code,
+		is_discount,
+		illustration,
+		status, 
+		once_dose,
+		once_dose_unit_name, 
+		route_administration_name, 
+		frequency_name,
+		fetch_address,
+		clinic_id
+		from clinic_drug
+		where id=$1`
+
+	row := model.DB.QueryRowx(selectDrugSQL, clinicDrugID)
+
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "预约失败"})
+		return
+	}
+	clinicDrug := FormatSQLRowToMap(row)
+
+	ctx.JSON(iris.Map{"code": "200", "data": clinicDrug})
 }
 
 //ClinicDrugList 药品列表
@@ -412,7 +443,7 @@ func ClinicDrugUpdate(ctx iris.Context) {
 	}
 
 	// 修改数据
-	updateSQL := `udpate clinic_drug set
+	updateSQL := `update clinic_drug set
 		name = $2,
 		specification = $3,
 		manu_factory_name = $4,
@@ -485,7 +516,86 @@ func ClinicDrugUpdate(ctx iris.Context) {
 		ToNullBool(selfSlag),
 		ToNullBool(drugDlag),
 	)
-	ctx.JSON(iris.Map{"code": "200", "data": clinicDrugID})
+
+	selectDrugSQL := `select 
+		id as clinic_drug_id,
+		type,
+		manu_factory_name,
+		name as drug_name,
+		specification,
+		packing_unit_name,
+		ret_price,
+		buy_price,
+		py_code,
+		is_discount,
+		illustration,
+		status, 
+		once_dose,
+		once_dose_unit_name, 
+		route_administration_name, 
+		frequency_name,
+		fetch_address,
+		clinic_id
+		from clinic_drug
+		where id=$1`
+
+	row := model.DB.QueryRowx(selectDrugSQL, clinicDrugID)
+
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改错误"})
+		return
+	}
+	clinicUpdatedDrug := FormatSQLRowToMap(row)
+
+	ctx.JSON(iris.Map{"code": "200", "data": clinicUpdatedDrug})
+}
+
+// ClinicDrugOnOff 启用和停用
+func ClinicDrugOnOff(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	clinicDrugID := ctx.PostValue("clinic_drug_id")
+	status := ctx.PostValue("status")
+	if clinicID == "" || clinicDrugID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id from clinic where id=$1 limit 1", clinicID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	clinic := FormatSQLRowToMap(row)
+	_, ok := clinic["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
+		return
+	}
+
+	crow := model.DB.QueryRowx("select id,clinic_id from clinic_drug where id=$1 limit 1", clinicDrugID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	clinicDrug := FormatSQLRowToMap(crow)
+	_, rok := clinicDrug["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据错误"})
+		return
+	}
+
+	if clinicID != strconv.FormatInt(clinicDrug["clinic_id"].(int64), 10) {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "诊所数据不匹配"})
+		return
+	}
+	_, err1 := model.DB.Exec("update clinic_drug set status=$1 where id=$2", status, clinicDrugID)
+	if err1 != nil {
+		fmt.Println(" err1====", err1)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
 //ClinicDrugDetail 药品详情
@@ -495,7 +605,7 @@ func ClinicDrugDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	sql := `select * clinic_drug from where id = $1`
+	sql := `select * from clinic_drug where id = $1`
 	arow := model.DB.QueryRowx(sql, clinicDrugID)
 	if arow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})

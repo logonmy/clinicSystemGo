@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"github.com/kataras/iris"
@@ -19,10 +20,11 @@ func LaboratoryTriageList(ctx iris.Context) {
 	}
 
 	selectSQL := `select lp.id as laboratory_patient_id,lp.clinic_triage_patient_id,
-	cl.name as clinic_laboratory_name,lp.clinic_laboratory_id 
+	cl.name as clinic_laboratory_name,lp.clinic_laboratory_id,lpr.id as laboratory_patient_record_id
 	FROM laboratory_patient lp 
 	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = lp.clinic_triage_patient_id and mo.charge_project_type_id=3 and lp.clinic_laboratory_id=mo.charge_project_id
+	left join laboratory_patient_record lpr on lpr.laboratory_patient_id = lp.id
 	where lp.clinic_triage_patient_id = $1 and lp.order_status=$2`
 
 	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID, status)
@@ -52,7 +54,7 @@ func LaboratoryTriageDetail(ctx iris.Context) {
 	aresults := FormatSQLRowsToMapArray(arows)
 	laboratoryItems := FormatLaboratoryItem(aresults)
 
-	selectSQL := `select lpri.clinic_laboratory_item_id,lpri.result_inspection,cli.name,cli.en_name,cli.unit_name,cli.is_special,
+	selectSQL := `select lpri.clinic_laboratory_item_id,lpri.result_inspection,lpri.property_inspection,cli.name,cli.en_name,cli.unit_name,cli.is_special,
 	cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status
 	FROM laboratory_patient_record_item lpri 
 	left join clinic_laboratory_item cli on lpri.clinic_laboratory_item_id = cli.id
@@ -132,7 +134,12 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
-	up.total_count,
+	((select count(*) 
+	from laboratory_patient where order_status = '10' and clinic_triage_patient_id = ctp.id )) as waiting_total_count,
+	((select count(*) 
+	from laboratory_patient where order_status = '20' and clinic_triage_patient_id = ctp.id )) as checking_total_count,
+	((select count(*) 
+	from laboratory_patient where order_status = '30' and clinic_triage_patient_id = ctp.id )) as checked_total_count,
 	ctp.id as clinic_triage_patient_id,
 	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time,
@@ -201,19 +208,54 @@ func LaboratoryTriageRecordCreate(ctx iris.Context) {
 		return
 	}
 
-	var recordID interface{}
-	err1 := tx.QueryRow(`INSERT INTO laboratory_patient_record 
-		(clinic_triage_patient_id, laboratory_patient_id, operation_id, remark) 
-		VALUES ($1,$2,$3,$4) RETURNING id`, clinicTriagePatientID, laboratoryPatientID, operationID, remark).Scan(&recordID)
-	if err1 != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+	rrow := model.DB.QueryRowx("select id from laboratory_patient_record where laboratory_patient_id=$1 and clinic_triage_patient_id=$2 limit 1", laboratoryPatientID, clinicTriagePatientID)
+	if rrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "创建失败"})
 		return
+	}
+	laboratoryPatientRecord := FormatSQLRowToMap(rrow)
+
+	var recordID interface{}
+	_, rok := laboratoryPatientRecord["id"]
+	if !rok {
+		err1 := tx.QueryRow(`INSERT INTO laboratory_patient_record 
+			(clinic_triage_patient_id, laboratory_patient_id, operation_id, remark) 
+			VALUES ($1,$2,$3,$4) RETURNING id`, clinicTriagePatientID, laboratoryPatientID, operationID, remark).Scan(&recordID)
+		if err1 != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+			return
+		}
+
+		_, err3 := tx.Exec(`UPDATE laboratory_patient set order_status = '30', updated_time=LOCALTIMESTAMP where id = $1`, laboratoryPatientID)
+		if err3 != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})
+			return
+		}
+
+	} else {
+		recordID = laboratoryPatientRecord["id"]
+		_, err2 := tx.Exec(`UPDATE laboratory_patient_record set
+			operation_id=$2, remark=$3, updated_time=LOCALTIMESTAMP where id=$1`, recordID, operationID, remark)
+		if err2 != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+			return
+		}
+
+		_, errd := tx.Exec(`delete from laboratory_patient_record_item where laboratory_patient_record_id=$1`, recordID)
+		if errd != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
+			return
+		}
 	}
 
 	for _, item := range results {
 		clinicLaboratoryItemID := item["clinic_laboratory_item_id"]
 		resultInspection := item["result_inspection"]
+		propertyInspection := item["property_inspection"]
 
 		row := model.DB.QueryRowx("select id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
 		if row == nil {
@@ -229,21 +271,13 @@ func LaboratoryTriageRecordCreate(ctx iris.Context) {
 		}
 
 		_, err := tx.Exec(`INSERT INTO laboratory_patient_record_item 
-			(laboratory_patient_record_id, clinic_laboratory_item_id,result_inspection) 
-			VALUES ($1,$2,$3)`, recordID, clinicLaboratoryItemID, resultInspection)
+			(laboratory_patient_record_id, clinic_laboratory_item_id,result_inspection,property_inspection) 
+			VALUES ($1,$2,$3,$4)`, recordID, clinicLaboratoryItemID, resultInspection, propertyInspection)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
-
-		_, err1 := tx.Exec(`UPDATE laboratory_patient set order_status = '20', updated_time=LOCALTIMESTAMP where id = $1`, laboratoryPatientID)
-		if err1 != nil {
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
-			return
-		}
-
 	}
 
 	erre := tx.Commit()
@@ -320,15 +354,44 @@ func LaboratoryTriageRecordDetail(ctx iris.Context) {
 func LaboratoryTriageUpdate(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	status := ctx.PostValue("order_status")
+	items := ctx.PostValue("items")
 
-	if clinicTriagePatientID == "" || status == "" {
+	if clinicTriagePatientID == "" || status == "" || items == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	_, err := model.DB.Exec(`UPDATE laboratory_patient set order_status=$1,updated_time=LOCALTIMESTAMP where id = $1`, status, clinicTriagePatientID)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	var results []map[string]string
+	errj := json.Unmarshal([]byte(items), &results)
+	fmt.Println("===", results)
+
+	if errj != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
+		return
+	}
+
+	tx, errb := model.DB.Begin()
+	if errb != nil {
+		fmt.Println("errb ===", errb)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
+		return
+	}
+
+	for _, v := range results {
+		laboratoryPatientID := v["laboratory_patient_id"]
+
+		_, err := tx.Exec(`UPDATE laboratory_patient set order_status=$1,updated_time=LOCALTIMESTAMP where id=$2 and clinic_triage_patient_id=$3`, status, laboratoryPatientID, clinicTriagePatientID)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	errc := tx.Commit()
+	if errc != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": errc.Error()})
 		return
 	}
 
