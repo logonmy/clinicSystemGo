@@ -1810,13 +1810,13 @@ CREATE TABLE pay_order
 (
   transaction_no varchar(100) NOT NULL,--流水号
   trade_no varchar(100) NOT NULL,--平台交易号
-  out_trade_no varchar(100) NOT NULL,--系统交易号
+  out_trade_no varchar(100) UNIQUE NOT NULL,--系统交易号
   total_fee INTEGER NOT NULL CHECK(total_fee > 0),--交易金额
-  body text NOT NULL,--交易备注
+  body text NOT NULL,--交易描述
   pay_state boolean NOT NULL DEFAULT false,--支付状态
   original_data text NOT NULL,--原始数据
   refund_state varchar(2) NOT NULL DEFAULT '10',--退款状态 10 未退款 20 部分退款 30 全退
-  refund_fee_total INTEGER NOT NULL DEFAULT 0 CHECK(refund_fee_total =< total_fee),--累计退款金额
+  refund_fee_total INTEGER NOT NULL DEFAULT 0 CHECK(refund_fee_total <= total_fee),--累计退款金额
 
   subject varchar(100),--交易标题
   buyer_account varchar(100),--购买者账号
@@ -1835,7 +1835,7 @@ CREATE TABLE pay_order
 CREATE TABLE refund_order
 (
   out_trade_no varchar(100) NOT NULL references pay_order(out_trade_no),--支付记录系统交易号
-  refund_fee INTEGER NOT NULL CHECK(refund_amount > 0),--退款金额
+  refund_fee INTEGER NOT NULL CHECK(refund_fee > 0),--退款金额
   refund_reason text, --退款原因
   out_request_no varchar(100) NOT NULL, --退款请求交易号
   refund_result text, --退款结果
