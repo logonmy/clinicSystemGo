@@ -266,3 +266,76 @@ func ExaminationTriageUpdate(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "操作成功"})
 }
+
+// ExaminationTriagePatientRecordList 患者历史检查记录
+func ExaminationTriagePatientRecordList(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	if patientID == "" && clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	if patientID == "" {
+		row := model.DB.QueryRowx(`select cp.patient_id from clinic_triage_patient ctp 
+			left join clinic_patient cp on ctp.clinic_patient_id = cp.id where ctp.id = $1`, clinicTriagePatientID)
+		if row == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "查询就诊人错误"})
+			return
+		}
+		patient := FormatSQLRowToMap(row)
+		pID, ok := patient["patient_id"]
+		if !ok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "查询就诊人错误"})
+			return
+		}
+		patientID = strconv.Itoa(int(pID.(int64)))
+	}
+
+	countSQL := `select count (*) as total from (select 
+		ep.clinic_triage_patient_id, 
+		ctp.clinic_patient_id, 
+		cp.patient_id 
+		from examination_patient ep
+		left join clinic_triage_patient ctp on ep.clinic_triage_patient_id = ctp.id
+		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+		where cp.patient_id = $1 and ep.order_status = '30'
+		group by (ep.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id)) aaa`
+	total := model.DB.QueryRowx(countSQL, patientID)
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	querySQL := `select 
+	string_agg (ce.name, '，') as clinic_examination_name, 
+	ep.clinic_triage_patient_id, 
+	ctp.clinic_patient_id, 
+	ctpo.created_time as finish_time,
+	cp.patient_id,
+	c.name as clinic_name 
+	from examination_patient ep
+	left join clinic_examination ce on ce.id = ep.clinic_examination_id
+	left join clinic_triage_patient ctp on ep.clinic_triage_patient_id = ctp.id
+	left join clinic_triage_patient_operation ctpo on ctp.id = ctpo.clinic_triage_patient_id and ctpo.type = 40 and ctpo.times = 1
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+	left join clinic c on c.id = cp.clinic_id
+	where cp.patient_id = $1 and ep.order_status = '30'
+	group by (ep.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, ctpo.created_time, c.name)
+	order by ctpo.created_time DESC
+	offset $2 limit $3`
+
+	rows, err := model.DB.Queryx(querySQL, patientID, offset, limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
