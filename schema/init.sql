@@ -443,7 +443,7 @@ CREATE TABLE charge_detail
   out_trade_no varchar(20),--第三方交易号
   out_refund_no varchar(20) UNIQUE,--第三方退费交易号
   in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'out'),--收入或支出
-  patient_id INTEGER references patient(id),--关联的患者
+  clinic_patient_id INTEGER references clinic_patient(id),--关联的患者
   department_id INTEGER references department(id),--关联的科室
   doctor_id INTEGER references personnel(id),--关联的医生信息
 
@@ -452,7 +452,7 @@ CREATE TABLE charge_detail
   examination_fee INTEGER NOT NULL DEFAULT 0, --检查费
   labortory_fee INTEGER NOT NULL DEFAULT 0, --检验费
   treatment_fee INTEGER NOT NULL DEFAULT 0, --治疗费
-  diagnosis_treatment INTEGER NOT NULL DEFAULT 0, --诊疗费
+  diagnosis_treatment_fee INTEGER NOT NULL DEFAULT 0, --诊疗费
   material_fee INTEGER NOT NULL DEFAULT 0, --材料费
   retail_fee INTEGER NOT NULL DEFAULT 0, --零售费
   other_fee INTEGER NOT NULL DEFAULT 0, --其他费用

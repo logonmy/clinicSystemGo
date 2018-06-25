@@ -4,6 +4,7 @@ import (
 	"clinicSystemGo/model"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -429,6 +430,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 	if balanceMoney == 0 || payMethodCode == "4" {
 		chaerr := charge(outTradeNo, outTradeNo, int64(balanceMoney))
 		if chaerr != nil {
+			fmt.Println(chaerr)
 			ctx.JSON(iris.Map{"code": "-1", "msg": "缴费通知失败"})
 			return
 		}
@@ -589,6 +591,38 @@ func charge(outTradeNo string, tradeNo string, money int64) error {
 	if deleteUnPaidErr != nil {
 		tx.Rollback()
 		return deleteUnPaidErr
+	}
+
+	//插入交易明细表
+	triagePatient := model.DB.QueryRowx("select * from clinic_triage_patient where id = $1", pay["clinic_triage_patient_id"])
+	triage := FormatSQLRowToMap(triagePatient)
+
+	typesql := `select sum(fee) as type_charge_total, charge_project_type_id from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) group by charge_project_type_id`
+	typetotal, _ := model.DB.Queryx(typesql)
+	typearray := FormatSQLRowsToMapArray(typetotal)
+
+	typeMoney := map[string]interface{}{}
+
+	for _, item := range typearray {
+		typeMoney[strconv.FormatInt(item["charge_project_type_id"].(int64), 10)] = item["type_charge_total"]
+	}
+
+	for index := 0; index < 9; index++ {
+		i := strconv.Itoa(index)
+		if typeMoney[i] == nil {
+			typeMoney[i] = 0
+		}
+	}
+
+	insertDetails := `insert into charge_detail (pay_record_id,out_trade_no,in_out,clinic_patient_id,department_id,doctor_id,
+		traditional_medical_fee,western_medicine_fee,examination_fee,labortory_fee,treatment_fee,diagnosis_treatment_fee,
+		material_fee,retail_fee,other_fee,discount_money,derate_money,medical_money,voucher_money,bonus_points_money,
+		on_credit_money,total_money,balance_money) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)`
+	_, insertDetailErr := tx.Exec(insertDetails, pay["id"], outTradeNo, "in", triage["clinic_patient_id"], triage["department_id"], triage["doctor_id"], typeMoney["2"], typeMoney["1"], typeMoney["4"], typeMoney["3"], typeMoney["7"], typeMoney["8"], typeMoney["5"], 0, typeMoney["6"],
+		pay["discount_money"], pay["derate_money"], pay["medical_money"], pay["voucher_money"], pay["bonus_points_money"], pay["on_credit_money"], pay["total_money"], pay["balance_money"])
+	if insertDetailErr != nil {
+		tx.Rollback()
+		return insertDetailErr
 	}
 
 	err := tx.Commit()
