@@ -270,6 +270,7 @@ func ExaminationTriageUpdate(ctx iris.Context) {
 // ExaminationTriagePatientRecordList 患者历史检查记录
 func ExaminationTriagePatientRecordList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	if offset == "" {
@@ -278,9 +279,24 @@ func ExaminationTriagePatientRecordList(ctx iris.Context) {
 	if limit == "" {
 		limit = "10"
 	}
-	if patientID == "" {
+	if patientID == "" && clinicTriagePatientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
+	}
+	if patientID == "" {
+		row := model.DB.QueryRowx(`select cp.patient_id from clinic_triage_patient ctp 
+			left join clinic_patient cp on ctp.clinic_patient_id = cp.id where ctp.id = $1`, clinicTriagePatientID)
+		if row == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "查询就诊人错误"})
+			return
+		}
+		patient := FormatSQLRowToMap(row)
+		pID, ok := patient["patient_id"]
+		if !ok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "查询就诊人错误"})
+			return
+		}
+		patientID = strconv.Itoa(int(pID.(int64)))
 	}
 
 	countSQL := `select count (*) as total from (select 
