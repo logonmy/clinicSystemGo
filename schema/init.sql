@@ -1778,7 +1778,6 @@ CREATE TABLE laboratory_patient_record_item
   laboratory_patient_record_id INTEGER NOT NULL references laboratory_patient_record(id),--检验记录id
   clinic_laboratory_item_id integer NOT NULL references clinic_laboratory_item(id),--诊所检验项目id
   result_inspection text, --检验结果
-  property_inspection text, --检验性质
   reference_max varchar(20), --定量参考值最大值
   reference_min varchar(20), --定量参考值最小值
   reference_value varchar(20), --定性参考值
