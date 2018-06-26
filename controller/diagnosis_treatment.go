@@ -117,24 +117,48 @@ func DiagnosisTreatmentUpdate(ctx iris.Context) {
 		return
 	}
 
-	clinicDiagnosisTreatmentUpdateSQL := `update clinic_diagnosis_treatment set 
-		name=$1,
-		en_name=$2,
-		cost=$7,
-		price=$8,
-		status=$9,
-		is_discount=$10
-		where id=$11`
+	clinicDiagnosisTreatmentMap := map[string]interface{}{
+		"id":          clinicDiagnosisTreatmentID,
+		"name":        name,
+		"en_name":     enName,
+		"price":       price,
+		"cost":        cost,
+		"is_discount": isDiscount,
+		"status":      status,
+	}
 
-	_, err2 := model.DB.Exec(clinicDiagnosisTreatmentUpdateSQL,
-		ToNullString(name),
-		ToNullString(enName),
-		ToNullInt64(cost),
-		ToNullInt64(price),
-		ToNullBool(status),
-		ToNullBool(isDiscount),
-		ToNullInt64(clinicDiagnosisTreatmentID),
-	)
+	// clinicDiagnosisTreatmentUpdateSQL := `update clinic_diagnosis_treatment set
+	// 	name=$1,
+	// 	en_name=$2,
+	// 	cost=$7,
+	// 	price=$8,
+	// 	status=$9,
+	// 	is_discount=$10
+	// 	where id=$11`
+
+	var s []string
+	s = append(s, "id=:id", "name=:name", "en_name=:en_name",
+		"cost=:cost", "is_discount=:is_discount", "status=:status")
+
+	if price != "" {
+		fmt.Println("price")
+		s = append(s, "price=:price")
+	}
+
+	joinSQL := strings.Join(s, ",")
+	clinicDiagnosisTreatmentUpdateSQL := `update clinic_diagnosis_treatment set ` + joinSQL + ` where id=:id`
+	fmt.Println("clinicDiagnosisTreatmentUpdateSQL==", clinicDiagnosisTreatmentUpdateSQL)
+	// _, err2 := model.DB.Exec(clinicDiagnosisTreatmentUpdateSQL,
+	// 	ToNullString(name),
+	// 	ToNullString(enName),
+	// 	ToNullInt64(cost),
+	// 	ToNullInt64(price),
+	// 	ToNullBool(status),
+	// 	ToNullBool(isDiscount),
+	// 	ToNullInt64(clinicDiagnosisTreatmentID),
+	// )
+
+	_, err2 := model.DB.NamedExec(clinicDiagnosisTreatmentUpdateSQL, clinicDiagnosisTreatmentMap)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})

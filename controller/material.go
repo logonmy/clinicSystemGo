@@ -174,7 +174,7 @@ func MaterialUpdate(ctx iris.Context) {
 	s = append(s, "id=:id", "name=:name", "en_name=:en_name",
 		"py_code=:py_code", "idc_code=:idc_code", "manu_factory_name=:manu_factory_name",
 		"specification=:specification", "unit_name=:unit_name", "remark=:remark",
-		"ret_price=:ret_price", "is_discount=:is_discount", "status=:status")
+		"ret_price=:ret_price", "is_discount=:is_discount", "status=:status", "updated_time=LOCALTIMESTAMP")
 
 	if buyPrice != "" {
 		fmt.Println("buy_price")
@@ -190,9 +190,9 @@ func MaterialUpdate(ctx iris.Context) {
 		fmt.Println("stock_warning")
 		s = append(s, "stock_warning=:stock_warning")
 	}
-	s = append(s, "updated_time=LOCALTIMESTAMP")
 	joinSQL := strings.Join(s, ",")
-	clinicMaterialUpdateSQL := `update clinic_material set` + joinSQL + `where id=:id`
+	clinicMaterialUpdateSQL := `update clinic_material set ` + joinSQL + ` where id=:id`
+	fmt.Println("clinicMaterialUpdateSQL==", clinicMaterialUpdateSQL)
 	// clinicMaterialUpdateSQL := `update clinic_material set
 	// 	name=$1,
 	// 	en_name=$2,
