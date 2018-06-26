@@ -1775,6 +1775,11 @@ CREATE TABLE laboratory_patient_record_item
   clinic_laboratory_item_id integer NOT NULL references clinic_laboratory_item(id),--诊所检验项目id
   result_inspection text, --检验结果
   property_inspection text, --检验性质
+  reference_max varchar(20), --定量参考值最大值
+  reference_min varchar(20), --定量参考值最小值
+  reference_value varchar(20), --定性参考值
+  data_type integer,--数据类型 1 定性 2 定量
+  is_normal varchar(10),--是否正常 正常 偏高 偏低
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

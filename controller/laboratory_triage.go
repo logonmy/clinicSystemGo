@@ -257,6 +257,11 @@ func LaboratoryTriageRecordCreate(ctx iris.Context) {
 		clinicLaboratoryItemID := item["clinic_laboratory_item_id"]
 		resultInspection := item["result_inspection"]
 		propertyInspection := item["property_inspection"]
+		referenceMax := item["reference_max"]
+		referenceMin := item["reference_min"]
+		referenceValue := item["reference_value"]
+		dataType := item["data_type"]
+		isNormal := item["is_normal"]
 
 		row := model.DB.QueryRowx("select id from clinic_laboratory_item where id=$1 limit 1", clinicLaboratoryItemID)
 		if row == nil {
@@ -272,8 +277,10 @@ func LaboratoryTriageRecordCreate(ctx iris.Context) {
 		}
 
 		_, err := tx.Exec(`INSERT INTO laboratory_patient_record_item 
-			(laboratory_patient_record_id, clinic_laboratory_item_id,result_inspection,property_inspection) 
-			VALUES ($1,$2,$3,$4)`, recordID, clinicLaboratoryItemID, resultInspection, propertyInspection)
+			(laboratory_patient_record_id, clinic_laboratory_item_id,
+				result_inspection,property_inspection,reference_max,reference_min,
+				reference_value,data_type,is_normal) 
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`, recordID, clinicLaboratoryItemID, resultInspection, propertyInspection, referenceMax, referenceMin, referenceValue, dataType, isNormal)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
