@@ -617,9 +617,9 @@ func charge(outTradeNo string, tradeNo string, money int64) error {
 	insertDetails := `insert into charge_detail (pay_record_id,out_trade_no,in_out,clinic_patient_id,department_id,doctor_id,
 		traditional_medical_fee,western_medicine_fee,examination_fee,labortory_fee,treatment_fee,diagnosis_treatment_fee,
 		material_fee,retail_fee,other_fee,discount_money,derate_money,medical_money,voucher_money,bonus_points_money,
-		on_credit_money,total_money,balance_money) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)`
+		on_credit_money,total_money,balance_money,operation_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)`
 	_, insertDetailErr := tx.Exec(insertDetails, pay["id"], outTradeNo, "in", triage["clinic_patient_id"], triage["department_id"], triage["doctor_id"], typeMoney["2"], typeMoney["1"], typeMoney["4"], typeMoney["3"], typeMoney["7"], typeMoney["8"], typeMoney["5"], 0, typeMoney["6"],
-		pay["discount_money"], pay["derate_money"], pay["medical_money"], pay["voucher_money"], pay["bonus_points_money"], pay["on_credit_money"], pay["total_money"], pay["balance_money"])
+		pay["discount_money"], pay["derate_money"], pay["medical_money"], pay["voucher_money"], pay["bonus_points_money"], pay["on_credit_money"], pay["total_money"], pay["balance_money"], confrimID)
 	if insertDetailErr != nil {
 		tx.Rollback()
 		return insertDetailErr
