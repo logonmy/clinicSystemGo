@@ -20,7 +20,7 @@ func LaboratoryTriageList(ctx iris.Context) {
 	}
 
 	selectSQL := `select lp.id as laboratory_patient_id,lp.clinic_triage_patient_id,
-	cl.name as clinic_laboratory_name,lp.clinic_laboratory_id,lpr.id as laboratory_patient_record_id
+	cl.name as clinic_laboratory_name,lp.clinic_laboratory_id,lpr.id as laboratory_patient_record_id,lpr.remark
 	FROM laboratory_patient lp 
 	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = lp.clinic_triage_patient_id and mo.charge_project_type_id=3 and lp.clinic_laboratory_id=mo.charge_project_id
