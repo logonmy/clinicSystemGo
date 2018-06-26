@@ -1146,8 +1146,9 @@ CREATE TABLE laboratory_item_reference
 (
   id serial PRIMARY KEY NOT NULL,--id
   laboratory_item_id integer NOT NULL references laboratory_item(id),--检验项目id
-  reference_max varchar(20), --定量/定性参考值最大值
-  reference_min varchar(20), --定量/定性参考值最小值
+  reference_max varchar(20), --定量参考值最大值
+  reference_min varchar(20), --定量参考值最小值
+  reference_value varchar(20), --定性参考值
   age_max integer, --参考值年龄段最大值
   age_min integer, --参考值年龄段最小值
   reference_sex varchar(5),--参考值性别 男、女、通用
@@ -1183,8 +1184,9 @@ CREATE TABLE clinic_laboratory_item_reference
 (
   id serial PRIMARY KEY NOT NULL,--id
   clinic_laboratory_item_id integer NOT NULL references clinic_laboratory_item(id),--诊所检验项目id
-  reference_max varchar(20), --定量/定性参考值最大值
-  reference_min varchar(20), --定量/定性参考值最小值
+  reference_max varchar(20), --定量参考值最大值
+  reference_min varchar(20), --定量参考值最小值
+  reference_value varchar(20), --定性参考值
   age_max integer, --参考值年龄段最大值
   age_min integer, --参考值年龄段最小值
   reference_sex varchar(5),--参考值性别 男、女、通用
