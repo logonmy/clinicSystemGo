@@ -47,6 +47,7 @@ type LaboratoryItem struct {
 	IsDelivery             interface{}  `json:"is_delivery"`
 	ResultInspection       interface{}  `json:"result_inspection"`
 	DefaultResult          interface{}  `json:"default_result"`
+	ClinicalSignificance   interface{}  `json:"clinical_significance"`
 	References             []References `json:"references"`
 }
 
@@ -120,6 +121,7 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 		isSpecial := v["is_special"]
 		dataType := v["data_type"]
 		defaultResult := v["default_result"]
+		clinicalSignificance := v["clinical_significance"]
 		resultInspection := v["result_inspection"]
 		referenceSex := v["reference_sex"]
 		referenceMax := v["reference_max"]
@@ -150,17 +152,18 @@ func FormatLaboratoryItem(results []map[string]interface{}) []LaboratoryItem {
 
 			laboratoryItem := LaboratoryItem{
 				ClinicLaboratoryItemID: clinicLaboratoryItemID,
-				Name:             name,
-				EnName:           enName,
-				UnitName:         unitName,
-				Status:           status,
-				InstrumentCode:   instrumentCode,
-				IsDelivery:       isDelivery,
-				DataType:         dataType,
-				DefaultResult:    defaultResult,
-				ResultInspection: resultInspection,
-				IsSpecial:        isSpecial,
-				References:       references,
+				Name:                 name,
+				EnName:               enName,
+				UnitName:             unitName,
+				Status:               status,
+				InstrumentCode:       instrumentCode,
+				IsDelivery:           isDelivery,
+				DataType:             dataType,
+				DefaultResult:        defaultResult,
+				ClinicalSignificance: clinicalSignificance,
+				ResultInspection:     resultInspection,
+				IsSpecial:            isSpecial,
+				References:           references,
 			}
 			laboratoryItems = append(laboratoryItems, laboratoryItem)
 		}

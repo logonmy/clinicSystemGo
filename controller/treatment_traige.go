@@ -90,7 +90,7 @@ func treatmentTriageList(ctx iris.Context, status string) {
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,count(*) as total_count 
+	left join (select clinic_triage_patient_id,count(*) as total_count,max(created_time) as order_time
 		from treatment_patient where order_status = $1 group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
 	left join (select clinic_triage_patient_id,count(*) as mz_count 
 		from mz_paid_orders where charge_project_type_id = 7 group by(clinic_triage_patient_id)) mzup on mzup.clinic_triage_patient_id = ctp.id
@@ -108,6 +108,7 @@ func treatmentTriageList(ctx iris.Context, status string) {
 	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time,
 	ctp.created_time as register_time,
+	up.order_time,
 	triage_personnel.name as register_personnel_name,
 	ctp.status,
 	ctp.visit_date,
@@ -117,7 +118,7 @@ func treatmentTriageList(ctx iris.Context, status string) {
 	p.sex,
 	p.phone,
 	doc.name as doctor_name,
-	d.name as department_name ` + sql + `offset $6 limit $7`
+	d.name as department_name ` + sql + `order by up.order_time desc offset $6 limit $7`
 
 	total := model.DB.QueryRowx(countsql, status, clinicID, startDate, endDate, keyword)
 
