@@ -468,6 +468,7 @@ CREATE TABLE charge_detail
   total_money  INTEGER NOT NULL ,--应收金额
   balance_money INTEGER NOT NULL,--实收金额
 
+  operation_id INTEGER NOT NULL references personnel(id),--创建人id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
