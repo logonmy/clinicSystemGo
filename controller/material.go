@@ -121,11 +121,6 @@ func MaterialUpdate(ctx iris.Context) {
 	isDiscount := ctx.PostValue("is_discount")
 	dayWarning := ctx.PostValue("day_warning")
 	stockWarning := ctx.PostValue("stock_warning")
-	fmt.Println("isDiscount====", isDiscount)
-	fmt.Println("dayWarning====", dayWarning)
-	fmt.Println("stockWarning====", stockWarning)
-	fmt.Println("ToNullInt64(dayWarning)====", ToNullInt64(dayWarning))
-	fmt.Println("ToNullInt64(stockWarning)====", ToNullInt64(stockWarning))
 
 	if name == "" || clinicMaterialID == "" || retPrice == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
@@ -157,40 +152,82 @@ func MaterialUpdate(ctx iris.Context) {
 		return
 	}
 
-	clinicMaterialUpdateSQL := `update clinic_material set 
-		name=$1,
-		en_name=$2,
-		py_code=$3,
-		idc_code=$4,
-		manu_factory_name=$5,
-		specification=$6,
-		unit_name=$7,
-		remark=$8,
-		ret_price=$9,
-		buy_price=$10,
-		is_discount=$11
-		day_warning=$12,
-		stock_warning=$13,
-		status=$14,
-		where id=$15`
+	clinicMaterialMap := map[string]interface{}{
+		"id":                clinicMaterialID,
+		"name":              name,
+		"en_name":           enName,
+		"py_code":           pyCode,
+		"idc_code":          idcCode,
+		"manu_factory_name": manuFactoryName,
+		"specification":     specification,
+		"unit_name":         unitName,
+		"remark":            remark,
+		"ret_price":         retPrice,
+		"buy_price":         buyPrice,
+		"is_discount":       isDiscount,
+		"day_warning":       dayWarning,
+		"stock_warning":     stockWarning,
+		"status":            status,
+	}
 
-	_, err2 := model.DB.Exec(clinicMaterialUpdateSQL,
-		ToNullString(name),
-		ToNullString(enName),
-		ToNullString(pyCode),
-		ToNullString(idcCode),
-		ToNullString(manuFactoryName),
-		ToNullString(specification),
-		ToNullString(unitName),
-		ToNullString(remark),
-		ToNullInt64(retPrice),
-		ToNullInt64(buyPrice),
-		ToNullBool(isDiscount),
-		ToNullInt64(dayWarning),
-		ToNullInt64(stockWarning),
-		ToNullBool(status),
-		ToNullInt64(clinicMaterialID),
-	)
+	var s []string
+	s = append(s, "id=:id", "name=:name", "en_name=:en_name",
+		"py_code=:py_code", "idc_code=:idc_code", "manu_factory_name=:manu_factory_name",
+		"specification=:specification", "unit_name=:unit_name", "remark=:remark",
+		"ret_price=:ret_price", "is_discount=:is_discount", "status=:status")
+
+	if buyPrice != "" {
+		fmt.Println("buy_price")
+		s = append(s, "buy_price=:buy_price")
+	}
+
+	if dayWarning != "" {
+		fmt.Println("day_warning")
+		s = append(s, "day_warning=:day_warning")
+	}
+
+	if stockWarning != "" {
+		fmt.Println("stock_warning")
+		s = append(s, "stock_warning=:stock_warning")
+	}
+	s = append(s, "updated_time=LOCALTIMESTAMP")
+	joinSQL := strings.Join(s, ",")
+	clinicMaterialUpdateSQL := `update clinic_material set` + joinSQL + `where id=:id`
+	// clinicMaterialUpdateSQL := `update clinic_material set
+	// 	name=$1,
+	// 	en_name=$2,
+	// 	py_code=$3,
+	// 	idc_code=$4,
+	// 	manu_factory_name=$5,
+	// 	specification=$6,
+	// 	unit_name=$7,
+	// 	remark=$8,
+	// 	ret_price=$9,
+	// 	buy_price=$10,
+	// 	is_discount=$11
+	// 	day_warning=$12,
+	// 	stock_warning=$13,
+	// 	status=$14,
+	// 	where id=$15`
+
+	// _, err2 := model.DB.Exec(clinicMaterialUpdateSQL,
+	// 	ToNullString(name),
+	// 	ToNullString(enName),
+	// 	ToNullString(pyCode),
+	// 	ToNullString(idcCode),
+	// 	ToNullString(manuFactoryName),
+	// 	ToNullString(specification),
+	// 	ToNullString(unitName),
+	// 	ToNullString(remark),
+	// 	ToNullInt64(retPrice),
+	// 	ToNullInt64(buyPrice),
+	// 	ToNullBool(isDiscount),
+	// 	ToNullInt64(dayWarning),
+	// 	ToNullInt64(stockWarning),
+	// 	ToNullBool(status),
+	// 	ToNullInt64(clinicMaterialID),
+	// )
+	_, err2 := model.DB.NamedExec(clinicMaterialUpdateSQL, clinicMaterialMap)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
