@@ -121,6 +121,11 @@ func MaterialUpdate(ctx iris.Context) {
 	isDiscount := ctx.PostValue("is_discount")
 	dayWarning := ctx.PostValue("day_warning")
 	stockWarning := ctx.PostValue("stock_warning")
+	fmt.Println("isDiscount====", isDiscount)
+	fmt.Println("dayWarning====", dayWarning)
+	fmt.Println("stockWarning====", stockWarning)
+	fmt.Println("ToNullInt64(dayWarning)====", ToNullInt64(dayWarning))
+	fmt.Println("ToNullInt64(stockWarning)====", ToNullInt64(stockWarning))
 
 	if name == "" || clinicMaterialID == "" || retPrice == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
