@@ -153,3 +153,70 @@ func GetPaidTraigePatients(ctx iris.Context) {
 	results := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
+
+// BusinessTransaction 获取交易流水
+func BusinessTransaction(ctx iris.Context) {
+	oprationName := ctx.PostValue("oprationName")
+	patientName := ctx.PostValue("patientName")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	if startDate == "" || endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入正确的时间范围"})
+		return
+	}
+
+	queryMap := map[string]interface{}{
+		"oprationName": ToNullString(oprationName),
+		"patientName":  ToNullString(patientName),
+		"offset":       ToNullInt64(offset),
+		"limit":        ToNullInt64(limit),
+		"startDate":    ToNullString(startDate),
+		"endDate":      ToNullString(endDate),
+	}
+
+	sql := `FROM charge_detail cd
+	left join personnel p on p.id = cd.operation_id  
+	left join department d on d.id = cd.department_id 
+	left join clinic_patient cp on cp.id = cd.clinic_patient_id 
+	left join patient pa on pa.id = cp.patient_id 
+	left join personnel doc on doc.id = cd.doctor_id 
+	where cd.created_time BETWEEN :startDate and :endDate `
+
+	if patientName != "" {
+		sql += ` and pa.name ~:patientName `
+	}
+
+	if oprationName != "" {
+		sql += ` and p.name ~:oprationName `
+	}
+
+	rows, err1 := model.DB.NamedQuery("SELECT cd.*,p.name as operation,d.name as departmentName, pa.name as patientName, cp.id as pid, doc.name as doctorName "+sql+" offset :offset limit :limit", queryMap)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	total, err2 := model.DB.NamedQuery("SELECT COUNT (*) as total "+sql, queryMap)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+
+}
