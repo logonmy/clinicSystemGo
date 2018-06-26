@@ -192,41 +192,7 @@ func MaterialUpdate(ctx iris.Context) {
 	}
 	joinSQL := strings.Join(s, ",")
 	clinicMaterialUpdateSQL := `update clinic_material set ` + joinSQL + ` where id=:id`
-	fmt.Println("clinicMaterialUpdateSQL==", clinicMaterialUpdateSQL)
-	// clinicMaterialUpdateSQL := `update clinic_material set
-	// 	name=$1,
-	// 	en_name=$2,
-	// 	py_code=$3,
-	// 	idc_code=$4,
-	// 	manu_factory_name=$5,
-	// 	specification=$6,
-	// 	unit_name=$7,
-	// 	remark=$8,
-	// 	ret_price=$9,
-	// 	buy_price=$10,
-	// 	is_discount=$11
-	// 	day_warning=$12,
-	// 	stock_warning=$13,
-	// 	status=$14,
-	// 	where id=$15`
 
-	// _, err2 := model.DB.Exec(clinicMaterialUpdateSQL,
-	// 	ToNullString(name),
-	// 	ToNullString(enName),
-	// 	ToNullString(pyCode),
-	// 	ToNullString(idcCode),
-	// 	ToNullString(manuFactoryName),
-	// 	ToNullString(specification),
-	// 	ToNullString(unitName),
-	// 	ToNullString(remark),
-	// 	ToNullInt64(retPrice),
-	// 	ToNullInt64(buyPrice),
-	// 	ToNullBool(isDiscount),
-	// 	ToNullInt64(dayWarning),
-	// 	ToNullInt64(stockWarning),
-	// 	ToNullBool(status),
-	// 	ToNullInt64(clinicMaterialID),
-	// )
 	_, err2 := model.DB.NamedExec(clinicMaterialUpdateSQL, clinicMaterialMap)
 	if err2 != nil {
 		fmt.Println(" err2====", err2)
