@@ -88,9 +88,9 @@ func examinationTriageList(ctx iris.Context, status string) {
 	left join personnel doc on doc.id = ctp.doctor_id 
 	left join department d on d.id = ctp.department_id  
 	left join patient p on p.id = cp.patient_id 
-	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
+	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 40 and times=1
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id
-	left join (select clinic_triage_patient_id,count(*) as total_count 
+	left join (select clinic_triage_patient_id,count(*) as total_count,max(created_time) as order_time
 		from examination_patient where order_status = $1 group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
 	left join (select clinic_triage_patient_id,count(*) as mz_count 
 		from mz_paid_orders where charge_project_type_id = 4 group by(clinic_triage_patient_id)) mzup on mzup.clinic_triage_patient_id = ctp.id	
@@ -108,6 +108,7 @@ func examinationTriageList(ctx iris.Context, status string) {
 	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time,
 	ctp.created_time as register_time,
+	up.order_time,
 	triage_personnel.name as register_personnel_name,
 	ctp.status,
 	ctp.visit_date,
@@ -117,7 +118,7 @@ func examinationTriageList(ctx iris.Context, status string) {
 	p.sex,
 	p.phone,
 	doc.name as doctor_name,
-	d.name as department_name ` + sql + `offset $6 limit $7`
+	d.name as department_name ` + sql + `order by up.order_time desc offset $6 limit $7`
 
 	total := model.DB.QueryRowx(countsql, status, clinicID, startDate, endDate, keyword)
 
@@ -319,15 +320,19 @@ func ExaminationTriagePatientRecordList(ctx iris.Context) {
 	ctp.clinic_patient_id, 
 	ctpo.created_time as finish_time,
 	cp.patient_id,
-	c.name as clinic_name 
+	c.name as clinic_name,
+	d.name as department_name,
+	p.name as doctor_name  
 	from examination_patient ep
 	left join clinic_examination ce on ce.id = ep.clinic_examination_id
 	left join clinic_triage_patient ctp on ep.clinic_triage_patient_id = ctp.id
 	left join clinic_triage_patient_operation ctpo on ctp.id = ctpo.clinic_triage_patient_id and ctpo.type = 40 and ctpo.times = 1
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
 	left join clinic c on c.id = cp.clinic_id
+	left join department d on ctp.department_id = d.id
+	left join personnel p on ctp.doctor_id = p.id
 	where cp.patient_id = $1 and ep.order_status = '30'
-	group by (ep.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, ctpo.created_time, c.name)
+	group by (ep.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, ctpo.created_time, c.name, d.name, p.name)
 	order by ctpo.created_time DESC
 	offset $2 limit $3`
 

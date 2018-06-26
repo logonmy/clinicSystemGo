@@ -950,7 +950,7 @@ func LaboratoryItemDetail(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select cli.id as clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cli.is_delivery,
+	selectSQL := `select cli.id as clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cli.is_delivery,cli.clinical_significance,
 		cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status,cli.instrument_code
 		from clinic_laboratory_item cli
 		left join clinic_laboratory_item_reference clir on clir.clinic_laboratory_item_id = cli.id
@@ -963,6 +963,7 @@ func LaboratoryItemDetail(ctx iris.Context) {
 	results = FormatSQLRowsToMapArray(rows)
 
 	laboratoryItems := FormatLaboratoryItem(results)
+	resData := laboratoryItems[0]
 
-	ctx.JSON(iris.Map{"code": "200", "data": laboratoryItems})
+	ctx.JSON(iris.Map{"code": "200", "data": resData})
 }
