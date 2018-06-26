@@ -168,6 +168,8 @@ func main() {
 		// 查询已缴费的就诊记录
 		charge.Post("/traigePatient/paid", controller.GetPaidTraigePatients)
 
+		charge.Post("/business/transaction", controller.BusinessTransaction)
+
 	}
 
 	//挂账

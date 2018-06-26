@@ -457,6 +457,10 @@ CREATE TABLE charge_detail
   retail_fee INTEGER NOT NULL DEFAULT 0, --零售费
   other_fee INTEGER NOT NULL DEFAULT 0, --其他费用
 
+  cash INTEGER NOT NULL DEFAULT 0, --现金
+  wechat INTEGER NOT NULL DEFAULT 0, --微信
+  alipay INTEGER NOT NULL DEFAULT 0, --支付宝
+  bank INTEGER NOT NULL DEFAULT 0, --银行
 
   discount_money INTEGER NOT NULL DEFAULT 0 ,--折扣金额
   derate_money INTEGER NOT NULL DEFAULT 0 ,--减免金额
