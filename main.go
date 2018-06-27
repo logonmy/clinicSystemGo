@@ -171,7 +171,8 @@ func main() {
 		charge.Post("/business/transaction", controller.BusinessTransaction)
 		// 获取交易流水月报表
 		charge.Post("/business/transaction/month", controller.BusinessTransactionMonth)
-
+		// 获取交易详情
+		charge.Post("/business/transaction/detail", controller.BusinessTransactionDetail)
 	}
 
 	//挂账
