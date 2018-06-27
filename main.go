@@ -167,8 +167,10 @@ func main() {
 		charge.Post("/paid/list", controller.ChargePaidList)
 		// 查询已缴费的就诊记录
 		charge.Post("/traigePatient/paid", controller.GetPaidTraigePatients)
-
+		// 获取交易流水日报表
 		charge.Post("/business/transaction", controller.BusinessTransaction)
+		// 获取交易流水月报表
+		charge.Post("/business/transaction/month", controller.BusinessTransactionMonth)
 
 	}
 

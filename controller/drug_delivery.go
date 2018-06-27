@@ -109,7 +109,7 @@ func drugDeliveryTriageList(ctx iris.Context, status string) {
 	p.sex,
 	p.phone,
 	doc.name as doctor_name,
-	d.name as department_name ` + sql + `offset $5 limit $6`
+	d.name as department_name ` + sql + ` order by ctp.updated_time DESC offset $5 limit $6`
 
 	total := model.DB.QueryRowx(countsql, clinicID, startDate, endDate, keyword)
 

@@ -701,7 +701,7 @@ func BusinessTransaction(ctx iris.Context) {
 	}
 
 	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total,
-	sum(wechat) as wechat,sum(cash) as cash,sum(wechat) as wechat,
+	sum(wechat) as wechat,sum(cash) as cash,
 	sum(total_money) as total_money,sum(balance_money) as balance_money,
 	sum(bank) as bank,sum(alipay) as alipay,sum(discount_money) as discount_money,
 	sum(derate_money) as derate_money, sum(medical_money) as medical_money,
@@ -723,4 +723,68 @@ func BusinessTransaction(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 
+}
+
+// BusinessTransactionMonth 获取交易流水月报表
+func BusinessTransactionMonth(ctx iris.Context) {
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	if startDate == "" || endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入正确的时间范围"})
+		return
+	}
+
+	queryMap := map[string]interface{}{
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+		"startDate": ToNullString(startDate),
+		"endDate":   ToNullString(endDate),
+	}
+
+	sql := `from charge_detail where created_time BETWEEN :startDate and :endDate `
+
+	rows, err1 := model.DB.NamedQuery(`select count(*) as total, 
+	to_char(created_time, 'YYYY-MM-DD') as date,
+	sum(total_money) as total_money,sum(balance_money) as balance_money,
+	sum(wechat) as wechat,sum(cash) as cash,
+	sum(bank) as bank,sum(alipay) as alipay,
+	sum(discount_money) as discount_money,
+	sum(derate_money) as derate_money, sum(medical_money) as medical_money,
+	sum(on_credit_money) as on_credit_money,sum(voucher_money) as voucher_money,
+	sum(bonus_points_money) as bonus_points_money 
+	`+sql+" GROUP by to_char(created_time, 'YYYY-MM-DD') order by date ASC offset :offset limit :limit", queryMap)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total,
+	sum(wechat) as wechat,sum(cash) as cash,
+	sum(total_money) as total_money,sum(balance_money) as balance_money,
+	sum(bank) as bank,sum(alipay) as alipay,sum(discount_money) as discount_money,
+	sum(derate_money) as derate_money, sum(medical_money) as medical_money,
+	sum(on_credit_money) as on_credit_money,sum(voucher_money) as voucher_money,
+	sum(bonus_points_money) as bonus_points_money 
+	`+sql, queryMap)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
