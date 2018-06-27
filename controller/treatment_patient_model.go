@@ -159,7 +159,7 @@ func TreatmentPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from treatment_patient_model where id >0`
+	countSQL := `select count(id) as total from treatment_patient_model where id >0 and deleted_time is null`
 	selectSQL := `select 
 	tpm.id as treatment_patient_model_id,
 	tpmi.clinic_treatment_id,
@@ -175,7 +175,7 @@ func TreatmentPatientModelList(ctx iris.Context) {
 	left join treatment_patient_model_item tpmi on tpmi.treatment_patient_model_id = tpm.id
 	left join clinic_treatment ct on tpmi.clinic_treatment_id = ct.id
 	left join personnel p on tpm.operation_id = p.id
-	where tpm.id >0`
+	where tpm.id >0 and tpm.deleted_time is null`
 
 	if keyword != "" {
 		countSQL += ` and model_name ~*:keyword`
@@ -296,13 +296,13 @@ func TreatmentPersonalPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from treatment_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
+	countSQL := `select count(id) as total from treatment_patient_model where model_name ~$1 and deleted_time is null and (operation_id=$2 or is_common=true)`
 	selectSQL := `select tpm.id as treatment_patient_model_id,tpmi.clinic_treatment_id,tpmi.illustration,ct.name as treatment_name,p.name as operation_name,
 	tpm.is_common,tpm.created_time,tpm.model_name,tpmi.times from treatment_patient_model tpm
 	left join treatment_patient_model_item tpmi on tpmi.treatment_patient_model_id = tpm.id
 	left join clinic_treatment ct on tpmi.clinic_treatment_id = ct.id
 	left join personnel p on tpm.operation_id = p.id
-	where tpm.model_name ~$1 and (tpm.operation_id=$2 or tpm.is_common=true)`
+	where tpm.model_name ~$1 and tpm.deleted_time is null and (tpm.operation_id=$2 or tpm.is_common=true)`
 
 	if isCommon != "" {
 		countSQL += ` and is_common =` + isCommon
@@ -523,6 +523,38 @@ func TreatmentPatientModelUpdate(ctx iris.Context) {
 	if errc != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": errc.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+// TreatmentPatientModelDelete 删除治疗医嘱模板
+func TreatmentPatientModelDelete(ctx iris.Context) {
+	treatmentModelID := ctx.PostValue("treatment_patient_model_id")
+
+	if treatmentModelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	mrow := model.DB.QueryRowx("select id from treatment_patient_model where id=$1 limit 1", treatmentModelID)
+	if mrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	models := FormatSQLRowToMap(mrow)
+	_, mok := models["id"]
+	if !mok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改的模板不存在"})
+		return
+	}
+
+	updateSQL := `update treatment_patient_model set updated_time=LOCALTIMESTAMP where id=$1`
+	_, err := model.DB.Exec(updateSQL, treatmentModelID)
+	if err != nil {
+		fmt.Println("err ===", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
