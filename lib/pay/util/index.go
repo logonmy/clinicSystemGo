@@ -31,6 +31,19 @@ func CreateLinkstring(para map[string]string) string {
 	return ls
 }
 
+//FilteParam 取出需要验证的属性
+func FilteParam(para map[string]string) map[string]string {
+	var paraFilter map[string]string
+	for key := range para {
+		if key == "sign" || key == "signType" || para[key] == "" {
+			continue
+		} else {
+			paraFilter[key] = para[key]
+		}
+	}
+	return paraFilter
+}
+
 //substr 截取字符串 start 起点下标 length 需要截取的长度
 func substr(str string, start int, length int) string {
 	rs := []rune(str)
