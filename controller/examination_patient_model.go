@@ -377,7 +377,7 @@ func ExaminationPatientModelDetail(ctx iris.Context) {
 	}
 	examinationModel := FormatSQLRowToMap(mrows)
 
-	selectiSQL := `select epmi.clinic_examination_id,ce.name,epmi.times,epmi.illustration 
+	selectiSQL := `select epmi.clinic_examination_id,ce.name,epmi.times,epmi.illustration,epmi.organ
 		from examination_patient_model_item epmi
 		left join examination_patient_model epm on epmi.examination_patient_model_id = epm.id
 		left join clinic_examination ce on epmi.clinic_examination_id = ce.id
