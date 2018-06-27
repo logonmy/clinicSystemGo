@@ -491,7 +491,8 @@ func TreatmentPatientModelUpdate(ctx iris.Context) {
 		return
 	}
 	tSetStr := strings.Join(itemSets, ",")
-	inserttSQL := "insert into treatment_patient_model_item (" + tSetStr + ") values ()"
+	inserttSQL := "insert into treatment_patient_model_item (" + tSetStr + ") values ($1,$2,$3,$4)"
+	fmt.Println("inserttSQL===", inserttSQL)
 
 	for _, v := range results {
 		clinicTreatmentID := v["clinic_treatment_id"]

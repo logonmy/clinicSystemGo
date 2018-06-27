@@ -5,7 +5,7 @@ import (
 )
 
 // 创建订单
-func create(ctx iris.Context) {
+func Create(ctx iris.Context) {
 	payMode := ctx.PostValue("pay_mode")
 	subjectType := ctx.PostValue("subject_type")
 	subjectId := ctx.PostValue("subject_id")
