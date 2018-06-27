@@ -614,20 +614,20 @@ func charge(outTradeNo string, tradeNo string, money int64) error {
 		}
 	}
 
-	cash := "0"
-	wechat := "0"
-	alipay := "0"
-	bank := "0"
+	cash := int64(0)
+	wechat := int64(0)
+	alipay := int64(0)
+	bank := int64(0)
 	payCode := pay["pay_method_code"]
 	switch payCode.(string) {
 	case "1":
-		cash = pay["alipay"].(string)
+		alipay = pay["balance_money"].(int64)
 	case "2":
-		cash = pay["wechat"].(string)
+		wechat = pay["balance_money"].(int64)
 	case "3":
-		cash = pay["bank"].(string)
+		bank = pay["balance_money"].(int64)
 	case "4":
-		cash = pay["cash"].(string)
+		cash = pay["balance_money"].(int64)
 	}
 
 	insertDetails := `insert into charge_detail (pay_record_id,out_trade_no,in_out,clinic_patient_id,department_id,doctor_id,
@@ -646,4 +646,81 @@ func charge(outTradeNo string, tradeNo string, money int64) error {
 		return err
 	}
 	return nil
+}
+
+// BusinessTransaction 获取交易流水
+func BusinessTransaction(ctx iris.Context) {
+	oprationName := ctx.PostValue("oprationName")
+	patientName := ctx.PostValue("patientName")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	if startDate == "" || endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入正确的时间范围"})
+		return
+	}
+
+	queryMap := map[string]interface{}{
+		"oprationName": ToNullString(oprationName),
+		"patientName":  ToNullString(patientName),
+		"offset":       ToNullInt64(offset),
+		"limit":        ToNullInt64(limit),
+		"startDate":    ToNullString(startDate),
+		"endDate":      ToNullString(endDate),
+	}
+
+	sql := `FROM charge_detail cd
+	left join personnel p on p.id = cd.operation_id  
+	left join department d on d.id = cd.department_id 
+	left join clinic_patient cp on cp.id = cd.clinic_patient_id 
+	left join patient pa on pa.id = cp.patient_id 
+	left join personnel doc on doc.id = cd.doctor_id 
+	where cd.created_time BETWEEN :startDate and :endDate `
+
+	if patientName != "" {
+		sql += ` and pa.name ~:patientName `
+	}
+
+	if oprationName != "" {
+		sql += ` and p.name ~:oprationName `
+	}
+
+	rows, err1 := model.DB.NamedQuery("SELECT cd.*,p.name as operation,d.name as departmentName, pa.name as patientName, cp.id as pid, doc.name as doctorName "+sql+" offset :offset limit :limit", queryMap)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total,
+	sum(wechat) as wechat,sum(cash) as cash,sum(wechat) as wechat,
+	sum(total_money) as total_money,sum(balance_money) as balance_money,
+	sum(bank) as bank,sum(alipay) as alipay,sum(discount_money) as discount_money,
+	sum(derate_money) as derate_money, sum(medical_money) as medical_money,
+	sum(on_credit_money) as on_credit_money,sum(voucher_money) as voucher_money,
+	sum(bonus_points_money) as bonus_points_money,sum(traditional_medical_fee) as traditional_medical_fee,
+	sum(western_medicine_fee) as western_medicine_fee,sum(examination_fee) as examination_fee,
+	sum(labortory_fee) as labortory_fee, sum(treatment_fee) as treatment_fee,sum(diagnosis_treatment_fee) as diagnosis_treatment_fee,
+	sum(material_fee) as material_fee, sum(retail_fee) as retail_fee,sum(other_fee) as other_fee
+	`+sql, queryMap)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+
 }
