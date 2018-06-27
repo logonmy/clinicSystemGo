@@ -121,7 +121,7 @@ func DiagnosisTreatmentUpdate(ctx iris.Context) {
 		"id":          clinicDiagnosisTreatmentID,
 		"name":        name,
 		"en_name":     enName,
-		"price":       price,
+		"price":       ToNullInt64(price),
 		"cost":        cost,
 		"is_discount": isDiscount,
 		"status":      status,
@@ -129,12 +129,7 @@ func DiagnosisTreatmentUpdate(ctx iris.Context) {
 
 	var s []string
 	s = append(s, "id=:id", "name=:name", "en_name=:en_name",
-		"cost=:cost", "is_discount=:is_discount", "status=:status")
-
-	if price != "" {
-		fmt.Println("price")
-		s = append(s, "price=:price")
-	}
+		"cost=:cost", "is_discount=:is_discount", "status=:status", "price=:price")
 
 	joinSQL := strings.Join(s, ",")
 	clinicDiagnosisTreatmentUpdateSQL := `update clinic_diagnosis_treatment set ` + joinSQL + ` where id=:id`

@@ -163,10 +163,10 @@ func MaterialUpdate(ctx iris.Context) {
 		"unit_name":         unitName,
 		"remark":            remark,
 		"ret_price":         retPrice,
-		"buy_price":         buyPrice,
+		"buy_price":         ToNullInt64(buyPrice),
 		"is_discount":       isDiscount,
-		"day_warning":       dayWarning,
-		"stock_warning":     stockWarning,
+		"day_warning":       ToNullInt64(dayWarning),
+		"stock_warning":     ToNullInt64(stockWarning),
 		"status":            status,
 	}
 
@@ -174,22 +174,8 @@ func MaterialUpdate(ctx iris.Context) {
 	s = append(s, "id=:id", "name=:name", "en_name=:en_name",
 		"py_code=:py_code", "idc_code=:idc_code", "manu_factory_name=:manu_factory_name",
 		"specification=:specification", "unit_name=:unit_name", "remark=:remark",
-		"ret_price=:ret_price", "is_discount=:is_discount", "status=:status", "updated_time=LOCALTIMESTAMP")
+		"ret_price=:ret_price", "is_discount=:is_discount", "status=:status", "buy_price=:buy_price", "updated_time=LOCALTIMESTAMP")
 
-	if buyPrice != "" {
-		fmt.Println("buy_price")
-		s = append(s, "buy_price=:buy_price")
-	}
-
-	if dayWarning != "" {
-		fmt.Println("day_warning")
-		s = append(s, "day_warning=:day_warning")
-	}
-
-	if stockWarning != "" {
-		fmt.Println("stock_warning")
-		s = append(s, "stock_warning=:stock_warning")
-	}
 	joinSQL := strings.Join(s, ",")
 	clinicMaterialUpdateSQL := `update clinic_material set ` + joinSQL + ` where id=:id`
 
