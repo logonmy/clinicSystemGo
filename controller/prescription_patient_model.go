@@ -158,7 +158,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from prescription_western_patient_model where model_name ~$1`
+	countSQL := `select count(id) as total from prescription_western_patient_model where model_name ~$1 and deleted_time is null`
 	selectSQL := `select pwpm.id as prescription_patient_model_id,
 	pwpm.is_common,
 	pwpm.created_time,
@@ -184,7 +184,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id 
 	left join drug_stock ds on ds.clinic_drug_id = cd.id
   left join personnel p on pwpm.operation_id = p.id
-	where pwpm.model_name ~$1
+	where pwpm.model_name ~$1 and pwpm.deleted_time is null
 	group by pwpm.id,pwpm.is_common,pwpm.created_time,pwpm.updated_time,p.name,pwpm.model_name,pwpmi.clinic_drug_id,cd.type,
 		cd.name,cd.specification,pwpmi.once_dose,pwpmi.once_dose_unit_name,pwpmi.route_administration_name,
 		pwpmi.frequency_name, pwpmi.eff_day,pwpmi.amount,cd.packing_unit_name, pwpmi.fetch_address,pwpmi.illustration`
@@ -248,7 +248,7 @@ func PrescriptionWesternPersonalPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from prescription_western_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
+	countSQL := `select count(id) as total from prescription_western_patient_model where model_name ~$1 and deleted_time is null and (operation_id=$2 or is_common=true)`
 	selectSQL := `select pwpm.id as prescription_patient_model_id,
 	pwpm.is_common,
 	pwpm.created_time,
@@ -273,7 +273,7 @@ func PrescriptionWesternPersonalPatientModelList(ctx iris.Context) {
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id 
     left join personnel p on pwpm.operation_id = p.id
-	where pwpm.model_name ~$1 and (pwpm.operation_id=$2 or pwpm.is_common=true)`
+	where pwpm.model_name ~$1 and pwpm.deleted_time is null and (pwpm.operation_id=$2 or pwpm.is_common=true)`
 
 	if isCommon != "" {
 		countSQL = countSQL + ` and is_common =` + isCommon
@@ -478,6 +478,38 @@ func PrescriptionWesternPatientModelUpdate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
+// PrescriptionWesternPatientModelDelete 删除西药处方模板
+func PrescriptionWesternPatientModelDelete(ctx iris.Context) {
+	prescriptionWesternPatientModelID := ctx.PostValue("prescription_patient_model_id")
+
+	if prescriptionWesternPatientModelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	mrow := model.DB.QueryRowx("select id from prescription_western_patient_model where id=$1 limit 1", prescriptionWesternPatientModelID)
+	if mrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	models := FormatSQLRowToMap(mrow)
+	_, mok := models["id"]
+	if !mok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改的模板不存在"})
+		return
+	}
+
+	updateSQL := `update prescription_western_patient_model set deleted_time=LOCALTIMESTAMP where id=$1`
+	_, err := model.DB.Exec(updateSQL, prescriptionWesternPatientModelID)
+	if err != nil {
+		fmt.Println("err ===", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
 // PrescriptionChinesePatientModelCreate 创建中药处方模板
 func PrescriptionChinesePatientModelCreate(ctx iris.Context) {
 	modelName := ctx.PostValue("model_name")
@@ -613,7 +645,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from prescription_chinese_patient_model where model_name ~$1`
+	countSQL := `select count(id) as total from prescription_chinese_patient_model where model_name ~$1 and deleted_time is null`
 	selectSQL := `select 
 	pcpm.id as prescription_patient_model_id,
 	pcpm.is_common,
@@ -639,7 +671,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	left join clinic_drug cd on pcpmi.clinic_drug_id = cd.id 
 	left join drug_stock ds on ds.clinic_drug_id = cd.id
 	left join personnel p on pcpm.operation_id = p.id
-	where pcpm.model_name ~$1
+	where pcpm.model_name ~$1 and pcpm.deleted_time is null
 	group by pcpm.id,pcpm.is_common,pcpm.created_time,pcpm.updated_time,p.name,pcpm.model_name,pcpm.route_administration_name,
 		pcpm.eff_day,pcpm.amount,pcpm.frequency_name,pcpm.fetch_address,pcpm.medicine_illustration,pcpmi.clinic_drug_id,cd.type,
 		cd.name,pcpmi.once_dose,pcpmi.once_dose_unit_name,pcpmi.special_illustration,pcpmi.amount`
@@ -703,7 +735,7 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from prescription_chinese_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
+	countSQL := `select count(id) as total from prescription_chinese_patient_model where model_name ~$1 and deleted_time is null and (operation_id=$2 or is_common=true)`
 	selectSQL := `select 
 	pcpm.id as prescription_patient_model_id,
 	pcpm.is_common,
@@ -729,7 +761,7 @@ func PrescriptionChinesePersonalPatientModelList(ctx iris.Context) {
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join clinic_drug cd on pcpmi.clinic_drug_id = cd.id 
 	left join personnel p on pcpm.operation_id = p.id
-	where pcpm.model_name ~$1 and (pcpm.operation_id=$2 or pcpm.is_common=true)`
+	where pcpm.model_name ~$1 and pcpm.deleted_time is null and (pcpm.operation_id=$2 or pcpm.is_common=true)`
 
 	if isCommon != "" {
 		countSQL += ` and is_common =` + isCommon
@@ -935,6 +967,38 @@ func PrescriptionChinesePatientModelUpdate(ctx iris.Context) {
 	if errc != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": errc.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+// PrescriptionChinesePatientModelDelete 删除中药药处方模板
+func PrescriptionChinesePatientModelDelete(ctx iris.Context) {
+	prescriptionChinesePatientModelID := ctx.PostValue("prescription_patient_model_id")
+
+	if prescriptionChinesePatientModelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	mrow := model.DB.QueryRowx("select id from prescription_chinese_patient_model where id=$1 limit 1", prescriptionChinesePatientModelID)
+	if mrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	models := FormatSQLRowToMap(mrow)
+	_, mok := models["id"]
+	if !mok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改的模板不存在"})
+		return
+	}
+
+	updateSQL := `update prescription_chinese_patient_model set deleted_time=LOCALTIMESTAMP where id=$1`
+	_, err := model.DB.Exec(updateSQL, prescriptionChinesePatientModelID)
+	if err != nil {
+		fmt.Println("err ===", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 

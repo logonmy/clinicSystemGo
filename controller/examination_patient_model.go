@@ -162,13 +162,13 @@ func ExaminationPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from examination_patient_model where id>0`
+	countSQL := `select count(id) as total from examination_patient_model where id>0 and deleted_time is null`
 	selectSQL := `select epm.id as examination_patient_model_id,ce.name as examination_name,p.name as operation_name,
 	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.organ, epmi.times from examination_patient_model epm
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
 	left join clinic_examination ce on epmi.clinic_examination_id = ce.id
 	left join personnel p on epm.operation_id = p.id
-	where epm.id >0`
+	where epm.id >0 and epm.deleted_time is null`
 
 	if keyword != "" {
 		countSQL += ` and model_name ~*:keyword`
@@ -293,13 +293,13 @@ func ExaminationPersonalPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from examination_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
+	countSQL := `select count(id) as total from examination_patient_model where model_name ~$1 and deleted_time is null and (operation_id=$2 or is_common=true)`
 	selectSQL := `select epm.id as examination_patient_model_id,ce.name as examination_name,p.name as operation_name,
 	epm.is_common,epm.created_time,epmi.clinic_examination_id,epmi.illustration,epm.model_name,epmi.times from examination_patient_model epm
 	left join examination_patient_model_item epmi on epmi.examination_patient_model_id = epm.id
 	left join clinic_examination ce on epmi.clinic_examination_id = ce.id
 	left join personnel p on epm.operation_id = p.id
-	where epm.model_name ~$1 and (epm.operation_id=$2 or epm.is_common=true)`
+	where epm.model_name ~$1 and epm.deleted_time is null and (epm.operation_id=$2 or epm.is_common=true)`
 
 	if isCommon != "" {
 		countSQL += ` and is_common =` + isCommon
@@ -514,6 +514,39 @@ func ExaminationPatientModelUpdate(ctx iris.Context) {
 	if errc != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": errc.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+// ExaminationPatientModelDelete 删除检查医嘱模板
+func ExaminationPatientModelDelete(ctx iris.Context) {
+	examinationModelID := ctx.PostValue("examination_patient_model_id")
+
+	if examinationModelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	mrow := model.DB.QueryRowx("select id from examination_patient_model where id=$1 limit 1", examinationModelID)
+	if mrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	models := FormatSQLRowToMap(mrow)
+	_, mok := models["id"]
+	if !mok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除的模板不存在"})
+		return
+	}
+
+	updateSQL := `update examination_patient_model set deleted_time=LOCALTIMESTAMP where id=$1`
+
+	_, err := model.DB.Exec(updateSQL, examinationModelID)
+	if err != nil {
+		fmt.Println("err ===", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 

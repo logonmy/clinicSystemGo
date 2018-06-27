@@ -163,13 +163,13 @@ func LaboratoryPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from laboratory_patient_model where id>0`
+	countSQL := `select count(id) as total from laboratory_patient_model where id>0 and deleted_time is null`
 	selectSQL := `select lpm.id as laboratory_patient_model_id,cl.name as laboratory_name,p.name as operation_name,
 	lpm.is_common,lpm.created_time,lpmi.clinic_laboratory_id, lpmi.illustration, lpm.model_name,lpmi.times from laboratory_patient_model lpm
 	left join laboratory_patient_model_item lpmi on lpmi.laboratory_patient_model_id = lpm.id
 	left join clinic_laboratory cl on lpmi.clinic_laboratory_id = cl.id
 	left join personnel p on lpm.operation_id = p.id
-	where lpm.id>0`
+	where lpm.id>0 and lpm.deleted_time is null`
 
 	if keyword != "" {
 		countSQL += ` and model_name ~*:keyword`
@@ -286,13 +286,13 @@ func LaboratoryPersonalPatientModelList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from laboratory_patient_model where model_name ~$1 and (operation_id=$2 or is_common=true)`
+	countSQL := `select count(id) as total from laboratory_patient_model where model_name ~$1 and deleted_time is null and (operation_id=$2 or is_common=true)`
 	selectSQL := `select lpm.id as laboratory_patient_model_id,cl.name as laboratory_name,p.name as operation_name,
 	lpm.is_common,lpm.created_time,lpmi.clinic_laboratory_id, lpmi.illustration, lpm.model_name,lpmi.times from laboratory_patient_model lpm
 	left join laboratory_patient_model_item lpmi on lpmi.laboratory_patient_model_id = lpm.id
 	left join clinic_laboratory cl on lpmi.clinic_laboratory_id = cl.id
 	left join personnel p on lpm.operation_id = p.id
-	where lpm.model_name ~$1 and (lpm.operation_id=$2 or lpm.is_common=true)`
+	where lpm.model_name ~$1 and lpm.deleted_time is null and (lpm.operation_id=$2 or lpm.is_common=true)`
 
 	if isCommon != "" {
 		countSQL += ` and is_common =` + isCommon
@@ -513,6 +513,38 @@ func LaboratoryPatientModelUpdate(ctx iris.Context) {
 	if errc != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": errc.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+// LaboratoryPatientModelDelete 删除检验医嘱模板
+func LaboratoryPatientModelDelete(ctx iris.Context) {
+	laboratoryModelID := ctx.PostValue("laboratory_patient_model_id")
+
+	if laboratoryModelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	mrow := model.DB.QueryRowx("select id from laboratory_patient_model where id=$1 limit 1", laboratoryModelID)
+	if mrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	models := FormatSQLRowToMap(mrow)
+	_, mok := models["id"]
+	if !mok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改的模板不存在"})
+		return
+	}
+
+	updateSQL := `update laboratory_patient_model set deleted_time=LOCALTIMESTAMP where id=$1`
+	_, err := model.DB.Exec(updateSQL, laboratoryModelID)
+	if err != nil {
+		fmt.Println("err ===", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
