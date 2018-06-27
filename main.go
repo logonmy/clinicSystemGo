@@ -421,6 +421,7 @@ func main() {
 		laboratoryTriage.Post("/LaboratoryTriageRecordList", controller.LaboratoryTriageRecordList)
 		laboratoryTriage.Post("/LaboratoryTriageRecordDetail", controller.LaboratoryTriageRecordDetail)
 		laboratoryTriage.Post("/LaboratoryTriageUpdate", controller.LaboratoryTriageUpdate)
+		laboratoryTriage.Post("/LaboratoryTriagePatientRecordList", controller.LaboratoryTriagePatientRecordList)
 	}
 
 	treatmentTriage := app.Party("/treatmentTriage", crs).AllowMethods(iris.MethodOptions)
