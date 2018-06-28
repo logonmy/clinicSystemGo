@@ -186,13 +186,13 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 			return
 		}
 
-		leftTimes := treatmentPatient["left_times"].(int64)
-		totalTimes := treatmentPatient["times"].(int64)
-		if leftTimes == times.(int64) {
+		leftTimes := int(treatmentPatient["left_times"].(int64))
+		totalTimes := int(treatmentPatient["times"].(int64))
+		if leftTimes == times {
 			orderStatus = "30"
 		}
 
-		if leftTimes < times.(int64) {
+		if leftTimes < times {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "治疗剩余次数不足"})
 			return
 		}
