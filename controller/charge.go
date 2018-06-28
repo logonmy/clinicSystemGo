@@ -561,15 +561,29 @@ func charge(outTradeNo string, tradeNo string, money int64) error {
 
 	onCreditMoney := pay["on_credit_money"]
 	if onCreditMoney.(int64) != 0 {
+
+		var creditID int
+
 		triageID := pay["clinic_triage_patient_id"]
 		creditSQL := `INSERT INTO on_credit_record( 
 		  clinic_triage_patient_id, on_credit_money, trade_no, operation_id) 
-			VALUES ($1, $2, $3, $4)`
-		_, creditErr := tx.Exec(creditSQL, triageID, onCreditMoney, tradeNo, operationID)
+			VALUES ($1, $2, $3, $4) RETURNING id`
+		creditErr := tx.QueryRow(creditSQL, triageID, onCreditMoney, tradeNo, operationID).Scan(&creditID)
 		if creditErr != nil {
 			tx.Rollback()
 			return updateErr
 		}
+
+		creditDetailSQL := `INSERT INTO on_credit_record_detail( 
+		  on_credit_record_id, type, trade_no, operation_id) 
+			VALUES ($1, $2, $3, $4)`
+
+		_, creditDErr := tx.Exec(creditDetailSQL, triageID, onCreditMoney, tradeNo, operationID)
+		if creditDErr != nil {
+			tx.Rollback()
+			return creditDErr
+		}
+
 	}
 
 	orderIDs := pay["orders_ids"]
@@ -871,4 +885,66 @@ func BusinessTransactionDetail(ctx iris.Context) {
 	results := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+// BusinessTransactionCredit 获取挂账详情
+func BusinessTransactionCredit(ctx iris.Context) {
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+	keyword := ctx.PostValue("keyword")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	if startDate == "" || endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入正确的时间范围"})
+		return
+	}
+
+	queryMap := map[string]interface{}{
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+		"startDate": ToNullString(startDate),
+		"endDate":   ToNullString(endDate),
+		"keyword":   ToNullString(keyword),
+	}
+
+	sql := `from on_credit_record ocr 
+	left join personnel ope on ocr.operation_id = ope.id 
+	left join clinic_triage_patient ctp on ocr.clinic_triage_patient_id = ctp.id 
+	left join clinic_patient cp on cp.id = ctp.clinic_patient_id 
+	left join patient pa on pa.id = cp.patient_id 
+	where ocr.created_time BETWEEN :startDate and :endDate `
+
+	if keyword != "" {
+		sql += " and "
+	}
+
+	rows, err1 := model.DB.NamedQuery(`select ocr.on_credit_money,ocr.created_time,
+		ope.name as operation,pa.name as patientname,pa.sex,pa.phone,cp.id as pid 
+		 `+sql+"order by ocr.created_time ASC offset :offset limit :limit", queryMap)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total `+sql, queryMap)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+
 }
