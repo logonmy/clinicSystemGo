@@ -186,6 +186,7 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 		}
 
 		leftTimes := treatmentPatient["left_times"].(int64)
+		totalTimes := treatmentPatient["times"].(int64)
 		if leftTimes == times.(int64) {
 			orderStatus = "30"
 		}
@@ -195,13 +196,22 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 			return
 		}
 
-		_, err := tx.Exec(`INSERT INTO treatment_patient_record 
-			(clinic_triage_patient_id, treatment_patient_id, times, remark,operation_id) 
-			VALUES ($1,$2,$3)`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
-		if err != nil {
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
+		if leftTimes == totalTimes {
+			_, err := tx.Exec(`INSERT INTO treatment_patient_record 
+				(clinic_triage_patient_id, treatment_patient_id, times, remark,operation_id) 
+				VALUES ($1,$2,$3)`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
+			if err != nil {
+				tx.Rollback()
+				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+				return
+			}
+		} else {
+			_, err1 := tx.Exec(`UPDATE treatment_patient_record set times=times+$3, remark=$4, operation_id=$5, updated_time=LOCALTIMESTAMP where clinic_triage_patient_id = $1 and treatment_patient_id = $2`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
+			if err1 != nil {
+				tx.Rollback()
+				ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+				return
+			}
 		}
 
 		_, err1 := tx.Exec(`UPDATE treatment_patient set left_times=left_times-$2, order_status=$3, updated_time=LOCALTIMESTAMP where id = $1`, treatmentPatientID, times, orderStatus)
