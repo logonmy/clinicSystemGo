@@ -382,7 +382,7 @@ func TreatmentTriageUpdate(ctx iris.Context) {
 
 }
 
-// TreatmentTriagePatientRecordList 患者历史检验记录
+// TreatmentTriagePatientRecordList 患者历史治疗记录
 func TreatmentTriagePatientRecordList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")

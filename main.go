@@ -445,6 +445,7 @@ func main() {
 		treatmentTriage.Post("/TreatmentTriageRecordList", controller.TreatmentTriageRecordList)
 		treatmentTriage.Post("/TreatmentTriageUpdate", controller.TreatmentTriageUpdate)
 		treatmentTriage.Post("/TreatmentPatientModelDelete", controller.TreatmentPatientModelDelete)
+		treatmentTriage.Post("/TreatmentTriagePatientRecordList", controller.TreatmentTriagePatientRecordList)
 	}
 
 	// http://localhost:8080
