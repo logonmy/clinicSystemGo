@@ -258,6 +258,8 @@ func main() {
 		medicalRecord.Post("/upsert", controller.MedicalRecordCreate)
 		medicalRecord.Post("/findByTriageId", controller.MedicalRecordFindByTriageID)
 		medicalRecord.Post("/model/create", controller.MedicalRecordModelCreate)
+		medicalRecord.Post("model/update", controller.MedicalRecordModelUpdate)
+		medicalRecord.Post("/model/delete", controller.MedicalRecordModelDelete)
 		medicalRecord.Post("/listByPid", controller.MedicalRecordListByPID)
 		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
 		medicalRecord.Post("/model/listByOperation", controller.MedicalRecordModelListByOperation)
@@ -290,6 +292,7 @@ func main() {
 		treatment.Post("/TreatmentPersonalPatientModelList", controller.TreatmentPersonalPatientModelList)
 		treatment.Post("/TreatmentPatientModelDetail", controller.TreatmentPatientModelDetail)
 		treatment.Post("/TreatmentPatientModelUpdate", controller.TreatmentPatientModelUpdate)
+		treatment.Post("/TreatmentPatientModelDelete", controller.TreatmentPatientModelDelete)
 	}
 
 	otherCost := app.Party("/otherCost", crs).AllowMethods(iris.MethodOptions)

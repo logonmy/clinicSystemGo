@@ -551,7 +551,7 @@ func TreatmentPatientModelDelete(ctx iris.Context) {
 		return
 	}
 
-	updateSQL := `update treatment_patient_model set updated_time=LOCALTIMESTAMP where id=$1`
+	updateSQL := `update treatment_patient_model set deleted_time=LOCALTIMESTAMP where id=$1`
 	_, err := model.DB.Exec(updateSQL, treatmentModelID)
 	if err != nil {
 		fmt.Println("err ===", err)
