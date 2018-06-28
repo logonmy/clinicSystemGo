@@ -258,7 +258,7 @@ func main() {
 		medicalRecord.Post("/upsert", controller.MedicalRecordCreate)
 		medicalRecord.Post("/findByTriageId", controller.MedicalRecordFindByTriageID)
 		medicalRecord.Post("/model/create", controller.MedicalRecordModelCreate)
-		medicalRecord.Post("model/update", controller.MedicalRecordModelUpdate)
+		medicalRecord.Post("/model/update", controller.MedicalRecordModelUpdate)
 		medicalRecord.Post("/model/delete", controller.MedicalRecordModelDelete)
 		medicalRecord.Post("/listByPid", controller.MedicalRecordListByPID)
 		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
