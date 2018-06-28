@@ -166,9 +166,10 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 
 	for _, item := range results {
 		treatmentPatientID := item["treatment_patient_id"]
-		times := item["times"]
+		timesStr := item["times"]
 		remark := item["remark"]
-		if times.(int) <= 0 {
+		times, _ := strconv.Atoi(timesStr.(string))
+		if times <= 0 {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "请填写次数"})
 			return
 		}
