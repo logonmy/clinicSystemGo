@@ -19,9 +19,17 @@ func TreatmentTriageList(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select ep.id as treatment_patient_id,ep.clinic_triage_patient_id,
-	ce.name as clinic_treatment_name,ep.clinic_treatment_id,
-	tpr.times,tpr.remark,tpr.id as treatment_patient_record_id
+	selectSQL := `select ep.id as treatment_patient_id,
+	ep.clinic_triage_patient_id,
+	ep.clinic_treatment_id,
+	ce.name as clinic_treatment_name,
+	ce.unit_name,
+	ce.price,
+	ep.times as total_times,
+	tpr.times as used_times,
+	ep.illustration,
+	tpr.remark,
+	tpr.id as treatment_patient_record_id
 	FROM treatment_patient ep 
 	left join clinic_treatment ce on ce.id = ep.clinic_treatment_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ep.clinic_triage_patient_id and mo.charge_project_type_id=7 and ep.clinic_treatment_id=mo.charge_project_id

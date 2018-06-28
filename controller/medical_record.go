@@ -3,6 +3,7 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"fmt"
+	"strings"
 
 	"github.com/kataras/iris"
 )
@@ -73,7 +74,7 @@ func MedicalRecordFindByTriageID(ctx iris.Context) {
 	return
 }
 
-// MedicalRecordModelCreate 创建病历
+// MedicalRecordModelCreate 创建病历模板
 func MedicalRecordModelCreate(ctx iris.Context) {
 
 	modelName := ctx.PostValue("model_name")
@@ -107,6 +108,107 @@ func MedicalRecordModelCreate(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": id})
+}
+
+// MedicalRecordModelUpdate 修改病历模板
+func MedicalRecordModelUpdate(ctx iris.Context) {
+	medicalRecordModelID := ctx.PostValue("medical_record_model_id")
+	modelName := ctx.PostValue("model_name")
+	isCommon := ctx.PostValue("is_common")
+
+	chiefComplaint := ctx.PostValue("chief_complaint")
+	historyOfPresentIllness := ctx.PostValue("history_of_present_illness")
+	historyOfPastIllness := ctx.PostValue("history_of_past_illness")
+	familyMedicalHistory := ctx.PostValue("family_medical_history")
+	allergicHistory := ctx.PostValue("allergic_history")
+	allergicReaction := ctx.PostValue("allergic_reaction")
+	immunizations := ctx.PostValue("immunizations")
+	bodyExamination := ctx.PostValue("body_examination")
+	diagnosis := ctx.PostValue("diagnosis")
+	cureSuggestion := ctx.PostValue("cure_suggestion")
+	remark := ctx.PostValue("remark")
+	operationID := ctx.PostValue("operation_id")
+
+	if modelName == "" || medicalRecordModelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	mrow := model.DB.QueryRowx("select id from medical_record_model where id=$1 limit 1", medicalRecordModelID)
+	if mrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	models := FormatSQLRowToMap(mrow)
+	_, mok := models["id"]
+	if !mok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改的模板不存在"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id from medical_record_model where model_name=$1 and id!=$2 limit 1", modelName, medicalRecordModelID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	examinationModel := FormatSQLRowToMap(row)
+	_, ok := examinationModel["id"]
+	if ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "模板名称已存在"})
+		return
+	}
+
+	prow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", operationID)
+	if prow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改模板失败,操作员错误"})
+		return
+	}
+	personnel := FormatSQLRowToMap(prow)
+	_, pok := personnel["id"]
+	if !pok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "操作员错误"})
+		return
+	}
+
+	medicalRecordModelMap := map[string]interface{}{
+		"id":                         medicalRecordModelID,
+		"model_name":                 modelName,
+		"is_common":                  isCommon,
+		"chief_complaint":            chiefComplaint,
+		"history_of_present_illness": historyOfPresentIllness,
+		"history_of_past_illness":    historyOfPastIllness,
+		"family_medical_history":     familyMedicalHistory,
+		"allergic_history":           allergicHistory,
+		"allergic_reaction":          allergicReaction,
+		"immunizations":              immunizations,
+		"body_examination":           bodyExamination,
+		"diagnosis":                  diagnosis,
+		"cure_suggestion":            cureSuggestion,
+		"remark":                     remark,
+		"operation_id":               ToNullInt64(operationID),
+	}
+
+	var s []string
+	s = append(s, "id=:id", "model_name=:model_name", "chief_complaint=:chief_complaint",
+		"history_of_present_illness=:history_of_present_illness", "history_of_past_illness=:history_of_past_illness",
+		"family_medical_history=:family_medical_history", "allergic_history=:allergic_history", "allergic_reaction:=allergic_reaction",
+		"immunizations:=immunizations", "body_examination:=body_examination", "diagnosis:=diagnosis", "cure_suggestion:=cure_suggestion",
+		"remark:=remark", "operation_id:=operation_id")
+
+	if isCommon != "" {
+		s = append(s, "is_common:=is_common")
+	}
+	joinSQL := strings.Join(s, ",")
+	medicalRecordUpdateSQL := `update medical_record_model set ` + joinSQL + ` where id=:id`
+
+	_, err2 := model.DB.NamedExec(medicalRecordUpdateSQL, medicalRecordModelMap)
+	if err2 != nil {
+		fmt.Println(" err2====", err2)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
 // MedicalRecordListByPID 获取病历列表
@@ -172,10 +274,10 @@ func MedicalRecordModelList(ctx iris.Context) {
 		limit = "10"
 	}
 
-	countSQL := `select count(id) as total from medical_record_model where model_name ~$1`
+	countSQL := `select count(id) as total from medical_record_model where model_name ~$1 and deleted_time is null`
 	selectSQL := `select mrm.*, p.name as operation_name from medical_record_model mrm
 	left join personnel p on mrm.operation_id = p.id
-	where mrm.model_name ~$1`
+	where mrm.model_name ~$1 and mrm.deleted_time is null`
 
 	if isCommon != "" {
 		countSQL += ` and is_common =` + isCommon
@@ -224,11 +326,11 @@ func MedicalRecordModelListByOperation(ctx iris.Context) {
 		limit = "10"
 	}
 
-	countSQL := `select count(id) as total from medical_record_model where model_name ~$1 AND (operation_id = $2 or is_common = true)`
+	countSQL := `select count(id) as total from medical_record_model where model_name ~$1 and deleted_time is null AND (operation_id = $2 or is_common = true)`
 	if isCommon != "" {
 		countSQL = countSQL + ` and is_common =` + isCommon
 	}
-	selectSQL := `select * from medical_record_model where model_name ~$1 AND (operation_id = $2 or is_common = true)`
+	selectSQL := `select * from medical_record_model where model_name ~$1 and deleted_time is null AND (operation_id = $2 or is_common = true)`
 	if isCommon != "" {
 		selectSQL = selectSQL + ` and is_common =` + isCommon
 	}
@@ -247,4 +349,37 @@ func MedicalRecordModelListByOperation(ctx iris.Context) {
 	}
 	result := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
+}
+
+// MedicalRecordModelDelete 删除病历模板
+func MedicalRecordModelDelete(ctx iris.Context) {
+	medicalRecordModelID := ctx.PostValue("medical_record_model_id")
+
+	if medicalRecordModelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	mrow := model.DB.QueryRowx("select id from medical_record_model where id=$1 limit 1", medicalRecordModelID)
+	if mrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	models := FormatSQLRowToMap(mrow)
+	_, mok := models["id"]
+	if !mok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改的模板不存在"})
+		return
+	}
+
+	medicalRecordUpdateSQL := `update medical_record_model set deleted_time=LOCALTIMESTAMP where id=$1`
+
+	_, err2 := model.DB.Exec(medicalRecordUpdateSQL, medicalRecordModelID)
+	if err2 != nil {
+		fmt.Println(" err2====", err2)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
