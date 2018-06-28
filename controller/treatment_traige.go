@@ -26,7 +26,7 @@ func TreatmentTriageList(ctx iris.Context) {
 	ce.unit_name,
 	ce.price,
 	ep.times as total_times,
-	tpr.times as used_times,
+	ep.left_times,
 	ep.illustration,
 	tpr.remark,
 	tpr.id as treatment_patient_record_id
@@ -149,7 +149,6 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	orderStatus := "20"
 	var results []map[string]interface{}
 	err := json.Unmarshal([]byte(items), &results)
 
@@ -166,13 +165,14 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 
 	for _, item := range results {
 		treatmentPatientID := item["treatment_patient_id"]
-		times := item["times"]
+		timesStr := item["times"]
 		remark := item["remark"]
-		if times.(int) <= 0 {
+		times, _ := strconv.Atoi(timesStr.(string))
+		if times <= 0 {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "请填写次数"})
 			return
 		}
-		row := model.DB.QueryRowx("select id,left_times from treatment_patient where id=$1 and clinic_triage_patient_id=$2 limit 1", treatmentPatientID, clinicTriagePatientID)
+		row := model.DB.QueryRowx("select id, times, left_times from treatment_patient where id=$1 and clinic_triage_patient_id=$2 limit 1", treatmentPatientID, clinicTriagePatientID)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "创建失败"})
 			return
@@ -185,23 +185,34 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 			return
 		}
 
-		leftTimes := treatmentPatient["left_times"].(int64)
-		if leftTimes == times.(int64) {
+		leftTimes := int(treatmentPatient["left_times"].(int64))
+		totalTimes := int(treatmentPatient["times"].(int64))
+		orderStatus := "20"
+		if leftTimes == times {
 			orderStatus = "30"
 		}
 
-		if leftTimes < times.(int64) {
+		if leftTimes < times {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "治疗剩余次数不足"})
 			return
 		}
 
-		_, err := tx.Exec(`INSERT INTO treatment_patient_record 
-			(clinic_triage_patient_id, treatment_patient_id, times, remark,operation_id) 
-			VALUES ($1,$2,$3)`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
-		if err != nil {
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
+		if leftTimes == totalTimes {
+			_, err := tx.Exec(`INSERT INTO treatment_patient_record 
+				(clinic_triage_patient_id, treatment_patient_id, times, remark,operation_id) 
+				VALUES ($1,$2,$3,$4,$5)`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
+			if err != nil {
+				tx.Rollback()
+				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+				return
+			}
+		} else {
+			_, err1 := tx.Exec(`UPDATE treatment_patient_record set times=times+$3, remark=$4, operation_id=$5, updated_time=LOCALTIMESTAMP where clinic_triage_patient_id = $1 and treatment_patient_id = $2`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
+			if err1 != nil {
+				tx.Rollback()
+				ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+				return
+			}
 		}
 
 		_, err1 := tx.Exec(`UPDATE treatment_patient set left_times=left_times-$2, order_status=$3, updated_time=LOCALTIMESTAMP where id = $1`, treatmentPatientID, times, orderStatus)
@@ -369,4 +380,79 @@ func TreatmentTriageUpdate(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "操作成功"})
 
+}
+
+// TreatmentTriagePatientRecordList 患者历史治疗记录
+func TreatmentTriagePatientRecordList(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	if patientID == "" && clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	if patientID == "" {
+		row := model.DB.QueryRowx(`select cp.patient_id from clinic_triage_patient ctp 
+			left join clinic_patient cp on ctp.clinic_patient_id = cp.id where ctp.id = $1`, clinicTriagePatientID)
+		if row == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "查询就诊人错误"})
+			return
+		}
+		patient := FormatSQLRowToMap(row)
+		pID, ok := patient["patient_id"]
+		if !ok {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "查询就诊人错误"})
+			return
+		}
+		patientID = strconv.Itoa(int(pID.(int64)))
+	}
+	countSQL := `select count (*) as total from (select 
+		tp.clinic_triage_patient_id, 
+		ctp.clinic_patient_id, 
+		cp.patient_id 
+		from treatment_patient tp
+		left join clinic_triage_patient ctp on tp.clinic_triage_patient_id = ctp.id
+		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+		where cp.patient_id = $1 and tp.order_status = '30'
+		group by (tp.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id)) aaa`
+	total := model.DB.QueryRowx(countSQL, patientID)
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	querySQL := `select 
+	string_agg (ce.name, '，') as clinic_treatment_name, 
+	max (tp.created_time) as finish_time,
+	tp.clinic_triage_patient_id, 
+	ctp.clinic_patient_id, 
+	cp.patient_id,
+	c.name as clinic_name,
+	d.name as department_name,
+	p.name as doctor_name  
+	from treatment_patient tp
+	left join clinic_treatment ce on ce.id = tp.clinic_treatment_id
+	left join clinic_triage_patient ctp on tp.clinic_triage_patient_id = ctp.id
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+	left join clinic c on c.id = cp.clinic_id
+	left join department d on ctp.department_id = d.id
+	left join personnel p on ctp.doctor_id = p.id
+	where cp.patient_id = $1 and tp.order_status = '30'
+	group by (tp.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, c.name, d.name, p.name)
+	order by finish_time DESC
+	offset $2 limit $3`
+
+	rows, err := model.DB.Queryx(querySQL, patientID, offset, limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
