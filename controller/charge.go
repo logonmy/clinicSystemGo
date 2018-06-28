@@ -923,7 +923,7 @@ func BusinessTransactionCredit(ctx iris.Context) {
 	where ocr.created_time BETWEEN :startDate and :endDate `
 
 	if keyword != "" {
-		sql += " and "
+		sql += " and (pa.name ~:keyword or pa.phone ~:keyword or cp.id ~:keyword) "
 	}
 
 	rows, err1 := model.DB.NamedQuery(`select ocr.on_credit_money,ocr.created_time,
