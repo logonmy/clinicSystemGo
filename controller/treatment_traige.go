@@ -173,7 +173,7 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "请填写次数"})
 			return
 		}
-		row := model.DB.QueryRowx("select id,left_times from treatment_patient where id=$1 and clinic_triage_patient_id=$2 limit 1", treatmentPatientID, clinicTriagePatientID)
+		row := model.DB.QueryRowx("select id, times, left_times from treatment_patient where id=$1 and clinic_triage_patient_id=$2 limit 1", treatmentPatientID, clinicTriagePatientID)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "创建失败"})
 			return
