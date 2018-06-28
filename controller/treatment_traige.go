@@ -26,7 +26,7 @@ func TreatmentTriageList(ctx iris.Context) {
 	ce.unit_name,
 	ce.price,
 	ep.times as total_times,
-	tpr.times as used_times,
+	ep.left_times,
 	ep.illustration,
 	tpr.remark,
 	tpr.id as treatment_patient_record_id
