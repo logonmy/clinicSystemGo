@@ -795,6 +795,10 @@ func BusinessTransactionDetail(ctx iris.Context) {
 	limit := ctx.PostValue("limit")
 	startDate := ctx.PostValue("start_date")
 	endDate := ctx.PostValue("end_date")
+	patientName := ctx.PostValue("patientName")
+	phone := ctx.PostValue("phone")
+	porjectName := ctx.PostValue("porjectName")
+	io := ctx.PostValue("in_out") // 退费或收费
 
 	if offset == "" {
 		offset = "0"
@@ -809,15 +813,47 @@ func BusinessTransactionDetail(ctx iris.Context) {
 	}
 
 	queryMap := map[string]interface{}{
-		"offset":    ToNullInt64(offset),
-		"limit":     ToNullInt64(limit),
-		"startDate": ToNullString(startDate),
-		"endDate":   ToNullString(endDate),
+		"offset":      ToNullInt64(offset),
+		"limit":       ToNullInt64(limit),
+		"startDate":   ToNullString(startDate),
+		"endDate":     ToNullString(endDate),
+		"patientName": ToNullString(patientName),
+		"phone":       ToNullString(phone),
+		"porjectName": ToNullString(porjectName),
+		"io":          ToNullString(io),
 	}
 
-	sql := `from charge_detail  where created_time BETWEEN :startDate and :endDate `
+	sql := `from charge_detail cd left join mz_paid_orders mpo on mpo.mz_paid_record_id = cd.pay_record_id 
+	left join personnel ope on mpo.confrim_id = ope.id 
+	left join charge_project_type cpt on cpt.id = mpo.charge_project_type_id 
+	left join clinic_triage_patient ctp on mpo.clinic_triage_patient_id = ctp.id 
+	left join personnel doc on doc.id = cd.doctor_id 
+	left join department d on d.id = cd.department_id 
+	left join clinic_patient cp on cp.id = cd.clinic_patient_id 
+	left join patient pa on pa.id = cp.patient_id 
+	where cd.created_time BETWEEN :startDate and :endDate `
 
-	rows, err1 := model.DB.NamedQuery(`select * `+sql+" order by date ASC offset :offset limit :limit", queryMap)
+	if patientName != "" {
+		sql += " and pa.name ~:patientName "
+	}
+
+	if phone != "" {
+		sql += " and pa.phone ~:phone "
+	}
+
+	if porjectName != "" {
+		sql += " and mpo.name ~:porjectName "
+	}
+
+	if io != "" {
+		sql += " and cd.in_out ~:io "
+	}
+
+	rows, err1 := model.DB.NamedQuery(`select mpo.name,mpo.price,mpo.amount,
+		mpo.total,mpo.fee,mpo.unit,ope.name as operarion,cpt.name as charge_project_type,
+		cd.created_time,cd.out_trade_no,ctp.visit_date,doc.name as doctorName,d.name as deptName,
+		pa.name as patientName,pa.sex,pa.birthday,pa.phone 
+		 `+sql+" order by cd.created_time ASC offset :offset limit :limit", queryMap)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
