@@ -191,12 +191,12 @@ func MedicalRecordModelUpdate(ctx iris.Context) {
 	var s []string
 	s = append(s, "id=:id", "model_name=:model_name", "chief_complaint=:chief_complaint",
 		"history_of_present_illness=:history_of_present_illness", "history_of_past_illness=:history_of_past_illness",
-		"family_medical_history=:family_medical_history", "allergic_history=:allergic_history", "allergic_reaction:=allergic_reaction",
-		"immunizations:=immunizations", "body_examination:=body_examination", "diagnosis:=diagnosis", "cure_suggestion:=cure_suggestion",
-		"remark:=remark", "operation_id:=operation_id")
+		"family_medical_history=:family_medical_history", "allergic_history=:allergic_history", "allergic_reaction=:allergic_reaction",
+		"immunizations=:immunizations", "body_examination=:body_examination", "diagnosis=:diagnosis", "cure_suggestion=:cure_suggestion",
+		"remark=:remark", "operation_id=:operation_id")
 
 	if isCommon != "" {
-		s = append(s, "is_common:=is_common")
+		s = append(s, "is_common=:is_common")
 	}
 	joinSQL := strings.Join(s, ",")
 	medicalRecordUpdateSQL := `update medical_record_model set ` + joinSQL + ` where id=:id`

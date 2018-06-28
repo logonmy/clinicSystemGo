@@ -3,7 +3,6 @@ package pay
 import (
 	"crypto"
 	"crypto/md5"
-	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha1"
 	"crypto/x509"
@@ -11,8 +10,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"sort"
 	"strings"
+	"time"
 )
 
 //GetRSA1Sign 获取签名
@@ -21,38 +22,72 @@ import (
  * @param formData 待签名对象
  * @param privateKeyPath 私钥地址
  */
-func GetRSA1Sign(formData map[string]string, privateKeyPath string) string {
-	sortData := sortArg(formData)
-	var s []string
-	for key := range sortData {
-		s = append(s, key+"="+sortData[key])
+// func GetRSA1Sign(formData map[string]string, privateKeyPath string) string {
+// 	sortData := sortArg(formData)
+// 	var s []string
+// 	for key := range sortData {
+// 		s = append(s, key+"="+sortData[key])
+// 	}
+// 	queryString := strings.Join(s, "&")
+// 	if contents, err := ioutil.ReadFile(privateKeyPath); err == nil {
+// 		//因为contents是[]byte类型，直接转换成string类型后会多一行空格,需要使用strings.Replace替换换行符
+// 		prvKey := strings.Replace(string(contents), "\n", "", 1)
+// 		keyByts, err := hex.DecodeString(prvKey)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 			return ""
+// 		}
+// 		privateKey, err := x509.ParsePKCS8PrivateKey(keyByts)
+// 		if err != nil {
+// 			fmt.Println("ParsePKCS8PrivateKey err", err)
+// 			return ""
+// 		}
+// 		h := sha1.New()
+// 		h.Write([]byte([]byte(queryString)))
+// 		hash := h.Sum(nil)
+// 		signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey.(*rsa.PrivateKey), crypto.SHA1, hash[:])
+// 		if err != nil {
+// 			fmt.Printf("Error from signing: %s\n", err)
+// 			return ""
+// 		}
+// 		out := hex.EncodeToString(signature)
+// 		return out
+// 	}
+// 	return ""
+// }
+
+//GetSign 计算签名
+func GetSign(mReq map[string]interface{}, key string) (sign string) {
+	fmt.Println("支付签名计算, API KEY:", key)
+	//STEP 1, 对key进行升序排序.
+	sortedKeys := make([]string, 0)
+	for k := range mReq {
+		sortedKeys = append(sortedKeys, k)
 	}
-	queryString := strings.Join(s, "&")
-	if contents, err := ioutil.ReadFile(privateKeyPath); err == nil {
-		//因为contents是[]byte类型，直接转换成string类型后会多一行空格,需要使用strings.Replace替换换行符
-		prvKey := strings.Replace(string(contents), "\n", "", 1)
-		keyByts, err := hex.DecodeString(prvKey)
-		if err != nil {
-			fmt.Println(err)
-			return ""
+
+	sort.Strings(sortedKeys)
+
+	//STEP2, 对key=value的键值对用&连接起来，略过空值
+	var signStrings string
+	for _, k := range sortedKeys {
+		fmt.Printf("k=%v, v=%v\n", k, mReq[k])
+		value := fmt.Sprintf("%v", mReq[k])
+		if value != "" {
+			signStrings = signStrings + k + "=" + value + "&"
 		}
-		privateKey, err := x509.ParsePKCS8PrivateKey(keyByts)
-		if err != nil {
-			fmt.Println("ParsePKCS8PrivateKey err", err)
-			return ""
-		}
-		h := sha1.New()
-		h.Write([]byte([]byte(queryString)))
-		hash := h.Sum(nil)
-		signature, err := rsa.SignPKCS1v15(rand.Reader, privateKey.(*rsa.PrivateKey), crypto.SHA1, hash[:])
-		if err != nil {
-			fmt.Printf("Error from signing: %s\n", err)
-			return ""
-		}
-		out := hex.EncodeToString(signature)
-		return out
 	}
-	return ""
+
+	//STEP3, 在键值对的最后加上key=API_KEY
+	if key != "" {
+		signStrings = signStrings + "key=" + key
+	}
+
+	//STEP4, 进行MD5签名并且将所有字符转为大写.
+	md5Ctx := md5.New()
+	md5Ctx.Write([]byte(signStrings))
+	cipherStr := md5Ctx.Sum(nil)
+	upperSign := strings.ToUpper(hex.EncodeToString(cipherStr))
+	return upperSign
 }
 
 //SignVeryfy 验证签名
@@ -183,4 +218,16 @@ func substr(str string, start int, length int) string {
 	}
 
 	return string(rs[start:end])
+}
+
+//generateNonceString 生成随机字符串
+func generateNonceString(length int) string {
+	str := "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	bytes := []byte(str)
+	result := []byte{}
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	for i := 0; i < length; i++ {
+		result = append(result, bytes[r.Intn(len(bytes))])
+	}
+	return string(result)
 }
