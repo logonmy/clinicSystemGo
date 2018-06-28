@@ -200,7 +200,7 @@ func TreatmentTriageRecordCreate(ctx iris.Context) {
 		if leftTimes == totalTimes {
 			_, err := tx.Exec(`INSERT INTO treatment_patient_record 
 				(clinic_triage_patient_id, treatment_patient_id, times, remark,operation_id) 
-				VALUES ($1,$2,$3)`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
+				VALUES ($1,$2,$3,$4,$5)`, clinicTriagePatientID, treatmentPatientID, times, remark, operationID)
 			if err != nil {
 				tx.Rollback()
 				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
