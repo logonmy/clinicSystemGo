@@ -1820,7 +1820,6 @@ CREATE TABLE treatment_patient_record
 --支付记录
 CREATE TABLE pay_order
 (
-  transaction_no varchar(100) NOT NULL,--流水号
   trade_no varchar(100) NOT NULL,--平台交易号
   out_trade_no varchar(100) UNIQUE NOT NULL,--系统交易号
   total_fee INTEGER NOT NULL CHECK(total_fee > 0),--交易金额
@@ -1849,7 +1848,8 @@ CREATE TABLE refund_order
   out_trade_no varchar(100) NOT NULL references pay_order(out_trade_no),--支付记录系统交易号
   refund_fee INTEGER NOT NULL CHECK(refund_fee > 0),--退款金额
   refund_reason text, --退款原因
-  out_request_no varchar(100) NOT NULL, --退款请求交易号
+  out_refund_no varchar(100) NOT NULL, --退款请求交易号
+  refund_trade_no varchar(100) NOT NULL, --平台退款流水号
   refund_result text, --退款结果
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
