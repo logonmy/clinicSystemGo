@@ -483,31 +483,33 @@ CREATE TABLE charge_detail
 CREATE TABLE on_credit_record
 (
   id serial PRIMARY KEY NOT NULL,--id
-  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
-  trade_no varchar(30) UNIQUE,--第三方平台交易号(如；支付宝，微信)
+  clinic_triage_patient_id INTEGER references clinic_triage_patient(id),--分诊就诊人id
+  trade_no varchar(30),--第三方平台交易号(如；支付宝，微信)
+  refund_trade_no varchar(30),--第三方平台退费交易号(如；支付宝，微信)
+  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-挂账 1-还账 
   on_credit_money INTEGER NOT NULL, --挂账总金额金额
-  already_pay_money INTEGER NOT NULL DEFAULT 0, --已还款金额
   operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+  remark varchar(30), --备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
 
---挂账还款记录
-CREATE TABLE on_credit_record_detail
-(
-  id serial PRIMARY KEY NOT NULL,--id
-  on_credit_record_id INTEGER NOT NULL references on_credit_record(id),--分诊记录id
-  type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-挂账 1-还账 
-  pay_method_code varchar(2),--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
-  should_repay_moeny INTEGER NOT NULL, --应还金额
-  repay_moeny INTEGER NOT NULL, --实还金额
-  remain_repay_moeny INTEGER NOT NULL, --剩余挂账金额
-  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
-  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
-);
+-- --挂账还款记录
+-- CREATE TABLE on_credit_record_detail
+-- (
+--   id serial PRIMARY KEY NOT NULL,--id
+--   on_credit_record_id INTEGER NOT NULL references on_credit_record(id),--分诊记录id
+--   type INTEGER NOT NULL CHECK(type = 0 or type = 1),--类型 0-挂账 1-还账 
+--   pay_method_code varchar(2),--支付方式编码 01-现金，02-微信，03-支付宝，04-银行卡
+--   should_repay_moeny INTEGER NOT NULL, --应还金额
+--   repay_moeny INTEGER NOT NULL, --实还金额
+--   remain_repay_moeny INTEGER NOT NULL, --剩余挂账金额
+--   operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+--   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+--   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+--   deleted_time timestamp with time zone
+-- );
 
 --平台管理人员
 CREATE TABLE admin

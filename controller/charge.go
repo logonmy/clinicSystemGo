@@ -562,26 +562,14 @@ func charge(outTradeNo string, tradeNo string, money int64) error {
 	onCreditMoney := pay["on_credit_money"]
 	if onCreditMoney.(int64) != 0 {
 
-		var creditID int
-
 		triageID := pay["clinic_triage_patient_id"]
 		creditSQL := `INSERT INTO on_credit_record( 
-		  clinic_triage_patient_id, on_credit_money, trade_no, operation_id) 
-			VALUES ($1, $2, $3, $4) RETURNING id`
-		creditErr := tx.QueryRow(creditSQL, triageID, onCreditMoney, tradeNo, operationID).Scan(&creditID)
+		  clinic_triage_patient_id, on_credit_money, trade_no, operation_id, type, remark) 
+			VALUES ($1, $2, $3, $4, $5, $6)`
+		_, creditErr := tx.Exec(creditSQL, triageID, onCreditMoney, tradeNo, operationID, 0, "门诊缴费挂账")
 		if creditErr != nil {
 			tx.Rollback()
 			return updateErr
-		}
-
-		creditDetailSQL := `INSERT INTO on_credit_record_detail( 
-		  on_credit_record_id, type, trade_no, operation_id) 
-			VALUES ($1, $2, $3, $4)`
-
-		_, creditDErr := tx.Exec(creditDetailSQL, triageID, onCreditMoney, tradeNo, operationID)
-		if creditDErr != nil {
-			tx.Rollback()
-			return creditDErr
 		}
 
 	}
