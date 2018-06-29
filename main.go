@@ -240,6 +240,7 @@ func main() {
 		role.Post("/update", controller.RoleUpdate)
 		role.Post("/listByClinicID", controller.RoleList)
 		role.Post("/roleDetail", controller.RoleDetail)
+		role.Post("/RoleFunctionUnset", controller.RoleFunctionUnset)
 		role.Post("/RoleAllocation", controller.RoleAllocation)
 	}
 

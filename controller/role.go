@@ -19,7 +19,7 @@ func RoleCreate(ctx iris.Context) {
 	}
 
 	var roleID string
-	row := model.DB.QueryRowx("select id from role name=$1 and clinic_id=$2 limit 1", name, clinicID)
+	row := model.DB.QueryRowx("select id from role where name=$1 and clinic_id=$2 limit 1", name, clinicID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "新增失败"})
 		return
@@ -32,22 +32,22 @@ func RoleCreate(ctx iris.Context) {
 	}
 	tx, err := model.DB.Begin()
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	err = tx.QueryRow("insert into role(name,clinic_id) values ($1,$2) RETURNING id", name, clinicID).Scan(&roleID)
-	if err != nil {
+	errq := tx.QueryRow("insert into role (name,clinic_id) values ($1,$2) RETURNING id", name, clinicID).Scan(&roleID)
+	if errq != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errq.Error()})
 		return
 	}
 
 	if items != "" {
 		var results []map[string]string
-		err := json.Unmarshal([]byte(items), &results)
+		errj := json.Unmarshal([]byte(items), &results)
 
-		if err != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		if errj != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": errj.Error()})
 			return
 		}
 
@@ -64,20 +64,20 @@ func RoleCreate(ctx iris.Context) {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "诊所菜单项不存在"})
 				return
 			}
-
 			sql := "INSERT INTO role_clinic_function_menu (clinic_children_function_menu_id, role_id) VALUES ($1,$2)"
-			_, err = tx.Exec(sql, ToNullInt64(clinicChildrenFunctionMenuID), ToNullInt64(roleID))
-			if err != nil {
+			_, erre := tx.Exec(sql, ToNullInt64(clinicChildrenFunctionMenuID), ToNullInt64(roleID))
+			if erre != nil {
+				fmt.Println("erre====", erre.Error())
 				tx.Rollback()
-				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+				ctx.JSON(iris.Map{"code": "-1", "msg": erre.Error()})
 				return
 			}
 		}
 	}
-	err = tx.Commit()
-	if err != nil {
+	errc := tx.Commit()
+	if errc != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errc.Error()})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": roleID})
@@ -317,4 +317,44 @@ func RoleAllocation(ctx iris.Context) {
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+//RoleFunctionUnset 获取角色未开通的菜单项
+func RoleFunctionUnset(ctx iris.Context) {
+	roleID := ctx.PostValue("role_id")
+	if roleID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id,clinic_id from role where id=$1 limit 1", roleID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
+		return
+	}
+	role := FormatSQLRowToMap(row)
+	_, ok := role["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询的权限组不存在"})
+		return
+	}
+	clinicID := role["clinic_id"]
+
+	selectSQL := `select ccf.id as clinic_function_menu_id,
+	ccf.children_function_menu_id as function_menu_id,pf.id as parent_id,pf.url as parent_url,
+	pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from clinic_children_function_menu ccf
+	left join children_function_menu cf on cf.id = ccf.children_function_menu_id
+	left join role_clinic_function_menu rcf on rcf.clinic_children_function_menu_id = ccf.id and rcf.role_id=$1
+	left join parent_function_menu pf on pf.id = cf.parent_function_menu_id
+	where rcf.clinic_children_function_menu_id IS NULL and ccf.status=true and ccf.clinic_id=$2`
+
+	rows, _ := model.DB.Queryx(selectSQL, roleID, clinicID)
+	if rows == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		return
+	}
+	parentFunctionMenu := FormatSQLRowsToMapArray(rows)
+	menus := FormatFuntionmenus(parentFunctionMenu)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
 }
