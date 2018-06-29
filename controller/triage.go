@@ -148,7 +148,7 @@ func TriagePatientDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	querySQL := `select p.*, ctp.visit_type from clinic_triage_patient ctp
+	querySQL := `select p.*, ctp.visit_type, ctp.clinic_patient_id from clinic_triage_patient ctp
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
 	left join patient p on cp.patient_id = p.id
 	where ctp.id = $1`
