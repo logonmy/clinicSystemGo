@@ -180,6 +180,8 @@ func main() {
 		charge.Post("/business/transaction/detail", controller.BusinessTransactionDetail)
 		// 获取挂账交易详情
 		charge.Post("/business/transaction/credit", controller.BusinessTransactionCredit)
+		// 患者支付列表
+		charge.Post("/PatientChargeList", controller.PatientChargeList)
 
 	}
 

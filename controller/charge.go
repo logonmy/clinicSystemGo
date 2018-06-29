@@ -936,3 +936,38 @@ func BusinessTransactionCredit(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 
 }
+
+// PatientChargeList 患者支付列表
+func PatientChargeList(ctx iris.Context) {
+	clinicPatientID := ctx.PostValue("clinic_patient_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicPatientID == "" {
+		ctx.JSON(iris.Map{"code": "-2", "msg": "参数错误"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	countSQL := `select count (*) as total from charge_detail where clinic_patient_id = $1`
+
+	total := model.DB.QueryRowx(countSQL, clinicPatientID)
+	pageInfo := FormatSQLRowToMap(total)
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	querySQL := `select * from charge_detail where clinic_patient_id = $1 order by id desc offset $2 limit $3`
+	rows, err := model.DB.Queryx(querySQL, clinicPatientID, offset, limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
