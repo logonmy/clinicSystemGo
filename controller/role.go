@@ -52,7 +52,7 @@ func RoleCreate(ctx iris.Context) {
 		}
 
 		for _, v := range results {
-			clinicChildrenFunctionMenuID := v["function_menu_id"]
+			clinicChildrenFunctionMenuID := v["clinic_function_menu_id"]
 			crow := model.DB.QueryRowx("select id from clinic_children_function_menu where id=$1 limit 1", clinicChildrenFunctionMenuID)
 			if crow == nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
