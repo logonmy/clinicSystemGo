@@ -112,6 +112,7 @@ func main() {
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
 	{
 		triage.Post("/register", controller.TriageRegister)
+		triage.Post("/TriagePatientDetail", controller.TriagePatientDetail)
 		triage.Post("/patientlist", controller.TriagePatientList)
 		triage.Post("/getById", controller.PatientGetByID)
 		triage.Post("/personnelList", controller.TriagePersonnelList)
@@ -177,6 +178,9 @@ func main() {
 		charge.Post("/business/transaction/month", controller.BusinessTransactionMonth)
 		// 获取交易详情
 		charge.Post("/business/transaction/detail", controller.BusinessTransactionDetail)
+		// 获取挂账交易详情
+		charge.Post("/business/transaction/credit", controller.BusinessTransactionCredit)
+
 	}
 
 	//挂账
@@ -449,6 +453,7 @@ func main() {
 		treatmentTriage.Post("/TreatmentTriageRecordList", controller.TreatmentTriageRecordList)
 		treatmentTriage.Post("/TreatmentTriageUpdate", controller.TreatmentTriageUpdate)
 		treatmentTriage.Post("/TreatmentPatientModelDelete", controller.TreatmentPatientModelDelete)
+		treatmentTriage.Post("/TreatmentTriagePatientRecordList", controller.TreatmentTriagePatientRecordList)
 	}
 
 	hcPay := app.Party("/hcPay", crs).AllowMethods(iris.MethodOptions)

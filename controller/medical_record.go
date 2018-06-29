@@ -235,10 +235,12 @@ func MedicalRecordListByPID(ctx iris.Context) {
 	cp.id as clinic_patient_id,
 	ctp.created_time as registion_time,
 	ctp.visit_type,
-	p.name as doctor_name 
+	p.name as doctor_name, 
+	d.name as department_name
 	from medical_record mr 
 	left join clinic_triage_patient ctp on ctp.id = mr.clinic_triage_patient_id 
 	left join personnel p on p.id = ctp.doctor_id 
+	left join department d on d.id = ctp.department_id 
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
 	left join clinic c on cp.clinic_id = c.id 
 	where ctp.clinic_patient_id = $1 ORDER BY mr.created_time DESC offset $2 limit $3`
