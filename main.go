@@ -2,6 +2,8 @@ package main
 
 import (
 	"clinicSystemGo/controller"
+	"fmt"
+	"time"
 
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris"
@@ -27,6 +29,8 @@ func main() {
 	// and log the requests to the terminal.
 	app.Use(recover.New())
 	app.Use(logger.New())
+	fmt.Println("===", time.Now().Format("2006-01-02 15:04:05"))
+	fmt.Println("===", time.Now().Format("20"))
 
 	// Method:   GET
 	// Resource: http://localhost:8080
@@ -450,6 +454,18 @@ func main() {
 		treatmentTriage.Post("/TreatmentTriageUpdate", controller.TreatmentTriageUpdate)
 		treatmentTriage.Post("/TreatmentPatientModelDelete", controller.TreatmentPatientModelDelete)
 		treatmentTriage.Post("/TreatmentTriagePatientRecordList", controller.TreatmentTriagePatientRecordList)
+	}
+
+	hcPay := app.Party("/hcPay", crs).AllowMethods(iris.MethodOptions)
+	{
+		hcPay.Post("/CreateHcOrder", controller.CreateHcOrder)
+		hcPay.Post("/QueryHcOrder", controller.QueryHcOrder)
+		hcPay.Post("/HcRefund", controller.HcRefund)
+		hcPay.Post("/QueryHcRefund", controller.QueryHcRefund)
+		hcPay.Post("/HcOrderClose", controller.HcOrderClose)
+		hcPay.Post("/FaceToFace", controller.FaceToFace)
+		hcPay.Post("/FaceToFaceCancel", controller.FaceToFaceCancel)
+		hcPay.Post("/DownloadBill", controller.DownloadBill)
 	}
 
 	// http://localhost:8080
