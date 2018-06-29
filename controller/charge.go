@@ -939,11 +939,11 @@ func BusinessTransactionCredit(ctx iris.Context) {
 
 // PatientChargeList 患者支付列表
 func PatientChargeList(ctx iris.Context) {
-	clinicPatientID := ctx.PostValue("clinic_patient_id")
+	patientID := ctx.PostValue("patient_id")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
-	if clinicPatientID == "" {
+	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-2", "msg": "参数错误"})
 		return
 	}
@@ -955,15 +955,25 @@ func PatientChargeList(ctx iris.Context) {
 		limit = "10"
 	}
 
-	countSQL := `select count (*) as total from charge_detail where clinic_patient_id = $1`
+	countSQL := `select count(*) as total from charge_detail cd 
+	left join clinic_patient cp on cd.clinic_patient_id = cp.id
+	left join clinic c on cp.clinic_id = c.id
+	left join mz_paid_record mpr on cd.out_trade_no = mpr.out_trade_no
+	left join clinic_triage_patient_operation ctpo on mpr.clinic_triage_patient_id = ctpo.clinic_triage_patient_id and type = '30' and times = 1
+	where cp.patient_id = $1`
 
-	total := model.DB.QueryRowx(countSQL, clinicPatientID)
+	total := model.DB.QueryRowx(countSQL, patientID)
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	querySQL := `select * from charge_detail where clinic_patient_id = $1 order by id desc offset $2 limit $3`
-	rows, err := model.DB.Queryx(querySQL, clinicPatientID, offset, limit)
+	querySQL := `select cd.*, c.name as clinic_name, ctpo.created_time as visit_time from charge_detail cd 
+	left join clinic_patient cp on cd.clinic_patient_id = cp.id
+	left join clinic c on cp.clinic_id = c.id
+	left join mz_paid_record mpr on cd.out_trade_no = mpr.out_trade_no
+	left join clinic_triage_patient_operation ctpo on mpr.clinic_triage_patient_id = ctpo.clinic_triage_patient_id and type = '30' and times = 1
+	where cp.patient_id = $1 order by id desc offset $2 limit $3`
+	rows, err := model.DB.Queryx(querySQL, patientID, offset, limit)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-2", "msg": err.Error()})
 		return
