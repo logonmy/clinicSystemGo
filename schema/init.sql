@@ -967,7 +967,7 @@ CREATE TABLE diagnosis
 CREATE TABLE medical_record
 (
   id serial PRIMARY KEY NOT NULL,--id
-  clinic_triage_patient_id INTEGER NOT NULL UNIQUE references clinic_triage_patient(id),--预约编号
+  clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--预约编号
   morbidity_date varchar(10), --发病日期
   chief_complaint text NOT NULL, --主诉
   history_of_present_illness text,-- 现病史
@@ -981,10 +981,12 @@ CREATE TABLE medical_record
   cure_suggestion text, --治疗建议
   remark text,--备注
   files text,--上传的文件
+  is_default boolean,--是否主病历
   operation_id integer REFERENCES personnel(id),--操作人编码
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE(clinic_triage_patient_id,is_default)
 );
 
 --病历模板

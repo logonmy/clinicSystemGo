@@ -680,7 +680,7 @@ func ReceiveRecord(ctx iris.Context) {
 	}
 
 	countSQL := `select count (*) as total from clinic_triage_patient ctp
-	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id
+	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id and mr.is_default = true
 	where ctp.status > 30 and ctp.clinic_patient_id = :clinic_patient_id`
 
 	querySQL := `select 
@@ -701,7 +701,7 @@ func ReceiveRecord(ctx iris.Context) {
 	left join clinic_triage_patient_operation ctpo on ctp.id = ctpo.clinic_triage_patient_id and type = 30 and times = 1
 	left join department d on ctp.department_id = d.id
 	left join personnel p on ctp.doctor_id = p.id
-	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id
+	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id and mr.is_default = true
 	where ctp.status > 30 and ctp.clinic_patient_id = :clinic_patient_id`
 
 	if keyword != "" {

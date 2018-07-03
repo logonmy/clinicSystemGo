@@ -639,7 +639,7 @@ func PrescriptionChinesePatientList(ctx iris.Context) {
 	countSQL := `select count(distinct(pcp.clinic_triage_patient_id)) as total from prescription_chinese_patient pcp
 		left join clinic_triage_patient ctp on pcp.clinic_triage_patient_id = ctp.id
 		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
-		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
 		where cp.id=:clinic_patient_id`
 	selectSQL := `select ctp.id as clinic_triage_patient_id,pcp.id as prescription_chinese_patient_id,ctp.visit_type,de.name as department_name,p.name as personnel_name,
 		mr.diagnosis,(select created_time from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id order by created_time DESC LIMIT 1) from prescription_chinese_patient pcp
@@ -647,7 +647,7 @@ func PrescriptionChinesePatientList(ctx iris.Context) {
 		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
 		left join department de on ctp.department_id = de.id
 		left join personnel p on ctp.doctor_id = p.id
-		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
 		where cp.id=:clinic_patient_id`
 
 	if keyword != "" {
@@ -741,7 +741,7 @@ func PrescriptionWesternPatientList(ctx iris.Context) {
 	countSQL := `select count(distinct(pwp.clinic_triage_patient_id)) as total from prescription_western_patient pwp
 		left join clinic_triage_patient ctp on pwp.clinic_triage_patient_id = ctp.id
 		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
-		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
 		where cp.id=:clinic_patient_id`
 	selectSQL := `select ctp.id as clinic_triage_patient_id,pwp.id as prescription_chinese_patient_id,ctp.visit_type,de.name as department_name,p.name as personnel_name,
 		mr.diagnosis,(select created_time from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id order by created_time DESC LIMIT 1) from prescription_western_patient pwp
@@ -749,7 +749,7 @@ func PrescriptionWesternPatientList(ctx iris.Context) {
 		left join clinic_patient cp on ctp.clinic_patient_id = cp.id
 		left join department de on ctp.department_id = de.id
 		left join personnel p on ctp.doctor_id = p.id
-		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+		left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
 		where cp.id=:clinic_patient_id`
 
 	if keyword != "" {

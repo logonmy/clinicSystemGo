@@ -267,6 +267,7 @@ func main() {
 	medicalRecord := app.Party("/medicalRecord", crs).AllowMethods(iris.MethodOptions)
 	{
 		medicalRecord.Post("/upsert", controller.MedicalRecordCreate)
+		medicalRecord.Post("/renew", controller.MedicalRecordRenew)
 		medicalRecord.Post("/findByTriageId", controller.MedicalRecordFindByTriageID)
 		medicalRecord.Post("/model/create", controller.MedicalRecordModelCreate)
 		medicalRecord.Post("/model/update", controller.MedicalRecordModelUpdate)
