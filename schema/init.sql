@@ -1835,7 +1835,7 @@ CREATE TABLE pay_order
   buyer_account varchar(100),--购买者账号
   seller_account varchar(100),--收款方账号
 
-  openid varchar(100),--用户微信openid/支付用户渠道 ID
+  openid varchar(100),--用户微信openid/支付用户渠道ID
   trade_type varchar(10),--交易类型
   --weixin_f2f –微信当面付 alipay_f2f –支付宝当面付 mybank_weixin_f2f -网商微信当面付 mybank_alipay_f2f -网商支付宝当面付
   --weixin_wap -微信wap支付 weixin_h5 -微信wap支付 weixin_app -微信app支付 weixin_qr -微信qr支付 
