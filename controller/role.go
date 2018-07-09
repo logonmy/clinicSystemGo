@@ -358,3 +358,26 @@ func RoleFunctionUnset(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
 }
+
+//PersonnelsByRole 角色分配的用户列表
+func PersonnelsByRole(ctx iris.Context) {
+	roleID := ctx.PostValue("role_id")
+
+	if roleID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	selectSQL := `select p.id as personnel_id, p.name as personnel_name from personnel_role pr
+	left join personnel p on p.id = pr.personnel_id
+	where pr.role_id=$1`
+
+	rows, _ := model.DB.Queryx(selectSQL, roleID)
+	if rows == nil {
+		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+		return
+	}
+	resData := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": resData})
+}

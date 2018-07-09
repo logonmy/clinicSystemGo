@@ -27,7 +27,7 @@ type Personnel struct {
 	IsAppointment interface{} `json:"is_appointment" db:"is_appointment"`
 }
 
-// PersonnelLogin 创建医院管理员
+// PersonnelLogin 登录
 func PersonnelLogin(ctx iris.Context) {
 	IP := ctx.RemoteAddr()
 	username := ctx.PostValue("username")
@@ -36,7 +36,10 @@ func PersonnelLogin(ctx iris.Context) {
 		md5Ctx := md5.New()
 		md5Ctx.Write([]byte(password))
 		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
-		row := model.DB.QueryRowx("select a.id, a.code, a.name, a.username, b.id as clinic_id, b.name as clinic_name from personnel a left join clinic b on a.clinic_id = b.id where a.username = $1 and a.password = $2", username, passwordMd5)
+		row := model.DB.QueryRowx(`select a.id, a.code, a.name, a.username, 
+			b.id as clinic_id, b.name as clinic_name 
+			from personnel a left join clinic b on a.clinic_id = b.id 
+			where a.username = $1 and a.password = $2`, username, passwordMd5)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误"})
 			return
@@ -472,6 +475,13 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
+	_, err1 := tx.Exec("delete from personnel_role where personnel_id=$1", ToNullInt64(id))
+	if err1 != nil {
+		fmt.Println(" err1====", err1.Error())
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
 	insertSQL := `insert into personnel_role (personnel_id,role_id) values ($1,$2)`
 	for _, v := range results {
 		roleID := v["role_id"]
@@ -536,4 +546,38 @@ func PersonnelDelete(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+//RolesByPersonnel 通过用户查询角色
+func RolesByPersonnel(ctx iris.Context) {
+	personnelID := ctx.PostValue("id")
+
+	if personnelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	selectSQL := `select rcfm.clinic_children_function_menu_id as clinic_function_menu_id,
+	ccfm.children_function_menu_id as function_menu_id,pfm.id as parent_id,pfm.url as parent_url,
+	pfm.name as parent_name,cfm.url as menu_url,cfm.name as menu_name 
+	from personnel_role pr
+	left join role_clinic_function_menu rcfm on rcfm.role_id = pr.role_id
+	left join clinic_children_function_menu ccfm on ccfm.id = rcfm.clinic_children_function_menu_id and ccfm.status=true
+	left join children_function_menu cfm on cfm.id = ccfm.children_function_menu_id
+	left join parent_function_menu pfm on pfm.id = cfm.parent_function_menu_id
+	where pr.personnel_id=$1 
+	group by rcfm.clinic_children_function_menu_id,
+	ccfm.children_function_menu_id,pfm.id,pfm.url,
+	pfm.name,cfm.url,cfm.name`
+
+	rows, _ := model.DB.Queryx(selectSQL, personnelID)
+	if rows == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
+		return
+	}
+	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
+	menus := FormatFuntionmenus(clinicFunctionMenu)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
+
 }

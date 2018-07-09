@@ -67,9 +67,11 @@ func main() {
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
+		personnel.Post("/RolesByPersonnel", controller.RolesByPersonnel)
 		personnel.Post("/update", controller.PersonnelUpdate)
 		personnel.Post("/delete", controller.PersonnelDelete)
 		personnel.Post("/PersonnelWithAuthorizationList", controller.PersonnelWithAuthorizationList)
+		personnel.Post("/PersonnelAuthorizationAllocation", controller.PersonnelAuthorizationAllocation)
 	}
 
 	// visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
@@ -244,6 +246,7 @@ func main() {
 		role.Post("/roleDetail", controller.RoleDetail)
 		role.Post("/RoleFunctionUnset", controller.RoleFunctionUnset)
 		role.Post("/RoleAllocation", controller.RoleAllocation)
+		role.Post("/PersonnelsByRole", controller.PersonnelsByRole)
 	}
 
 	business := app.Party("/business", crs).AllowMethods(iris.MethodOptions)
