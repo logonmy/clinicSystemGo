@@ -967,7 +967,7 @@ func PatientChargeList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	querySQL := `select cd.*, c.name as clinic_name, ctpo.created_time as visit_time from charge_detail cd 
+	querySQL := `select cd.*, c.name as clinic_name, ctpo.created_time as visit_time, mpr.id as mz_paid_record_id from charge_detail cd 
 	left join clinic_patient cp on cd.clinic_patient_id = cp.id
 	left join clinic c on cp.clinic_id = c.id
 	left join mz_paid_record mpr on cd.out_trade_no = mpr.out_trade_no
