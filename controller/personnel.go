@@ -559,7 +559,7 @@ func RolesByPersonnel(ctx iris.Context) {
 
 	selectSQL := `select rcfm.clinic_children_function_menu_id as clinic_function_menu_id,
 	ccfm.children_function_menu_id as function_menu_id,pfm.id as parent_id,pfm.url as parent_url,
-	pfm.name as parent_name,cfm.url as menu_url,cfm.name as menu_name 
+	pfm.name as parent_name,cfm.url as menu_url,cfm.name as menu_name,cfm.icon
 	from personnel_role pr
 	left join role_clinic_function_menu rcfm on rcfm.role_id = pr.role_id
 	left join clinic_children_function_menu ccfm on ccfm.id = rcfm.clinic_children_function_menu_id and ccfm.status=true
@@ -568,7 +568,7 @@ func RolesByPersonnel(ctx iris.Context) {
 	where pr.personnel_id=$1 
 	group by rcfm.clinic_children_function_menu_id,
 	ccfm.children_function_menu_id,pfm.id,pfm.url,
-	pfm.name,cfm.url,cfm.name`
+	pfm.name,cfm.url,cfm.name,cfm.icon`
 
 	rows, _ := model.DB.Queryx(selectSQL, personnelID)
 	if rows == nil {

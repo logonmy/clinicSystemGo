@@ -546,6 +546,7 @@ CREATE TABLE children_function_menu
   id serial PRIMARY KEY NOT NULL,--id
   parent_function_menu_id INTEGER references parent_function_menu(id),--上级菜单id
   url varchar(50) NOT NULL,--功能路由
+  icon varchar(100),--功能图标
   name varchar(20),--菜单名
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
