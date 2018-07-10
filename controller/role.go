@@ -368,8 +368,10 @@ func PersonnelsByRole(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select p.id as personnel_id, p.name as personnel_name from personnel_role pr
+	selectSQL := `select p.id as personnel_id, p.name as personnel_name, d.name as department_name from personnel_role pr
 	left join personnel p on p.id = pr.personnel_id
+	left join department_personnel dp on dp.personnel_id = p.id
+	left join department d on d.id = dp.department_id
 	where pr.role_id=$1`
 
 	rows, _ := model.DB.Queryx(selectSQL, roleID)
