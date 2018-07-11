@@ -1857,3 +1857,20 @@ CREATE TABLE refund_order
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
+
+--药品零售
+CREATE TABLE drug_retail
+(
+  group_no varchar(30) NOT NULL UNIQUE,--组号，一次零售的编码
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--药品id
+  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存id
+  amount INTEGER NOT NULL, --药品数量
+  total_fee INTEGER NOT NULL, --总费用
+  pay_status boolean  NOT NULL, --支付状态
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  charge_operation_id INTEGER NOT NULL references personnel(id),--收费员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
