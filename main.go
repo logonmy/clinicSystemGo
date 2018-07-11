@@ -2,6 +2,8 @@ package main
 
 import (
 	"clinicSystemGo/controller"
+	"fmt"
+	"time"
 
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris"
@@ -27,6 +29,8 @@ func main() {
 	// and log the requests to the terminal.
 	app.Use(recover.New())
 	app.Use(logger.New())
+	fmt.Println("===", time.Now().Format("2006-01-02 15:04:05"))
+	fmt.Println("===", time.Now().Format("20"))
 
 	// Method:   GET
 	// Resource: http://localhost:8080
@@ -63,9 +67,11 @@ func main() {
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
+		personnel.Post("/RolesByPersonnel", controller.RolesByPersonnel)
 		personnel.Post("/update", controller.PersonnelUpdate)
 		personnel.Post("/delete", controller.PersonnelDelete)
 		personnel.Post("/PersonnelWithAuthorizationList", controller.PersonnelWithAuthorizationList)
+		personnel.Post("/PersonnelAuthorizationAllocation", controller.PersonnelAuthorizationAllocation)
 	}
 
 	// visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
@@ -108,6 +114,7 @@ func main() {
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
 	{
 		triage.Post("/register", controller.TriageRegister)
+		triage.Post("/TriagePatientDetail", controller.TriagePatientDetail)
 		triage.Post("/patientlist", controller.TriagePatientList)
 		triage.Post("/getById", controller.PatientGetByID)
 		triage.Post("/personnelList", controller.TriagePersonnelList)
@@ -175,6 +182,8 @@ func main() {
 		charge.Post("/business/transaction/detail", controller.BusinessTransactionDetail)
 		// 获取挂账交易详情
 		charge.Post("/business/transaction/credit", controller.BusinessTransactionCredit)
+		// 患者支付列表
+		charge.Post("/PatientChargeList", controller.PatientChargeList)
 
 	}
 
@@ -236,7 +245,9 @@ func main() {
 		role.Post("/update", controller.RoleUpdate)
 		role.Post("/listByClinicID", controller.RoleList)
 		role.Post("/roleDetail", controller.RoleDetail)
+		role.Post("/RoleFunctionUnset", controller.RoleFunctionUnset)
 		role.Post("/RoleAllocation", controller.RoleAllocation)
+		role.Post("/PersonnelsByRole", controller.PersonnelsByRole)
 	}
 
 	business := app.Party("/business", crs).AllowMethods(iris.MethodOptions)
@@ -260,6 +271,7 @@ func main() {
 	medicalRecord := app.Party("/medicalRecord", crs).AllowMethods(iris.MethodOptions)
 	{
 		medicalRecord.Post("/upsert", controller.MedicalRecordCreate)
+		medicalRecord.Post("/renew", controller.MedicalRecordRenew)
 		medicalRecord.Post("/findByTriageId", controller.MedicalRecordFindByTriageID)
 		medicalRecord.Post("/model/create", controller.MedicalRecordModelCreate)
 		medicalRecord.Post("/model/update", controller.MedicalRecordModelUpdate)
@@ -450,6 +462,18 @@ func main() {
 		treatmentTriage.Post("/TreatmentTriageUpdate", controller.TreatmentTriageUpdate)
 		treatmentTriage.Post("/TreatmentPatientModelDelete", controller.TreatmentPatientModelDelete)
 		treatmentTriage.Post("/TreatmentTriagePatientRecordList", controller.TreatmentTriagePatientRecordList)
+	}
+
+	hcPay := app.Party("/hcPay", crs).AllowMethods(iris.MethodOptions)
+	{
+		hcPay.Post("/CreateHcOrder", controller.CreateHcOrder)
+		hcPay.Post("/QueryHcOrder", controller.QueryHcOrder)
+		hcPay.Post("/HcRefund", controller.HcRefund)
+		hcPay.Post("/QueryHcRefund", controller.QueryHcRefund)
+		hcPay.Post("/HcOrderClose", controller.HcOrderClose)
+		hcPay.Post("/FaceToFace", controller.FaceToFace)
+		hcPay.Post("/FaceToFaceCancel", controller.FaceToFaceCancel)
+		hcPay.Post("/DownloadBill", controller.DownloadBill)
 	}
 
 	// http://localhost:8080

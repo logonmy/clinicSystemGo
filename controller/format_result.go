@@ -14,6 +14,7 @@ type Menu struct {
 	FunctionmenuID       interface{} `json:"function_menu_id"`
 	MenuName             interface{} `json:"menu_name"`
 	MenuURL              interface{} `json:"menu_url"`
+	Icon                 interface{} `json:"icon"`
 }
 
 //Funtionmenus 菜单
@@ -182,12 +183,14 @@ func FormatFuntionmenus(functionMenus []map[string]interface{}) []Funtionmenus {
 		parentID := v["parent_id"]
 		parentURL := v["parent_url"]
 		parentName := v["parent_name"]
+		icon := v["icon"]
 		has := false
 		children := Menu{
 			ClinicFunctionmenuID: clinicFunctionmenuID,
 			FunctionmenuID:       functionmenuID,
 			MenuName:             childenName,
 			MenuURL:              childenURL,
+			Icon:                 icon,
 		}
 		for k, menu := range menus {
 			parentMenuID := menu.ParentID

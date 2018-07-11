@@ -8,8 +8,60 @@ import (
 	"github.com/kataras/iris"
 )
 
-// MedicalRecordCreate 创建病历
+// MedicalRecordCreate 创建主病历
 func MedicalRecordCreate(ctx iris.Context) {
+
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	chiefComplaint := ctx.PostValue("chief_complaint")
+
+	morbidityDate := ctx.PostValue("morbidity_date")
+	historyOfPresentIllness := ctx.PostValue("history_of_present_illness")
+	historyOfPastIllness := ctx.PostValue("history_of_past_illness")
+	familyMedicalHistory := ctx.PostValue("family_medical_history")
+	allergicHistory := ctx.PostValue("allergic_history")
+	allergicReaction := ctx.PostValue("allergic_reaction")
+	immunizations := ctx.PostValue("immunizations")
+	bodyExamination := ctx.PostValue("body_examination")
+	diagnosis := ctx.PostValue("diagnosis")
+	cureSuggestion := ctx.PostValue("cure_suggestion")
+	remark := ctx.PostValue("remark")
+	files := ctx.PostValue("files")
+	operationID := ctx.PostValue("operation_id")
+
+	if clinicTriagePatientID == "" || chiefComplaint == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id from medical_record where clinic_triage_patient_id=$1", clinicTriagePatientID)
+	clinicTriagePatient := FormatSQLRowToMap(row)
+	_, ok := clinicTriagePatient["id"]
+	if !ok {
+		sql := `INSERT INTO  medical_record ( clinic_triage_patient_id, morbidity_date, chief_complaint, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id, files, is_default ) 
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`
+
+		var id int
+		err := model.DB.QueryRow(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, true).Scan(&id)
+		if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	} else {
+		sql := `UPDATE medical_record SET morbidity_date=$1, chief_complaint=$2, history_of_present_illness=$3, history_of_past_illness=$4, family_medical_history=$5, allergic_history=$6, allergic_reaction=$7, immunizations=$8, body_examination=$9, diagnosis=$10, cure_suggestion=$11, remark=$12, operation_id=$13, files=$14, updated_time=LOCALTIMESTAMP WHERE clinic_triage_patient_id=$15`
+
+		_, err := model.DB.Exec(sql, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, clinicTriagePatientID)
+		if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+// MedicalRecordRenew 续写病历
+func MedicalRecordRenew(ctx iris.Context) {
 
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	chiefComplaint := ctx.PostValue("chief_complaint")
@@ -229,16 +281,20 @@ func MedicalRecordListByPID(ctx iris.Context) {
 		limit = "10"
 	}
 
-	countSQL := `select count(mr.id) as total from medical_record mr left join clinic_triage_patient ctp on ctp.id = mr.clinic_triage_patient_id where ctp.clinic_patient_id = $1`
+	countSQL := `select count(mr.id) as total from medical_record mr 
+	left join clinic_triage_patient ctp on ctp.id = mr.clinic_triage_patient_id 
+	where ctp.clinic_patient_id = $1`
 	selectSQL := `	select mr.*,
 	c.name as clinic_name,
 	cp.id as clinic_patient_id,
 	ctp.created_time as registion_time,
 	ctp.visit_type,
-	p.name as doctor_name 
+	p.name as doctor_name, 
+	d.name as department_name
 	from medical_record mr 
 	left join clinic_triage_patient ctp on ctp.id = mr.clinic_triage_patient_id 
 	left join personnel p on p.id = ctp.doctor_id 
+	left join department d on d.id = ctp.department_id 
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
 	left join clinic c on cp.clinic_id = c.id 
 	where ctp.clinic_patient_id = $1 ORDER BY mr.created_time DESC offset $2 limit $3`

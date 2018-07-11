@@ -141,6 +141,26 @@ func TriageRegister(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": nil})
 }
 
+// TriagePatientDetail 登记患者详情
+func TriagePatientDetail(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	querySQL := `select p.*, ctp.visit_type, ctp.clinic_patient_id from clinic_triage_patient ctp
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+	left join patient p on cp.patient_id = p.id
+	where ctp.id = $1`
+	row := model.DB.QueryRowx(querySQL, clinicTriagePatientID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询患者"})
+		return
+	}
+	result := FormatSQLRowToMap(row)
+	ctx.JSON(iris.Map{"code": "200", "data": result})
+}
+
 // TriagePatientList 当日登记就诊人列表 分诊记录
 func TriagePatientList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
@@ -660,7 +680,7 @@ func ReceiveRecord(ctx iris.Context) {
 	}
 
 	countSQL := `select count (*) as total from clinic_triage_patient ctp
-	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id
+	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id and mr.is_default = true
 	where ctp.status > 30 and ctp.clinic_patient_id = :clinic_patient_id`
 
 	querySQL := `select 
@@ -681,7 +701,7 @@ func ReceiveRecord(ctx iris.Context) {
 	left join clinic_triage_patient_operation ctpo on ctp.id = ctpo.clinic_triage_patient_id and type = 30 and times = 1
 	left join department d on ctp.department_id = d.id
 	left join personnel p on ctp.doctor_id = p.id
-	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id
+	left join medical_record mr on ctp.id = mr.clinic_triage_patient_id and mr.is_default = true
 	where ctp.status > 30 and ctp.clinic_patient_id = :clinic_patient_id`
 
 	if keyword != "" {

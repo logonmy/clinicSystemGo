@@ -123,7 +123,7 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 	left join personnel doc on doc.id = ctp.doctor_id 
 	left join department d on d.id = ctp.department_id  
 	left join patient p on p.id = cp.patient_id 
-	left join medical_record mr on mr.clinic_triage_patient_id = ctp.id
+	left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
 	left join (select clinic_triage_patient_id,count(*) as total_count,max(created_time) as order_time
