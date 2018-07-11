@@ -527,70 +527,74 @@ CREATE TABLE admin
   deleted_time timestamp with time zone
 );
 
---一级菜单功能项
-CREATE TABLE parent_function_menu
-(
-  id serial PRIMARY KEY NOT NULL,--id
-  url varchar(20) NOT NULL,--功能路由
-  ascription VARCHAR(2) NOT NULL DEFAULT '01',--菜单所属类型 01 诊所 02 平台
-  name varchar(20),--菜单名
-  status boolean NOT NULL DEFAULT true,--是否启用
-  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
-);
+-- --一级菜单功能项
+-- CREATE TABLE parent_function_menu
+-- (
+--   id serial PRIMARY KEY NOT NULL,--id
+--   url varchar(20) NOT NULL,--功能路由
+--   ascription VARCHAR(2) NOT NULL DEFAULT '01',--菜单所属类型 01 诊所 02 平台
+--   name varchar(20),--菜单名
+--   status boolean NOT NULL DEFAULT true,--是否启用
+--   weight integer,--权重
+--   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+--   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+--   deleted_time timestamp with time zone
+-- );
 
---二级菜单功能项
-CREATE TABLE children_function_menu
+--菜单功能项
+CREATE TABLE function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
-  parent_function_menu_id INTEGER references parent_function_menu(id),--上级菜单id
+  level integer NOT NULL DEFAULT 0,--菜单等级
+  parent_function_menu_id INTEGER references function_menu(id),--上级菜单id
   url varchar(50) NOT NULL,--功能路由
+  ascription VARCHAR(2) NOT NULL DEFAULT '01',--菜单所属类型 01 诊所 02 平台
   icon varchar(100),--功能图标
   name varchar(20),--菜单名
   status boolean NOT NULL DEFAULT true,--是否启用
+  weight integer,--权重
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
 
 --诊所菜单项
-CREATE TABLE clinic_children_function_menu
+CREATE TABLE clinic_function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
-  children_function_menu_id INTEGER NOT NULL references children_function_menu(id),--菜单id
+  function_menu_id INTEGER NOT NULL references function_menu(id),--菜单id
   clinic_id integer NOT NULL references clinic(id),--所属诊所
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
   status boolean NOT NULL DEFAULT true,--是否启用
-  UNIQUE (children_function_menu_id, clinic_id)
+  UNIQUE (function_menu_id, clinic_id)
 );
 
 --诊所角色菜单项
 CREATE TABLE role_clinic_function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
-  clinic_children_function_menu_id INTEGER NOT NULL references clinic_children_function_menu(id),--诊所菜单id
+  clinic_function_menu_id INTEGER NOT NULL references clinic_function_menu(id),--诊所菜单id
   role_id integer NOT NULL references role(id),--所属角色
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
   status boolean NOT NULL DEFAULT true,--是否启用
-  UNIQUE (clinic_children_function_menu_id, role_id)
+  UNIQUE (clinic_function_menu_id, role_id)
 );
 
 --平台管理员菜单项
 CREATE TABLE admin_function_menu
 (
   id serial PRIMARY KEY NOT NULL,--id
-  children_function_menu_id INTEGER NOT NULL references children_function_menu(id),--平台菜单id
+  function_menu_id INTEGER NOT NULL references function_menu(id),--平台菜单id
   admin_id integer NOT NULL references admin(id),--所属平台管理员
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
   status boolean NOT NULL DEFAULT true,--是否启用
-  UNIQUE (children_function_menu_id, admin_id)
+  UNIQUE (function_menu_id, admin_id)
 );
 
 --用药频率
