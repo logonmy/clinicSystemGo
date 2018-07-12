@@ -364,6 +364,104 @@ func ClinicDrugList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
+// ClinicDrugListWithStock 查询药品库存信息
+func ClinicDrugListWithStock(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	keyword := ctx.PostValue("keyword")
+	status := ctx.PostValue("status")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "20"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	countSQL := `select count(*) as total from clinic_drug cd where clinic_id=:clinic_id`
+	selectSQL := `select 
+		cd.id + ds.storehouse_id as clinic_drug_id,
+		cd.type,
+		cd.manu_factory_name,
+		cd.name as drug_name,
+		cd.specification,
+		cd.packing_unit_name,
+		cd.ret_price,
+		cd.buy_price,
+		cd.py_code,
+		cd.is_discount,
+		cd.illustration,
+		cd.status, 
+		cd.once_dose,
+		cd.once_dose_unit_name, 
+		cd.route_administration_name, 
+		cd.frequency_name,
+		cd.fetch_address,
+		cd.clinic_id,
+		ds.stock_amount,
+		ds.serial,
+		ds.storehouse_id,
+		ds.eff_date,
+		ds.supplier_name 
+		from clinic_drug cd 
+		left join drug_stock ds on ds.clinic_drug_id = cd.id
+		where cd.clinic_id = :clinic_id`
+
+	if status != "" {
+		countSQL += " and cd.status = :status"
+		selectSQL += " and cd.status = :status"
+	}
+
+	if keyword != "" {
+		countSQL += ` and (cd.py_code ~*:keyword or cd.name ~*:keyword)`
+		selectSQL += ` and (cd.py_code ~*:keyword or cd.name ~*:keyword)`
+	}
+
+	var queryOption = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"status":    ToNullBool(status),
+		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+	}
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+
+}
+
 //ClinicDrugUpdate 修改药品
 func ClinicDrugUpdate(ctx iris.Context) {
 	clinicDrugID := ctx.PostValue("clinic_drug_id")
