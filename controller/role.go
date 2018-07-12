@@ -92,7 +92,7 @@ func RoleUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	row := model.DB.QueryRowx("select id from role where id=$1 limit 1", roleID)
+	row := model.DB.QueryRowx("select id from role where id=$1", roleID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
@@ -220,7 +220,7 @@ func RoleDetail(ctx iris.Context) {
 	}
 	selectSQL := `select 
 	rcf.clinic_function_menu_id,
-	ccf.function_menu_id,
+	cfm.function_menu_id,
 	fm.url as menu_url,
 	fm.name as menu_name,
 	fm.level,
@@ -228,7 +228,7 @@ func RoleDetail(ctx iris.Context) {
 	fm.parent_function_menu_id
 	from role_clinic_function_menu rcf
 	left join clinic_function_menu cfm on cfm.id = rcf.clinic_function_menu_id and cfm.status=true
-	left join function_menu fm on fm.id = cfm.unction_menu_id
+	left join function_menu fm on fm.id = cfm.function_menu_id
 	where rcf.role_id=$1 order by fm.level asc,fm.weight asc`
 	rows, err2 := model.DB.Queryx(selectSQL, roleID)
 	if err2 != nil {

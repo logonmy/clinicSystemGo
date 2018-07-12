@@ -276,7 +276,7 @@ func AdminCreate(ctx iris.Context) {
 
 		for _, v := range results {
 			functionMenuID := v["function_menu_id"]
-			crow := model.DB.QueryRowx("select id from function_menu where id=$1 limit 1", functionMenuID)
+			crow := model.DB.QueryRowx("select id from function_menu where id=$1", functionMenuID)
 			if crow == nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
@@ -376,7 +376,7 @@ func AdminUpdate(ctx iris.Context) {
 
 		for _, v := range results {
 			functionMenuID := v["function_menu_id"]
-			crow := model.DB.QueryRowx("select id from children_function_menu where id=$1 limit 1", functionMenuID)
+			crow := model.DB.QueryRowx("select id from function_menu where id=$1 limit 1", functionMenuID)
 			if crow == nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
