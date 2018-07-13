@@ -408,7 +408,7 @@ func PersonalMedicalRecord(ctx iris.Context) {
 		return
 	}
 
-	row := model.DB.QueryRowx("select * from personal_medical_record where id=$1", patientID)
+	row := model.DB.QueryRowx("select * from personal_medical_record where patient_id=$1", patientID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询患者诊前病历失败"})
 		return
