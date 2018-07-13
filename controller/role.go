@@ -230,7 +230,7 @@ func RoleDetail(ctx iris.Context) {
 	fm.icon,
 	fm.parent_function_menu_id
 	from role_clinic_function_menu rcf
-	left join clinic_function_menu cfm on cfm.id = rcf.clinic_function_menu_id and cfm.status=true
+	right join clinic_function_menu cfm on cfm.id = rcf.clinic_function_menu_id and cfm.status=true
 	left join function_menu fm on fm.id = cfm.function_menu_id
 	where rcf.role_id=$1 order by fm.level asc,fm.weight asc`
 	rows, err2 := model.DB.Queryx(selectSQL, roleID)
