@@ -221,10 +221,13 @@ func RoleDetail(ctx iris.Context) {
 	selectSQL := `select 
 	rcf.clinic_function_menu_id,
 	cfm.function_menu_id,
-	fm.url as menu_url,
 	fm.name as menu_name,
+	fm.url as menu_url,
 	fm.level,
 	fm.weight,
+	fm.ascription,
+	fm.status,
+	fm.icon,
 	fm.parent_function_menu_id
 	from role_clinic_function_menu rcf
 	left join clinic_function_menu cfm on cfm.id = rcf.clinic_function_menu_id and cfm.status=true
@@ -236,9 +239,22 @@ func RoleDetail(ctx iris.Context) {
 		return
 	}
 	role := FormatSQLRowToMap(arows)
-	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
-	// menus := FormatFuntionmenus(clinicFunctionMenu)
+
+	var funtionmenu []Funtionmenu
+	for rows.Next() {
+		var f Funtionmenu
+		err := rows.StructScan(&f)
+		if err != nil {
+			fmt.Println("err=====", err.Error())
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+		funtionmenu = append(funtionmenu, f)
+	}
+
+	clinicFunctionMenu := FormatMenu(funtionmenu)
 	role["funtionMenus"] = clinicFunctionMenu
+
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": role})
 }
 
@@ -347,11 +363,14 @@ func RoleFunctionUnset(ctx iris.Context) {
 
 	selectSQL := `select 
 	cfm.id as clinic_function_menu_id,
-	cfm.function_menu_id,
-	fm.url as menu_url,
+	fm.id as function_menu_id,
 	fm.name as menu_name,
+	fm.url as menu_url,
 	fm.level,
 	fm.weight,
+	fm.ascription,
+	fm.status,
+	fm.icon,
 	fm.parent_function_menu_id
 	from clinic_function_menu cfm
 	left join function_menu fm on fm.id = cfm.function_menu_id
@@ -363,10 +382,25 @@ func RoleFunctionUnset(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
 		return
 	}
-	parentFunctionMenu := FormatSQLRowsToMapArray(rows)
-	// menus := FormatFuntionmenus(parentFunctionMenu)
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": parentFunctionMenu})
+	var funtionmenu []Funtionmenu
+	for rows.Next() {
+		var f Funtionmenu
+		err := rows.StructScan(&f)
+		if err != nil {
+			fmt.Println("err=====", err.Error())
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+		formatUnsetMenu := FormatUnsetMenu(f)
+		fmt.Println("formatUnsetMenu=====", formatUnsetMenu)
+		funtionmenu = append(funtionmenu, formatUnsetMenu...)
+	}
+	fmt.Println("funtionmenu=====", funtionmenu)
+
+	result := FormatMenu(funtionmenu)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 }
 
 //PersonnelsByRole 角色分配的用户列表
