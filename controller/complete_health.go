@@ -6,6 +6,23 @@ import (
 	"github.com/kataras/iris"
 )
 
+// GetLastBodySign 获取最后一次体征信息
+func GetLastBodySign(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+
+	if patientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	querySQL := `select p.id as patient_id, bs.* from body_sign bs left join clinic_triage_patient ctp on bs.clinic_triage_patient_id = ctp.id
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
+	left join patient p on cp.patient_id = p.id where p.id = $1 order by bs.id DESC LIMIT 1`
+
+	row := model.DB.QueryRowx(querySQL, patientID)
+	result := FormatSQLRowToMap(row)
+	ctx.JSON(iris.Map{"code": "200", "data": result})
+}
+
 // TriageCompleteBodySign 完善体征信息
 func TriageCompleteBodySign(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
