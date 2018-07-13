@@ -199,8 +199,7 @@ func PatientUpdate(ctx iris.Context) {
 	profession := ctx.PostValue("profession")
 	remark := ctx.PostValue("remark")
 	patientChannelID := ctx.PostValue("patient_channel_id")
-	personnelID := ctx.PostValue("personnel_id")
-	if id == "" || certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" || patientChannelID == "" || personnelID == "" {
+	if id == "" || certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -208,7 +207,7 @@ func PatientUpdate(ctx iris.Context) {
 	var patientID string
 	err := model.DB.QueryRow(`UPDATE patient set  
 		cert_no=$1,name=$2, birthday=$3, sex=$4, phone=$5, address=$6, profession=$7, remark=$8, patient_channel_id=$9, updated_time=$10
-		where id=$10 RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, patientChannelID, id, time.Now()).Scan(&patientID)
+		where id=$10 RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, ToNullInt64(patientChannelID), id, time.Now()).Scan(&patientID)
 	if err != nil {
 		// tx.Rollback()
 		fmt.Println("err2 ===", err)
