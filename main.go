@@ -111,6 +111,7 @@ func main() {
 		patient.Post("/getByKeyword", controller.PatientsGetByKeyword)
 		patient.Post("/MemberPateintList", controller.MemberPateintList)
 		patient.Post("/PersonalMedicalRecordUpsert", controller.PersonalMedicalRecordUpsert)
+		patient.Post("/PersonalMedicalRecord", controller.PersonalMedicalRecord)
 		patient.Post("/GetLastBodySign", controller.GetLastBodySign)
 	}
 
