@@ -199,7 +199,7 @@ func PatientUpdate(ctx iris.Context) {
 	profession := ctx.PostValue("profession")
 	remark := ctx.PostValue("remark")
 	patientChannelID := ctx.PostValue("patient_channel_id")
-	if id == "" || certNo == "" || name == "" || birthday == "" || sex == "" || phone == "" {
+	if id == "" || name == "" || birthday == "" || sex == "" || phone == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
