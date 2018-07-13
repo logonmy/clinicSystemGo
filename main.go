@@ -110,6 +110,7 @@ func main() {
 		patient.Post("/getByCertNo", controller.PatientGetByCertNo)
 		patient.Post("/getByKeyword", controller.PatientsGetByKeyword)
 		patient.Post("/MemberPateintList", controller.MemberPateintList)
+		patient.Post("/PersonalMedicalRecordUpsert", controller.PersonalMedicalRecordUpsert)
 	}
 
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
