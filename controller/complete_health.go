@@ -141,6 +141,24 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		return
 	}
 
+	selectSQL := `select p.id as patient_id,ctp.id
+	from clinic_triage_patient ctp
+	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
+	left join patient p on p.id = cp.patient_id where id=$1`
+	ctrow := model.DB.QueryRowx(selectSQL, clinicTriagePatientID)
+	if ctrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "材料费项错误"})
+		return
+	}
+
+	clinicTriagePatient := FormatSQLRowToMap(ctrow)
+	_, ok := clinicTriagePatient["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录错误"})
+		return
+	}
+	patientID := clinicTriagePatient["patient_id"]
+
 	tx, err := model.DB.Begin()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -149,9 +167,35 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 
 	_, err = tx.Exec("delete from pre_medical_record where clinic_triage_patient_id=$1", clinicTriagePatientID)
 	if err != nil {
+		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
+
+	_, perr := tx.Exec("delete from personal_medical_record where patient_id=$1", patientID)
+	if perr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": perr.Error()})
+		return
+	}
+
+	insertpSQL := `insert into personal_medical_record (
+		patient_id,
+		has_allergic_history,
+		allergic_history,
+		personal_medical_history,
+		family_medical_history,
+		vaccination,
+		menarche_age,
+		menstrual_period_start_day,
+		menstrual_period_end_day,
+		menstrual_cycle_start_day,
+		menstrual_cycle_end_day,
+		menstrual_last_day,
+		gestational_weeks,
+		childbearing_history,
+		remark
+	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id;`
 
 	insertSQL := `insert into pre_medical_record (
 		clinic_triage_patient_id,
@@ -170,7 +214,31 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		childbearing_history,
 		remark
 	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id;`
-	_, err = tx.Exec(insertSQL,
+
+	_, err = tx.Exec(insertpSQL,
+		ToNullInt64(patientID.(string)),
+		ToNullBool(hasAllergicHistory),
+		ToNullString(allergicHistory),
+		ToNullString(personalMedicalHistory),
+		ToNullString(familyMedicalHistory),
+		ToNullString(vaccination),
+		ToNullInt64(menarcheAge),
+		ToNullString(menstrualPeriodStartDay),
+		ToNullString(menstrualPeriodEndDay),
+		ToNullString(menstrualCycleStartDay),
+		ToNullString(menstrualCycleEndDay),
+		ToNullString(menstrualLastDay),
+		ToNullInt64(gestationalWeeks),
+		ToNullString(childbearingHistory),
+		ToNullString(remark))
+
+	if err != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	_, perr = tx.Exec(insertSQL,
 		ToNullInt64(clinicTriagePatientID),
 		ToNullBool(hasAllergicHistory),
 		ToNullString(allergicHistory),
@@ -186,8 +254,9 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		ToNullInt64(gestationalWeeks),
 		ToNullString(childbearingHistory),
 		ToNullString(remark))
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	if perr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": perr.Error()})
 		return
 	}
 	err = tx.Commit()

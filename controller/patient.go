@@ -321,3 +321,102 @@ func MemberPateintList(ctx iris.Context) {
 	array := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": array, "page_info": pageInfo})
 }
+
+// PersonalMedicalRecordUpsert 完善患者个人诊前病历
+func PersonalMedicalRecordUpsert(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	hasAllergicHistory := ctx.PostValue("has_allergic_history")
+	allergicHistory := ctx.PostValue("allergic_history")
+	personalMedicalHistory := ctx.PostValue("personal_medical_history")
+	familyMedicalHistory := ctx.PostValue("family_medical_history")
+	vaccination := ctx.PostValue("vaccination")
+	menarcheAge := ctx.PostValue("menarche_age")
+	menstrualPeriodStartDay := ctx.PostValue("menstrual_period_start_day")
+	menstrualPeriodEndDay := ctx.PostValue("menstrual_period_end_day")
+	menstrualCycleStartDay := ctx.PostValue("menstrual_cycle_start_day")
+	menstrualCycleEndDay := ctx.PostValue("menstrual_cycle_end_day")
+	menstrualLastDay := ctx.PostValue("menstrual_last_day")
+	gestationalWeeks := ctx.PostValue("gestational_weeks")
+	childbearingHistory := ctx.PostValue("childbearing_history")
+	remark := ctx.PostValue("remark")
+	if patientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	tx, err := model.DB.Begin()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	_, err = tx.Exec("delete from personal_medical_record where patient_id=$1", patientID)
+	if err != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	insertSQL := `insert into personal_medical_record (
+		patient_id,
+		has_allergic_history,
+		allergic_history,
+		personal_medical_history,
+		family_medical_history,
+		vaccination,
+		menarche_age,
+		menstrual_period_start_day,
+		menstrual_period_end_day,
+		menstrual_cycle_start_day,
+		menstrual_cycle_end_day,
+		menstrual_last_day,
+		gestational_weeks,
+		childbearing_history,
+		remark
+	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id;`
+	_, err = tx.Exec(insertSQL,
+		ToNullInt64(patientID),
+		ToNullBool(hasAllergicHistory),
+		ToNullString(allergicHistory),
+		ToNullString(personalMedicalHistory),
+		ToNullString(familyMedicalHistory),
+		ToNullString(vaccination),
+		ToNullInt64(menarcheAge),
+		ToNullString(menstrualPeriodStartDay),
+		ToNullString(menstrualPeriodEndDay),
+		ToNullString(menstrualCycleStartDay),
+		ToNullString(menstrualCycleEndDay),
+		ToNullString(menstrualLastDay),
+		ToNullInt64(gestationalWeeks),
+		ToNullString(childbearingHistory),
+		ToNullString(remark))
+	if err != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// PersonalMedicalRecord 患者个人诊前病历
+func PersonalMedicalRecord(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+
+	if patientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select * from personal_medical_record where id=$1", patientID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询患者诊前病历失败"})
+		return
+	}
+	result := FormatSQLRowToMap(row)
+	ctx.JSON(iris.Map{"code": "200", "msg": "查询成功", "data": result})
+}
