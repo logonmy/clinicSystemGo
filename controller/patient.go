@@ -204,17 +204,15 @@ func PatientUpdate(ctx iris.Context) {
 		return
 	}
 
-	var patientID string
-	err := model.DB.QueryRow(`UPDATE patient set  
-		cert_no=$1,name=$2, birthday=$3, sex=$4, phone=$5, address=$6, profession=$7, remark=$8, patient_channel_id=$9, updated_time=$10
-		where id=$10 RETURNING id`, certNo, name, birthday, sex, phone, address, profession, remark, ToNullInt64(patientChannelID), id, time.Now()).Scan(&patientID)
+	_, err := model.DB.Exec(`UPDATE patient set  
+		cert_no=$1,name=$2, birthday=$3, sex=$4, phone=$5, address=$6, profession=$7, remark=$8, patient_channel_id=$9, updated_time = LOCALTIMESTAMP
+		where id=$10`, certNo, name, birthday, sex, phone, address, profession, remark, ToNullInt64(patientChannelID), id)
+
 	if err != nil {
-		// tx.Rollback()
-		fmt.Println("err2 ===", err)
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "200", "data": patientID})
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
 	return
 }
 
