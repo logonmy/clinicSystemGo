@@ -352,6 +352,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 
 	_, err = tx.Exec("delete from personal_medical_record where patient_id=$1", patientID)
 	if err != nil {
+		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
@@ -390,6 +391,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 		ToNullString(childbearingHistory),
 		ToNullString(remark))
 	if err != nil {
+		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
