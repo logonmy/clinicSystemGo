@@ -1870,6 +1870,7 @@ CREATE TABLE refund_order
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
+
 --药品零售
 CREATE TABLE drug_retail
 (
@@ -1881,6 +1882,30 @@ CREATE TABLE drug_retail
   pay_status boolean  NOT NULL, --支付状态
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   charge_operation_id INTEGER NOT NULL references personnel(id),--收费员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--个人病历
+CREATE TABLE personal_medical_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  has_allergic_history boolean,--是否有过敏
+  allergic_history text,--过敏史
+  personal_medical_history text,--个人病史
+  family_medical_history text,--家族病史
+  vaccination text,--接种疫苗
+  menarche_age integer,--月经初潮年龄
+  menstrual_period_start_day varchar(10),--月经经期开始时间
+  menstrual_period_end_day varchar(10),--月经经期结束时间
+  menstrual_cycle_start_day varchar(10),--月经周期结束时间
+  menstrual_cycle_end_day varchar(10),--月经周期结束时间
+  menstrual_last_day varchar(10),--末次月经时间
+  gestational_weeks integer,--孕周
+  childbearing_history text,--生育史
+  remark VARCHAR(100),
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
