@@ -570,9 +570,9 @@ func RolesByPersonnel(ctx iris.Context) {
 	ccfm.children_function_menu_id,pfm.id,pfm.url,
 	pfm.name,cfm.url,cfm.name,cfm.icon`
 
-	rows, _ := model.DB.Queryx(selectSQL, personnelID)
-	if rows == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
+	rows, err := model.DB.Queryx(selectSQL, personnelID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)

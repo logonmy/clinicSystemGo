@@ -213,11 +213,12 @@ func RoleDetail(ctx iris.Context) {
 		return
 	}
 
-	arows := model.DB.QueryRowx("select id as role_id,name,status from role where id=$1", roleID)
-	if arows == nil {
+	row := model.DB.QueryRowx("select id as role_id,name,status from role where id=$1", roleID)
+	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 		return
 	}
+	role := FormatSQLRowToMap(row)
 	selectSQL := `select 
 	rcf.clinic_function_menu_id,
 	cfm.function_menu_id,
@@ -238,22 +239,24 @@ func RoleDetail(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
 		return
 	}
-	role := FormatSQLRowToMap(arows)
+	roles := FormatSQLRowsToMapArray(rows)
 
-	var funtionmenu []Funtionmenu
-	for rows.Next() {
-		var f Funtionmenu
-		err := rows.StructScan(&f)
-		if err != nil {
-			fmt.Println("err=====", err.Error())
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
-		}
-		funtionmenu = append(funtionmenu, f)
-	}
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	funtionmenu = append(funtionmenu, f)
+	// }
 
-	clinicFunctionMenu := FormatMenu(funtionmenu)
-	role["funtionMenus"] = clinicFunctionMenu
+	// clinicFunctionMenu := FormatMenu(funtionmenu)
+	// role["funtionMenus"] = clinicFunctionMenu
+
+	role["funtionMenus"] = roles
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": role})
 }

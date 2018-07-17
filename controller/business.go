@@ -66,25 +66,26 @@ func MenubarList(ctx iris.Context) {
 	from function_menu
 	where ascription=$1 order by level asc,weight asc`
 
-	rows, _ := model.DB.Queryx(selectSQL, ascription)
+	rows, err := model.DB.Queryx(selectSQL, ascription)
 	if rows == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	var funtionmenu []Funtionmenu
-	for rows.Next() {
-		var f Funtionmenu
-		err := rows.StructScan(&f)
-		if err != nil {
-			fmt.Println("err=====", err.Error())
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
-		}
-		funtionmenu = append(funtionmenu, f)
-	}
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	funtionmenu = append(funtionmenu, f)
+	// }
 
-	result := FormatMenu(funtionmenu)
+	// result := FormatMenu(funtionmenu)
+	result := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 }
@@ -105,28 +106,27 @@ func MenubarListByClinicID(ctx iris.Context) {
 		from function_menu fm
 		left join clinic_function_menu cfm on cfm.function_menu_id = fm.id and cfm.clinic_id = $1 and cfm.status=true
 		where cfm.function_menu_id IS NULL order by fm.level asc,fm.weight asc`
-	rows, _ := model.DB.Queryx(selectSQL, clinicID)
-	if rows == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
+	rows, err := model.DB.Queryx(selectSQL, clinicID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	var funtionmenu []Funtionmenu
-	for rows.Next() {
-		var f Funtionmenu
-		err := rows.StructScan(&f)
-		if err != nil {
-			fmt.Println("err=====", err.Error())
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
-		}
-		formatUnsetMenu := FormatUnsetMenu(f)
-		fmt.Println("formatUnsetMenu=====", formatUnsetMenu)
-		funtionmenu = append(funtionmenu, formatUnsetMenu...)
-	}
-	fmt.Println("funtionmenu=====", funtionmenu)
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	formatUnsetMenu := FormatUnsetMenu(f)
+	// 	funtionmenu = append(funtionmenu, formatUnsetMenu...)
+	// }
 
-	result := FormatMenu(funtionmenu)
+	// result := FormatMenu(funtionmenu)
+	result := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 
@@ -579,19 +579,20 @@ func MenuGetByClinicID(ctx iris.Context) {
 		return
 	}
 
-	var funtionmenu []Funtionmenu
-	for rows.Next() {
-		var f Funtionmenu
-		err := rows.StructScan(&f)
-		if err != nil {
-			fmt.Println("err=====", err.Error())
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
-		}
-		funtionmenu = append(funtionmenu, f)
-	}
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	funtionmenu = append(funtionmenu, f)
+	// }
 
-	result := FormatMenu(funtionmenu)
+	// result := FormatMenu(funtionmenu)
+	result := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 }
