@@ -580,6 +580,31 @@ func FunMenusByPersonnel(ctx iris.Context) {
 
 }
 
+//PersonnelRoles 通过用户查询用户角色
+func PersonnelRoles(ctx iris.Context) {
+	personnelID := ctx.PostValue("id")
+
+	if personnelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	selectSQL := `select r.id as role_id,r.name,r.status,r.created_time from personnel_role pr 
+	left join role r on pr.role_id = r.id
+	where pr.personnel_id = $1 and r.status=true;`
+
+	rows, err := model.DB.Queryx(selectSQL, personnelID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+
+}
+
 // PersonnelWithUsername 有账号的医生礼拜（包含角色）
 func PersonnelWithUsername(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
