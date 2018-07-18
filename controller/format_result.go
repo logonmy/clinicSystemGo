@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"clinicSystemGo/model"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
@@ -86,6 +88,21 @@ type PrescriptionModelItem struct {
 	FetchAddress            interface{} `json:"fetch_address"`
 	Illustration            interface{} `json:"illustration"`
 	SpecialIllustration     interface{} `json:"special_illustration"`
+}
+
+//Funtionmenu 测试
+type Funtionmenu struct {
+	ID                   int64         `json:"function_menu_id" db:"function_menu_id"`
+	ParentID             interface{}   `json:"parent_function_menu_id,omitempty" db:"parent_function_menu_id"`
+	ClinicFunctionMenuID interface{}   `json:"clinic_function_menu_id,omitempty" db:"clinic_function_menu_id"`
+	Name                 string        `json:"menu_name" db:"menu_name"`
+	Level                int64         `json:"level" db:"level"`
+	Ascription           string        `json:"ascription" db:"ascription"`
+	Icon                 interface{}   `json:"icon,omitempty" db:"icon"`
+	Status               bool          `json:"status" db:"status"`
+	Weight               int64         `json:"weight" db:"weight"`
+	URL                  string        `json:"menu_url" db:"menu_url"`
+	List                 []Funtionmenu `json:"list,omitempty" db:"list"`
 }
 
 // FormatSQLRowsToMapArray 格式化数据库返回的数组数据
@@ -304,4 +321,81 @@ func FormatPrescriptionModel(prescriptionModel []map[string]interface{}) []Presc
 		}
 	}
 	return models
+}
+
+// FormatMenu 格式化菜单项
+func FormatMenu(list []Funtionmenu) []Funtionmenu {
+	data := buildData(list)
+	FormatResult := makeTreeCore(0, data)
+	return FormatResult
+}
+
+func buildData(list []Funtionmenu) map[int64]map[int64]Funtionmenu {
+	var data = make(map[int64]map[int64]Funtionmenu)
+	for _, v := range list {
+		id := v.ID
+		fid := v.ParentID
+		if fid == nil {
+			if _, ok := data[0]; !ok {
+				data[0] = make(map[int64]Funtionmenu)
+			}
+			data[0][id] = v
+		} else {
+			if _, ok := data[fid.(int64)]; !ok {
+				data[fid.(int64)] = make(map[int64]Funtionmenu)
+			}
+			data[fid.(int64)][id] = v
+		}
+
+	}
+	return data
+}
+
+func makeTreeCore(index int64, data map[int64]map[int64]Funtionmenu) []Funtionmenu {
+	tmp := make([]Funtionmenu, 0)
+	for id, item := range data[index] {
+		if data[id] != nil {
+			item.List = makeTreeCore(id, data)
+		}
+		tmp = append(tmp, item)
+	}
+	return tmp
+}
+
+// FormatUnsetMenu 格式化未开通菜单项
+func FormatUnsetMenu(functionMenu Funtionmenu) []Funtionmenu {
+	fmt.Println("=======", functionMenu)
+	var unsetMenu []Funtionmenu
+	unsetMenu = append(unsetMenu, functionMenu)
+	if functionMenu.ParentID != nil {
+		fmt.Println("11111111111111111111", functionMenu.ParentID)
+		selectSQL := `select 
+		id as function_menu_id,
+		parent_function_menu_id,
+		name as menu_name,
+		url as menu_url,
+		level,
+		ascription,
+		icon,
+		status,
+		weight
+		from function_menu
+		where id=$1`
+
+		var f Funtionmenu
+		err := model.DB.QueryRowx(selectSQL, functionMenu.ParentID).StructScan(&f)
+		if err == nil {
+			fmt.Println("22222222222", f)
+			unsetMenu = append(unsetMenu, f)
+			if f.ParentID != nil {
+				fmt.Println("333333333333")
+				FormatUnsetMenu(f)
+			}
+		} else {
+			fmt.Println("err====", err.Error())
+			return unsetMenu
+		}
+	}
+	fmt.Println("44444444", unsetMenu)
+	return unsetMenu
 }

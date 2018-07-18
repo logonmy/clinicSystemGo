@@ -193,8 +193,7 @@ func DrugInstockRecord(ctx iris.Context) {
 		from drug_instock_record ir
 		left join personnel p on ir.instock_operation_id = p.id
 		left join personnel vp on ir.verify_operation_id = vp.id
-		where storehouse_id=:storehouse_id
-		order by ir.instock_date desc`
+		where storehouse_id=:storehouse_id`
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
@@ -232,7 +231,7 @@ func DrugInstockRecord(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, _ := model.DB.NamedQuery(selectSQL+"order by ir.instock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})

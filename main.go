@@ -51,6 +51,7 @@ func main() {
 		clinic.Post("/update", controller.ClinicUpdate)
 		clinic.Post("/getByID", controller.ClinicGetByID)
 		clinic.Post("/code", controller.GetClinicCode)
+		clinic.Post("/test", controller.GetClinicCode)
 	}
 
 	department := app.Party("/department", crs).AllowMethods(iris.MethodOptions)
@@ -67,11 +68,15 @@ func main() {
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
-		personnel.Post("/RolesByPersonnel", controller.RolesByPersonnel)
+		personnel.Post("/FunMenusByPersonnel", controller.FunMenusByPersonnel)
 		personnel.Post("/update", controller.PersonnelUpdate)
 		personnel.Post("/delete", controller.PersonnelDelete)
 		personnel.Post("/PersonnelWithAuthorizationList", controller.PersonnelWithAuthorizationList)
 		personnel.Post("/PersonnelAuthorizationAllocation", controller.PersonnelAuthorizationAllocation)
+		personnel.Post("/PersonnelWithUsername", controller.PersonnelWithUsername)
+		personnel.Post("/UpdatePersonnelStatus", controller.UpdatePersonnelStatus)
+		personnel.Post("/UpdatePersonnelUsername", controller.UpdatePersonnelUsername)
+		personnel.Post("/PersonnelRoles", controller.PersonnelRoles)
 	}
 
 	// visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
@@ -109,6 +114,9 @@ func main() {
 		patient.Post("/getByCertNo", controller.PatientGetByCertNo)
 		patient.Post("/getByKeyword", controller.PatientsGetByKeyword)
 		patient.Post("/MemberPateintList", controller.MemberPateintList)
+		patient.Post("/PersonalMedicalRecordUpsert", controller.PersonalMedicalRecordUpsert)
+		patient.Post("/PersonalMedicalRecord", controller.PersonalMedicalRecord)
+		patient.Post("/GetLastBodySign", controller.GetLastBodySign)
 	}
 
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)

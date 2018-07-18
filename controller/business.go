@@ -15,37 +15,19 @@ import (
 //MenubarCreate 添加功能菜单栏
 func MenubarCreate(ctx iris.Context) {
 	url := ctx.PostValue("url")
+	level := ctx.PostValue("level")
+	icon := ctx.PostValue("icon")
 	name := ctx.PostValue("name")
+	weight := ctx.PostValue("weight")
 	ascription := ctx.PostValue("ascription")
 	parentFunctionMenuID := ctx.PostValue("parent_function_menu_id")
-	if url == "" || name == "" || ascription == "" {
+	if url == "" || name == "" || ascription == "" || level == "" || weight == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	insertSQL := "insert into parent_function_menu (url, ascription, name) VALUES ($1, $2, $3) RETURNING id"
-	if parentFunctionMenuID != "" {
-		row := model.DB.QueryRowx("select id from parent_function_menu where id=$1", parentFunctionMenuID)
-		if row == nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "创建失败"})
-			return
-		}
-		parentFunctionMenu := FormatSQLRowToMap(row)
-		_, ok := parentFunctionMenu["id"]
-		if !ok {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "父级菜单ID不存在"})
-			return
-		}
-		insertSQL = "insert into children_function_menu (url, name, parent_function_menu_id) VALUES ($1, $2, $3) RETURNING id"
-		_, err := model.DB.Exec(insertSQL, url, name, parentFunctionMenuID)
-		if err != nil {
-			fmt.Println("err1 ===", err)
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
-			return
-		}
-		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": nil})
-		return
-	}
-	_, err := model.DB.Exec(insertSQL, url, ascription, name)
+	insertSQL := "insert into function_menu (level, url, ascription, name, icon, weight, parent_function_menu_id) VALUES ($1, $2, $3, $4, $5, $6, $7)"
+
+	_, err := model.DB.Exec(insertSQL, level, url, ascription, name, ToNullString(icon), weight, ToNullInt64(parentFunctionMenuID))
 	if err != nil {
 		fmt.Println("err1 ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -61,38 +43,92 @@ func MenubarList(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	selectSQL := `select p.id as parent_id,p.url as parent_url,c.url as menu_url,p.name as parent_name,c.name menu_name,c.id as function_menu_id from children_function_menu c 
-		left join parent_function_menu p on p.id = c.parent_function_menu_id`
-	if ascription != "" {
-		selectSQL += " where p.ascription='" + ascription + "'"
-	}
-	rows, _ := model.DB.Queryx(selectSQL)
+
+	// selectSQL := `select * from function_menu where ascription=$1 order by level asc,weight asc`
+
+	// rows, _ := model.DB.Queryx(selectSQL, ascription)
+	// if rows == nil {
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
+	// 	return
+	// }
+	// result := FormatSQLRowsToMapArray(rows)
+
+	selectSQL := `select 
+	id as function_menu_id,
+	parent_function_menu_id,
+	name as menu_name,
+	url as menu_url,
+	level,
+	ascription,
+	icon,
+	status,
+	weight
+	from function_menu
+	where ascription=$1 order by level asc,weight asc`
+
+	rows, err := model.DB.Queryx(selectSQL, ascription)
 	if rows == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	parentFunctionMenu := FormatSQLRowsToMapArray(rows)
-	menus := FormatFuntionmenus(parentFunctionMenu)
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	funtionmenu = append(funtionmenu, f)
+	// }
+
+	// result := FormatMenu(funtionmenu)
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 }
 
 //MenubarListByClinicID 获取诊所未开通的菜单项
 func MenubarListByClinicID(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
-	selectSQL := `select p.id as parent_id,p.url as parent_url,c.url as menu_url,p.name as parent_name,c.name menu_name,c.id as function_menu_id from children_function_menu c 
-		left join parent_function_menu p on p.id = c.parent_function_menu_id 
-		left join clinic_children_function_menu r on r.children_function_menu_id = c.id and r.clinic_id = $1 and r.status=true
-		where r.children_function_menu_id IS NULL`
-	rows, _ := model.DB.Queryx(selectSQL, clinicID)
-	if rows == nil {
-		ctx.JSON(iris.Map{"code": "1", "msg": "查询失败"})
+	selectSQL := `select 
+		fm.id as function_menu_id,
+		fm.name as menu_name,
+		fm.url as menu_url,
+		fm.level,
+		fm.weight,
+		fm.ascription,
+		fm.status,
+		fm.icon,
+		fm.parent_function_menu_id
+		from function_menu fm
+		left join clinic_function_menu cfm on cfm.function_menu_id = fm.id and cfm.clinic_id = $1 and cfm.status=true
+		where cfm.function_menu_id IS NULL order by fm.level asc,fm.weight asc`
+	rows, err := model.DB.Queryx(selectSQL, clinicID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	parentFunctionMenu := FormatSQLRowsToMapArray(rows)
-	menus := FormatFuntionmenus(parentFunctionMenu)
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	formatUnsetMenu := FormatUnsetMenu(f)
+	// 	funtionmenu = append(funtionmenu, formatUnsetMenu...)
+	// }
+
+	// result := FormatMenu(funtionmenu)
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 
 }
 
@@ -130,27 +166,72 @@ func BusinessAssign(ctx iris.Context) {
 		return
 	}
 	var sets []string
+	// if len(results) > 0 {
+	// 	for _, v := range results {
+	// 		childrenFunctionMenuID := v["function_menu_id"]
+	// 		crow := model.DB.QueryRowx("select id from children_function_menu where id=$1 limit 1", childrenFunctionMenuID)
+	// 		if crow == nil {
+	// 			ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+	// 			return
+	// 		}
+	// 		childrenFunctionMenu := FormatSQLRowToMap(crow)
+	// 		_, cok := childrenFunctionMenu["id"]
+	// 		if !cok {
+	// 			ctx.JSON(iris.Map{"code": "-1", "msg": "菜单项不存在"})
+	// 			return
+	// 		}
+	// 		sets = append(sets, childrenFunctionMenuID)
+	// 	}
+	// 	setStr := strings.Join(sets, ",")
+	// 	insertSQL := `insert into clinic_children_function_menu (clinic_id, children_function_menu_id)
+	// 	select ` + clinicID + `, id from children_function_menu
+	// 	where id in (` + setStr +
+	// 		`)and id not in (select children_function_menu_id from clinic_children_function_menu where clinic_id = ` + clinicID + `);`
+
+	// 	_, errtx1 := tx.Exec(insertSQL)
+	// 	if errtx1 != nil {
+	// 		tx.Rollback()
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": errtx1.Error()})
+	// 		return
+	// 	}
+
+	// 	_, errtx2 := tx.Exec("update clinic_children_function_menu set status=false where clinic_id=$1", clinicID)
+	// 	if errtx2 != nil {
+	// 		tx.Rollback()
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": errtx2.Error()})
+	// 		return
+	// 	}
+	// 	updateSQL := "update clinic_children_function_menu set status=true where clinic_id=$1 and children_function_menu_id in (" + setStr + ")"
+	// 	fmt.Println("updateSQL===", updateSQL)
+	// 	_, errtx3 := tx.Exec(updateSQL, clinicID)
+	// 	if errtx3 != nil {
+	// 		tx.Rollback()
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": errtx3.Error()})
+	// 		return
+	// 	}
+	// }
+
 	if len(results) > 0 {
 		for _, v := range results {
-			childrenFunctionMenuID := v["function_menu_id"]
-			crow := model.DB.QueryRowx("select id from children_function_menu where id=$1 limit 1", childrenFunctionMenuID)
+			functionMenuID := v["function_menu_id"]
+			crow := model.DB.QueryRowx("select id from function_menu where id=$1 limit 1", functionMenuID)
 			if crow == nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
 			}
-			childrenFunctionMenu := FormatSQLRowToMap(crow)
-			_, cok := childrenFunctionMenu["id"]
+			functionMenu := FormatSQLRowToMap(crow)
+			_, cok := functionMenu["id"]
 			if !cok {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "菜单项不存在"})
 				return
 			}
-			sets = append(sets, childrenFunctionMenuID)
+			sets = append(sets, functionMenuID)
 		}
 		setStr := strings.Join(sets, ",")
-		insertSQL := `insert into clinic_children_function_menu (clinic_id, children_function_menu_id) 
-		select ` + clinicID + `, id from children_function_menu 
+		insertSQL := `insert into clinic_function_menu (clinic_id, function_menu_id) 
+		select ` + clinicID + `, id from function_menu 
 		where id in (` + setStr +
-			`)and id not in (select children_function_menu_id from clinic_children_function_menu where clinic_id = ` + clinicID + `);`
+			`)and id not in (select function_menu_id from clinic_function_menu where clinic_id = ` + clinicID + `);`
 
 		_, errtx1 := tx.Exec(insertSQL)
 		if errtx1 != nil {
@@ -159,13 +240,13 @@ func BusinessAssign(ctx iris.Context) {
 			return
 		}
 
-		_, errtx2 := tx.Exec("update clinic_children_function_menu set status=false where clinic_id=$1", clinicID)
+		_, errtx2 := tx.Exec("update clinic_function_menu set status=false where clinic_id=$1", clinicID)
 		if errtx2 != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": errtx2.Error()})
 			return
 		}
-		updateSQL := "update clinic_children_function_menu set status=true where clinic_id=$1 and children_function_menu_id in (" + setStr + ")"
+		updateSQL := "update clinic_function_menu set status=true where clinic_id=$1 and function_menu_id in (" + setStr + ")"
 		fmt.Println("updateSQL===", updateSQL)
 		_, errtx3 := tx.Exec(updateSQL, clinicID)
 		if errtx3 != nil {
@@ -233,20 +314,20 @@ func AdminCreate(ctx iris.Context) {
 		}
 
 		for _, v := range results {
-			childrenFunctionMenuID := v["function_menu_id"]
-			crow := model.DB.QueryRowx("select id from children_function_menu where id=$1 limit 1", childrenFunctionMenuID)
+			functionMenuID := v["function_menu_id"]
+			crow := model.DB.QueryRowx("select id from function_menu where id=$1", functionMenuID)
 			if crow == nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
 			}
-			childrenFunctionMenu := FormatSQLRowToMap(crow)
-			_, cok := childrenFunctionMenu["id"]
+			functionMenu := FormatSQLRowToMap(crow)
+			_, cok := functionMenu["id"]
 			if !cok {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "菜单项不存在"})
 				return
 			}
-			sql := "INSERT INTO admin_function_menu (children_function_menu_id, admin_id) VALUES ($1,$2)"
-			_, err = tx.Exec(sql, ToNullInt64(childrenFunctionMenuID), ToNullInt64(adminID))
+			sql := "INSERT INTO admin_function_menu (function_menu_id, admin_id) VALUES ($1,$2)"
+			_, err = tx.Exec(sql, ToNullInt64(functionMenuID), ToNullInt64(adminID))
 			if err != nil {
 				tx.Rollback()
 				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -333,21 +414,21 @@ func AdminUpdate(ctx iris.Context) {
 		}
 
 		for _, v := range results {
-			childrenFunctionMenuID := v["function_menu_id"]
-			crow := model.DB.QueryRowx("select id from children_function_menu where id=$1 limit 1", childrenFunctionMenuID)
+			functionMenuID := v["function_menu_id"]
+			crow := model.DB.QueryRowx("select id from function_menu where id=$1 limit 1", functionMenuID)
 			if crow == nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 				return
 			}
-			childrenFunctionMenu := FormatSQLRowToMap(crow)
-			_, cok := childrenFunctionMenu["id"]
+			functionMenu := FormatSQLRowToMap(crow)
+			_, cok := functionMenu["id"]
 			if !cok {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "菜单项不存在"})
 				return
 			}
-			sql := "INSERT INTO admin_function_menu (children_function_menu_id, admin_id) VALUES ($1,$2)"
+			sql := "INSERT INTO admin_function_menu (function_menu_id, admin_id) VALUES ($1,$2)"
 			fmt.Println(sql)
-			_, err = tx.Exec(sql, ToNullInt64(childrenFunctionMenuID), ToNullInt64(adminID))
+			_, err = tx.Exec(sql, ToNullInt64(functionMenuID), ToNullInt64(adminID))
 			if err != nil {
 				tx.Rollback()
 				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -431,19 +512,41 @@ func AdminGetByID(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 		return
 	}
-	selectSQL := `select cf.id as function_menu_id,pf.id as parent_id,pf.url as parent_url,pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from admin_function_menu af
-	left join children_function_menu cf on cf.id = af.children_function_menu_id
-	left join parent_function_menu pf on pf.id = cf.parent_function_menu_id
-	where af.admin_id=$1`
+	selectSQL := `select 
+	fm.id as function_menu_id,
+	fm.name as menu_name,
+	fm.url as menu_url,
+	fm.level,
+	fm.weight,
+	fm.ascription,
+	fm.status,
+	fm.icon,
+	fm.parent_function_menu_id
+	from admin_function_menu af
+	left join function_menu fm on fm.id = af.function_menu_id
+	where af.admin_id=$1 order by fm.level asc,fm.weight asc`
 	rows, err2 := model.DB.Queryx(selectSQL, adminID)
 	if err2 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
 		return
 	}
 	admin := FormatSQLRowToMap(arows)
-	adminFunctionMenu := FormatSQLRowsToMapArray(rows)
-	menus := FormatFuntionmenus(adminFunctionMenu)
-	admin["funtionMenus"] = menus
+
+	var funtionmenu []Funtionmenu
+	for rows.Next() {
+		var f Funtionmenu
+		err := rows.StructScan(&f)
+		if err != nil {
+			fmt.Println("err=====", err.Error())
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+		funtionmenu = append(funtionmenu, f)
+	}
+
+	adminFunctionMenu := FormatMenu(funtionmenu)
+
+	admin["funtionMenus"] = adminFunctionMenu
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": admin})
 }
 
@@ -455,18 +558,41 @@ func MenuGetByClinicID(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select ccf.id as clinic_function_menu_id,ccf.children_function_menu_id as function_menu_id,pf.id as parent_id,pf.url as parent_url,
-	pf.name as parent_name,cf.url as menu_url,cf.name as menu_name from clinic_children_function_menu ccf
-	left join children_function_menu cf on cf.id = ccf.children_function_menu_id
-	left join parent_function_menu pf on pf.id = cf.parent_function_menu_id
-	where ccf.clinic_id=$1 and ccf.status=true`
+	selectSQL := `select 
+	cfm.id as clinic_function_menu_id,
+	cfm.function_menu_id as function_menu_id,
+	fm.name as menu_name,
+	fm.url as menu_url,
+	fm.level,
+	fm.weight,
+	fm.ascription,
+	fm.status,
+	fm.icon,
+	fm.parent_function_menu_id
+	from clinic_function_menu cfm
+	left join function_menu fm on fm.id = cfm.function_menu_id
+	where cfm.clinic_id=$1 and cfm.status=true order by fm.level asc,fm.weight asc`
+
 	rows, err2 := model.DB.Queryx(selectSQL, clinicID)
 	if err2 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
 		return
 	}
-	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
-	menus := FormatFuntionmenus(clinicFunctionMenu)
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	funtionmenu = append(funtionmenu, f)
+	// }
+
+	// result := FormatMenu(funtionmenu)
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 }

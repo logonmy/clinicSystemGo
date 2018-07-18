@@ -25,6 +25,7 @@ type Personnel struct {
 	ClinicID      interface{} `json:"clinic_id" db:"clinic_id"`
 	Weight        interface{} `json:"weight" db:"weight"`
 	IsAppointment interface{} `json:"is_appointment" db:"is_appointment"`
+	Status        interface{} `json:"status" db:"status"`
 }
 
 // PersonnelLogin 登录
@@ -397,6 +398,9 @@ func PersonnelUpdate(ctx iris.Context) {
 	if personnel.Weight != nil {
 		s = append(s, "weight=:weight")
 	}
+	if personnel.Status != nil {
+		s = append(s, "status=:status")
+	}
 	if personnel.Password != nil {
 		md5Ctx := md5.New()
 		md5Ctx.Write([]byte(personnel.Password.(string)))
@@ -548,8 +552,8 @@ func PersonnelDelete(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
-//RolesByPersonnel 通过用户查询角色
-func RolesByPersonnel(ctx iris.Context) {
+//FunMenusByPersonnel 通过用户查询用户菜单
+func FunMenusByPersonnel(ctx iris.Context) {
 	personnelID := ctx.PostValue("id")
 
 	if personnelID == "" {
@@ -557,27 +561,162 @@ func RolesByPersonnel(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select rcfm.clinic_children_function_menu_id as clinic_function_menu_id,
-	ccfm.children_function_menu_id as function_menu_id,pfm.id as parent_id,pfm.url as parent_url,
-	pfm.name as parent_name,cfm.url as menu_url,cfm.name as menu_name,cfm.icon
-	from personnel_role pr
-	left join role_clinic_function_menu rcfm on rcfm.role_id = pr.role_id
-	left join clinic_children_function_menu ccfm on ccfm.id = rcfm.clinic_children_function_menu_id and ccfm.status=true
-	left join children_function_menu cfm on cfm.id = ccfm.children_function_menu_id
-	left join parent_function_menu pfm on pfm.id = cfm.parent_function_menu_id
-	where pr.personnel_id=$1 
-	group by rcfm.clinic_children_function_menu_id,
-	ccfm.children_function_menu_id,pfm.id,pfm.url,
-	pfm.name,cfm.url,cfm.name,cfm.icon`
+	selectSQL := `select DISTINCT fm.parent_function_menu_id, fm.id as function_menu_id, fm.url as menu_url, fm.name as menu_name, fm.weight, fm.level, fm.icon from personnel_role pr 
+	left join role_clinic_function_menu rcfm on pr.role_id = rcfm.role_id
+	left join clinic_function_menu cfm on rcfm.clinic_function_menu_id = cfm.id
+	left join function_menu fm on cfm.function_menu_id = fm.id 
+	where cfm.status = true and rcfm.status = true and pr.personnel_id = $1
+	order by fm.level, fm.weight asc `
 
-	rows, _ := model.DB.Queryx(selectSQL, personnelID)
-	if rows == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "查询失败"})
+	rows, err := model.DB.Queryx(selectSQL, personnelID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
-	menus := FormatFuntionmenus(clinicFunctionMenu)
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
+	result := FormatSQLRowsToMapArray(rows)
 
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+
+}
+
+//PersonnelRoles 通过用户查询用户角色
+func PersonnelRoles(ctx iris.Context) {
+	personnelID := ctx.PostValue("id")
+
+	if personnelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	selectSQL := `select r.id as role_id,r.name,r.status,r.created_time from personnel_role pr 
+	left join role r on pr.role_id = r.id
+	where pr.personnel_id = $1 and r.status=true;`
+
+	rows, err := model.DB.Queryx(selectSQL, personnelID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+
+}
+
+// PersonnelWithUsername 有账号的医生礼拜（包含角色）
+func PersonnelWithUsername(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	keyword := ctx.PostValue("keyword")
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	var queryOptions = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+	}
+
+	countSQL := `select count(*) as total from personnel where username is not null and deleted_time is null and clinic_id = :clinic_id`
+	rowSQL := `select p.id as personnel_id, p.username, p.name as personnel_name, d.name as department_name, p.status, dp.type as personnel_type, string_agg (r.name, '，') as role_name from personnel p 
+	left join department_personnel dp on dp.personnel_id = p.id
+	left join department d on dp.department_id = d.id 
+	left join personnel_role pr on p.id = pr.personnel_id
+	left join role r on pr.role_id = r.id
+	where p.username is not null and p.deleted_time is null and p.clinic_id = :clinic_id `
+
+	if keyword != "" {
+		countSQL += ` and (name ~*:keyword or username ~*:keyword) `
+		rowSQL += ` and (p.name ~*:keyword or p.username ~*:keyword) `
+	}
+
+	total, err2 := model.DB.NamedQuery(countSQL, queryOptions)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err3 := model.DB.NamedQuery(rowSQL+` group by (p.id, p.username, p.name, d.name, p.status, dp.type)
+	order by p.id asc offset :offset limit :limit`, queryOptions)
+	if err3 != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err3.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+// UpdatePersonnelStatus 修改账号生效状态
+func UpdatePersonnelStatus(ctx iris.Context) {
+	personnelID := ctx.PostValue("personnel_id")
+	status := ctx.PostValue("status")
+	if personnelID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	querySQL := `update personnel set status = $1 where id = $2`
+
+	_, err := model.DB.Exec(querySQL, status, personnelID)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "修改成功"})
+}
+
+// UpdatePersonnelUsername 修改用户名密码
+func UpdatePersonnelUsername(ctx iris.Context) {
+	personnelID := ctx.PostValue("personnel_id")
+	username := ctx.PostValue("username")
+	password := ctx.PostValue("password")
+	if personnelID == "" || username == "" || password == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	md5Ctx := md5.New()
+	md5Ctx.Write([]byte(password))
+	passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
+
+	querySQL := `update personnel set username = $1, password = $2 where id = $3`
+
+	_, err := model.DB.Exec(querySQL, username, passwordMd5, personnelID)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "修改成功"})
 }
