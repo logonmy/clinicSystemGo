@@ -661,7 +661,7 @@ func UpdatePersonnelStatus(ctx iris.Context) {
 
 	querySQL := `update personnel set status = $1 where id = $2`
 
-	_, err := model.DB.Exec(querySQL, personnelID, status)
+	_, err := model.DB.Exec(querySQL, status, personnelID)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
