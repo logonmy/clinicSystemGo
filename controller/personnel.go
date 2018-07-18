@@ -649,3 +649,25 @@ func PersonnelWithUsername(ctx iris.Context) {
 	results := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
+
+// UpdatePersonnelStatus 修改账号生效状态
+func UpdatePersonnelStatus(ctx iris.Context) {
+	personnelID := ctx.PostValue("personnel_id")
+	status := ctx.PostValue("status")
+	if personnelID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	querySQL := `update personnel set status = $1 where id = $2`
+
+	_, err := model.DB.Exec(querySQL, personnelID, status)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "修改成功"})
+
+}
