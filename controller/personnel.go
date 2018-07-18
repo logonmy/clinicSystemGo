@@ -25,6 +25,7 @@ type Personnel struct {
 	ClinicID      interface{} `json:"clinic_id" db:"clinic_id"`
 	Weight        interface{} `json:"weight" db:"weight"`
 	IsAppointment interface{} `json:"is_appointment" db:"is_appointment"`
+	Status        interface{} `json:"status" db:"status"`
 }
 
 // PersonnelLogin 登录
@@ -396,6 +397,9 @@ func PersonnelUpdate(ctx iris.Context) {
 	}
 	if personnel.Weight != nil {
 		s = append(s, "weight=:weight")
+	}
+	if personnel.Status != nil {
+		s = append(s, "status=:status")
 	}
 	if personnel.Password != nil {
 		md5Ctx := md5.New()
