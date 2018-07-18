@@ -618,7 +618,7 @@ func PersonnelWithUsername(ctx iris.Context) {
 	}
 
 	countSQL := `select count(*) as total from personnel where username is not null and deleted_time is null and clinic_id = :clinic_id`
-	rowSQL := `select p.id as personnel_id, p.username, p.name as personnel_name, d.name as department_name, p.status, string_agg (r.name, '，') as role_name from personnel p 
+	rowSQL := `select p.id as personnel_id, p.username, p.name as personnel_name, d.name as department_name, p.status, dp.type as personnel_type, string_agg (r.name, '，') as role_name from personnel p 
 	left join department_personnel dp on dp.personnel_id = p.id
 	left join department d on dp.department_id = d.id 
 	left join personnel_role pr on p.id = pr.personnel_id
@@ -640,7 +640,7 @@ func PersonnelWithUsername(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err3 := model.DB.NamedQuery(rowSQL+` group by (p.id, p.username, p.name, d.name, p.status)
+	rows, err3 := model.DB.NamedQuery(rowSQL+` group by (p.id, p.username, p.name, d.name, p.status, dp.type)
 	order by p.id asc offset :offset limit :limit`, queryOptions)
 	if err3 != nil {
 		ctx.JSON(iris.Map{"code": "-2", "msg": err3.Error()})
