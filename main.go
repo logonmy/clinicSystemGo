@@ -68,11 +68,14 @@ func main() {
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
-		personnel.Post("/RolesByPersonnel", controller.RolesByPersonnel)
+		personnel.Post("/FunMenusByPersonnel", controller.FunMenusByPersonnel)
 		personnel.Post("/update", controller.PersonnelUpdate)
 		personnel.Post("/delete", controller.PersonnelDelete)
 		personnel.Post("/PersonnelWithAuthorizationList", controller.PersonnelWithAuthorizationList)
 		personnel.Post("/PersonnelAuthorizationAllocation", controller.PersonnelAuthorizationAllocation)
+		personnel.Post("/PersonnelWithUsername", controller.PersonnelWithUsername)
+		personnel.Post("/UpdatePersonnelStatus", controller.UpdatePersonnelStatus)
+		personnel.Post("/PersonnelRoles", controller.PersonnelRoles)
 	}
 
 	// visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
