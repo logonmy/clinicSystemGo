@@ -575,3 +575,73 @@ func RolesByPersonnel(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 
 }
+
+// PersonnelWithUsername 有账号的医生礼拜（包含角色）
+func PersonnelWithUsername(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	keyword := ctx.PostValue("keyword")
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	var queryOptions = map[string]interface{}{
+		"clinic_id": ToNullInt64(clinicID),
+		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+	}
+
+	countSQL := `select count(*) as total from personnel where username is not null and deleted_time is null and clinic_id = :clinic_id`
+	rowSQL := `select p.id as personnel_id, p.username, p.name as personnel_name, d.name as department_name, p.status, string_agg (r.name, '，') as role_name from personnel p 
+	left join department_personnel dp on dp.personnel_id = p.id
+	left join department d on dp.department_id = d.id 
+	left join personnel_role pr on p.id = pr.personnel_id
+	left join role r on pr.role_id = r.id
+	where p.username is not null and p.deleted_time is null and p.clinic_id = :clinic_id `
+
+	if keyword != "" {
+		countSQL += ` and (name ~*:keyword or username ~*:keyword) `
+		rowSQL += ` and (p.name ~*:keyword or p.username ~*:keyword) `
+	}
+
+	total, err2 := model.DB.NamedQuery(countSQL, queryOptions)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err3 := model.DB.NamedQuery(rowSQL+` group by (p.id, p.username, p.name, d.name, p.status)
+	order by p.id asc offset :offset limit :limit`, queryOptions)
+	if err3 != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err3.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}

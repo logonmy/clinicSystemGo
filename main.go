@@ -73,6 +73,7 @@ func main() {
 		personnel.Post("/delete", controller.PersonnelDelete)
 		personnel.Post("/PersonnelWithAuthorizationList", controller.PersonnelWithAuthorizationList)
 		personnel.Post("/PersonnelAuthorizationAllocation", controller.PersonnelAuthorizationAllocation)
+		personnel.Post("/PersonnelWithUsername", controller.PersonnelWithUsername)
 	}
 
 	// visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
