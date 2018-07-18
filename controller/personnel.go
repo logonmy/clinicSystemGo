@@ -557,27 +557,21 @@ func RolesByPersonnel(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select rcfm.clinic_children_function_menu_id as clinic_function_menu_id,
-	ccfm.children_function_menu_id as function_menu_id,pfm.id as parent_id,pfm.url as parent_url,
-	pfm.name as parent_name,cfm.url as menu_url,cfm.name as menu_name,cfm.icon
-	from personnel_role pr
-	left join role_clinic_function_menu rcfm on rcfm.role_id = pr.role_id
-	left join clinic_children_function_menu ccfm on ccfm.id = rcfm.clinic_children_function_menu_id and ccfm.status=true
-	left join children_function_menu cfm on cfm.id = ccfm.children_function_menu_id
-	left join parent_function_menu pfm on pfm.id = cfm.parent_function_menu_id
-	where pr.personnel_id=$1 
-	group by rcfm.clinic_children_function_menu_id,
-	ccfm.children_function_menu_id,pfm.id,pfm.url,
-	pfm.name,cfm.url,cfm.name,cfm.icon`
+	selectSQL := `select DISTINCT fm.parent_function_menu_id, fm.id as function_menu_id, fm.url as menu_url, fm.name as menu_name, fm.weight, fm.level, fm.icon from personnel_role pr 
+	left join role_clinic_function_menu rcfm on pr.role_id = rcfm.role_id
+	left join clinic_function_menu cfm on rcfm.clinic_function_menu_id = cfm.id
+	left join function_menu fm on cfm.function_menu_id = fm.id 
+	where cfm.status = true and rcfm.status = true and pr.personnel_id = $1
+	order by fm.level, fm.weight asc `
 
 	rows, err := model.DB.Queryx(selectSQL, personnelID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	clinicFunctionMenu := FormatSQLRowsToMapArray(rows)
-	menus := FormatFuntionmenus(clinicFunctionMenu)
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": menus})
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 
 }
