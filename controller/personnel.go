@@ -552,8 +552,8 @@ func PersonnelDelete(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
 }
 
-//RolesByPersonnel 通过用户查询角色
-func RolesByPersonnel(ctx iris.Context) {
+//FunMenusByPersonnel 通过用户查询用户菜单
+func FunMenusByPersonnel(ctx iris.Context) {
 	personnelID := ctx.PostValue("id")
 
 	if personnelID == "" {

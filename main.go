@@ -68,7 +68,7 @@ func main() {
 		personnel.Post("/create", controller.PersonnelCreate)
 		personnel.Post("/getById", controller.PersonnelGetByID)
 		personnel.Post("/list", controller.PersonnelList)
-		personnel.Post("/RolesByPersonnel", controller.RolesByPersonnel)
+		personnel.Post("/FunMenusByPersonnel", controller.FunMenusByPersonnel)
 		personnel.Post("/update", controller.PersonnelUpdate)
 		personnel.Post("/delete", controller.PersonnelDelete)
 		personnel.Post("/PersonnelWithAuthorizationList", controller.PersonnelWithAuthorizationList)
