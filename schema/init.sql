@@ -1866,18 +1866,54 @@ CREATE TABLE refund_order
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
---药品零售
-CREATE TABLE drug_retail
+
+--药品零售(临时表)
+CREATE TABLE drug_retail_temp 
 (
-  group_no varchar(30) NOT NULL UNIQUE,--组号，一次零售的编码
+  out_trade_no varchar(30) NOT NULL,--交易号，一次交易的编码
   clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--药品id
-  drug_stock_id INTEGER NOT NULL references drug_stock(id),--库存id
   amount INTEGER NOT NULL, --药品数量
   total_fee INTEGER NOT NULL, --总费用
-  pay_status boolean  NOT NULL, --支付状态
-  operation_id INTEGER NOT NULL references personnel(id),--操作员id
-  charge_operation_id INTEGER NOT NULL references personnel(id),--收费员id
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP
+);
+
+--药品零售支付订单
+CREATE TABLE drug_retail_pay_record 
+(
+  out_trade_no varchar(30) NOT NULL UNIQUE,--交易号，一次交易的编码
+  pay_method varchar(6) NOT NULL,--支付方式， wechat - 微信，alipay-支付宝 ,bank - 银行, cash- 现金
+  auth_code varchar(20) , --授权码
+  status INTEGER NOT NULL DEFAULT -1, --订单状态, -1--待确认，0-待支付， 2--已支付， 3-支付失败
+  total_money INTEGER NOT NULL, --交易总金额金额
+  discount_money INTEGER NOT NULL DEFAULT 0 ,--折扣金额
+  medical_money INTEGER NOT NULL DEFAULT 0 ,--医保金额
+  balance_money INTEGER NOT NULL,--实收金额
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  pay_time timestamp with time zone,
+  operation_id INTEGER NOT NULL references personnel(id)--操作员id
+);
+
+--药品零售退费订单
+CREATE TABLE drug_retail_pay_record 
+(
+  out_trade_no varchar(30) NOT NULL,--交易号，一次交易的编码
+  refund_trade_no varchar(30) NOT NULL UNIQUE,--退费交易号
+  status INTEGER NOT NULL DEFAULT -1, --订单状态, -1--待确认， 2--退费成功， 3-退费失败
+  refund_money INTEGER NOT NULL, --交易总金额金额
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  refund_time timestamp with time zone,
+  operation_id INTEGER NOT NULL references personnel(id)--操作员id
+);
+
+
+--药品零售记录表
+CREATE TABLE drug_retail
+(
+  out_trade_no varchar(30) NOT NULL,--交易号，一次交易的编码
+  refund_trade_no varchar(30), --退费编号
+  clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--药品id
+  drug_stock_id INTEGER NOT NULL references drug_stock(id),
+  amount INTEGER NOT NULL, --药品数量
+  total_fee INTEGER NOT NULL, --总费用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP
 );
