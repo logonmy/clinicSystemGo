@@ -406,8 +406,6 @@ func RecptionPatientList(ctx iris.Context) {
 		querySQL += " and ctp.doctor_id=:personnel_id "
 	}
 
-	fmt.Println("countSQL ========= ", countSQL, querySQL)
-
 	total, err2 := model.DB.NamedQuery(countSQL, queryMap)
 	if err2 != nil {
 		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
