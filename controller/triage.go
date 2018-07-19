@@ -296,6 +296,137 @@ func TriagePatientList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
 
+// RecptionPatientList 接诊就诊人列表
+func RecptionPatientList(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	personnelID := ctx.PostValue("personnel_id")
+	queryType := ctx.PostValue("query_type") // 待接诊 0, 已接诊 1
+	startDate := ctx.PostValue("startDate")
+	endDate := ctx.PostValue("endDate")
+	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicID == "" || personnelID == "" || queryType == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
+		return
+	}
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+	statusStart := 40
+	statusEnd := 90
+	if queryType == "0" {
+		statusStart = 20
+		statusEnd = 30
+	}
+
+	queryMap := map[string]interface{}{
+		"clinic_id":    ToNullInt64(clinicID),
+		"personnel_id": ToNullInt64(personnelID),
+		"keyword":      ToNullString(keyword),
+		"status_start": statusStart,
+		"status_end":   statusEnd,
+		"startDate":    startDate,
+		"endDate":      endDate,
+		"offset":       ToNullInt64(offset),
+		"limit":        ToNullInt64(limit),
+	}
+
+	row := model.DB.QueryRowx(`select * from personnel where id = $1`, personnelID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "医生不存在"})
+		return
+	}
+	personnel := FormatSQLRowToMap(row)
+	isClinicAdmin, ok := personnel["is_clinic_admin"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "医生不存在"})
+		return
+	}
+
+	countSQL := `select count(*) as total from clinic_triage_patient ctp left join clinic_patient cp  on ctp.clinic_patient_id = cp.id
+	left join department d on ctp.department_id = d.id
+	left join personnel doc on ctp.doctor_id = doc.id
+	left join patient p on cp.patient_id = p.id
+	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
+	left join personnel triage_personnel on triage_personnel.id = register.personnel_id
+	where cp.clinic_id = :clinic_id and ctp.status BETWEEN :status_start and :status_end `
+
+	querySQL := `select 
+	ctp.id as clinic_triage_patient_id, 
+	ctp.clinic_patient_id as clinic_patient_id,
+	ctp.updated_time, 
+	ctp.created_time as register_time, 
+	triage_personnel.name as register_personnel_name, 
+	ctp.status, 
+	ctp.visit_date,
+	ctp.register_type,
+	cp.patient_id,
+	p.name as patient_name, 
+	p.birthday,
+	p.sex, 
+	p.phone,
+	doc.name as doctor_name,
+	d.name as department_name
+	from clinic_triage_patient ctp left join clinic_patient cp  on ctp.clinic_patient_id = cp.id
+	left join department d on ctp.department_id = d.id
+	left join personnel doc on ctp.doctor_id = doc.id
+	left join patient p on cp.patient_id = p.id
+	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
+	left join personnel triage_personnel on triage_personnel.id = register.personnel_id
+	where cp.clinic_id = :clinic_id and ctp.status BETWEEN :status_start and :status_end `
+
+	if queryType == "1" {
+		if startDate != "" && endDate != "" {
+			countSQL += " and ctp.created_time between date :startDate - integer '1' and date :endDate + integer '1'"
+			querySQL += " and ctp.created_time between date :startDate - integer '1' and date :endDate + integer '1'"
+		}
+	}
+	if keyword != "" {
+		countSQL += ` and (p.cert_no ~:keyword or p.name ~:keyword or p.phone ~:keyword) `
+		querySQL += ` and (p.cert_no ~:keyword or p.name ~:keyword or p.phone ~:keyword) `
+	}
+
+	if !isClinicAdmin.(bool) {
+		countSQL += " and ctp.doctor_id=:personnel_id "
+		querySQL += " and ctp.doctor_id=:personnel_id "
+	}
+
+	fmt.Println("countSQL ========= ", countSQL, querySQL)
+
+	total, err2 := model.DB.NamedQuery(countSQL, queryMap)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
+		return
+	}
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err1 := model.DB.NamedQuery(querySQL+" order by ctp.id DESC offset :offset limit :limit", queryMap)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+
+}
+
 //PersonnelChoose 分诊、换诊
 func PersonnelChoose(ctx iris.Context) {
 	doctorVisitScheduleID := ctx.PostValue("doctor_visit_schedule_id")
@@ -454,11 +585,17 @@ func TriageReception(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	row := model.DB.QueryRowx("select id,status from clinic_triage_patient where id=$1", clinicTriagePatientID)
+	row := model.DB.QueryRowx("select id,doctor_id, status from clinic_triage_patient where id=$1", clinicTriagePatientID)
 	clinicTriagePatient := FormatSQLRowToMap(row)
 	_, ok := clinicTriagePatient["id"]
 	if !ok {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "就诊人不存在"})
+		return
+	}
+	doctorID := clinicTriagePatient["doctor_id"]
+	doctorIDStr := strconv.Itoa(int(doctorID.(int64)))
+	if triagePersonnelID != doctorIDStr {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "该患者您不能接诊"})
 		return
 	}
 	fmt.Println("clinicTriagePatient", clinicTriagePatient)
@@ -469,7 +606,7 @@ func TriageReception(ctx iris.Context) {
 		return
 	}
 	tx, err := model.DB.Begin()
-	_, err = tx.Exec("update clinic_triage_patient set status=30,updated_time=LOCALTIMESTAMP where id=$1", clinicTriagePatientID)
+	_, err = tx.Exec("update clinic_triage_patient set status=30,doctor_id=$1, updated_time=LOCALTIMESTAMP where id=$2", triagePersonnelID, clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("接诊错误", err)
 		tx.Rollback()

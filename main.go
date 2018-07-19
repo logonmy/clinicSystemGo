@@ -124,6 +124,7 @@ func main() {
 		triage.Post("/register", controller.TriageRegister)
 		triage.Post("/TriagePatientDetail", controller.TriagePatientDetail)
 		triage.Post("/patientlist", controller.TriagePatientList)
+		triage.Post("/RecptionPatientList", controller.RecptionPatientList)
 		triage.Post("/getById", controller.PatientGetByID)
 		triage.Post("/personnelList", controller.TriagePersonnelList)
 		triage.Post("/completeBodySign", controller.TriageCompleteBodySign)
