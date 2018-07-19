@@ -392,8 +392,8 @@ func RecptionPatientList(ctx iris.Context) {
 
 	if queryType == "1" {
 		if startDate != "" && endDate != "" {
-			countSQL += " and ctp.created_time between date :startDate - integer '1' and date :endDate + integer '1'"
-			querySQL += " and ctp.created_time between date :startDate - integer '1' and date :endDate + integer '1'"
+			countSQL += " and ctp.created_time between date(:startDate)-integer '1' and date(:endDate) + integer '1'"
+			querySQL += " and ctp.created_time between date(:startDate)-integer '1' and date(:endDate) + integer '1'"
 		}
 	}
 	if keyword != "" {
