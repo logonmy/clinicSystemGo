@@ -605,7 +605,7 @@ func PersonnelRoles(ctx iris.Context) {
 
 }
 
-// PersonnelWithUsername 有账号的医生礼拜（包含角色）
+// PersonnelWithUsername 有账号的医生列表（包含角色）
 func PersonnelWithUsername(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	offset := ctx.PostValue("offset")

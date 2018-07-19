@@ -182,10 +182,16 @@ func RoleList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 
-	sql := `SELECT id as role_id,name,status,created_time FROM role where clinic_id=:clinic_id`
+	sql := `SELECT r.id as role_id,r.name,r.status,r.created_time, string_agg( fm.name,  ',') as function_menu_name FROM role r 
+	left join role_clinic_function_menu rcfm on r.id = rcfm.role_id 
+	left join clinic_function_menu cfm on rcfm.clinic_function_menu_id = cfm.id
+	left join function_menu fm on fm.id = cfm.function_menu_id
+	 where r.clinic_id=:clinic_id and r.status = true
+	 group by (r.id, r.name, r.status, r.created_time)
+	 order by r.created_time desc`
 
 	if keyword != "" {
-		sql += ` and name ~*:keyword`
+		sql += ` and r.name ~*:keyword`
 	}
 
 	var queryOptions = map[string]interface{}{
