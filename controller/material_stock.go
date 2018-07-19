@@ -460,7 +460,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 		"buy_price",
 		"stock_amount"}
 
-	updateSQL := "update drug_stock set stock_amount=$1,buy_price=$2,updated_time=LOCALTIMESTAMP where id=$3"
+	updateSQL := "update material_stock set stock_amount=$1,buy_price=$2,updated_time=LOCALTIMESTAMP where id=$3"
 	setStr := strings.Join(sets, ",")
 	insertSQL := "insert into material_stock (" + setStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
 
@@ -472,7 +472,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 		buyPrice := v["buy_price"].(int64)
 		effDate := v["eff_date"].(time.Time).Format("2006-01-02")
 		drow := model.DB.QueryRowx(`select id,stock_amount from material_stock where storehouse_id=$1 and clinic_material_id=$2 
-			and supplier_name=$3 and serial=$4 and eff_date=$5 limit 1`, storehouseID, clinicMaterialID, supplierName, serial, effDate)
+			and supplier_name=$3 and serial=$4 and eff_date=$5 limit 1 FOR UPDATE`, storehouseID, clinicMaterialID, supplierName, serial, effDate)
 		if drow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 			return
@@ -1044,7 +1044,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 		materialStockID := v["material_stock_id"].(int64)
 		outstockAmount := v["outstock_amount"].(int64)
 
-		drow := model.DB.QueryRowx("select id,stock_amount from material_stock where id=$1 limit 1", materialStockID)
+		drow := model.DB.QueryRowx("select id,stock_amount from material_stock where id=$1 limit 1 FOR UPDATE", materialStockID)
 		if drow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 			return
