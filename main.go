@@ -75,6 +75,7 @@ func main() {
 		personnel.Post("/PersonnelAuthorizationAllocation", controller.PersonnelAuthorizationAllocation)
 		personnel.Post("/PersonnelWithUsername", controller.PersonnelWithUsername)
 		personnel.Post("/UpdatePersonnelStatus", controller.UpdatePersonnelStatus)
+		personnel.Post("/UpdatePersonnelUsername", controller.UpdatePersonnelUsername)
 		personnel.Post("/PersonnelRoles", controller.PersonnelRoles)
 	}
 

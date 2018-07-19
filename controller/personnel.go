@@ -694,5 +694,29 @@ func UpdatePersonnelStatus(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "修改成功"})
+}
 
+// UpdatePersonnelUsername 修改用户名密码
+func UpdatePersonnelUsername(ctx iris.Context) {
+	personnelID := ctx.PostValue("personnel_id")
+	username := ctx.PostValue("username")
+	password := ctx.PostValue("password")
+	if personnelID == "" || username == "" || password == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	md5Ctx := md5.New()
+	md5Ctx.Write([]byte(password))
+	passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
+
+	querySQL := `update personnel set username = $1, password = $2 where id = $3`
+
+	_, err := model.DB.Exec(querySQL, username, passwordMd5, personnelID)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "修改成功"})
 }
