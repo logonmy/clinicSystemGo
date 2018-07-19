@@ -1898,7 +1898,7 @@ CREATE TABLE drug_retail_pay_record
 );
 
 --药品零售退费订单
-CREATE TABLE drug_retail_pay_record 
+CREATE TABLE drug_retail_refund_record 
 (
   out_trade_no varchar(30) NOT NULL,--交易号，一次交易的编码
   refund_trade_no varchar(30) NOT NULL UNIQUE,--退费交易号

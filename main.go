@@ -484,6 +484,12 @@ func main() {
 		hcPay.Post("/DownloadBill", controller.DownloadBill)
 	}
 
+	drugRetail := app.Party("/drugRetail", crs).AllowMethods(iris.MethodOptions)
+	{
+		drugRetail.Post("/createOrder", controller.CreateDrugRetailOrder)
+		drugRetail.Post("/createPaymentOrder", controller.CreateDrugRetailPaymentOrder)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
