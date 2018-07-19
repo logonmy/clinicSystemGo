@@ -46,9 +46,9 @@ func CreateHcOrder(ctx iris.Context) {
 
 	// outTradeNo := hcpay.CreateTradeNo(20)
 
-	requestIP := "47.93.206.157"
-	// requestIP := ctx.Host()
-	// requestIP = requestIP[0:strings.LastIndex(requestIP, ":")]
+	// requestIP := "47.93.206.157"
+	requestIP := ctx.Host()
+	requestIP = requestIP[0:strings.LastIndex(requestIP, ":")]
 	noncestr := hcpay.GenerateNonceString(32)
 
 	var m map[string]string
