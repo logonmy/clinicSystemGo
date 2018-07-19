@@ -1829,21 +1829,18 @@ CREATE TABLE treatment_patient_record
 --支付记录
 CREATE TABLE pay_order
 (
-  trade_no varchar(100),--平台交易号
+  trade_no varchar(100),--支付平台交易号
   out_trade_no varchar(100) UNIQUE NOT NULL,--系统交易号
   total_fee INTEGER NOT NULL CHECK(total_fee > 0),--交易金额
   body text NOT NULL,--交易描述
-  pay_state boolean NOT NULL DEFAULT false,--支付状态
   original_data text NOT NULL,--原始数据
-  refund_state varchar(2) NOT NULL DEFAULT '10',--退款状态 10 未退款 20 部分退款 30 全退
-  refund_fee_total INTEGER NOT NULL DEFAULT 0 CHECK(refund_fee_total <= total_fee),--累计退款金额
+  order_status varchar(20) NOT NULL DEFAULT 'NOTPAY',
+  --订单状态  NOTPAY 未支付; SUCCESS 已支付; REFUND 转入退费; CLOSE 已关闭; CANCEL 已撤销; USERPAYING 用户支付中; FAIL 失败; UNKONWN 未知;
 
   subject varchar(100),--交易标题
-  buyer_account varchar(100),--购买者账号
-  seller_account varchar(100),--收款方账号
-
   openid varchar(100),--用户微信openid/支付用户渠道ID
-  trade_type varchar(10),--交易类型
+  business_type varchar(10) NOT NULL,--业务类型
+  trade_type varchar(10) NOT NULL,--交易类型
   --weixin_f2f –微信当面付 alipay_f2f –支付宝当面付 mybank_weixin_f2f -网商微信当面付 mybank_alipay_f2f -网商支付宝当面付
   --weixin_wap -微信wap支付 weixin_h5 -微信wap支付 weixin_app -微信app支付 weixin_qr -微信qr支付 
   --alipay_wap -支付宝wap支付 alipay_qr -支付宝qr支付 alipay_app -支付宝app支付 
@@ -1863,9 +1860,12 @@ CREATE TABLE refund_order
   out_trade_no varchar(100) NOT NULL references pay_order(out_trade_no),--支付记录系统交易号
   refund_fee INTEGER NOT NULL CHECK(refund_fee > 0),--退款金额
   refund_reason text, --退款原因
-  out_refund_no varchar(100) NOT NULL, --退款请求交易号
-  refund_trade_no varchar(100) NOT NULL, --平台退款流水号
+  refund_status varchar(20) NOT NULL DEFAULT 'PROCESSING',
+  --退款状态 PROCESSING 退款处理中; SUCCESS 退款成功; FAIL 退款失败
+  out_refund_no varchar(100) NOT NULL, --系统退款请求交易号
+  refund_trade_no varchar(100), --支付平台退款流水号
   refund_result text, --退款结果
+  refund_success_time varchar(14),--退款完成时间 格式为yyyyMMddHHmmss
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

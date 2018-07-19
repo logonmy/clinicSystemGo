@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kataras/iris"
@@ -36,13 +37,14 @@ func CreateHcOrder(ctx iris.Context) {
 	deviceInfo := ctx.PostValue("device_info")
 	merchantID := ctx.PostValue("merchant_id")
 	orderType := ctx.PostValue("order_type")
+	outTradeNo := ctx.PostValue("out_trade_no")
 
-	if payMode == "" || totalFee == "" || body == "" || merchantID == "" || orderType == "" {
+	if outTradeNo == "" || payMode == "" || totalFee == "" || body == "" || merchantID == "" || orderType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	outTradeNo := hcpay.CreateTradeNo(20)
+	// outTradeNo := hcpay.CreateTradeNo(20)
 
 	requestIP := "47.93.206.157"
 	// requestIP := ctx.Host()
@@ -98,7 +100,6 @@ func QueryHcOrder(ctx iris.Context) {
 	var tradeNo string
 	var openID string
 	var payTime string
-	payState := false
 	var m map[string]string
 	m = make(map[string]string, 0)
 	m["service_code"] = "hcpay.trade.orderquery"
@@ -111,8 +112,22 @@ func QueryHcOrder(ctx iris.Context) {
 	sign := hcpay.GetSign(m, partnerKey)
 	m["sign"] = sign
 
+	selectSQL := `select out_trade_no from pay_order where out_trade_no=$1`
 	updateSQL := `update pay_order set 
-		trade_no=$2,pay_state=$3,openid=$4,pay_time=$5 where out_trade_no=$1`
+		trade_no=$2,order_status=$3,openid=$4,pay_time=$5,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
+
+	row := model.DB.QueryRowx(selectSQL, outTradeNo)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "支付订单查询失败"})
+		return
+	}
+
+	payOrder := FormatSQLRowToMap(row)
+	_, ok := payOrder["out_trade_no"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "支付订单不存在"})
+		return
+	}
 
 	resData := request("POST", m)
 
@@ -122,15 +137,15 @@ func QueryHcOrder(ctx iris.Context) {
 		tradeNo = resData["transaction_id"].(string)
 		openID = resData["openid"].(string)
 		payTime = resData["payed_time"].(string)
-		if resData["trade_status"] == "SUCCESS" {
-			payState = true
-		}
+		payState := resData["trade_status"]
+
 		_, err := model.DB.Exec(updateSQL, outTradeNo, tradeNo, payState, openID, payTime)
 		if err != nil {
-			fmt.Println("err1 ===", err)
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			fmt.Println("err ===", err)
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
+
 		ctx.JSON(iris.Map{"code": "200", "data": resData})
 	}
 }
@@ -142,15 +157,19 @@ func HcRefund(ctx iris.Context) {
 	refundFeeStr := ctx.PostValue("refund_fee")
 	refundReason := ctx.PostValue("refund_reason")
 	merchantID := ctx.PostValue("merchant_id")
+	outRefundNo := ctx.PostValue("out_refund_no")
 
-	if outTradeNo == "" || merchantID == "" || refundFeeStr == "" {
+	outRefundNo = hcpay.CreateTradeNo(20)
+
+	if outRefundNo == "" || outTradeNo == "" || merchantID == "" || refundFeeStr == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
 	refundFee, _ := strconv.ParseInt(refundFeeStr, 10, 64)
+	refundFeeTotal := int64(0)
 
-	crow := model.DB.QueryRowx("select out_trade_no,total_fee,refund_fee_total from pay_order where out_trade_no=$1 limit 1", outTradeNo)
+	crow := model.DB.QueryRowx("select out_trade_no,total_fee from pay_order where out_trade_no=$1 limit 1", outTradeNo)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "退款失败"})
 		return
@@ -161,9 +180,24 @@ func HcRefund(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "支付订单不存在"})
 		return
 	}
-	var refundState string
+
+	rrow := model.DB.QueryRowx(`select out_trade_no,sum(refund_fee) as refund_fee_total 
+		from refund_order 
+		where out_trade_no=$1 and refund_status in ('PROCESSING','SUCCESS')
+		group by out_trade_no`, outTradeNo)
+	if rrow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "退款失败"})
+		return
+	}
+	refundOrder := FormatSQLRowToMap(rrow)
+
+	_, ok := refundOrder["out_trade_no"]
+	if ok {
+		refundFeeTotal = refundOrder["refund_fee_total"].(int64)
+	}
+
 	totalFee := payOrder["total_fee"].(int64)
-	refundFeeTotal := payOrder["refund_fee_total"].(int64)
+
 	if refundFee < 0 {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "退款金额小于0"})
 		return
@@ -172,16 +206,8 @@ func HcRefund(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "总退款金额大于支付金额"})
 		return
 	}
-	if totalFee > refundFee+refundFeeTotal {
-		refundState = "20"
-	}
-	if totalFee == refundFee+refundFeeTotal {
-		refundState = "30"
-	}
 
 	noncestr := hcpay.GenerateNonceString(32)
-	outRefundNo := hcpay.CreateTradeNo(20)
-	var refundTradeNo string
 
 	var m map[string]string
 	m = make(map[string]string, 0)
@@ -197,44 +223,39 @@ func HcRefund(ctx iris.Context) {
 	sign := hcpay.GetSign(m, partnerKey)
 	m["sign"] = sign
 
-	updateSQL := `update pay_order set 
-	refund_state=$2,refund_fee_total=refund_fee_total+$3 where out_trade_no=$1`
+	// updateSQL := `update pay_order set
+	// refund_fee_total=refund_fee_total+$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
 
 	insertSQL := `INSERT INTO refund_order (
-		out_trade_no,refund_fee,refund_reason,out_refund_no,refund_trade_no,refund_result) 
+		out_trade_no,refund_fee,refund_reason,out_refund_no,refund_status) 
 		VALUES 
-		($1,$2,$3,$4,$5,$6)`
+		($1,$2,$3,$4,$5)`
+
+	updateRefundSQL := `update refund_order set 
+	refund_status=$2,refund_result=$3,refund_trade_no=$4,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
+
+	_, err := model.DB.Exec(insertSQL, outTradeNo, refundFee, refundReason, outRefundNo, "PROCESSING")
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
 
 	resData := request("POST", m)
+	mjson, _ := json.Marshal(resData)
+	refundResult := string(mjson)
 
 	if resData["code"] == "error" {
+		_, err2 := model.DB.Exec("update refund_order set refund_status=$2,refund_result=$3 where out_trade_no=$1", outTradeNo, "FAIL", refundResult)
+		if err2 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+			return
+		}
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
 	} else {
-		mjson, _ := json.Marshal(m)
-		refundResult := string(mjson)
-		refundTradeNo = resData["refund_id"].(string)
-		tx, txErr := model.DB.Beginx()
-		if txErr != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": txErr.Error()})
-			return
-		}
-		_, err1 := tx.Exec(updateSQL, outTradeNo, refundState, refundFee)
-		if err1 != nil {
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
-			return
-		}
-
-		_, erru := tx.Exec(insertSQL, outTradeNo, refundFee, refundReason, outRefundNo, refundTradeNo, refundResult)
-		if erru != nil {
-			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": erru.Error()})
-			return
-		}
-
-		erre := tx.Commit()
-		if erre != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": erre.Error()})
+		refundTradeNo := resData["refund_id"]
+		_, err2 := model.DB.Exec(updateRefundSQL, outTradeNo, "SUCCESS", refundResult, refundTradeNo)
+		if err2 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 			return
 		}
 
@@ -250,7 +271,7 @@ func QueryHcRefund(ctx iris.Context) {
 	refundID := ctx.PostValue("refund_trade_no")
 	merchantID := ctx.PostValue("merchant_id")
 
-	if merchantID == "" || (outTradeNo == "" && transactionNo == "" && outRefundNo == "" && refundID == "") {
+	if merchantID == "" || outRefundNo == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -270,11 +291,37 @@ func QueryHcRefund(ctx iris.Context) {
 	sign := hcpay.GetSign(m, partnerKey)
 	m["sign"] = sign
 
+	crow := model.DB.QueryRowx("select out_refund_no from refund_order where out_refund_no=$1 limit 1", outRefundNo)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "退款查询失败"})
+		return
+	}
+	refundOrder := FormatSQLRowToMap(crow)
+	_, cok := refundOrder["out_refund_no"]
+	if !cok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "退款订单不存在"})
+		return
+	}
+
 	resData := request("POST", m)
+
+	updateRefundSQL := `update refund_order set
+	refund_status=$2,refund_result=$3,refund_trade_no=$4,refund_success_time=$5,updated_time=LOCALTIMESTAMP where out_refund_no=$1`
 
 	if resData["code"] == "error" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
 	} else {
+		mjson, _ := json.Marshal(resData)
+		refundResult := string(mjson)
+		refundTradeNo := resData["refund_id_0"]
+		refundStatus := resData["refund_status_0"]
+		refundSuccessTime := resData["refund_success_time_0"]
+
+		_, err2 := model.DB.Exec(updateRefundSQL, outRefundNo, refundStatus, refundResult, refundTradeNo, refundSuccessTime)
+		if err2 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+			return
+		}
 		ctx.JSON(iris.Map{"code": "200", "data": resData})
 	}
 }
@@ -301,11 +348,35 @@ func HcOrderClose(ctx iris.Context) {
 	sign := hcpay.GetSign(m, partnerKey)
 	m["sign"] = sign
 
+	selectSQL := `select out_trade_no from pay_order where out_trade_no=$1`
+	updateSQL := `update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
+
+	row := model.DB.QueryRowx(selectSQL, outTradeNo)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "支付订单查询失败"})
+		return
+	}
+
+	payOrder := FormatSQLRowToMap(row)
+	_, ok := payOrder["out_trade_no"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "支付订单不存在"})
+		return
+	}
+
 	resData := request("POST", m)
 
 	if resData["code"] == "error" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
 	} else {
+
+		_, err := model.DB.Exec(updateSQL, outTradeNo, "CLOSE")
+		if err != nil {
+			fmt.Println("err ===", err)
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+
 		ctx.JSON(iris.Map{"code": "200", "data": resData})
 	}
 }
@@ -313,26 +384,25 @@ func HcOrderClose(ctx iris.Context) {
 //FaceToFace 当面付
 func FaceToFace(ctx iris.Context) {
 	payMode := ctx.PostValue("pay_mode")
+	businessType := ctx.PostValue("business_type")
 	totalFee := ctx.PostValue("total_fee")
 	body := ctx.PostValue("body")
 	goodsDetail := ctx.PostValue("goods_detail")
 	deviceInfo := ctx.PostValue("device_info")
 	authCode := ctx.PostValue("auth_code")
 	merchantID := ctx.PostValue("merchant_id")
+	outTradeNo := ctx.PostValue("out_trade_no")
 
-	if payMode == "" || totalFee == "" || body == "" || merchantID == "" || authCode == "" {
+	// outTradeNo = hcpay.CreateTradeNo(20)
+
+	if outTradeNo == "" || businessType == "" || payMode == "" || totalFee == "" || body == "" || merchantID == "" || authCode == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	var tradeNo string
-	var openID string
-	var payTime string
-	var originalData string
-	outTradeNo := hcpay.CreateTradeNo(20)
 
-	requestIP := "47.93.206.157"
-	// requestIP := ctx.Host()
-	// requestIP = requestIP[0:strings.LastIndex(requestIP, ":")]
+	// requestIP := "47.93.206.157"
+	requestIP := ctx.Host()
+	requestIP = requestIP[0:strings.LastIndex(requestIP, ":")]
 	noncestr := hcpay.GenerateNonceString(32)
 
 	var m map[string]string
@@ -354,32 +424,49 @@ func FaceToFace(ctx iris.Context) {
 	m["sign"] = sign
 
 	mjson, _ := json.Marshal(m)
-	originalData = string(mjson)
+	originalData := string(mjson)
+
+	insertSQL := `INSERT INTO pay_order (
+		out_trade_no,total_fee,body,order_status,original_data,trade_type,business_type) 
+		VALUES 
+		($1,$2,$3,$4,$5,$6,$7)`
+
+	updateSQL := `update pay_order set 
+	trade_no=$2,order_status=$3,openid=$4,pay_time=$5 where out_trade_no=$1`
+
+	_, err := model.DB.Exec(insertSQL, outTradeNo, totalFee, body, "NOTPAY", originalData, payMode, businessType)
+	if err != nil {
+		fmt.Println("err ===", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
 
 	resData := request("POST", m)
-	insertSQL := `INSERT INTO pay_order (
-		trade_no,out_trade_no,total_fee,body,pay_state,original_data,openid,trade_type,pay_time) 
-		VALUES 
-		($1,$2,$3,$4,$5,$6,$7,$8,$9)`
 
 	if resData["code"] == "error" {
-		_, err := model.DB.Exec(insertSQL, tradeNo, outTradeNo, totalFee, body, false, originalData, openID, payMode, payTime)
-		if err != nil {
-			fmt.Println("err1 ===", err)
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		if resData["data"] != nil && resData["data"].(string) == "USERPAYING" {
+			_, err := model.DB.Exec("update pay_order set order_status=$2 where out_trade_no=$1", outTradeNo, "USERPAYING")
+			if err != nil {
+				fmt.Println("err ===", err)
+				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+				return
+			}
+			ctx.JSON(iris.Map{"code": "2", "msg": resData["msg"]})
 			return
 		}
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
 	} else {
-		tradeNo = resData["transaction_id"].(string)
-		openID = resData["openid"].(string)
-		payTime = resData["payed_time"].(string)
-		_, err := model.DB.Exec(insertSQL, tradeNo, outTradeNo, totalFee, body, true, originalData, openID, payMode, payTime)
+		tradeNo := resData["transaction_id"]
+		openID := resData["openid"]
+		payTime := resData["payed_time"]
+
+		_, err := model.DB.Exec(updateSQL, outTradeNo, tradeNo, "SUCCESS", openID, payTime)
 		if err != nil {
-			fmt.Println("err1 ===", err)
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			fmt.Println("err ===", err)
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
+
 		ctx.JSON(iris.Map{"code": "200", "data": resData})
 	}
 }
@@ -407,11 +494,34 @@ func FaceToFaceCancel(ctx iris.Context) {
 	sign := hcpay.GetSign(m, partnerKey)
 	m["sign"] = sign
 
+	selectSQL := `select out_trade_no from pay_order where out_trade_no=$1`
+	updateSQL := `update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
+
+	row := model.DB.QueryRowx(selectSQL, outTradeNo)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "支付订单查询失败"})
+		return
+	}
+
+	payOrder := FormatSQLRowToMap(row)
+	_, ok := payOrder["out_trade_no"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "支付订单不存在"})
+		return
+	}
+
 	resData := request("POST", m)
 
 	if resData["code"] == "error" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
 	} else {
+		_, err := model.DB.Exec(updateSQL, outTradeNo, "CLOSE")
+		if err != nil {
+			fmt.Println("err ===", err)
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+
 		ctx.JSON(iris.Map{"code": "200", "data": resData})
 	}
 }
@@ -489,6 +599,9 @@ func request(method string, m map[string]string) map[string]interface{} {
 	if results["return_code"] == "0" {
 		if results["result_code"] == "0" {
 			return results
+		}
+		if results["result_code"] == "2" {
+			return map[string]interface{}{"code": "error", "msg": results["result_msg"], "data": "USERPAYING"}
 		}
 		return map[string]interface{}{"code": "error", "msg": results["result_msg"]}
 	}
