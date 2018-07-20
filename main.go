@@ -475,14 +475,14 @@ func main() {
 
 	hcPay := app.Party("/hcPay", crs).AllowMethods(iris.MethodOptions)
 	{
-		hcPay.Post("/CreateHcOrder", controller.CreateHcOrder)
-		hcPay.Post("/QueryHcOrder", controller.QueryHcOrder)
-		hcPay.Post("/HcRefund", controller.HcRefund)
-		hcPay.Post("/QueryHcRefund", controller.QueryHcRefund)
-		hcPay.Post("/HcOrderClose", controller.HcOrderClose)
-		hcPay.Post("/FaceToFace", controller.FaceToFace)
-		hcPay.Post("/FaceToFaceCancel", controller.FaceToFaceCancel)
-		hcPay.Post("/DownloadBill", controller.DownloadBill)
+		hcPay.Post("/CreateHcOrder", controller.CreateHcOrderWeb)
+		hcPay.Post("/QueryHcOrder", controller.QueryHcOrderWeb)
+		hcPay.Post("/HcRefund", controller.HcRefundWeb)
+		hcPay.Post("/QueryHcRefund", controller.QueryHcRefundWeb)
+		hcPay.Post("/HcOrderClose", controller.HcOrderCloseWeb)
+		hcPay.Post("/FaceToFace", controller.FaceToFaceWeb)
+		hcPay.Post("/FaceToFaceCancel", controller.FaceToFaceCancelWeb)
+		hcPay.Post("/DownloadBill", controller.DownloadBillWeb)
 	}
 
 	// http://localhost:8080
