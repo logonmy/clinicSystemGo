@@ -444,7 +444,7 @@ func DrugInstockCheck(ctx iris.Context) {
 	instockRecordItems := FormatSQLRowsToMapArray(rows)
 	fmt.Println("====", instockRecordItems)
 
-	tx, err := model.DB.Begin()
+	tx, err := model.DB.Beginx()
 
 	if err != nil {
 		fmt.Println("err ===", err)
@@ -473,7 +473,7 @@ func DrugInstockCheck(ctx iris.Context) {
 		buyPrice := v["buy_price"].(int64)
 		effDate := v["eff_date"].(time.Time).Format("2006-01-02")
 
-		drow := model.DB.QueryRowx(`select id,stock_amount from drug_stock where storehouse_id=$1 and clinic_drug_id=$2 
+		drow := tx.QueryRowx(`select id,stock_amount from drug_stock where storehouse_id=$1 and clinic_drug_id=$2 
 			and supplier_name=$3 and serial=$4 and eff_date=$5 limit 1 FOR UPDATE`, storehouseID, clinicDrugID, supplierName, serial, effDate)
 		if drow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
@@ -1029,7 +1029,7 @@ func DrugOutstockCheck(ctx iris.Context) {
 	}
 	outstockRecordItems := FormatSQLRowsToMapArray(rows)
 
-	tx, err := model.DB.Begin()
+	tx, err := model.DB.Beginx()
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
@@ -1049,7 +1049,7 @@ func DrugOutstockCheck(ctx iris.Context) {
 	for _, v := range outstockRecordItems {
 		drugStockID := v["drug_stock_id"].(int64)
 		outstockAmount := v["outstock_amount"].(int64)
-		drow := model.DB.QueryRowx("select id,stock_amount from drug_stock where id=$1 limit 1 FOR UPDATE", drugStockID)
+		drow := tx.QueryRowx("select id,stock_amount from drug_stock where id=$1 limit 1 FOR UPDATE", drugStockID)
 		if drow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 			return

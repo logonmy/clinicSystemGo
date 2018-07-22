@@ -147,7 +147,7 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 	}
 
 	if authCode == "" && (payMethod == "alipay" || payMethod == "wechat") {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少认证吗"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少认证码"})
 		return
 	}
 
@@ -304,19 +304,18 @@ func updateDrugStock(tx *sqlx.Tx, clinicDrugID int64, amount int64, outTradeNo s
 		}
 
 		return nil
-	} else {
-		_, err := tx.Exec("update drug_stock set 0 where id = $1", rowMap["id"])
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-
-		_, errIn := tx.Exec("insert into drug_retail (out_trade_no,clinic_drug_id,drug_stock_id,amount,total_fee) VALUES ($1,$2,$3,$4,$5)", outTradeNo, clinicDrugID, rowMap["id"], stockAmount, price*stockAmount)
-		if errIn != nil {
-			tx.Rollback()
-			return errIn
-		}
-
-		return updateDrugStock(tx, clinicDrugID, amount-stockAmount, outTradeNo, price)
 	}
+	_, err := tx.Exec("update drug_stock set 0 where id = $1", rowMap["id"])
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, errIn := tx.Exec("insert into drug_retail (out_trade_no,clinic_drug_id,drug_stock_id,amount,total_fee) VALUES ($1,$2,$3,$4,$5)", outTradeNo, clinicDrugID, rowMap["id"], stockAmount, price*stockAmount)
+	if errIn != nil {
+		tx.Rollback()
+		return errIn
+	}
+
+	return updateDrugStock(tx, clinicDrugID, amount-stockAmount, outTradeNo, price)
 }
