@@ -2,6 +2,7 @@ package main
 
 import (
 	"clinicSystemGo/controller"
+	"clinicSystemGo/lib/mission"
 	"fmt"
 	"time"
 
@@ -37,6 +38,9 @@ func main() {
 	app.Handle("GET", "/", func(ctx iris.Context) {
 		ctx.HTML("<h1>Welcome</h1>")
 	})
+
+	//定时任务
+	mission.StartMission()
 
 	file := app.Party("/file", crs).AllowMethods(iris.MethodOptions)
 	{
@@ -477,6 +481,7 @@ func main() {
 	{
 		hcPay.Post("/CreateHcOrder", controller.CreateHcOrderWeb)
 		hcPay.Post("/QueryHcOrder", controller.QueryHcOrderWeb)
+		hcPay.Post("/QueryHcOrderTest", controller.QueryHcOrderTest)
 		hcPay.Post("/HcRefund", controller.HcRefundWeb)
 		hcPay.Post("/QueryHcRefund", controller.QueryHcRefundWeb)
 		hcPay.Post("/HcOrderClose", controller.HcOrderCloseWeb)

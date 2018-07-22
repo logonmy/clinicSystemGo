@@ -1835,11 +1835,12 @@ CREATE TABLE pay_order
   body text NOT NULL,--交易描述
   original_data text NOT NULL,--原始数据
   order_status varchar(20) NOT NULL DEFAULT 'NOTPAY',
-  --订单状态  NOTPAY 未支付; SUCCESS 已支付; REFUND 转入退费; CLOSE 已关闭; CANCEL 已撤销; USERPAYING 用户支付中; FAIL 失败; UNKONWN 未知;
+  --订单状态  NOTPAY 未支付; USERPAYING 用户支付中; SUCCESS 已支付; REFUND 转入退费; CLOSE 已关闭/已撤销; FAIL 失败; UNKONWN 未知;
 
   subject varchar(100),--交易标题
   openid varchar(100),--用户微信openid/支付用户渠道ID
   business_type varchar(10) NOT NULL,--业务类型
+  merchant_id varchar(5) NOT NULL,--支付机构的商户号类型 wx ali
   trade_type varchar(10) NOT NULL,--交易类型
   --weixin_f2f –微信当面付 alipay_f2f –支付宝当面付 mybank_weixin_f2f -网商微信当面付 mybank_alipay_f2f -网商支付宝当面付
   --weixin_wap -微信wap支付 weixin_h5 -微信wap支付 weixin_app -微信app支付 weixin_qr -微信qr支付 

@@ -14,6 +14,7 @@ import (
 
 var partnerID = "GZHXDMD"
 var partnerKey = "C1F013D2B90E45E9995E16A3411A6910"
+
 var hcMerchantID = map[string]string{"wx": "1260939901", "ali": "2017081008129270"}
 var hcOrdertype = map[string]string{"normal": "hcpay.trade.unifiedorder", "public": "hcpay.trade.registerorder"}
 
@@ -64,14 +65,14 @@ func FaceToFace(outTradeNo string, authCode string, merchantID string, payMode s
 	originalData := string(mjson)
 
 	insertSQL := `INSERT INTO pay_order (
-		out_trade_no,total_fee,body,order_status,original_data,trade_type,business_type) 
+		out_trade_no,total_fee,body,order_status,original_data,trade_type,business_type,merchant_id) 
 		VALUES 
-		($1,$2,$3,$4,$5,$6,$7)`
+		($1,$2,$3,$4,$5,$6,$7,$8)`
 
 	updateSQL := `update pay_order set 
 	trade_no=$2,order_status=$3,openid=$4,pay_time=$5 where out_trade_no=$1`
 
-	_, err := model.DB.Exec(insertSQL, outTradeNo, totalFee, body, "NOTPAY", originalData, payMode, businessType)
+	_, err := model.DB.Exec(insertSQL, outTradeNo, totalFee, body, "NOTPAY", originalData, payMode, businessType, merchantID)
 	if err != nil {
 		fmt.Println("err ===", err)
 		return map[string]interface{}{"code": "-1", "msg": err.Error()}
@@ -80,7 +81,7 @@ func FaceToFace(outTradeNo string, authCode string, merchantID string, payMode s
 	resData := request("POST", m)
 
 	if resData["code"] == "error" {
-		if resData["data"] != nil && resData["data"].(string) == "USERPAYING" {
+		if resData["data"] != nil && resData["data"].(string) == "2" {
 			_, err := model.DB.Exec("update pay_order set order_status=$2 where out_trade_no=$1", outTradeNo, "USERPAYING")
 			if err != nil {
 				fmt.Println("err ===", err)
@@ -88,6 +89,13 @@ func FaceToFace(outTradeNo string, authCode string, merchantID string, payMode s
 			}
 			return map[string]interface{}{"code": "2", "msg": resData["msg"]}
 		}
+
+		_, errf := model.DB.Exec("update pay_order set order_status=$2 where out_trade_no=$1", outTradeNo, "FAIL")
+		if errf != nil {
+			fmt.Println("errf ===", errf)
+			return map[string]interface{}{"code": "-1", "msg": errf.Error()}
+		}
+
 		return map[string]interface{}{"code": "-1", "msg": resData["msg"]}
 	}
 	tradeNo := resData["transaction_id"]
@@ -143,9 +151,17 @@ func FaceToFaceCancel(outTradeNo string, merchantID string) map[string]interface
 	resData := request("POST", m)
 
 	if resData["code"] == "error" {
-		return map[string]interface{}{"code": "-1", "msg": resData["msg"]}
+		if resData["data"] != nil && resData["data"].(string) == "2" {
+			_, err := model.DB.Exec("update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1", outTradeNo, "UNKONWN")
+			if err != nil {
+				fmt.Println("err ===", err)
+				return map[string]interface{}{"code": "-1", "msg": err.Error()}
+			}
+			return map[string]interface{}{"code": "2", "msg": resData["msg"]}
+		}
+		return map[string]interface{}{"code": resData["code"], "msg": resData["msg"]}
 	}
-	_, err := model.DB.Exec(updateSQL, outTradeNo, "CANCEL")
+	_, err := model.DB.Exec(updateSQL, outTradeNo, "CLOSE")
 	if err != nil {
 		fmt.Println("err ===", err)
 		return map[string]interface{}{"code": "-1", "msg": err.Error()}
@@ -400,7 +416,7 @@ func QueryHcOrder(outTradeNo string, merchantID string, transactionNo string) ma
 	sign := hcpay.GetSign(m, partnerKey)
 	m["sign"] = sign
 
-	selectSQL := `select out_trade_no from pay_order where out_trade_no=$1`
+	selectSQL := `select out_trade_no,order_status,created_time from pay_order where out_trade_no=$1`
 	updateSQL := `update pay_order set
 		trade_no=$2,order_status=$3,openid=$4,pay_time=$5,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
 
@@ -415,6 +431,15 @@ func QueryHcOrder(outTradeNo string, merchantID string, transactionNo string) ma
 		return map[string]interface{}{"code": "-1", "msg": "支付订单不存在"}
 	}
 
+	createdTime := payOrder["created_time"].(time.Time)
+	orderStatus := payOrder["order_status"].(string)
+
+	//超时未支付的订单撤销
+	if createdTime.Before(time.Now().Add(-30*time.Second)) && (orderStatus == "USERPAYING" || orderStatus == "NOTPAY" || orderStatus == "UNKONWN") {
+		fmt.Println("***********撤销************")
+		FaceToFaceCancel(outTradeNo, merchantID)
+	}
+
 	resData := request("POST", m)
 
 	if resData["code"] == "error" {
@@ -423,9 +448,53 @@ func QueryHcOrder(outTradeNo string, merchantID string, transactionNo string) ma
 	tradeNo := resData["transaction_id"]
 	openID := resData["openid"]
 	payTime := resData["payed_time"]
-	payState := resData["trade_status"]
+	orderStatusHc := resData["trade_status"]
 
-	_, err := model.DB.Exec(updateSQL, outTradeNo, tradeNo, payState, openID, payTime)
+	_, err := model.DB.Exec(updateSQL, outTradeNo, tradeNo, orderStatusHc, openID, payTime)
+	if err != nil {
+		fmt.Println("err ===", err)
+		return map[string]interface{}{"code": "-1", "msg": err.Error()}
+	}
+	return map[string]interface{}{"code": "200", "data": resData}
+}
+
+//QueryOrder 查询平台订单状态
+/**
+ * @param outTradeNo 系统交易号 非必须
+ * @param merchantID 支付类型 wx 微信 ali 支付宝 必须
+ */
+func QueryOrder(outTradeNo string, merchantID string) map[string]interface{} {
+
+	if outTradeNo == "" || merchantID == "" {
+		return map[string]interface{}{"code": "-1", "msg": "缺少参数"}
+	}
+	noncestr := hcpay.GenerateNonceString(32)
+
+	var m map[string]string
+	m = make(map[string]string, 0)
+	m["service_code"] = "hcpay.trade.orderquery"
+	m["merchant_id"] = hcMerchantID[merchantID]
+	m["partner_id"] = partnerID
+	m["nonce_str"] = noncestr
+	m["sign_type"] = "MD5"
+	m["out_trade_no"] = outTradeNo
+	sign := hcpay.GetSign(m, partnerKey)
+	m["sign"] = sign
+
+	updateSQL := `update pay_order set
+		trade_no=$2,order_status=$3,openid=$4,pay_time=$5,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
+
+	resData := request("POST", m)
+
+	if resData["code"] == "error" {
+		return map[string]interface{}{"code": "-1", "msg": resData["msg"]}
+	}
+	tradeNo := resData["transaction_id"]
+	openID := resData["openid"]
+	payTime := resData["payed_time"]
+	orderStatusHc := resData["trade_status"]
+
+	_, err := model.DB.Exec(updateSQL, outTradeNo, tradeNo, orderStatusHc, openID, payTime)
 	if err != nil {
 		fmt.Println("err ===", err)
 		return map[string]interface{}{"code": "-1", "msg": err.Error()}
@@ -530,7 +599,7 @@ func request(method string, m map[string]string) map[string]interface{} {
 	}
 
 	var jsonStr = []byte(post)
-	fmt.Println("new_str", bytes.NewBuffer(jsonStr))
+	fmt.Println("请求参数**************", bytes.NewBuffer(jsonStr))
 
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
@@ -551,14 +620,14 @@ func request(method string, m map[string]string) map[string]interface{} {
 		fmt.Println("errb=========", errb)
 		return nil
 	}
-	fmt.Println("results=========", results)
+	fmt.Println("支付平台返回结果*****************", results)
 
 	if results["return_code"] == "0" {
 		if results["result_code"] == "0" {
 			return results
 		}
 		if results["result_code"] == "2" {
-			return map[string]interface{}{"code": "error", "msg": results["result_msg"], "data": "USERPAYING"}
+			return map[string]interface{}{"code": "error", "msg": results["result_msg"], "data": results["result_code"]}
 		}
 		return map[string]interface{}{"code": "error", "msg": results["result_msg"]}
 	}
