@@ -1913,6 +1913,7 @@ CREATE TABLE drug_retail_refund_record
 --药品零售记录表
 CREATE TABLE drug_retail
 (
+  id serial PRIMARY KEY NOT NULL,--id
   out_trade_no varchar(30) NOT NULL,--交易号，一次交易的编码
   refund_trade_no varchar(30), --退费编号
   clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--药品id
