@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -394,9 +395,12 @@ func ClinicDrugListWithStock(ctx iris.Context) {
 		return
 	}
 
+	timeNow := time.Now().Format("2006-01-02")
+	fmt.Println(timeNow)
+
 	countSQL := `select count(*) as total from clinic_drug cd where clinic_id=:clinic_id`
 	selectSQL := `select 
-		cd.id + ds.storehouse_id as clinic_drug_id,
+		cd.id as clinic_drug_id,
 		cd.type,
 		cd.manu_factory_name,
 		cd.name as drug_name,
@@ -414,14 +418,10 @@ func ClinicDrugListWithStock(ctx iris.Context) {
 		cd.frequency_name,
 		cd.fetch_address,
 		cd.clinic_id,
-		ds.stock_amount,
-		ds.serial,
-		ds.storehouse_id,
-		ds.eff_date,
-		ds.supplier_name 
+		sum(ds.stock_amount) as stock_amount 
 		from clinic_drug cd 
-		left join drug_stock ds on ds.clinic_drug_id = cd.id
-		where cd.clinic_id = :clinic_id`
+		left join drug_stock ds on ds.clinic_drug_id = cd.id 
+		where cd.clinic_id = :clinic_id and ds.eff_date > '` + timeNow + `' `
 
 	if status != "" {
 		countSQL += " and cd.status = :status"
@@ -432,6 +432,26 @@ func ClinicDrugListWithStock(ctx iris.Context) {
 		countSQL += ` and (cd.py_code ~*:keyword or cd.name ~*:keyword)`
 		selectSQL += ` and (cd.py_code ~*:keyword or cd.name ~*:keyword)`
 	}
+
+	selectSQL += ` group by 
+		cd.id,
+		cd.type,
+		cd.manu_factory_name,
+		cd.name,
+		cd.specification,
+		cd.packing_unit_name,
+		cd.ret_price,
+		cd.buy_price,
+		cd.py_code,
+		cd.is_discount,
+		cd.illustration,
+		cd.status, 
+		cd.once_dose,
+		cd.once_dose_unit_name, 
+		cd.route_administration_name, 
+		cd.frequency_name, 
+		cd.fetch_address,
+		cd.clinic_id `
 
 	var queryOption = map[string]interface{}{
 		"clinic_id": ToNullInt64(clinicID),

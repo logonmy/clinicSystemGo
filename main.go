@@ -489,6 +489,7 @@ func main() {
 	{
 		drugRetail.Post("/createOrder", controller.CreateDrugRetailOrder)
 		drugRetail.Post("/createPaymentOrder", controller.CreateDrugRetailPaymentOrder)
+		drugRetail.Post("/list", controller.DrugRetailList)
 	}
 
 	// http://localhost:8080

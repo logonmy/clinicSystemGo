@@ -1887,7 +1887,7 @@ CREATE TABLE drug_retail_pay_record
   out_trade_no varchar(30) NOT NULL UNIQUE,--交易号，一次交易的编码
   pay_method varchar(6) NOT NULL,--支付方式， wechat - 微信，alipay-支付宝 ,bank - 银行, cash- 现金
   auth_code varchar(20) , --授权码
-  status INTEGER NOT NULL DEFAULT -1, --订单状态, -1--待确认，0-待支付， 2--已支付， 3-支付失败
+  status INTEGER NOT NULL DEFAULT -1, --订单状态, -1--待确认，1-待支付， 2--已支付， 3-支付失败
   total_money INTEGER NOT NULL, --交易总金额金额
   discount_money INTEGER NOT NULL DEFAULT 0 ,--折扣金额
   medical_money INTEGER NOT NULL DEFAULT 0 ,--医保金额
