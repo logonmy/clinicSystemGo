@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -540,9 +541,9 @@ func PersonnelDelete(ctx iris.Context) {
 		return
 	}
 	code := personnel["code"]
-	code = code.(string) + "#del"
+	code = code.(string) + "#" + strconv.Itoa(int(time.Now().Unix()))
 
-	_, err := model.DB.Exec("update personnel set code=$1,deleted_time=LOCALTIMESTAMP WHERE id=$2", code, personnelID)
+	_, err := model.DB.Exec("update personnel set code=$1,deleted_time=LOCALTIMESTAMP, username = null, password=null WHERE id=$2", code, personnelID)
 	if err != nil {
 		fmt.Println("Perr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

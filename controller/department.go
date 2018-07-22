@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -142,7 +143,7 @@ func DepartmentDelete(ctx iris.Context) {
 		return
 	}
 	code := department["code"]
-	code = code.(string) + "#del"
+	code = code.(string) + "#" + strconv.Itoa(int(time.Now().Unix()))
 
 	stmt, err := model.DB.Prepare("update department set code=$1,deleted_time=LOCALTIMESTAMP WHERE id=$2")
 	if err != nil {
