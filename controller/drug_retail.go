@@ -84,6 +84,30 @@ func DrugRetailList(ctx iris.Context) {
 
 }
 
+// DrugRetailDetail 获取药品详情
+func DrugRetailDetail(ctx iris.Context) {
+	outTradeNo := ctx.PostValue("out_trade_no")
+	if outTradeNo == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	payrecord := model.DB.QueryRowx(`select * from drug_retail_pay_record where out_trade_no = $1`, outTradeNo)
+	payMap := FormatSQLRowToMap(payrecord)
+
+	refundRow, _ := model.DB.Queryx(`select * from drug_retail_refund_record where out_trade_no = $1`, outTradeNo)
+	refundMap := FormatSQLRowsToMapArray(refundRow)
+
+	itemsRow, _ := model.DB.Queryx(`select dr.id as record_id,dr.amount,cd.name,cd.specification,cd.ret_price,cd.packing_unit_name,ds.serial,ds.eff_date from drug_retail dr 
+	left join clinic_drug cd on cd.id = dr.clinic_drug_id 
+	left join drug_stock ds on ds.id = dr.drug_stock_id 
+	where out_trade_no = $1`, outTradeNo)
+	itemsRows := FormatSQLRowsToMapArray(itemsRow)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": itemsRows, "payrecordMap": payMap, "refundMap": refundMap})
+
+}
+
 // CreateDrugRetailOrder 创建药品零售订单
 func CreateDrugRetailOrder(ctx iris.Context) {
 	items := ctx.PostValue("items")
@@ -224,6 +248,11 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 	} else {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "不支持的支付方式"})
 	}
+}
+
+// DrugRetailRefund 退费
+func DrugRetailRefund(ctx iris.Context) {
+	// outTradeNo := ctx.PostValue("out_trade_no")
 }
 
 // 支付成功后通知
