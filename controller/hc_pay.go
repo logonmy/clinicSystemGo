@@ -152,7 +152,7 @@ func FaceToFaceCancel(outTradeNo string, merchantID string) map[string]interface
 
 	if resData["code"] == "error" {
 		if resData["data"] != nil && resData["data"].(string) == "2" {
-			_, err := model.DB.Exec("update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1", outTradeNo, "UNKONWN")
+			_, err := model.DB.Exec("update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1", outTradeNo, "UNKNOW")
 			if err != nil {
 				fmt.Println("err ===", err)
 				return map[string]interface{}{"code": "-1", "msg": err.Error()}
@@ -435,7 +435,7 @@ func QueryHcOrder(outTradeNo string, merchantID string, transactionNo string) ma
 	orderStatus := payOrder["order_status"].(string)
 
 	//超时未支付的订单撤销
-	if createdTime.Before(time.Now().Add(-30*time.Second)) && (orderStatus == "USERPAYING" || orderStatus == "NOTPAY" || orderStatus == "UNKONWN") {
+	if createdTime.Before(time.Now().Add(-30*time.Second)) && (orderStatus == "USERPAYING" || orderStatus == "NOTPAY") {
 		fmt.Println("***********撤销************")
 		FaceToFaceCancel(outTradeNo, merchantID)
 	}

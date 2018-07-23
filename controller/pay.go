@@ -22,7 +22,8 @@ func CreateHcOrderWeb(ctx iris.Context) {
 	orderType := ctx.PostValue("order_type")
 	outTradeNo := ctx.PostValue("out_trade_no")
 	businessType := ctx.PostValue("business_type")
-	outTradeNo = "TRZ" + hcpay.CreateTradeNo(20)
+	outTradeNo = hcpay.CreateTradeNo(20)
+	// outTradeNo = "TRZ" + hcpay.CreateTradeNo(20)
 
 	if outTradeNo == "" || payMode == "" || totalFee == "" || body == "" || merchantID == "" || orderType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
@@ -84,6 +85,7 @@ func HcRefundWeb(ctx iris.Context) {
 	outRefundNo := ctx.PostValue("out_refund_no")
 
 	outRefundNo = hcpay.CreateTradeNo(20)
+	// outRefundNo = "TRZ"+hcpay.CreateTradeNo(20)
 
 	if outRefundNo == "" || outTradeNo == "" || merchantID == "" || refundFeeStr == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
@@ -152,7 +154,8 @@ func FaceToFaceWeb(ctx iris.Context) {
 	merchantID := ctx.PostValue("merchant_id")
 	outTradeNo := ctx.PostValue("out_trade_no")
 
-	outTradeNo = "TRZ" + hcpay.CreateTradeNo(20)
+	outTradeNo = hcpay.CreateTradeNo(20)
+	// outTradeNo = "TRZ" + hcpay.CreateTradeNo(20)
 
 	if outTradeNo == "" || businessType == "" || payMode == "" || totalFee == "" || body == "" || merchantID == "" || authCode == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
