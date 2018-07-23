@@ -207,7 +207,7 @@ func TreatmentPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select tp.*, ct.name as treatment_name, ct.unit_name from treatment_patient tp 
+	rows, err := model.DB.Queryx(`select tp.*, ct.name as treatment_name, ct.unit_name, ct.price from treatment_patient tp 
 		left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
 		where tp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	if err != nil {

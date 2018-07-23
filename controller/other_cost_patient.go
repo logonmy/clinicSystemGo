@@ -205,7 +205,7 @@ func OtherCostPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select ocp.*, coc.name, coc.unit_name from other_cost_patient ocp 
+	rows, err := model.DB.Queryx(`select ocp.*, coc.name, coc.unit_name, coc.price from other_cost_patient ocp 
 		left join clinic_other_cost coc on ocp.clinic_other_cost_id = coc.id 
 		where ocp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
