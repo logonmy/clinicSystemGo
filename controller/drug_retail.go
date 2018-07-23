@@ -58,8 +58,8 @@ func DrugRetailList(ctx iris.Context) {
 	countSQL := `SELECT COUNT(*) AS total from (select pr.out_trade_no, sum(rr.refund_money) as refund_money  ` + sql + `) as u `
 
 	if refundStatus == "2" {
-		querySQL += `where u.refund_money > 0 `
-		countSQL += `where u.refund_money > 0 `
+		querySQL += `where u.refund_money < 0 `
+		countSQL += `where u.refund_money < 0 `
 	}
 
 	total, err2 := model.DB.NamedQuery(countSQL, queryMap)
