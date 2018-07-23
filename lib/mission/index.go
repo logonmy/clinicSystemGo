@@ -24,7 +24,7 @@ func StartMission() {
 	//每分钟
 	c.AddFunc("@every 1m", func() {
 		fmt.Println("开始定时任务")
-		selectSQL := `select out_trade_no,order_status,merchant_id,created_time from pay_order where order_status in ('NOTPAY','USERPAYING')`
+		selectSQL := `select out_trade_no,order_status,merchant_id,created_time from pay_order where order_status in ('NOTPAY','USERPAYING','UNKNOW')`
 		rows, _ := model.DB.Queryx(selectSQL)
 		if rows == nil {
 			fmt.Println("查询订单数据库错误")

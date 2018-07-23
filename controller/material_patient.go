@@ -34,13 +34,13 @@ func MaterialPatientCreate(ctx iris.Context) {
 	}
 	row := model.DB.QueryRowx(`select id,status from clinic_triage_patient where id=$1 limit 1`, clinicTriagePatientID)
 	if row == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "保存检查失败,分诊记录错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存材料费失败,分诊记录错误"})
 		return
 	}
 
 	prow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", personnelID)
 	if prow == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "保存检查失败,操作员错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "保存材料费失败,操作员错误"})
 		return
 	}
 	clinicTriagePatient := FormatSQLRowToMap(row)
@@ -207,10 +207,11 @@ func MaterialPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name,ms.stock_amount from material_patient mp 
-		left join clinic_material cm on mp.clinic_material_id = cm.id 
-		left join material_stock ms on cm.id = ms.clinic_material_id
-		where mp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
+	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name, cm.ret_price as price, sum( ms.stock_amount ) as stock_amount from material_patient mp 
+	left join clinic_material cm on mp.clinic_material_id = cm.id 
+	left join material_stock ms on cm.id = ms.clinic_material_id
+	where mp.clinic_triage_patient_id = $1
+	group by (mp.id, mp.clinic_triage_patient_id, mp.clinic_material_id, mp.order_sn, mp.soft_sn, mp.amount, mp.illustration, mp.operation_id, mp.created_time, cm.name, cm.specification, cm.unit_name,cm.ret_price)`, clinicTriagePatientID)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

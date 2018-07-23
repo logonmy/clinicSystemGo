@@ -1835,7 +1835,7 @@ CREATE TABLE pay_order
   body text NOT NULL,--交易描述
   original_data text NOT NULL,--原始数据
   order_status varchar(20) NOT NULL DEFAULT 'NOTPAY',
-  --订单状态  NOTPAY 未支付; USERPAYING 用户支付中; SUCCESS 已支付; REFUND 转入退费; CLOSE 已关闭/已撤销; FAIL 失败; UNKONWN 未知;
+  --订单状态  NOTPAY 未支付; USERPAYING 用户支付中; SUCCESS 已支付; REFUND 转入退费; CLOSE 已关闭/已撤销; FAIL 失败; UNKNOW 未知;
 
   subject varchar(100),--交易标题
   openid varchar(100),--用户微信openid/支付用户渠道ID

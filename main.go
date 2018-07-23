@@ -2,8 +2,7 @@ package main
 
 import (
 	"clinicSystemGo/controller"
-	"fmt"
-	"time"
+	"clinicSystemGo/lib/mission"
 
 	"github.com/iris-contrib/middleware/cors"
 	"github.com/kataras/iris"
@@ -14,6 +13,17 @@ import (
 
 func main() {
 	app := iris.New()
+
+	// jwtHandler := jwtmiddleware.New(jwtmiddleware.Config{
+	// 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+	// 		return []byte("0.9434990896465933"), nil
+	// 	},
+	// 	// When set, the middleware verifies that tokens are signed with the specific signing algorithm
+	// 	// If the signing method is not constant the ValidationKeyGetter callback can be used to implement additional checks
+	// 	// Important to avoid security issues described here: https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/
+	// 	SigningMethod: jwt.SigningMethodHS256,
+	// })
+
 	app.Logger().SetLevel("debug")
 
 	crs := cors.New(cors.Options{
@@ -29,8 +39,6 @@ func main() {
 	// and log the requests to the terminal.
 	app.Use(recover.New())
 	app.Use(logger.New())
-	fmt.Println("===", time.Now().Format("2006-01-02 15:04:05"))
-	fmt.Println("===", time.Now().Format("20"))
 
 	// Method:   GET
 	// Resource: http://localhost:8080
@@ -38,8 +46,11 @@ func main() {
 		ctx.HTML("<h1>Welcome</h1>")
 	})
 
+	// app.Handle("POST", "/personnel/login", controller.PersonnelLogin)
+	// app.Use(jwtHandler.Serve)
+
 	//定时任务
-	// mission.StartMission()
+	mission.StartMission()
 
 	file := app.Party("/file", crs).AllowMethods(iris.MethodOptions)
 	{
