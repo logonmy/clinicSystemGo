@@ -1835,11 +1835,12 @@ CREATE TABLE pay_order
   body text NOT NULL,--交易描述
   original_data text NOT NULL,--原始数据
   order_status varchar(20) NOT NULL DEFAULT 'NOTPAY',
-  --订单状态  NOTPAY 未支付; SUCCESS 已支付; REFUND 转入退费; CLOSE 已关闭; CANCEL 已撤销; USERPAYING 用户支付中; FAIL 失败; UNKONWN 未知;
+  --订单状态  NOTPAY 未支付; USERPAYING 用户支付中; SUCCESS 已支付; REFUND 转入退费; CLOSE 已关闭/已撤销; FAIL 失败; UNKNOW 未知;
 
   subject varchar(100),--交易标题
   openid varchar(100),--用户微信openid/支付用户渠道ID
   business_type varchar(10) NOT NULL,--业务类型
+  merchant_id varchar(5) NOT NULL,--支付机构的商户号类型 wx ali
   trade_type varchar(10) NOT NULL,--交易类型
   --weixin_f2f –微信当面付 alipay_f2f –支付宝当面付 mybank_weixin_f2f -网商微信当面付 mybank_alipay_f2f -网商支付宝当面付
   --weixin_wap -微信wap支付 weixin_h5 -微信wap支付 weixin_app -微信app支付 weixin_qr -微信qr支付 
@@ -1887,7 +1888,7 @@ CREATE TABLE drug_retail_pay_record
   out_trade_no varchar(30) NOT NULL UNIQUE,--交易号，一次交易的编码
   pay_method varchar(6) NOT NULL,--支付方式， wechat - 微信，alipay-支付宝 ,bank - 银行, cash- 现金
   auth_code varchar(20) , --授权码
-  status INTEGER NOT NULL DEFAULT -1, --订单状态, -1--待确认，0-待支付， 2--已支付， 3-支付失败
+  status INTEGER NOT NULL DEFAULT -1, --订单状态, -1--待确认，1-待支付， 2--已支付， 3-支付失败
   total_money INTEGER NOT NULL, --交易总金额金额
   discount_money INTEGER NOT NULL DEFAULT 0 ,--折扣金额
   medical_money INTEGER NOT NULL DEFAULT 0 ,--医保金额
@@ -1898,7 +1899,7 @@ CREATE TABLE drug_retail_pay_record
 );
 
 --药品零售退费订单
-CREATE TABLE drug_retail_pay_record 
+CREATE TABLE drug_retail_refund_record 
 (
   out_trade_no varchar(30) NOT NULL,--交易号，一次交易的编码
   refund_trade_no varchar(30) NOT NULL UNIQUE,--退费交易号
@@ -1913,6 +1914,7 @@ CREATE TABLE drug_retail_pay_record
 --药品零售记录表
 CREATE TABLE drug_retail
 (
+  id serial PRIMARY KEY NOT NULL,--id
   out_trade_no varchar(30) NOT NULL,--交易号，一次交易的编码
   refund_trade_no varchar(30), --退费编号
   clinic_drug_id INTEGER NOT NULL references clinic_drug(id),--药品id

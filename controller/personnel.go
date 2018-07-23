@@ -29,6 +29,8 @@ type Personnel struct {
 	Status        interface{} `json:"status" db:"status"`
 }
 
+const secretKey = "0.9434990896465933"
+
 // PersonnelLogin 登录
 func PersonnelLogin(ctx iris.Context) {
 	IP := ctx.RemoteAddr()
@@ -52,7 +54,23 @@ func PersonnelLogin(ctx iris.Context) {
 			_ = model.DB.MustExec("INSERT INTO personnel_login_record (personnel_id, ip) VALUES ($1, $2) RETURNING id", personnelID, IP)
 			countRow := model.DB.QueryRowx("select count(*) as count from personnel_login_record where personnel_id = $1", personnelID)
 			count := FormatSQLRowToMap(countRow)
+
+			// token := jwt.New(jwt.SigningMethodHS256)
+			// claims := make(jwt.MapClaims)
+			// claims["exp"] = time.Now().Add(time.Hour * time.Duration(1)).Unix()
+			// claims["iat"] = time.Now().Unix()
+			// claims["personnel_id"] = personnelID
+			// token.Claims = claims
+			// tokenString, err := token.SignedString([]byte(secretKey))
+
+			// if err != nil {
+			// 	fmt.Println("Error while signing the token", err)
+			// 	ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			// 	return
+			// }
+
 			ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result, "login_times": count["count"]})
+			// ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": tokenString})
 			return
 		}
 		ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误"})

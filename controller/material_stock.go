@@ -442,7 +442,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 	instockRecordItems := FormatSQLRowsToMapArray(rows)
 	fmt.Println("====", instockRecordItems)
 
-	tx, err := model.DB.Begin()
+	tx, err := model.DB.Beginx()
 
 	if err != nil {
 		fmt.Println("err ===", err)
@@ -471,7 +471,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 		serial := v["serial"].(string)
 		buyPrice := v["buy_price"].(int64)
 		effDate := v["eff_date"].(time.Time).Format("2006-01-02")
-		drow := model.DB.QueryRowx(`select id,stock_amount from material_stock where storehouse_id=$1 and clinic_material_id=$2 
+		drow := tx.QueryRowx(`select id,stock_amount from material_stock where storehouse_id=$1 and clinic_material_id=$2 
 			and supplier_name=$3 and serial=$4 and eff_date=$5 limit 1 FOR UPDATE`, storehouseID, clinicMaterialID, supplierName, serial, effDate)
 		if drow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
@@ -1023,7 +1023,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 	}
 	outstockRecordItems := FormatSQLRowsToMapArray(rows)
 
-	tx, err := model.DB.Begin()
+	tx, err := model.DB.Beginx()
 	if err != nil {
 		fmt.Println("err ===", err)
 		tx.Rollback()
@@ -1044,7 +1044,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 		materialStockID := v["material_stock_id"].(int64)
 		outstockAmount := v["outstock_amount"].(int64)
 
-		drow := model.DB.QueryRowx("select id,stock_amount from material_stock where id=$1 limit 1 FOR UPDATE", materialStockID)
+		drow := tx.QueryRowx("select id,stock_amount from material_stock where id=$1 limit 1 FOR UPDATE", materialStockID)
 		if drow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})
 			return
