@@ -2,7 +2,6 @@ package main
 
 import (
 	"clinicSystemGo/controller"
-	"clinicSystemGo/lib/mission"
 	"fmt"
 	"time"
 
@@ -40,7 +39,7 @@ func main() {
 	})
 
 	//定时任务
-	mission.StartMission()
+	// mission.StartMission()
 
 	file := app.Party("/file", crs).AllowMethods(iris.MethodOptions)
 	{
@@ -496,6 +495,7 @@ func main() {
 		drugRetail.Post("/createPaymentOrder", controller.CreateDrugRetailPaymentOrder)
 		drugRetail.Post("/list", controller.DrugRetailList)
 		drugRetail.Post("/detail", controller.DrugRetailDetail)
+		drugRetail.Post("/refund", controller.DrugRetailRefund)
 	}
 
 	// http://localhost:8080

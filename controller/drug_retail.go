@@ -250,6 +250,11 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 	}
 }
 
+// DrugRetailRefund 退费
+func DrugRetailRefund(ctx iris.Context) {
+	// outTradeNo := ctx.PostValue("out_trade_no")
+}
+
 // 支付成功后通知
 func paySuccessNotice(outTradeNo string) error {
 	fmt.Println(outTradeNo)
