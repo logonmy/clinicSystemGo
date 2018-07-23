@@ -207,7 +207,7 @@ func MaterialPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name,ms.stock_amount, cm.price from material_patient mp 
+	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name,ms.stock_amount, cm.ret_price as price from material_patient mp 
 		left join clinic_material cm on mp.clinic_material_id = cm.id 
 		left join material_stock ms on cm.id = ms.clinic_material_id
 		where mp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
