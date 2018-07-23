@@ -284,6 +284,8 @@ func DrugRetailRefund(ctx iris.Context) {
 
 	refundTotalFee := int64(0)
 
+	fmt.Println(results)
+
 	for _, item := range results {
 		retailID := item["retail_id"]
 		amount := item["amount"]
@@ -292,7 +294,7 @@ func DrugRetailRefund(ctx iris.Context) {
 			return
 		}
 
-		amountInt := amount.(int64)
+		amountInt := int64(amount.(float64))
 
 		if amountInt > 0 {
 			amountInt = amountInt * -1
@@ -312,11 +314,11 @@ func DrugRetailRefund(ctx iris.Context) {
 		fee := price * amountInt
 		refundTotalFee += fee
 
-		_, err1 := tx.Exec(`insert into drug_retail (out_trade_no, refund_trade_no, clinic_drug_id, drug_stock_id, amount, total_fee) values ($1, $2, $3, $4, $5, $6)`, outTradeNo, tradeRefundNo, item["clinic_drug_id"], item["drug_stock_id"], amountInt, fee)
+		_, err1 := tx.Exec(`INSERT INTO drug_retail (out_trade_no,refund_trade_no,clinic_drug_id,drug_stock_id,amount,total_fee) VALUES ($1,$2,$3,$4,$5,$6)`, outTradeNo, tradeRefundNo, rowMap["clinic_drug_id"], rowMap["drug_stock_id"], amountInt, fee)
 
 		if err1 != nil {
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+			ctx.JSON(iris.Map{"code": "-2", "msg": err1.Error()})
 			return
 		}
 
@@ -325,7 +327,7 @@ func DrugRetailRefund(ctx iris.Context) {
 	if refundTotalFee*-1 != rowPayRecordMap["total_money"].(int64) {
 		if rowPayRecordMap["discount_money"].(int64) > 0 || rowPayRecordMap["medical_money"].(int64) > 0 {
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": "存在优惠项，无法部分退费"})
+			ctx.JSON(iris.Map{"code": "-3", "msg": "存在优惠项，无法部分退费"})
 			return
 		}
 	}
@@ -333,22 +335,22 @@ func DrugRetailRefund(ctx iris.Context) {
 	refundErr := refundTrade(outTradeNo, refundTotalFee*1, tradeRefundNo)
 	if refundErr != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": refundErr.Error()})
+		ctx.JSON(iris.Map{"code": "-4", "msg": refundErr.Error()})
 		return
 	}
 
-	_, err1 := tx.Exec(`insert into drug_retail (out_trade_no, refund_trade_no, status, refund_money, operation_id) values ($1, $2, $3, $4, $5)`, outTradeNo, tradeRefundNo, 2, refundTotalFee, operationID)
+	_, err3 := tx.Exec(`INSERT INTO drug_retail_refund_record (out_trade_no,refund_trade_no,status,refund_money,operation_id) VALUES ($1,$2,$3,$4,$5)`, outTradeNo, tradeRefundNo, 2, refundTotalFee, operationID)
 
-	if err1 != nil {
+	if err3 != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		ctx.JSON(iris.Map{"code": "-5", "msg": err3.Error()})
 		return
 	}
 
 	cerr := tx.Commit()
 
 	if cerr != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": cerr.Error()})
+		ctx.JSON(iris.Map{"code": "-6", "msg": cerr.Error()})
 		return
 	}
 
