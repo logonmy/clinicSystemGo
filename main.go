@@ -141,6 +141,7 @@ func main() {
 		patient.Post("/UpsertPatientPulse", controller.UpsertPatientPulse)
 		patient.Post("/UpsertPatientBloodPressure", controller.UpsertPatientBloodPressure)
 		patient.Post("/UpsertPatientVision", controller.UpsertPatientVision)
+		patient.Post("/UpsertPatientBloodSugar", controller.UpsertPatientBloodSugar)
 		patient.Post("/UpsertPatientOxygenSaturation", controller.UpsertPatientOxygenSaturation)
 		patient.Post("/PatientHeightList", controller.PatientHeightList)
 		patient.Post("/PatientWeightList", controller.PatientWeightList)
@@ -152,6 +153,7 @@ func main() {
 		patient.Post("/PatientPulseList", controller.PatientPulseList)
 		patient.Post("/PatientBloodPressureList", controller.PatientBloodPressureList)
 		patient.Post("/PatientVisionList", controller.PatientVisionList)
+		patient.Post("/PatientBloodSugarList", controller.PatientBloodSugarList)
 		patient.Post("/PatientOxygenSaturationList", controller.PatientOxygenSaturationList)
 	}
 

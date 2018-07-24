@@ -249,6 +249,17 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		}
 	}
 
+	if bloodSugarType != "" && bloodSugarConcentration != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "blood_sugar_type": bloodSugarType, "blood_sugar_concentration": bloodSugarConcentration, "upsert_type": "insert"})
+		err := upsertPatientBloodSugar(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
 	if oxygenSaturation != "" {
 		var results []map[string]string
 		results = append(results, map[string]string{"record_time": recordTime, "oxygen_saturation": oxygenSaturation, "upsert_type": "insert"})
@@ -541,6 +552,12 @@ func upsertPatientHeight(patientID string, results []map[string]string) error {
 			exceSQL := `update patient_height set height = $1 where patient_id = $2 and record_time = $3`
 			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_height where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
 			exceSQL := `insert into patient_height (height, patient_id, record_time) values ($1, $2, $3)`
 			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -611,6 +628,13 @@ func upsertPatientWeight(patientID string, results []map[string]string) error {
 			exceSQL := `update patient_weight set weight = $1 where patient_id = $2 and record_time = $3`
 			_, err = tx.Exec(exceSQL, ToNullFloat64(weight), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_weight where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_weight (weight, patient_id, record_time) values ($1, $2, $3)`
 			_, err = tx.Exec(exceSQL, ToNullFloat64(weight), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -681,6 +705,13 @@ func upsertPatientBmi(patientID string, results []map[string]string) error {
 			exceSQL := `update patient_bmi set bmi = $1 where patient_id = $2 and record_time = $3`
 			_, err = tx.Exec(exceSQL, ToNullFloat64(bmi), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_bmi where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_bmi (bmi, patient_id, record_time) values ($1, $2, $3)`
 			_, err = tx.Exec(exceSQL, ToNullFloat64(bmi), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -751,6 +782,13 @@ func upsertPatientBloodType(patientID string, results []map[string]string) error
 			exceSQL := `update patient_blood_type set blood_type = $1 where patient_id = $2 and record_time = $3`
 			_, err = tx.Exec(exceSQL, ToNullString(bloodType), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_blood_type where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_blood_type (blood_type, patient_id, record_time) values ($1, $2, $3)`
 			_, err = tx.Exec(exceSQL, ToNullString(bloodType), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -821,6 +859,12 @@ func upsertPatientRhBloodType(patientID string, results []map[string]string) err
 			exceSQL := `update patient_rh_blood_type set rh_blood_type = $1 where patient_id = $2 and record_time = $3`
 			_, err = tx.Exec(exceSQL, ToNullInt64(RhBloodType), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_rh_blood_type where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
 			exceSQL := `insert into patient_rh_blood_type (rh_blood_type, patient_id, record_time) values ($1, $2, $3)`
 			_, err = tx.Exec(exceSQL, ToNullInt64(RhBloodType), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -892,6 +936,13 @@ func upsertPatientTemperature(patientID string, results []map[string]string) err
 			exceSQL := `update patient_temperature set temperature_type = $1,temperature = $2 where patient_id = $3 and record_time = $4`
 			_, err = tx.Exec(exceSQL, ToNullInt64(temperatureType), ToNullFloat64(temperature), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_temperature where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_temperature (temperature_type, temperature, patient_id, record_time) values ($1, $2, $3, $4)`
 			_, err = tx.Exec(exceSQL, ToNullInt64(temperatureType), ToNullFloat64(temperature), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -962,6 +1013,13 @@ func upsertPatientBreathe(patientID string, results []map[string]string) error {
 			exceSQL := `update patient_breathe set breathe = $1 where patient_id = $2 and record_time = $3`
 			_, err = tx.Exec(exceSQL, ToNullInt64(breathe), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deletSQL := `delete from patient_breathe where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deletSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_breathe (breathe, patient_id, record_time) values ($1, $2, $3)`
 			_, err = tx.Exec(exceSQL, ToNullInt64(breathe), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -1032,6 +1090,13 @@ func upsertPatientPulse(patientID string, results []map[string]string) error {
 			exceSQL := `update patient_pulse set pulse = $1 where patient_id = $2 and record_time = $3`
 			_, err = tx.Exec(exceSQL, ToNullInt64(pulse), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_pulse where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_pulse (pulse, patient_id, record_time) values ($1, $2, $3)`
 			_, err = tx.Exec(exceSQL, ToNullInt64(pulse), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -1103,6 +1168,13 @@ func upsertPatientBloodPressure(patientID string, results []map[string]string) e
 			exceSQL := `update patient_blood_pressure set systolic_blood_pressure = $1,diastolic_blood_pressure = $2 where patient_id = $3 and record_time = $4`
 			_, err = tx.Exec(exceSQL, ToNullInt64(systolicBloodPressure), ToNullInt64(diastolicBloodPressure), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_blood_pressure where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_blood_pressure (systolic_blood_pressure, diastolic_blood_pressure, patient_id, record_time) values ($1, $2, $3, $4)`
 			_, err = tx.Exec(exceSQL, ToNullInt64(systolicBloodPressure), ToNullInt64(diastolicBloodPressure), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -1174,10 +1246,95 @@ func upsertPatientVision(patientID string, results []map[string]string) error {
 			exceSQL := `update patient_vision set left_vision = $1,right_vision = $2 where patient_id = $3 and record_time = $4`
 			_, err = tx.Exec(exceSQL, ToNullString(leftVision), ToNullString(rightVision), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_vision where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_vision (left_vision, right_vision, patient_id, record_time) values ($1, $2, $3, $4)`
 			_, err = tx.Exec(exceSQL, ToNullString(leftVision), ToNullString(rightVision), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
 			exceSQL := `delete from patient_vision where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientBloodSugar 修改血糖
+func UpsertPatientBloodSugar(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientBloodSugar(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientBloodSugar 修改血糖
+func upsertPatientBloodSugar(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		bloodSugarType, ttok := v["blood_sugar_type"]
+		bloodSugarConcentration, tok := v["blood_sugar_concentration"]
+		upsertType, uok := v["upsert_type"]
+		if !rok || recordTime == "" || !ttok || bloodSugarType == "" || !tok || bloodSugarConcentration == "" || !uok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_blood_sugar set blood_sugar_type = $1,blood_sugar_concentration = $2 where patient_id = $3 and record_time = $4`
+			_, err = tx.Exec(exceSQL, ToNullInt64(bloodSugarType), ToNullFloat64(bloodSugarConcentration), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_vision where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
+			exceSQL := `insert into patient_blood_sugar (blood_sugar_type, blood_sugar_concentration, patient_id, record_time) values ($1, $2, $3, $4)`
+			_, err = tx.Exec(exceSQL, ToNullInt64(bloodSugarType), ToNullFloat64(bloodSugarConcentration), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_blood_sugar where patient_id = $1 and record_time = $2`
 			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
 		} else {
 			return errors.New("upsert_type 值为 update，insert，delete ")
@@ -1244,6 +1401,13 @@ func upsertPatientOxygenSaturation(patientID string, results []map[string]string
 			exceSQL := `update patient_oxygen_saturation set oxygen_saturation = $1 where patient_id = $2 and record_time = $3`
 			_, err = tx.Exec(exceSQL, ToNullFloat64(oxygenSaturation), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
+			deleteSQL := `delete from patient_oxygen_saturation where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 			exceSQL := `insert into patient_oxygen_saturation (oxygen_saturation, patient_id, record_time) values ($1, $2, $3)`
 			_, err = tx.Exec(exceSQL, ToNullFloat64(oxygenSaturation), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
@@ -1267,11 +1431,22 @@ func upsertPatientOxygenSaturation(patientID string, results []map[string]string
 //PatientHeightList 患者身高记录
 func PatientHeightList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1293,38 +1468,66 @@ func PatientHeightList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_height where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_height WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_height where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_height WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientWeightList 患者体重记录
 func PatientWeightList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1346,38 +1549,66 @@ func PatientWeightList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_weight where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_weight WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_weight where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_weight WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientBmiList 患者BMI记录
 func PatientBmiList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1399,38 +1630,66 @@ func PatientBmiList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_bmi where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_bmi WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_bmi where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_bmi WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientBloodTypeList 患者血型记录
 func PatientBloodTypeList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1452,38 +1711,66 @@ func PatientBloodTypeList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_blood_type where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_blood_type WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_blood_type where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_blood_type WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientRhBloodTypeList 患者RH血型记录
 func PatientRhBloodTypeList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1505,38 +1792,66 @@ func PatientRhBloodTypeList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_rh_blood_type where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_rh_blood_type WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_rh_blood_type where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_rh_blood_type WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientTemperatureList 患者体温记录
 func PatientTemperatureList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1558,38 +1873,66 @@ func PatientTemperatureList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_temperature where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_temperature WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_temperature where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_temperature WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientBreatheList 患者呼吸记录
 func PatientBreatheList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1611,38 +1954,66 @@ func PatientBreatheList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_breathe where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_breathe WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_breathe where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_breathe WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientPulseList 患者脉搏记录
 func PatientPulseList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1664,38 +2035,66 @@ func PatientPulseList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_pulse where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_pulse WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_pulse where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_pulse WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientBloodPressureList 患者血压记录
 func PatientBloodPressureList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1717,38 +2116,66 @@ func PatientBloodPressureList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_blood_pressure where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_blood_pressure WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_blood_pressure where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_blood_pressure WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientVisionList 患者视力记录
 func PatientVisionList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1770,38 +2197,147 @@ func PatientVisionList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_vision where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_vision WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_vision where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_vision WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+//PatientBloodSugarList 患者血糖记录
+func PatientBloodSugarList(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if patientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
+
+	countSQL := `select count(id) as total from patient_blood_sugar where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_blood_sugar WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
+	if rows == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //PatientOxygenSaturationList 患者氧饱和度记录
 func PatientOxygenSaturationList(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
 	if patientID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
 
@@ -1823,26 +2359,43 @@ func PatientOxygenSaturationList(ctx iris.Context) {
 		return
 	}
 
-	countSQL := `select count(id) as total from patient_oxygen_saturation where patient_id=$1`
-	rowSQL := `SELECT * FROM patient_oxygen_saturation WHERE patient_id = $1`
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
 
-	total := model.DB.QueryRowx(countSQL, patientID)
+	countSQL := `select count(id) as total from patient_oxygen_saturation where patient_id=:patient_id`
+	rowSQL := `SELECT * FROM patient_oxygen_saturation WHERE patient_id=:patient_id`
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and record_time between :start_date and :end_date"
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	pageInfo := FormatSQLRowToMap(total)
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, _ := model.DB.Queryx(rowSQL, patientID)
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
 	if rows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
-	patientHeightLists := FormatSQLRowsToMapArray(rows)
+	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": patientHeightLists, "page_info": pageInfo})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
