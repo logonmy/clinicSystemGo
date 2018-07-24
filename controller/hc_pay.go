@@ -609,7 +609,7 @@ func request(method string, m map[string]string) map[string]interface{} {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return map[string]interface{}{"code": "error", "msg": err.Error()}
 	}
 	defer resp.Body.Close()
 
