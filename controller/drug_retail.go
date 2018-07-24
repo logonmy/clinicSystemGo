@@ -198,7 +198,7 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 	requestIP := ctx.Host()
 	requestIP = requestIP[0:strings.LastIndex(requestIP, ":")]
 
-	model.DB.NamedExec("DELETE from drug_retail_pay_record where out_trade_no = :outTradeNo", queryMap)
+	model.DB.NamedExec("DELETE from drug_retail_pay_record where out_trade_no = :outTradeNo and status = -1", queryMap)
 
 	_, err1 := model.DB.NamedExec("INSERT INTO drug_retail_pay_record (out_trade_no,pay_method,auth_code,total_money,discount_money,medical_money,balance_money,operation_id) VALUES (:outTradeNo,:payMethod,:authCode,:totalMoney,:discountMoney,:medicalMoney,:balanceMoney,:operationID)", queryMap)
 	if err1 != nil {
