@@ -132,6 +132,16 @@ func main() {
 		patient.Post("/PersonalMedicalRecord", controller.PersonalMedicalRecord)
 		patient.Post("/GetLastBodySign", controller.GetLastBodySign)
 		patient.Post("/UpsertPatientHeight", controller.UpsertPatientHeight)
+		patient.Post("/UpsertPatientWeight", controller.UpsertPatientWeight)
+		patient.Post("/UpsertPatientBmi", controller.UpsertPatientBmi)
+		patient.Post("/UpsertPatientBloodType", controller.UpsertPatientBloodType)
+		patient.Post("/UpsertPatientRhBloodType", controller.UpsertPatientRhBloodType)
+		patient.Post("/UpsertPatientTemperature", controller.UpsertPatientTemperature)
+		patient.Post("/UpsertPatientBreathe", controller.UpsertPatientBreathe)
+		patient.Post("/UpsertPatientPulse", controller.UpsertPatientPulse)
+		patient.Post("/UpsertPatientBloodPressure", controller.UpsertPatientBloodPressure)
+		patient.Post("/UpsertPatientVision", controller.UpsertPatientVision)
+		patient.Post("/UpsertPatientOxygenSaturation", controller.UpsertPatientOxygenSaturation)
 	}
 
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
