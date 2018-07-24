@@ -238,6 +238,7 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 		}
 	} else if payMethod == "cash" {
 		err := paySuccessNotice(outTradeNo)
+		fmt.Println("现金支付结果", err)
 		if err != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
@@ -305,7 +306,7 @@ func DrugRetailRefund(ctx iris.Context) {
 		return
 	}
 
-	tradeRefundNo := "401" + time.Now().Format("20060102150405") + strconv.Itoa((rand.Intn(8999) + 1000))
+	tradeRefundNo := "41" + time.Now().Format("20060102150405") + strconv.Itoa((rand.Intn(8999) + 1000))
 
 	refundTotalFee := int64(0)
 
@@ -359,7 +360,7 @@ func DrugRetailRefund(ctx iris.Context) {
 		}
 	}
 
-	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo)
+	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo, operationID)
 	if refundErr != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-4", "msg": refundErr.Error()})
@@ -396,17 +397,18 @@ func paySuccessNotice(outTradeNo string) error {
 		return errors.New("订单已处理过")
 	}
 
-	_, err := model.DB.Exec("update drug_retail_pay_record set status = 2,pay_time = LOCALTIMESTAMP where out_trade_no = $1", outTradeNo)
-	if err != nil {
-		return err
-	}
-
 	rows, _ := model.DB.Queryx("SELECT * FROM drug_retail_temp WHERE out_trade_no = $1", outTradeNo)
 	rowsMap := FormatSQLRowsToMapArray(rows)
 
 	tx, txErr := model.DB.Beginx()
 	if txErr != nil {
 		return txErr
+	}
+
+	_, err := tx.Exec("update drug_retail_pay_record set status = 2,pay_time = LOCALTIMESTAMP where out_trade_no = $1", outTradeNo)
+	if err != nil {
+		tx.Rollback()
+		return err
 	}
 
 	for _, item := range rowsMap {
@@ -422,6 +424,30 @@ func paySuccessNotice(outTradeNo string) error {
 
 	}
 
+	cash := int64(0)
+	wechat := int64(0)
+	alipay := int64(0)
+	bank := int64(0)
+
+	switch payRecordMap["pay_method"].(string) {
+	case "bank":
+		bank = payRecordMap["balance_money"].(int64)
+	case "cash":
+		cash = payRecordMap["balance_money"].(int64)
+	case "wechat":
+		wechat = payRecordMap["balance_money"].(int64)
+	case "alipay":
+		alipay = payRecordMap["balance_money"].(int64)
+	}
+
+	_, crer := tx.Exec(`insert into charge_detail (pay_record_id,out_trade_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, -1, payRecordMap["out_trade_no"], "in", payRecordMap["balance_money"], payRecordMap["discount_money"], payRecordMap["medical_money"], payRecordMap["total_money"], payRecordMap["balance_money"], 0, payRecordMap["operation_id"], cash, wechat, alipay, bank)
+
+	if crer != nil {
+		tx.Rollback()
+		return crer
+	}
+
 	crr := tx.Commit()
 	if crr != nil {
 		return err
@@ -430,37 +456,51 @@ func paySuccessNotice(outTradeNo string) error {
 	return nil
 }
 
-func refundTrade(outTradeNo string, refundFee int64, outRefundNo string) error {
+func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operationID string) error {
 	rowPayRecord := model.DB.QueryRowx("select * from drug_retail_pay_record where out_trade_no = $1 ", outTradeNo)
 	rowPayRecordMap := FormatSQLRowToMap(rowPayRecord)
 	if rowPayRecordMap["pay_method"] == nil {
 		return errors.New("未找到支付项")
 	}
+
+	cash := int64(0)
+	wechat := int64(0)
+	alipay := int64(0)
+	bank := int64(0)
+
 	switch rowPayRecordMap["pay_method"].(string) {
 	case "cash":
-		return nil
+		{
+			cash = refundFee * -1
+		}
 	case "wechat":
 		{
+			wechat = refundFee * -1
 			res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "", "药品零售退药")
-			if res["code"] == "200" {
-				return nil
+			if res["code"] != "200" {
+				return errors.New(res["msg"].(string))
 			}
-			return errors.New(res["msg"].(string))
 		}
 
 	case "alipay":
 		{
+			alipay = refundFee * -1
 			res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "", "药品零售退药")
-			if res["code"] == "200" {
-				return nil
+			if res["code"] != "200" {
+				return errors.New(res["msg"].(string))
 			}
-			return errors.New(res["msg"].(string))
 		}
 	case "bank":
+		bank = refundFee * -1
 		return errors.New("暂不支持银行卡退费")
 	default:
 		return errors.New("未知的支付方式")
 	}
+
+	_, err := model.DB.Exec(`insert into charge_detail (pay_record_id,out_trade_no,out_refund_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`, -1, rowPayRecordMap["out_trade_no"], outRefundNo, "out", refundFee*-1, rowPayRecordMap["discount_money"].(int64)*-1, rowPayRecordMap["medical_money"].(int64)*-1, refundFee*-1, refundFee*-1+rowPayRecordMap["medical_money"].(int64)*-1+rowPayRecordMap["discount_money"].(int64)*-1, 0, operationID, cash, wechat, alipay, bank)
+
+	return err
 }
 
 func updateDrugStock(tx *sqlx.Tx, clinicDrugID int64, amount int64, outTradeNo string, price int64) error {
@@ -472,7 +512,6 @@ func updateDrugStock(tx *sqlx.Tx, clinicDrugID int64, amount int64, outTradeNo s
 	}
 
 	timeNow := time.Now().Format("2006-01-02")
-	fmt.Println("clinicDrugID", clinicDrugID)
 	row := model.DB.QueryRowx("select * from drug_stock where clinic_drug_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1", clinicDrugID, timeNow)
 	rowMap := FormatSQLRowToMap(row)
 	if rowMap["stock_amount"] == nil {
