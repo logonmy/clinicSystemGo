@@ -346,6 +346,14 @@ func DrugRetailRefund(ctx iris.Context) {
 			return
 		}
 
+		_, err10 := tx.Exec("update drug_stock set stock_amount=stock_amount+$1 where id = $2", amountInt*-1, rowMap["drug_stock_id"])
+
+		if err10 != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-7", "msg": err10.Error()})
+			return
+		}
+
 	}
 
 	if refundTotalFee*-1 != rowPayRecordMap["total_money"].(int64) {
