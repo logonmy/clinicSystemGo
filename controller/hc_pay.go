@@ -113,29 +113,14 @@ func FaceToFace(outTradeNo string, authCode string, merchantID string, payMode s
 //FaceToFaceCancel 当面付支付撤销
 /**
  * @param outTradeNo 系统交易号 必须
- * @param merchantID 支付类型 wx 微信 ali 支付宝 必须
  */
-func FaceToFaceCancel(outTradeNo string, merchantID string) map[string]interface{} {
+func FaceToFaceCancel(outTradeNo string) map[string]interface{} {
 
-	if merchantID == "" || outTradeNo == "" {
+	if outTradeNo == "" {
 		return map[string]interface{}{"code": "-1", "msg": "缺少参数"}
 	}
 
-	noncestr := hcpay.GenerateNonceString(32)
-
-	var m map[string]string
-	m = make(map[string]string, 0)
-	m["service_code"] = "hcpay.trade.reverse"
-	m["merchant_id"] = hcMerchantID[merchantID]
-	m["partner_id"] = partnerID
-	m["nonce_str"] = noncestr
-	m["sign_type"] = "MD5"
-	m["out_trade_no"] = outTradeNo
-	sign := hcpay.GetSign(m, partnerKey)
-	m["sign"] = sign
-
-	selectSQL := `select out_trade_no from pay_order where out_trade_no=$1`
-	updateSQL := `update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
+	selectSQL := `select out_trade_no,merchant_id from pay_order where out_trade_no=$1`
 
 	row := model.DB.QueryRowx(selectSQL, outTradeNo)
 	if row == nil {
@@ -147,6 +132,21 @@ func FaceToFaceCancel(outTradeNo string, merchantID string) map[string]interface
 	if !ok {
 		return map[string]interface{}{"code": "-1", "msg": "支付订单不存在"}
 	}
+
+	noncestr := hcpay.GenerateNonceString(32)
+
+	var m map[string]string
+	m = make(map[string]string, 0)
+	m["service_code"] = "hcpay.trade.reverse"
+	m["merchant_id"] = hcMerchantID[payOrder["merchant_id"].(string)]
+	m["partner_id"] = partnerID
+	m["nonce_str"] = noncestr
+	m["sign_type"] = "MD5"
+	m["out_trade_no"] = outTradeNo
+	sign := hcpay.GetSign(m, partnerKey)
+	m["sign"] = sign
+
+	updateSQL := `update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
 
 	resData := request("POST", m)
 
@@ -174,24 +174,16 @@ func FaceToFaceCancel(outTradeNo string, merchantID string) map[string]interface
  * @param outTradeNo 系统交易号 必须
  * @param refundFeeStr 退款金额 必须
  * @param outRefundNo 系统退款请求交易号 必须
- * @param merchantID 支付类型 wx 微信 ali 支付宝 必须
  * @param transactionNo 支付平台交易号 非必须
  * @param refundReason 退款原因 非必须
  */
-func HcRefund(outTradeNo string, refundFeeStr string, outRefundNo string, merchantID string, transactionNo string, refundReason string) map[string]interface{} {
+func HcRefund(outTradeNo string, refundFeeStr string, outRefundNo string, transactionNo string, refundReason string) map[string]interface{} {
 
-	if outRefundNo == "" || outTradeNo == "" || merchantID == "" || refundFeeStr == "" {
+	if outRefundNo == "" || outTradeNo == "" || refundFeeStr == "" {
 		return map[string]interface{}{"code": "-1", "msg": "缺少参数"}
 	}
 
-	refundFee, _ := strconv.ParseInt(refundFeeStr, 10, 64)
-	refundFeeTotal := int64(0)
-
-	if refundFee < 0 {
-		return map[string]interface{}{"code": "-1", "msg": "退款金额小于0"}
-	}
-
-	crow := model.DB.QueryRowx("select out_trade_no,total_fee from pay_order where out_trade_no=$1 limit 1", outTradeNo)
+	crow := model.DB.QueryRowx("select out_trade_no,total_fee,merchant_id from pay_order where out_trade_no=$1 limit 1", outTradeNo)
 	if crow == nil {
 		return map[string]interface{}{"code": "-1", "msg": "退款失败"}
 	}
@@ -199,6 +191,13 @@ func HcRefund(outTradeNo string, refundFeeStr string, outRefundNo string, mercha
 	_, cok := payOrder["out_trade_no"]
 	if !cok {
 		return map[string]interface{}{"code": "-1", "msg": "支付订单不存在"}
+	}
+
+	refundFee, _ := strconv.ParseInt(refundFeeStr, 10, 64)
+	refundFeeTotal := int64(0)
+
+	if refundFee < 0 {
+		return map[string]interface{}{"code": "-1", "msg": "退款金额小于0"}
 	}
 
 	rrow := model.DB.QueryRowx(`select out_trade_no,sum(refund_fee) as refund_fee_total
@@ -226,7 +225,7 @@ func HcRefund(outTradeNo string, refundFeeStr string, outRefundNo string, mercha
 	var m map[string]string
 	m = make(map[string]string, 0)
 	m["service_code"] = "hcpay.trade.refund"
-	m["merchant_id"] = hcMerchantID[merchantID]
+	m["merchant_id"] = hcMerchantID[payOrder["merchant_id"].(string)]
 	m["partner_id"] = partnerID
 	m["nonce_str"] = noncestr
 	m["sign_type"] = "MD5"
@@ -272,22 +271,34 @@ func HcRefund(outTradeNo string, refundFeeStr string, outRefundNo string, mercha
 //QueryHcRefund 退款查询
 /**
  * @param outRefundNo 系统退款请求交易号 必须
- * @param merchantID 支付类型 wx 微信 ali 支付宝 必须
  * @param transactionNo 支付平台交易号 非必须
  * @param outTradeNo 系统交易号 非必须
  * @param refundTradeNo 支付平台退款流水号 非必须
  */
-func QueryHcRefund(outRefundNo string, merchantID string, transactionNo string, outTradeNo string, refundTradeNo string) map[string]interface{} {
+func QueryHcRefund(outRefundNo string, transactionNo string, outTradeNo string, refundTradeNo string) map[string]interface{} {
 
-	if merchantID == "" || outRefundNo == "" {
+	if outRefundNo == "" {
 		return map[string]interface{}{"code": "-1", "msg": "缺少参数"}
 	}
+
+	crow := model.DB.QueryRowx(`select ro.out_refund_no,po.merchant_id from refund_order ro
+	left join pay_order po on po.out_trade_no = ro.out_trade_no
+	where ro.out_refund_no=$1 limit 1`, outRefundNo)
+	if crow == nil {
+		return map[string]interface{}{"code": "-1", "msg": "退款查询失败"}
+	}
+	refundOrder := FormatSQLRowToMap(crow)
+	_, cok := refundOrder["out_refund_no"]
+	if !cok {
+		return map[string]interface{}{"code": "-1", "msg": "退款订单不存在"}
+	}
+
 	noncestr := hcpay.GenerateNonceString(32)
 
 	var m map[string]string
 	m = make(map[string]string, 0)
 	m["service_code"] = "hcpay.trade.refundquery"
-	m["merchant_id"] = hcMerchantID[merchantID]
+	m["merchant_id"] = hcMerchantID[refundOrder["merchant_id"].(string)]
 	m["partner_id"] = partnerID
 	m["nonce_str"] = noncestr
 	m["sign_type"] = "MD5"
@@ -297,16 +308,6 @@ func QueryHcRefund(outRefundNo string, merchantID string, transactionNo string, 
 	m["refund_id"] = refundTradeNo
 	sign := hcpay.GetSign(m, partnerKey)
 	m["sign"] = sign
-
-	crow := model.DB.QueryRowx("select out_refund_no from refund_order where out_refund_no=$1 limit 1", outRefundNo)
-	if crow == nil {
-		return map[string]interface{}{"code": "-1", "msg": "退款查询失败"}
-	}
-	refundOrder := FormatSQLRowToMap(crow)
-	_, cok := refundOrder["out_refund_no"]
-	if !cok {
-		return map[string]interface{}{"code": "-1", "msg": "退款订单不存在"}
-	}
 
 	resData := request("POST", m)
 
@@ -394,32 +395,15 @@ func CreateHcOrder(outTradeNo string, merchantID string, payMode string, totalFe
 //QueryHcOrder 订单查询
 /**
  * @param outTradeNo 系统交易号 非必须
- * @param merchantID 支付类型 wx 微信 ali 支付宝 必须
  * @param transactionNo 支付平台交易号 非必须
  */
-func QueryHcOrder(outTradeNo string, merchantID string, transactionNo string) map[string]interface{} {
+func QueryHcOrder(outTradeNo string, transactionNo string) map[string]interface{} {
 
-	if outTradeNo == "" || merchantID == "" {
+	if outTradeNo == "" {
 		return map[string]interface{}{"code": "-1", "msg": "缺少参数"}
 	}
-	noncestr := hcpay.GenerateNonceString(32)
 
-	var m map[string]string
-	m = make(map[string]string, 0)
-	m["service_code"] = "hcpay.trade.orderquery"
-	m["merchant_id"] = hcMerchantID[merchantID]
-	m["partner_id"] = partnerID
-	m["nonce_str"] = noncestr
-	m["sign_type"] = "MD5"
-	m["transaction_id"] = transactionNo
-	m["out_trade_no"] = outTradeNo
-	sign := hcpay.GetSign(m, partnerKey)
-	m["sign"] = sign
-
-	selectSQL := `select out_trade_no,order_status,created_time from pay_order where out_trade_no=$1`
-	updateSQL := `update pay_order set
-		trade_no=$2,order_status=$3,openid=$4,pay_time=$5,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
-
+	selectSQL := `select out_trade_no,order_status,merchant_id,created_time from pay_order where out_trade_no=$1`
 	row := model.DB.QueryRowx(selectSQL, outTradeNo)
 	if row == nil {
 		return map[string]interface{}{"code": "-1", "msg": "支付订单查询失败"}
@@ -431,13 +415,30 @@ func QueryHcOrder(outTradeNo string, merchantID string, transactionNo string) ma
 		return map[string]interface{}{"code": "-1", "msg": "支付订单不存在"}
 	}
 
+	noncestr := hcpay.GenerateNonceString(32)
+
+	var m map[string]string
+	m = make(map[string]string, 0)
+	m["service_code"] = "hcpay.trade.orderquery"
+	m["merchant_id"] = hcMerchantID[payOrder["merchant_id"].(string)]
+	m["partner_id"] = partnerID
+	m["nonce_str"] = noncestr
+	m["sign_type"] = "MD5"
+	m["transaction_id"] = transactionNo
+	m["out_trade_no"] = outTradeNo
+	sign := hcpay.GetSign(m, partnerKey)
+	m["sign"] = sign
+
+	updateSQL := `update pay_order set
+		trade_no=$2,order_status=$3,openid=$4,pay_time=$5,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
+
 	createdTime := payOrder["created_time"].(time.Time)
 	orderStatus := payOrder["order_status"].(string)
 
 	//超时未支付的订单撤销
 	if createdTime.Before(time.Now().Add(-30*time.Second)) && (orderStatus == "USERPAYING" || orderStatus == "NOTPAY") {
 		fmt.Println("***********撤销************")
-		FaceToFaceCancel(outTradeNo, merchantID)
+		FaceToFaceCancel(outTradeNo)
 	}
 
 	resData := request("POST", m)
@@ -458,10 +459,9 @@ func QueryHcOrder(outTradeNo string, merchantID string, transactionNo string) ma
 	return map[string]interface{}{"code": "200", "data": resData}
 }
 
-//QueryOrder 查询平台订单状态
+//QueryOrder 查询平台订单状态 定时任务用
 /**
  * @param outTradeNo 系统交易号 非必须
- * @param merchantID 支付类型 wx 微信 ali 支付宝 必须
  */
 func QueryOrder(outTradeNo string, merchantID string) map[string]interface{} {
 
@@ -507,26 +507,13 @@ func QueryOrder(outTradeNo string, merchantID string) map[string]interface{} {
  * @param outTradeNo 系统交易号 非必须
  * @param merchantID 支付类型 wx 微信 ali 支付宝 必须
  */
-func HcOrderClose(outTradeNo string, merchantID string) map[string]interface{} {
+func HcOrderClose(outTradeNo string) map[string]interface{} {
 
-	if merchantID == "" || outTradeNo == "" {
+	if outTradeNo == "" {
 		return map[string]interface{}{"code": "-1", "msg": "缺少参数"}
 	}
-	noncestr := hcpay.GenerateNonceString(32)
 
-	var m map[string]string
-	m = make(map[string]string, 0)
-	m["service_code"] = "hcpay.trade.close"
-	m["merchant_id"] = hcMerchantID[merchantID]
-	m["partner_id"] = partnerID
-	m["nonce_str"] = noncestr
-	m["sign_type"] = "MD5"
-	m["out_trade_no"] = outTradeNo
-	sign := hcpay.GetSign(m, partnerKey)
-	m["sign"] = sign
-
-	selectSQL := `select out_trade_no from pay_order where out_trade_no=$1`
-	updateSQL := `update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
+	selectSQL := `select out_trade_no,merchant_id from pay_order where out_trade_no=$1`
 
 	row := model.DB.QueryRowx(selectSQL, outTradeNo)
 	if row == nil {
@@ -538,6 +525,21 @@ func HcOrderClose(outTradeNo string, merchantID string) map[string]interface{} {
 	if !ok {
 		return map[string]interface{}{"code": "-1", "msg": "支付订单不存在"}
 	}
+
+	noncestr := hcpay.GenerateNonceString(32)
+
+	var m map[string]string
+	m = make(map[string]string, 0)
+	m["service_code"] = "hcpay.trade.close"
+	m["merchant_id"] = hcMerchantID[payOrder["merchant_id"].(string)]
+	m["partner_id"] = partnerID
+	m["nonce_str"] = noncestr
+	m["sign_type"] = "MD5"
+	m["out_trade_no"] = outTradeNo
+	sign := hcpay.GetSign(m, partnerKey)
+	m["sign"] = sign
+
+	updateSQL := `update pay_order set order_status=$2,updated_time=LOCALTIMESTAMP where out_trade_no=$1`
 
 	resData := request("POST", m)
 

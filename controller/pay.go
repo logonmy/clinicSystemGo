@@ -44,14 +44,13 @@ func CreateHcOrderWeb(ctx iris.Context) {
 func QueryHcOrderWeb(ctx iris.Context) {
 	outTradeNo := ctx.PostValue("out_trade_no")
 	transactionNo := ctx.PostValue("trade_no")
-	merchantID := ctx.PostValue("merchant_id")
 
-	if outTradeNo == "" || merchantID == "" {
+	if outTradeNo == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	resData := QueryHcOrder(outTradeNo, merchantID, transactionNo)
+	resData := QueryHcOrder(outTradeNo, transactionNo)
 
 	if resData["code"] != "200" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
@@ -81,18 +80,17 @@ func HcRefundWeb(ctx iris.Context) {
 	transactionNo := ctx.PostValue("trade_no")
 	refundFeeStr := ctx.PostValue("refund_fee")
 	refundReason := ctx.PostValue("refund_reason")
-	merchantID := ctx.PostValue("merchant_id")
 	outRefundNo := ctx.PostValue("out_refund_no")
 
 	outRefundNo = hcpay.CreateTradeNo(20)
 	// outRefundNo = "TRZ"+hcpay.CreateTradeNo(20)
 
-	if outRefundNo == "" || outTradeNo == "" || merchantID == "" || refundFeeStr == "" {
+	if outRefundNo == "" || outTradeNo == "" || refundFeeStr == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	resData := HcRefund(outTradeNo, refundFeeStr, outRefundNo, merchantID, transactionNo, refundReason)
+	resData := HcRefund(outTradeNo, refundFeeStr, outRefundNo, transactionNo, refundReason)
 
 	if resData["code"] != "200" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
@@ -107,14 +105,13 @@ func QueryHcRefundWeb(ctx iris.Context) {
 	transactionNo := ctx.PostValue("trade_no")
 	outRefundNo := ctx.PostValue("out_refund_no")
 	refundTradeNo := ctx.PostValue("refund_trade_no")
-	merchantID := ctx.PostValue("merchant_id")
 
-	if merchantID == "" || outRefundNo == "" {
+	if outRefundNo == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	resData := QueryHcRefund(outRefundNo, merchantID, transactionNo, outTradeNo, refundTradeNo)
+	resData := QueryHcRefund(outRefundNo, transactionNo, outTradeNo, refundTradeNo)
 
 	if resData["code"] != "200" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
@@ -133,7 +130,7 @@ func HcOrderCloseWeb(ctx iris.Context) {
 		return
 	}
 
-	resData := HcOrderClose(outTradeNo, merchantID)
+	resData := HcOrderClose(outTradeNo)
 
 	if resData["code"] != "200" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
@@ -174,14 +171,13 @@ func FaceToFaceWeb(ctx iris.Context) {
 //FaceToFaceCancelWeb 当面付支付撤销
 func FaceToFaceCancelWeb(ctx iris.Context) {
 	outTradeNo := ctx.PostValue("out_trade_no")
-	merchantID := ctx.PostValue("merchant_id")
 
-	if merchantID == "" || outTradeNo == "" {
+	if outTradeNo == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	resData := FaceToFaceCancel(outTradeNo, merchantID)
+	resData := FaceToFaceCancel(outTradeNo)
 
 	if resData["code"] != "200" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": resData["msg"]})
