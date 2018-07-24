@@ -248,6 +248,31 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 	}
 }
 
+// DrugRetailPaymentStatus 获取收费状态
+func DrugRetailPaymentStatus(ctx iris.Context) {
+	outTradeNo := ctx.PostValue("out_trade_no")
+	if outTradeNo == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	res := QueryHcOrder(outTradeNo, "")
+
+	if res["code"] == "200" {
+		data := res["data"].(map[string]interface{})
+		tradeStatus := data["trade_status"].(string)
+		if tradeStatus == "SUCCESS" {
+			err := paySuccessNotice(outTradeNo)
+			if err != nil {
+				fmt.Println("缴费通知失败", err.Error())
+			}
+		}
+		ctx.JSON(iris.Map{"code": "200", "data": res["data"]})
+	} else {
+		ctx.JSON(iris.Map{"code": "-1", "msg": res["msg"]})
+	}
+
+}
+
 // DrugRetailRefund 退费
 func DrugRetailRefund(ctx iris.Context) {
 	outTradeNo := ctx.PostValue("out_trade_no")
@@ -332,7 +357,7 @@ func DrugRetailRefund(ctx iris.Context) {
 		}
 	}
 
-	refundErr := refundTrade(outTradeNo, refundTotalFee*1, tradeRefundNo)
+	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo)
 	if refundErr != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-4", "msg": refundErr.Error()})
