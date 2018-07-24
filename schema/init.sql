@@ -2059,15 +2059,3 @@ CREATE TABLE patient_oxygen_saturation
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
---体征 疼痛评分
-CREATE TABLE patient_pain_score
-(
-  id serial PRIMARY KEY NOT NULL,--id
-  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
-  record_time VARCHAR(20) NOT NULL,--记录时间
-  pain_score integer CHECK(pain_score>-1 AND pain_score<11),--疼痛评分
-  remark VARCHAR(100),
-  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
-);
