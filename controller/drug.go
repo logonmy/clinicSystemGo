@@ -396,7 +396,6 @@ func ClinicDrugListWithStock(ctx iris.Context) {
 	}
 
 	timeNow := time.Now().Format("2006-01-02")
-	fmt.Println(timeNow)
 
 	countSQL := `select count(*) as total from clinic_drug cd where clinic_id=:clinic_id`
 	selectSQL := `select 
