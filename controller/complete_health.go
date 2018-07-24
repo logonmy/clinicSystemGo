@@ -3,6 +3,9 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"encoding/json"
+	"errors"
+	"strconv"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -69,8 +72,9 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录不存在"})
 		return
 	}
-	// patientID := clinicTriagePatient["patient_id"]
-	// recordTime := time.Now().Format("2006-01-02")
+	patientID := clinicTriagePatient["patient_id"].(int64)
+	patientIDStr := strconv.FormatInt(patientID, 10)
+	recordTime := time.Now().Format("2006-01-02")
 
 	tx, err := model.DB.Begin()
 	if err != nil {
@@ -80,6 +84,7 @@ func TriageCompleteBodySign(ctx iris.Context) {
 
 	_, err = tx.Exec("delete from body_sign where clinic_triage_patient_id=$1", clinicTriagePatientID)
 	if err != nil {
+		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
@@ -129,9 +134,132 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		ToNullString(remark))
 
 	if err != nil {
+		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
+
+	if height != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "height": height, "upsert_type": "insert"})
+		err := upsertPatientHeight(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if weight != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "weight": weight, "upsert_type": "insert"})
+		err := upsertPatientWeight(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if bmi != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "bmi": bmi, "upsert_type": "insert"})
+		err := upsertPatientBmi(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if bloodType != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "blood_type": bloodType, "upsert_type": "insert"})
+		err := upsertPatientBloodType(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if rhBloodType != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "rh_blood_type": rhBloodType, "upsert_type": "insert"})
+		err := upsertPatientRhBloodType(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if temperature != "" && temperatureType != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "temperature_type": temperatureType, "temperature": temperature, "upsert_type": "insert"})
+		err := upsertPatientTemperature(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if breathe != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "breathe": breathe, "upsert_type": "insert"})
+		err := upsertPatientBreathe(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if pulse != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "pulse": pulse, "upsert_type": "insert"})
+		err := upsertPatientPulse(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if systolicBloodPressure != "" && diastolicBloodPressure != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "systolic_blood_pressure": systolicBloodPressure, "diastolic_blood_pressure": diastolicBloodPressure, "upsert_type": "insert"})
+		err := upsertPatientBloodPressure(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if leftVision != "" && rightVision != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "left_vision": leftVision, "right_vision": rightVision, "upsert_type": "insert"})
+		err := upsertPatientVision(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	if oxygenSaturation != "" {
+		var results []map[string]string
+		results = append(results, map[string]string{"record_time": recordTime, "oxygen_saturation": oxygenSaturation, "upsert_type": "insert"})
+		err := upsertPatientOxygenSaturation(patientIDStr, results)
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -379,11 +507,25 @@ func UpsertPatientHeight(ctx iris.Context) {
 		return
 	}
 
-	tx, err := model.DB.Beginx()
+	err = upsertPatientHeight(patientID, results)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientHeight 修改身高
+func upsertPatientHeight(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
 	}
 
 	for _, v := range results {
@@ -391,34 +533,733 @@ func UpsertPatientHeight(ctx iris.Context) {
 		height, hok := v["height"]
 		upsertType, tok := v["upsert_type"]
 		if !rok || recordTime == "" || !hok || height == "" || !tok || upsertType == "" {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
-			return
+			return errors.New("缺少参数")
 		}
 
 		var err error
 		if upsertType == "update" {
 			exceSQL := `update patient_height set height = $1 where patient_id = $2 and record_time = $3`
-			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(partnerID), ToNullString(recordTime))
+			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "insert" {
-			exceSQL := `insert into patient_height(height, patient_id, record_time) values ($1, $2, $3)`
-			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(partnerID), ToNullString(recordTime))
+			exceSQL := `insert into patient_height (height, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(patientID), ToNullString(recordTime))
 		} else if upsertType == "delete" {
 			exceSQL := `delete from patient_height where patient_id = $1 and record_time = $2`
-			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(partnerID), ToNullString(recordTime))
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
 		} else {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "upsert_type 值为 update，insert，delete "})
-			return
+			return errors.New("upsert_type 值为 update，insert，delete ")
 		}
 		if err != nil {
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
+			return err
 		}
 	}
 	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientWeight 修改体重
+func UpsertPatientWeight(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientWeight(patientID, results)
+
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientWeight 修改体重
+func upsertPatientWeight(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		weight, hok := v["weight"]
+		upsertType, tok := v["upsert_type"]
+		if !rok || recordTime == "" || !hok || weight == "" || !tok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_weight set weight = $1 where patient_id = $2 and record_time = $3`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(weight), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_weight (weight, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(weight), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_weight where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientBmi 修改BMI
+func UpsertPatientBmi(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientBmi(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientBmi 修改BMI
+func upsertPatientBmi(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		bmi, hok := v["bmi"]
+		upsertType, tok := v["upsert_type"]
+		if !rok || recordTime == "" || !hok || bmi == "" || !tok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_bmi set bmi = $1 where patient_id = $2 and record_time = $3`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(bmi), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_bmi (bmi, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(bmi), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_bmi where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientBloodType 修改血型
+func UpsertPatientBloodType(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientBloodType(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientBloodType 修改血型
+func upsertPatientBloodType(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		bloodType, hok := v["blood_type"]
+		upsertType, tok := v["upsert_type"]
+		if !rok || recordTime == "" || !hok || bloodType == "" || !tok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_blood_type set blood_type = $1 where patient_id = $2 and record_time = $3`
+			_, err = tx.Exec(exceSQL, ToNullString(bloodType), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_blood_type (blood_type, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullString(bloodType), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_blood_type where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientRhBloodType 修改RH血型
+func UpsertPatientRhBloodType(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientRhBloodType(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientRhBloodType 修改RH血型
+func upsertPatientRhBloodType(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		RhBloodType, hok := v["rh_blood_type"]
+		upsertType, tok := v["upsert_type"]
+		if !rok || recordTime == "" || !hok || RhBloodType == "" || !tok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_rh_blood_type set rh_blood_type = $1 where patient_id = $2 and record_time = $3`
+			_, err = tx.Exec(exceSQL, ToNullInt64(RhBloodType), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_rh_blood_type (rh_blood_type, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullInt64(RhBloodType), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_rh_blood_type where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientTemperature 修改体温
+func UpsertPatientTemperature(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientTemperature(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientTemperature 修改体温
+func upsertPatientTemperature(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		temperatureType, ttok := v["temperature_type"]
+		temperature, tok := v["temperature"]
+		upsertType, uok := v["upsert_type"]
+		if !rok || recordTime == "" || !ttok || temperatureType == "" || !tok || temperature == "" || !uok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_temperature set temperature_type = $1,temperature = $2 where patient_id = $3 and record_time = $4`
+			_, err = tx.Exec(exceSQL, ToNullInt64(temperatureType), ToNullFloat64(temperature), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_temperature (temperature_type, temperature, patient_id, record_time) values ($1, $2, $3, $4)`
+			_, err = tx.Exec(exceSQL, ToNullInt64(temperatureType), ToNullFloat64(temperature), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_temperature where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientBreathe 修改呼吸
+func UpsertPatientBreathe(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientBreathe(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientBreathe 修改呼吸
+func upsertPatientBreathe(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		breathe, hok := v["breathe"]
+		upsertType, tok := v["upsert_type"]
+		if !rok || recordTime == "" || !hok || breathe == "" || !tok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_breathe set breathe = $1 where patient_id = $2 and record_time = $3`
+			_, err = tx.Exec(exceSQL, ToNullInt64(breathe), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_breathe (breathe, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullInt64(breathe), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_breathe where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientPulse 修改脉搏
+func UpsertPatientPulse(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientPulse(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientPulse 修改脉搏
+func upsertPatientPulse(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		pulse, hok := v["pulse"]
+		upsertType, tok := v["upsert_type"]
+		if !rok || recordTime == "" || !hok || pulse == "" || !tok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_pulse set pulse = $1 where patient_id = $2 and record_time = $3`
+			_, err = tx.Exec(exceSQL, ToNullInt64(pulse), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_pulse (pulse, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullInt64(pulse), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_pulse where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientBloodPressure 修改血压
+func UpsertPatientBloodPressure(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientBloodPressure(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientBloodPressure 修改血压
+func upsertPatientBloodPressure(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		systolicBloodPressure, ttok := v["systolic_blood_pressure"]
+		diastolicBloodPressure, tok := v["diastolic_blood_pressure"]
+		upsertType, uok := v["upsert_type"]
+		if !rok || recordTime == "" || !ttok || systolicBloodPressure == "" || !tok || diastolicBloodPressure == "" || !uok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_blood_pressure set systolic_blood_pressure = $1,diastolic_blood_pressure = $2 where patient_id = $3 and record_time = $4`
+			_, err = tx.Exec(exceSQL, ToNullInt64(systolicBloodPressure), ToNullInt64(diastolicBloodPressure), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_blood_pressure (systolic_blood_pressure, diastolic_blood_pressure, patient_id, record_time) values ($1, $2, $3, $4)`
+			_, err = tx.Exec(exceSQL, ToNullInt64(systolicBloodPressure), ToNullInt64(diastolicBloodPressure), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_blood_pressure where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientVision 修改视力
+func UpsertPatientVision(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientVision(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientVision 修改视力
+func upsertPatientVision(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		leftVision, ttok := v["left_vision"]
+		rightVision, tok := v["right_vision"]
+		upsertType, uok := v["upsert_type"]
+		if !rok || recordTime == "" || !ttok || leftVision == "" || !tok || rightVision == "" || !uok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_vision set left_vision = $1,right_vision = $2 where patient_id = $3 and record_time = $4`
+			_, err = tx.Exec(exceSQL, ToNullString(leftVision), ToNullString(rightVision), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_vision (left_vision, right_vision, patient_id, record_time) values ($1, $2, $3, $4)`
+			_, err = tx.Exec(exceSQL, ToNullString(leftVision), ToNullString(rightVision), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_vision where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpsertPatientOxygenSaturation 修改氧饱和度
+func UpsertPatientOxygenSaturation(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = upsertPatientOxygenSaturation(patientID, results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
+}
+
+// upsertPatientOxygenSaturation 修改氧饱和度
+func upsertPatientOxygenSaturation(patientID string, results []map[string]string) error {
+	if patientID == "" || results == nil {
+		return errors.New("缺少参数")
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		oxygenSaturation, hok := v["oxygen_saturation"]
+		upsertType, tok := v["upsert_type"]
+		if !rok || recordTime == "" || !hok || oxygenSaturation == "" || !tok || upsertType == "" {
+			return errors.New("缺少参数")
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_oxygen_saturation set oxygen_saturation = $1 where patient_id = $2 and record_time = $3`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(oxygenSaturation), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_oxygen_saturation (oxygen_saturation, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(oxygenSaturation), ToNullInt64(patientID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_oxygen_saturation where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
+		} else {
+			return errors.New("upsert_type 值为 update，insert，delete ")
+		}
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
 }
