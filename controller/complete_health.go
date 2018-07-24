@@ -58,7 +58,7 @@ func TriageCompleteBodySign(ctx iris.Context) {
 	selectSQL := `select ctp.id, cp.patient_id
 	from clinic_triage_patient ctp
 	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
-	where id=$1`
+	where ctp.id=$1`
 
 	row := model.DB.QueryRowx(selectSQL, clinicTriagePatientID)
 	if row == nil {
