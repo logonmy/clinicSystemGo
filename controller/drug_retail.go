@@ -309,8 +309,6 @@ func DrugRetailRefund(ctx iris.Context) {
 
 	refundTotalFee := int64(0)
 
-	fmt.Println(results)
-
 	for _, item := range results {
 		retailID := item["retail_id"]
 		amount := item["amount"]
@@ -354,6 +352,10 @@ func DrugRetailRefund(ctx iris.Context) {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-3", "msg": "存在优惠项，无法部分退费"})
 			return
+		}
+	} else {
+		if rowPayRecordMap["discount_money"].(int64) > 0 || rowPayRecordMap["medical_money"].(int64) > 0 {
+			refundTotalFee = rowPayRecordMap["balance_money"].(int64) * -1
 		}
 	}
 
