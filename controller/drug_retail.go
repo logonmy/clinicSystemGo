@@ -262,7 +262,9 @@ func DrugRetailPaymentStatus(ctx iris.Context) {
 		tradeStatus := data["trade_status"].(string)
 		if tradeStatus == "SUCCESS" {
 			err := paySuccessNotice(outTradeNo)
-			fmt.Println("缴费通知失败", err.Error())
+			if err != nil {
+				fmt.Println("缴费通知失败", err.Error())
+			}
 		}
 		ctx.JSON(iris.Map{"code": "200", "data": res["data"]})
 	} else {
