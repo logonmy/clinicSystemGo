@@ -424,7 +424,7 @@ func refundTrade(outTradeNo string, refundFee int64, outRefundNo string) error {
 		return nil
 	case "wechat":
 		{
-			res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "wx", "", "药品零售退药")
+			res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "", "药品零售退药")
 			if res["code"] == "200" {
 				return nil
 			}
@@ -433,7 +433,7 @@ func refundTrade(outTradeNo string, refundFee int64, outRefundNo string) error {
 
 	case "alipay":
 		{
-			res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "ali", "", "药品零售退药")
+			res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "", "药品零售退药")
 			if res["code"] == "200" {
 				return nil
 			}
