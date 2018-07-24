@@ -155,6 +155,7 @@ func main() {
 		patient.Post("/PatientVisionList", controller.PatientVisionList)
 		patient.Post("/PatientBloodSugarList", controller.PatientBloodSugarList)
 		patient.Post("/PatientOxygenSaturationList", controller.PatientOxygenSaturationList)
+		patient.Post("/PatientBloodSugarListByDate", controller.PatientBloodSugarListByDate)
 	}
 
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
