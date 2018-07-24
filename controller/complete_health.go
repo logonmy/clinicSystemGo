@@ -251,7 +251,7 @@ func TriageCompleteBodySign(ctx iris.Context) {
 
 	if bloodSugarType != "" && bloodSugarConcentration != "" {
 		var results []map[string]string
-		results = append(results, map[string]string{"record_time": recordTime, "blood_sugar_type": bloodSugarType, "blood_sugar_concentration": bloodSugarConcentration, "upsert_type": "insert"})
+		results = append(results, map[string]string{"record_time": bloodSugarTime, "blood_sugar_type": bloodSugarType, "blood_sugar_concentration": bloodSugarConcentration, "upsert_type": "insert"})
 		err := upsertPatientBloodSugar(patientIDStr, results)
 		if err != nil {
 			tx.Rollback()
@@ -2378,6 +2378,97 @@ func PatientOxygenSaturationList(ctx iris.Context) {
 		countSQL += " and record_time between :start_date and :end_date"
 		rowSQL += " and record_time between :start_date and :end_date"
 	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, _ := model.DB.NamedQuery(rowSQL+" order by record_time desc offset :offset limit :limit", queryOption)
+	if rows == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+}
+
+// PatientBloodSugarListByDate 患者血糖记录 按天聚合
+func PatientBloodSugarListByDate(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if patientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	var queryOption = map[string]interface{}{
+		"patient_id": ToNullInt64(patientID),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+	}
+
+	rowSQL := `select patient_id, record_time,
+	array_to_string(array_agg(
+			CASE WHEN blood_sugar_type is not null THEN blood_sugar_type
+					ELSE 0
+			END
+	 ), ',') as blood_sugar_types,
+	 array_to_string(array_agg(CASE WHEN blood_sugar_concentration is not null THEN blood_sugar_concentration
+					ELSE 0
+			END), ',') 
+	 as blood_sugar_concentrations 
+	 from patient_blood_sugar where patient_id=:patient_id `
+
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		rowSQL += " and record_time between :start_date and :end_date"
+	}
+	rowSQL += ` group by (patient_id, record_time)`
+	countSQL := `select count (*) from (` + rowSQL + `) a`
 
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
