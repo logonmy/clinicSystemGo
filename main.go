@@ -504,6 +504,7 @@ func main() {
 	{
 		drugRetail.Post("/createOrder", controller.CreateDrugRetailOrder)
 		drugRetail.Post("/createPaymentOrder", controller.CreateDrugRetailPaymentOrder)
+		drugRetail.Post("/payment/status", controller.DrugRetailPaymentStatus)
 		drugRetail.Post("/list", controller.DrugRetailList)
 		drugRetail.Post("/detail", controller.DrugRetailDetail)
 		drugRetail.Post("/refund", controller.DrugRetailRefund)

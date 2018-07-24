@@ -248,6 +248,16 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 	}
 }
 
+// DrugRetailPaymentStatus 获取收费状态
+func DrugRetailPaymentStatus(ctx iris.Context) {
+	outTradeNo := ctx.PostValue("out_trade_no")
+	if outTradeNo == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+}
+
 // DrugRetailRefund 退费
 func DrugRetailRefund(ctx iris.Context) {
 	outTradeNo := ctx.PostValue("out_trade_no")
