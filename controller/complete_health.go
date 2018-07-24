@@ -51,6 +51,26 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		return
 	}
 
+	selectSQL := `select ctp.id, cp.patient_id
+	from clinic_triage_patient ctp
+	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
+	where id=$1`
+
+	row := model.DB.QueryRowx(selectSQL, clinicTriagePatientID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询分诊记录失败"})
+		return
+	}
+
+	clinicTriagePatient := FormatSQLRowToMap(row)
+	_, ok := clinicTriagePatient["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录不存在"})
+		return
+	}
+	// patientID := clinicTriagePatient["patient_id"]
+	// recordTime := time.Now().Format("2006-01-02")
+
 	tx, err := model.DB.Begin()
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -116,6 +136,7 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
+
 	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
 }
 
@@ -141,20 +162,20 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select p.id as patient_id,ctp.id
+	selectSQL := `select cp.patient_id,ctp.id
 	from clinic_triage_patient ctp
 	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
-	left join patient p on p.id = cp.patient_id where id=$1`
+	where ctp.id=$1`
 	ctrow := model.DB.QueryRowx(selectSQL, clinicTriagePatientID)
 	if ctrow == nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "材料费项错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询分诊记录错误"})
 		return
 	}
 
 	clinicTriagePatient := FormatSQLRowToMap(ctrow)
 	_, ok := clinicTriagePatient["id"]
 	if !ok {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "分诊记录不存在"})
 		return
 	}
 	patientID := clinicTriagePatient["patient_id"]
