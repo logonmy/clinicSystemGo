@@ -2059,3 +2059,17 @@ CREATE TABLE patient_oxygen_saturation
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
 );
+
+--体征血糖
+CREATE TABLE patient_blood_sugar
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  blood_sugar_type integer,--血糖时段类型 1：睡前，2，晚餐后，3晚餐前，4午餐后，5，午餐前，6，早餐后，7早餐前，8：凌晨，9空腹
+  blood_sugar_concentration FLOAT,--血糖浓度(mmol/I)
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
