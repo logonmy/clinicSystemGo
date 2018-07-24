@@ -142,6 +142,17 @@ func main() {
 		patient.Post("/UpsertPatientBloodPressure", controller.UpsertPatientBloodPressure)
 		patient.Post("/UpsertPatientVision", controller.UpsertPatientVision)
 		patient.Post("/UpsertPatientOxygenSaturation", controller.UpsertPatientOxygenSaturation)
+		patient.Post("/PatientHeightList", controller.PatientHeightList)
+		patient.Post("/PatientWeightList", controller.PatientWeightList)
+		patient.Post("/PatientBmiList", controller.PatientBmiList)
+		patient.Post("/PatientBloodTypeList", controller.PatientBloodTypeList)
+		patient.Post("/PatientRhBloodTypeList", controller.PatientRhBloodTypeList)
+		patient.Post("/PatientTemperatureList", controller.PatientTemperatureList)
+		patient.Post("/PatientBreatheList", controller.PatientBreatheList)
+		patient.Post("/PatientPulseList", controller.PatientPulseList)
+		patient.Post("/PatientBloodPressureList", controller.PatientBloodPressureList)
+		patient.Post("/PatientVisionList", controller.PatientVisionList)
+		patient.Post("/PatientOxygenSaturationList", controller.PatientOxygenSaturationList)
 	}
 
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)
