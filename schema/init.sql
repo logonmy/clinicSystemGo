@@ -1923,3 +1923,151 @@ CREATE TABLE drug_retail
   total_fee INTEGER NOT NULL, --总费用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP
 );
+
+--体征-身高
+CREATE TABLE patient_height
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  height FLOAT,--身高（m）
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征-体重
+CREATE TABLE patient_weight
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  weight FLOAT,--体重(kg)
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征-BMI
+CREATE TABLE patient_bmi
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  bmi FLOAT,--体重（千克）/（身高（米）*身高（米））
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征-血型--血型
+CREATE TABLE patient_blood_type
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  blood_type VARCHAR(2) CHECK(blood_type = 'A' OR blood_type = 'B' OR blood_type = 'O' OR blood_type = 'AB' OR blood_type = 'UC' ),--血型 uc: 未查
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征RH血型 
+CREATE TABLE patient_rh_blood_type
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  rh_blood_type integer CHECK(rh_blood_type = -1 or rh_blood_type = 1 or rh_blood_type = 0),--RH血型 -1: 阴性，1阳性, 0: 未查
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征体温
+CREATE TABLE patient_temperature
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  temperature_type integer CHECK(temperature_type >0 AND temperature_type <6),--类型 1: 口温，2：耳温，3：额温，4：腋温，5：肛温
+  temperature FLOAT,--体温
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征--呼吸
+CREATE TABLE patient_breathe
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间ECK(temperature_type >0 AND temperature_type <6),--RH血型 1: 口温，2：耳温，3：额温，4：腋温，5：肛温
+  breathe integer,--呼吸(次/分钟)
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征脉搏(次/分钟)
+CREATE TABLE patient_pulse
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  pulse integer,--脉搏(次/分钟)
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征-血压
+CREATE TABLE patient_blood_pressure
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  systolic_blood_pressure integer,--血压收缩压
+  diastolic_blood_pressure integer,--血压舒张压
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征视力
+CREATE TABLE patient_vision
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  left_vision varchar(5),--左眼视力
+  right_vision varchar(5),--右眼视力
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征氧饱和度
+CREATE TABLE patient_oxygen_saturation
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  oxygen_saturation FLOAT,--氧饱和度(%)
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+--体征 疼痛评分
+CREATE TABLE patient_pain_score
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  patient_id INTEGER NOT NULL UNIQUE references patient(id),--患者id
+  record_time VARCHAR(20) NOT NULL,--记录时间
+  pain_score integer CHECK(pain_score>-1 AND pain_score<11),--疼痛评分
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
