@@ -131,6 +131,7 @@ func main() {
 		patient.Post("/PersonalMedicalRecordUpsert", controller.PersonalMedicalRecordUpsert)
 		patient.Post("/PersonalMedicalRecord", controller.PersonalMedicalRecord)
 		patient.Post("/GetLastBodySign", controller.GetLastBodySign)
+		patient.Post("/UpsertPatientHeight", controller.UpsertPatientHeight)
 	}
 
 	triage := app.Party("/triage", crs).AllowMethods(iris.MethodOptions)

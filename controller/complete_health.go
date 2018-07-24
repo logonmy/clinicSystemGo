@@ -2,6 +2,7 @@ package controller
 
 import (
 	"clinicSystemGo/model"
+	"encoding/json"
 
 	"github.com/kataras/iris"
 )
@@ -339,4 +340,64 @@ func GetHealthRecord(ctx iris.Context) {
 	preDiagnosisMap := FormatSQLRowToMap(preDiagnosisRow)
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "body_sign": bodySignMap, "pre_medical_record": preMedicalRecordMap, "pre_diagnosis": preDiagnosisMap})
+}
+
+// UpsertPatientHeight 修改身高
+func UpsertPatientHeight(ctx iris.Context) {
+	patientID := ctx.PostValue("patient_id")
+	items := ctx.PostValue("items")
+	if patientID == "" || items == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	var results []map[string]string
+	err := json.Unmarshal([]byte(items), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	tx, err := model.DB.Beginx()
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	for _, v := range results {
+		recordTime, rok := v["record_time"]
+		height, hok := v["height"]
+		upsertType, tok := v["upsert_type"]
+		if !rok || recordTime == "" || !hok || height == "" || !tok || upsertType == "" {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+			return
+		}
+
+		var err error
+		if upsertType == "update" {
+			exceSQL := `update patient_height set height = $1 where patient_id = $2 and record_time = $3`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(partnerID), ToNullString(recordTime))
+		} else if upsertType == "insert" {
+			exceSQL := `insert into patient_height(height, patient_id, record_time) values ($1, $2, $3)`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(partnerID), ToNullString(recordTime))
+		} else if upsertType == "delete" {
+			exceSQL := `delete from patient_height where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullFloat64(height), ToNullInt64(partnerID), ToNullString(recordTime))
+		} else {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "upsert_type 值为 update，insert，delete "})
+			return
+		}
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "保存成功"})
 }
