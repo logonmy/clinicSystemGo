@@ -44,7 +44,7 @@ func StartMission() {
 				fmt.Println("************订单信息存在**********", outTradeNo)
 				if results["trade_status"] != "REFUND" && results["trade_status"] != "CLOSE" && createdTime.Before(time.Now().Add(-30*time.Second)) {
 					fmt.Println("***********定时撤销************")
-					controller.FaceToFaceCancel(outTradeNo, merchantID)
+					controller.FaceToFaceCancel(outTradeNo)
 				}
 			} else if resData["msg"].(string) == "未找到支付订单信息" {
 				fmt.Println("************订单信息不存在**********", outTradeNo)
