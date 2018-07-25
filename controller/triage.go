@@ -894,6 +894,7 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 
 	queryWesternSQL := `select 
 		cd.name,
+		cd.packing_unit_name,
 		cd.specification,
 		pwp.eff_day,
 		pwp.illustration,
@@ -906,14 +907,17 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 		where pwp.clinic_triage_patient_id=$1`
 
 	queryChineseSQL := `select 
-		cd.name,
+		cd.name as drug_name,
+		cd.packing_unit_name,
 		pci.once_dose,
 		pci.once_dose_unit_name,
-		pcp.amount,
+		pci.amount,
+		pcp.amount as info_amount,
+		pcp.id as prescription_patient_id,
 		pcp.medicine_illustration,
-		pcp.route_administration_name,
-		pcp.frequency_name,
-		pcp.eff_day 
+		pcp.route_administration_name as info_route_administration_name,
+		pcp.frequency_name as info_frequency_name,
+		pcp.eff_day as info_eff_day
 		from prescription_chinese_patient pcp 
 		left join prescription_chinese_item pci on pci.prescription_chinese_patient_id = pcp.id
 		left join clinic_drug cd on cd.id = pci.clinic_drug_id
@@ -940,7 +944,7 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 	resultsChinese := FormatSQLRowsToMapArray(rowsChinese)
 
 	result["prescription_western_patient"] = resultsWestern
-	result["prescription_chinese_patient"] = resultsChinese
+	result["prescription_chinese_patient"] = FormatPrescription(resultsChinese)
 
 	ctx.JSON(iris.Map{"code": "200", "data": result})
 }

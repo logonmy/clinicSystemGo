@@ -18,9 +18,23 @@ func GetLastBodySign(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	querySQL := `select p.id as patient_id, bs.* from body_sign bs left join clinic_triage_patient ctp on bs.clinic_triage_patient_id = ctp.id
-	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
-	left join patient p on cp.patient_id = p.id where p.id = $1 order by bs.id DESC LIMIT 1`
+	querySQL := `select 
+	p.id as patient_id,ph.*,pw.*,pb.*,pbt.*,prbt.*,pt.*,pbr.*,pp.*,pbp.*,pv.*,pos.*,pbs.*
+	from patient p
+	left join (select * from patient_height where patient_id=$1 order by id DESC LIMIT 1) ph on ph.patient_id = p.id
+	left join (select * from patient_weight where patient_id=$1 order by id DESC LIMIT 1) pw on pw.patient_id = p.id
+	left join (select * from patient_bmi where patient_id=$1 order by id DESC LIMIT 1) pb on pb.patient_id = p.id
+	left join (select * from patient_blood_type where patient_id=$1 order by id DESC LIMIT 1) pbt on pbt.patient_id = p.id
+	left join (select * from patient_rh_blood_type where patient_id=$1 order by id DESC LIMIT 1) prbt on prbt.patient_id = p.id
+	left join (select * from patient_temperature where patient_id=$1 order by id DESC LIMIT 1) pt on pt.patient_id = p.id
+	left join (select * from patient_breathe where patient_id=$1 order by id DESC LIMIT 1) pbr on pbr.patient_id = p.id
+	left join (select * from patient_pulse where patient_id=$1 order by id DESC LIMIT 1) pp on pp.patient_id = p.id
+	left join (select * from patient_blood_pressure where patient_id=$1 order by id DESC LIMIT 1) pbp on pbp.patient_id = p.id
+	left join (select * from patient_vision where patient_id=$1 order by id DESC LIMIT 1) pv on pv.patient_id = p.id
+	left join (select * from patient_oxygen_saturation where patient_id=$1 order by id DESC LIMIT 1) pos on pos.patient_id = p.id
+	left join (select * from patient_blood_sugar where patient_id=$1 order by id DESC LIMIT 1) pbs on pbs.patient_id = p.id
+	where p.id = $1;
+	`
 
 	row := model.DB.QueryRowx(querySQL, patientID)
 	result := FormatSQLRowToMap(row)
