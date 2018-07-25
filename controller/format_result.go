@@ -96,6 +96,7 @@ type Prescription struct {
 	OperationName           interface{}        `json:"operation_name"`
 	RouteAdministrationName interface{}        `json:"route_administration_name"`
 	EffDay                  interface{}        `json:"eff_day"`
+	OrderSn                 interface{}        `json:"order_sn"`
 	Amount                  interface{}        `json:"amount"`
 	FrequencyName           interface{}        `json:"frequency_name"`
 	FetchAddress            interface{}        `json:"fetch_address"`
@@ -461,6 +462,7 @@ func FormatPrescription(prescription []map[string]interface{}) []Prescription {
 		routeAdministrationName := v["route_administration_name"]
 		frequencyName := v["frequency_name"]
 		effDay := v["eff_day"]
+		orderSn := v["order_sn"]
 		amount := v["amount"]
 		packingUnitName := v["packing_unit_name"]
 		fetchAddress := v["fetch_address"]
@@ -501,6 +503,7 @@ func FormatPrescription(prescription []map[string]interface{}) []Prescription {
 				CreatedTime:             createdTime,
 				RouteAdministrationName: inforRouteAdministrationName,
 				EffDay:                  infoEffDay,
+				OrderSn:                 orderSn,
 				Amount:                  infoAmount,
 				FrequencyName:           infoFrequencyName,
 				FetchAddress:            infoFetchAddress,
