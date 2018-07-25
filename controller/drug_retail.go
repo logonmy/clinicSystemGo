@@ -375,7 +375,7 @@ func DrugRetailRefund(ctx iris.Context) {
 		return
 	}
 
-	_, err3 := tx.Exec(`INSERT INTO drug_retail_refund_record (out_trade_no,refund_trade_no,status,refund_money,operation_id) VALUES ($1,$2,$3,$4,$5)`, outTradeNo, tradeRefundNo, 2, refundTotalFee, operationID)
+	_, err3 := tx.Exec(`INSERT INTO drug_retail_refund_record (out_trade_no,refund_trade_no,status,refund_money,operation_id,refund_time) VALUES ($1,$2,$3,$4,$5,LOCALTIMESTAMP)`, outTradeNo, tradeRefundNo, 2, refundTotalFee, operationID)
 
 	if err3 != nil {
 		tx.Rollback()
