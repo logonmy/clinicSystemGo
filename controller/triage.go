@@ -881,7 +881,7 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 		return
 	}
 
-	querySQL := `select mr.*,
+	querySQL := `select mr.*,p.name as operation_name,
 	(select string_agg (cl.name, '、') as clinic_laboratory_name from laboratory_patient lp
 			left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id where clinic_triage_patient_id = ctp.id group by clinic_triage_patient_id),
 	(select string_agg (ce.name, '、') as clinic_examination_name from examination_patient ep 
@@ -890,9 +890,13 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 			left join clinic_treatment ct on ct.id = tp.clinic_treatment_id where clinic_triage_patient_id = ctp.id group by clinic_triage_patient_id)
 	from clinic_triage_patient ctp
 	left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
+	left join personnel p on p.id = mr.operation_id
 	where ctp.id=$1`
 
-	queryMedicalRecordSQL := `select * from medical_record where clinic_triage_patient_id=$1 and is_default is null`
+	queryMedicalRecordSQL := `select mr.*,p.name as operation_name
+	from medical_record mr
+	left join personnel p on p.id = mr.operation_id
+	where mr.clinic_triage_patient_id=$1 and mr.is_default is null`
 
 	queryWesternSQL := `select 
 		cd.name,

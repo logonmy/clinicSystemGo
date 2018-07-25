@@ -28,7 +28,7 @@ func MedicalRecordCreate(ctx iris.Context) {
 	files := ctx.PostValue("files")
 	operationID := ctx.PostValue("operation_id")
 
-	if clinicTriagePatientID == "" || chiefComplaint == "" {
+	if clinicTriagePatientID == "" || chiefComplaint == "" || operationID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -80,7 +80,7 @@ func MedicalRecordRenew(ctx iris.Context) {
 	files := ctx.PostValue("files")
 	operationID := ctx.PostValue("operation_id")
 
-	if clinicTriagePatientID == "" || chiefComplaint == "" {
+	if clinicTriagePatientID == "" || chiefComplaint == "" || operationID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -112,7 +112,7 @@ func MedicalRecordRenewUpdate(ctx iris.Context) {
 	files := ctx.PostValue("files")
 	operationID := ctx.PostValue("operation_id")
 
-	if medicalRecordID == "" || chiefComplaint == "" {
+	if medicalRecordID == "" || chiefComplaint == "" || operationID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
