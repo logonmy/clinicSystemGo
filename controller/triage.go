@@ -871,3 +871,80 @@ func ReceiveRecord(ctx iris.Context) {
 	result := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
+
+//TriagePatientVisitDetail 获取病人就诊信息详情
+func TriagePatientVisitDetail(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	querySQL := `select mr.*,
+	(select string_agg (cl.name, '、') as clinic_laboratory_name from laboratory_patient lp
+			left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id where clinic_triage_patient_id = ctp.id group by clinic_triage_patient_id),
+	(select string_agg (ce.name, '、') as clinic_examination_name from examination_patient ep 
+			left join clinic_examination ce on ce.id = ep.clinic_examination_id where clinic_triage_patient_id = ctp.id group by clinic_triage_patient_id),
+	(select string_agg (ct.name, '，') as clinic_treatment_name from treatment_patient tp 
+			left join clinic_treatment ct on ct.id = tp.clinic_treatment_id where clinic_triage_patient_id = ctp.id group by clinic_triage_patient_id)
+	from clinic_triage_patient ctp
+	left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
+	where ctp.id=$1`
+
+	queryWesternSQL := `select 
+		cd.name,
+		cd.packing_unit_name,
+		cd.specification,
+		pwp.eff_day,
+		pwp.illustration,
+		pwp.amount,
+		pwp.route_administration_name,
+		pwp.once_dose,
+		pwp.once_dose_unit_name 
+		from prescription_western_patient pwp
+		left join clinic_drug cd on cd.id = pwp.clinic_drug_id 
+		where pwp.clinic_triage_patient_id=$1`
+
+	queryChineseSQL := `select 
+		cd.name as drug_name,
+		cd.packing_unit_name,
+		pci.once_dose,
+		pci.once_dose_unit_name,
+		pci.amount,
+		pcp.amount as info_amount,
+		pcp.id as prescription_patient_id,
+		pcp.medicine_illustration,
+		pcp.route_administration_name as info_route_administration_name,
+		pcp.frequency_name as info_frequency_name,
+		pcp.eff_day as info_eff_day
+		from prescription_chinese_patient pcp 
+		left join prescription_chinese_item pci on pci.prescription_chinese_patient_id = pcp.id
+		left join clinic_drug cd on cd.id = pci.clinic_drug_id
+		where pcp.clinic_triage_patient_id=$1`
+
+	row := model.DB.QueryRowx(querySQL, clinicTriagePatientID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "查询详情错误"})
+	}
+	result := FormatSQLRowToMap(row)
+
+	rowsWestern, err := model.DB.Queryx(queryWesternSQL, clinicTriagePatientID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	resultsWestern := FormatSQLRowsToMapArray(rowsWestern)
+
+	rowsChinese, err := model.DB.Queryx(queryChineseSQL, clinicTriagePatientID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	resultsChinese := FormatSQLRowsToMapArray(rowsChinese)
+
+	result["prescription_western_patient"] = resultsWestern
+	result["prescription_chinese_patient"] = FormatPrescription(resultsChinese)
+
+	ctx.JSON(iris.Map{"code": "200", "data": result})
+}

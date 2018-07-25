@@ -90,7 +90,41 @@ type PrescriptionModelItem struct {
 	SpecialIllustration     interface{} `json:"special_illustration"`
 }
 
-//Funtionmenu 测试
+//Prescription 处方
+type Prescription struct {
+	PrescriptionID          interface{}        `json:"prescription_patient_id"`
+	OperationName           interface{}        `json:"operation_name"`
+	RouteAdministrationName interface{}        `json:"route_administration_name"`
+	EffDay                  interface{}        `json:"eff_day"`
+	Amount                  interface{}        `json:"amount"`
+	FrequencyName           interface{}        `json:"frequency_name"`
+	FetchAddress            interface{}        `json:"fetch_address"`
+	MedicineIllustration    interface{}        `json:"medicine_illustration"`
+	CreatedTime             interface{}        `json:"created_time"`
+	UpdatedTime             interface{}        `json:"updated_time"`
+	Items                   []PrescriptionItem `json:"items"`
+}
+
+//PrescriptionItem 处方item
+type PrescriptionItem struct {
+	ClinicDrugID            interface{} `json:"clinic_drug_id"`
+	DrugType                interface{} `json:"type"`
+	DrugName                interface{} `json:"drug_name"`
+	Specification           interface{} `json:"specification"`
+	StockAmount             interface{} `json:"stock_amount"`
+	OnceDose                interface{} `json:"once_dose"`
+	OnceDoseUnitName        interface{} `json:"once_dose_unit_name"`
+	RouteAdministrationName interface{} `json:"route_administration_name"`
+	FrequencyName           interface{} `json:"frequency_name"`
+	EffDay                  interface{} `json:"eff_day"`
+	Amount                  interface{} `json:"amount"`
+	PackingUnitName         interface{} `json:"packing_unit_name"`
+	FetchAddress            interface{} `json:"fetch_address"`
+	Illustration            interface{} `json:"illustration"`
+	SpecialIllustration     interface{} `json:"special_illustration"`
+}
+
+//Funtionmenu 菜单功能
 type Funtionmenu struct {
 	ID                   int64         `json:"function_menu_id" db:"function_menu_id"`
 	ParentID             interface{}   `json:"parent_function_menu_id,omitempty" db:"parent_function_menu_id"`
@@ -398,4 +432,84 @@ func FormatUnsetMenu(functionMenu Funtionmenu) []Funtionmenu {
 	}
 	fmt.Println("44444444", unsetMenu)
 	return unsetMenu
+}
+
+// FormatPrescription 格式化处方
+func FormatPrescription(prescription []map[string]interface{}) []Prescription {
+	var prescriptions []Prescription
+	for _, v := range prescription {
+		prescriptionID := v["prescription_patient_id"]
+		operationName := v["operation_name"]
+		createdTime := v["created_time"]
+		updatedTime := v["updated_time"]
+		inforRouteAdministrationName := v["info_route_administration_name"]
+		infoEffDay := v["info_eff_day"]
+		infoAmount := v["info_amount"]
+		infoFrequencyName := v["info_frequency_name"]
+		infoFetchAddress := v["info_fetch_address"]
+		medicineIllustration := v["medicine_illustration"]
+
+		has := false
+
+		clinicDrugID := v["clinic_drug_id"]
+		drugType := v["type"]
+		drugName := v["drug_name"]
+		specification := v["specification"]
+		stockAmount := v["stock_amount"]
+		onceDose := v["once_dose"]
+		onceDoseUnitName := v["once_dose_unit_name"]
+		routeAdministrationName := v["route_administration_name"]
+		frequencyName := v["frequency_name"]
+		effDay := v["eff_day"]
+		amount := v["amount"]
+		packingUnitName := v["packing_unit_name"]
+		fetchAddress := v["fetch_address"]
+		illustration := v["illustration"]
+		specialIllustration := v["special_illustration"]
+
+		item := PrescriptionItem{
+			ClinicDrugID:            clinicDrugID,
+			DrugType:                drugType,
+			DrugName:                drugName,
+			Specification:           specification,
+			StockAmount:             stockAmount,
+			OnceDose:                onceDose,
+			OnceDoseUnitName:        onceDoseUnitName,
+			RouteAdministrationName: routeAdministrationName,
+			FrequencyName:           frequencyName,
+			EffDay:                  effDay,
+			Amount:                  amount,
+			PackingUnitName:         packingUnitName,
+			FetchAddress:            fetchAddress,
+			Illustration:            illustration,
+			SpecialIllustration:     specialIllustration,
+		}
+		for k, pModel := range prescriptions {
+			dprescriptionID := pModel.PrescriptionID
+			items := pModel.Items
+			if prescriptionID == dprescriptionID {
+				prescriptions[k].Items = append(items, item)
+				has = true
+			}
+		}
+		if !has {
+			var items []PrescriptionItem
+			items = append(items, item)
+			pmodel := Prescription{
+				PrescriptionID:          prescriptionID,
+				OperationName:           operationName,
+				CreatedTime:             createdTime,
+				RouteAdministrationName: inforRouteAdministrationName,
+				EffDay:                  infoEffDay,
+				Amount:                  infoAmount,
+				FrequencyName:           infoFrequencyName,
+				FetchAddress:            infoFetchAddress,
+				MedicineIllustration:    medicineIllustration,
+				UpdatedTime:             updatedTime,
+				Items:                   items,
+			}
+			prescriptions = append(prescriptions, pmodel)
+		}
+	}
+	return prescriptions
 }
