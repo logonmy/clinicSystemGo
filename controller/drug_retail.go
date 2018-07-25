@@ -368,18 +368,19 @@ func DrugRetailRefund(ctx iris.Context) {
 		}
 	}
 
-	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo, operationID)
-	if refundErr != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-4", "msg": refundErr.Error()})
-		return
-	}
-
-	_, err3 := tx.Exec(`INSERT INTO drug_retail_refund_record (out_trade_no,refund_trade_no,status,refund_money,operation_id,refund_time) VALUES ($1,$2,$3,$4,$5,LOCALTIMESTAMP)`, outTradeNo, tradeRefundNo, 2, refundTotalFee, operationID)
+	var refundID int
+	err3 := tx.QueryRow(`INSERT INTO drug_retail_refund_record (out_trade_no,refund_trade_no,status,refund_money,operation_id,refund_time) VALUES ($1,$2,$3,$4,$5,LOCALTIMESTAMP) RETURNING id `, outTradeNo, tradeRefundNo, 2, refundTotalFee, operationID).Scan(&refundID)
 
 	if err3 != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-5", "msg": err3.Error()})
+		return
+	}
+
+	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo, operationID, refundID)
+	if refundErr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-4", "msg": refundErr.Error()})
 		return
 	}
 
@@ -448,8 +449,8 @@ func paySuccessNotice(outTradeNo string) error {
 		alipay = payRecordMap["balance_money"].(int64)
 	}
 
-	_, crer := tx.Exec(`insert into charge_detail (pay_record_id,out_trade_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, -1, payRecordMap["out_trade_no"], "in", payRecordMap["balance_money"], payRecordMap["discount_money"], payRecordMap["medical_money"], payRecordMap["total_money"], payRecordMap["balance_money"], 0, payRecordMap["operation_id"], cash, wechat, alipay, bank)
+	_, crer := tx.Exec(`insert into charge_detail (pay_record_id,record_type,out_trade_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`, payRecordMap["id"], 2, payRecordMap["out_trade_no"], "in", payRecordMap["balance_money"], payRecordMap["discount_money"], payRecordMap["medical_money"], payRecordMap["total_money"], payRecordMap["balance_money"], 0, payRecordMap["operation_id"], cash, wechat, alipay, bank)
 
 	if crer != nil {
 		tx.Rollback()
@@ -464,7 +465,7 @@ func paySuccessNotice(outTradeNo string) error {
 	return nil
 }
 
-func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operationID string) error {
+func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operationID string, refundID int) error {
 	rowPayRecord := model.DB.QueryRowx("select * from drug_retail_pay_record where out_trade_no = $1 ", outTradeNo)
 	rowPayRecordMap := FormatSQLRowToMap(rowPayRecord)
 	if rowPayRecordMap["pay_method"] == nil {
@@ -505,8 +506,8 @@ func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operati
 		return errors.New("未知的支付方式")
 	}
 
-	_, err := model.DB.Exec(`insert into charge_detail (pay_record_id,out_trade_no,out_refund_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`, -1, rowPayRecordMap["out_trade_no"], outRefundNo, "out", refundFee*-1, rowPayRecordMap["discount_money"].(int64)*-1, rowPayRecordMap["medical_money"].(int64)*-1, refundFee*-1, refundFee*-1+rowPayRecordMap["medical_money"].(int64)*-1+rowPayRecordMap["discount_money"].(int64)*-1, 0, operationID, cash, wechat, alipay, bank)
+	_, err := model.DB.Exec(`insert into charge_detail (pay_record_id,record_type,out_trade_no,out_refund_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`, refundID, 2, rowPayRecordMap["out_trade_no"], outRefundNo, "out", refundFee*-1, rowPayRecordMap["discount_money"].(int64)*-1, rowPayRecordMap["medical_money"].(int64)*-1, refundFee*-1, refundFee*-1+rowPayRecordMap["medical_money"].(int64)*-1+rowPayRecordMap["discount_money"].(int64)*-1, 0, operationID, cash, wechat, alipay, bank)
 
 	return err
 }
