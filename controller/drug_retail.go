@@ -449,7 +449,7 @@ func paySuccessNotice(outTradeNo string) error {
 	}
 
 	_, crer := tx.Exec(`insert into charge_detail (pay_record_id,out_trade_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, -1, payRecordMap["out_trade_no"], "in", payRecordMap["balance_money"], payRecordMap["discount_money"], payRecordMap["medical_money"], payRecordMap["total_money"], payRecordMap["balance_money"], 0, payRecordMap["operation_id"], cash, wechat, alipay, bank)
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`, payRecordMap["id"], payRecordMap["out_trade_no"], "in", payRecordMap["balance_money"], payRecordMap["discount_money"], payRecordMap["medical_money"], payRecordMap["total_money"], payRecordMap["balance_money"], 0, payRecordMap["operation_id"], cash, wechat, alipay, bank)
 
 	if crer != nil {
 		tx.Rollback()

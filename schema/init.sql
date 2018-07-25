@@ -1894,6 +1894,7 @@ CREATE TABLE drug_retail_temp
 --药品零售支付订单
 CREATE TABLE drug_retail_pay_record 
 (
+  id serial PRIMARY KEY NOT NULL,--id
   out_trade_no varchar(30) NOT NULL UNIQUE,--交易号，一次交易的编码
   pay_method varchar(6) NOT NULL,--支付方式， wechat - 微信，alipay-支付宝 ,bank - 银行, cash- 现金
   auth_code varchar(20) , --授权码
@@ -1910,6 +1911,7 @@ CREATE TABLE drug_retail_pay_record
 --药品零售退费订单
 CREATE TABLE drug_retail_refund_record 
 (
+  id serial PRIMARY KEY NOT NULL,--id
   out_trade_no varchar(30) NOT NULL,--交易号，一次交易的编码
   refund_trade_no varchar(30) NOT NULL UNIQUE,--退费交易号
   status INTEGER NOT NULL DEFAULT -1, --订单状态, -1--待确认， 2--退费成功， 3-退费失败
