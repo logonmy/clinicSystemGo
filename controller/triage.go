@@ -892,6 +892,8 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 	left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
 	where ctp.id=$1`
 
+	queryMedicalRecordSQL := `select * from medical_record where clinic_triage_patient_id=$1 and is_default is null`
+
 	queryWesternSQL := `select 
 		cd.name,
 		cd.packing_unit_name,
@@ -931,6 +933,13 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 	}
 	result := FormatSQLRowToMap(row)
 
+	rowsMedicalRecord, err := model.DB.Queryx(queryMedicalRecordSQL, clinicTriagePatientID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	resultsMedicalRecord := FormatSQLRowsToMapArray(rowsMedicalRecord)
+
 	rowsWestern, err := model.DB.Queryx(queryWesternSQL, clinicTriagePatientID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -945,6 +954,7 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 	}
 	resultsChinese := FormatSQLRowsToMapArray(rowsChinese)
 
+	result["medical_records"] = resultsMedicalRecord
 	result["prescription_western_patient"] = resultsWestern
 	result["prescription_chinese_patient"] = FormatPrescription(resultsChinese)
 

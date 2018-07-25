@@ -85,28 +85,96 @@ func MedicalRecordRenew(ctx iris.Context) {
 		return
 	}
 
-	row := model.DB.QueryRowx("select id from medical_record where clinic_triage_patient_id=$1", clinicTriagePatientID)
-	clinicTriagePatient := FormatSQLRowToMap(row)
-	_, ok := clinicTriagePatient["id"]
+	row := model.DB.QueryRowx("select id from medical_record where clinic_triage_patient_id=$1 and is_default=true", clinicTriagePatientID)
+	medicalRecord := FormatSQLRowToMap(row)
+	_, ok := medicalRecord["id"]
 	if !ok {
-		sql := `INSERT INTO  medical_record ( clinic_triage_patient_id, morbidity_date, chief_complaint, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id, files ) 
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`
+		ctx.JSON(iris.Map{"code": "-1", "msg": "没有主病历,不能续写"})
+		return
+	}
+	sql := `INSERT INTO  medical_record ( clinic_triage_patient_id, morbidity_date, chief_complaint, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id, files ) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`
 
-		var id int
-		err := model.DB.QueryRow(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files).Scan(&id)
-		if err != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
-		}
-	} else {
-		sql := `UPDATE medical_record SET morbidity_date=$1, chief_complaint=$2, history_of_present_illness=$3, history_of_past_illness=$4, family_medical_history=$5, allergic_history=$6, allergic_reaction=$7, immunizations=$8, body_examination=$9, diagnosis=$10, cure_suggestion=$11, remark=$12, operation_id=$13, files=$14, updated_time=LOCALTIMESTAMP WHERE clinic_triage_patient_id=$15`
+	_, err := model.DB.Exec(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
 
-		_, err := model.DB.Exec(sql, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, clinicTriagePatientID)
-		if err != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
-		}
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
 
+// MedicalRecordRenewUpdate 续写病历修改
+func MedicalRecordRenewUpdate(ctx iris.Context) {
+
+	medicalRecordID := ctx.PostValue("medical_record_id")
+	chiefComplaint := ctx.PostValue("chief_complaint")
+	files := ctx.PostValue("files")
+	operationID := ctx.PostValue("operation_id")
+
+	if medicalRecordID == "" || chiefComplaint == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id,is_default from medical_record where id=$1", medicalRecordID)
+	medicalRecord := FormatSQLRowToMap(row)
+
+	_, ok := medicalRecord["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改的病历不存在"})
+		return
+	}
+	isDefault := medicalRecord["is_default"]
+
+	if isDefault != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "主病历不能修改"})
+		return
+	}
+
+	sql := `UPDATE medical_record SET chief_complaint=$2, operation_id=$3, files=$4, updated_time=LOCALTIMESTAMP WHERE id=$1`
+
+	_, err := model.DB.Exec(sql, medicalRecordID, chiefComplaint, operationID, files)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
+// MedicalRecordRenewDelete 续写病历删除
+func MedicalRecordRenewDelete(ctx iris.Context) {
+
+	medicalRecordID := ctx.PostValue("medical_record_id")
+
+	if medicalRecordID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id,is_default from medical_record where id=$1", medicalRecordID)
+	medicalRecord := FormatSQLRowToMap(row)
+
+	_, ok := medicalRecord["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除的病历不存在"})
+		return
+	}
+
+	isDefault := medicalRecord["is_default"]
+
+	if isDefault != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "主病历不能删除"})
+		return
+	}
+
+	sql := `delete from medical_record WHERE id=$1`
+
+	_, err := model.DB.Exec(sql, medicalRecordID)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "data": nil})

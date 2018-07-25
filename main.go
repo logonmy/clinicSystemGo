@@ -321,6 +321,8 @@ func main() {
 	{
 		medicalRecord.Post("/upsert", controller.MedicalRecordCreate)
 		medicalRecord.Post("/renew", controller.MedicalRecordRenew)
+		medicalRecord.Post("/MedicalRecordRenewUpdate", controller.MedicalRecordRenewUpdate)
+		medicalRecord.Post("/MedicalRecordRenewDelete", controller.MedicalRecordRenewDelete)
 		medicalRecord.Post("/findByTriageId", controller.MedicalRecordFindByTriageID)
 		medicalRecord.Post("/model/create", controller.MedicalRecordModelCreate)
 		medicalRecord.Post("/model/update", controller.MedicalRecordModelUpdate)
