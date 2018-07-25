@@ -241,8 +241,17 @@ CREATE TABLE body_sign
   systolic_blood_pressure integer,--血压收缩压
   diastolic_blood_pressure integer,--血压舒张压
   blood_sugar_time varchar(20),--血糖时间
-  blood_sugar_type integer,--血糖时段类型 1：睡前，2，晚餐后，3晚餐前，4午餐后，5，午餐前，6，早餐后，7早餐前，8：凌晨，9空腹
-  blood_sugar_concentration FLOAT,--血糖浓度(mmol/I)
+  -- blood_sugar_type integer,--血糖时段类型 1：睡前，2，晚餐后，3晚餐前，4午餐后，5，午餐前，6，早餐后，7早餐前，8：凌晨，9空腹
+  -- blood_sugar_concentration FLOAT,--血糖浓度(mmol/I)
+  concentration_before_retiring FLOAT,--睡前血糖浓度(mmol/I)
+  concentration_after_dinner FLOAT,--晚餐后血糖浓度(mmol/I)
+  concentration_before_dinner FLOAT,--晚餐前血糖浓度(mmol/I)
+  concentration_after_lunch FLOAT,--午餐后血糖浓度(mmol/I)
+  concentration_before_lunch FLOAT,--午餐血糖浓度(mmol/I)
+  concentration_after_breakfast FLOAT,--早餐后血糖浓度(mmol/I)
+  concentration_before_breakfast FLOAT,--早餐前血糖浓度(mmol/I)
+  concentration_before_dawn FLOAT,--凌晨血糖浓度(mmol/I)
+  concentration_empty_stomach FLOAT,--空腹血糖浓度(mmol/I)
   left_vision varchar(5),--左眼视力
   right_vision varchar(5),--右眼视力
   oxygen_saturation FLOAT,--氧饱和度(%)
@@ -2067,6 +2076,7 @@ CREATE TABLE patient_blood_sugar
   patient_id INTEGER NOT NULL references patient(id),--患者id
   record_time VARCHAR(20) NOT NULL,--记录时间
   -- blood_sugar_type integer,--血糖时段类型 1：睡前，2，晚餐后，3晚餐前，4午餐后，5，午餐前，6，早餐后，7早餐前，8：凌晨，9空腹
+  -- blood_sugar_concentration FLOAT,--血糖浓度(mmol/I)
   concentration_before_retiring FLOAT,--睡前血糖浓度(mmol/I)
   concentration_after_dinner FLOAT,--晚餐后血糖浓度(mmol/I)
   concentration_before_dinner FLOAT,--晚餐前血糖浓度(mmol/I)
