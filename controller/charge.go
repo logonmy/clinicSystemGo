@@ -310,9 +310,9 @@ func ChargePay(ctx iris.Context) {
 
 	//插入交易流水表
 	var sID int
-	insertPaidCharge := "insert into charge_detail (pay_record_id,out_trade_no,in_out,patient_id,department_id,doctor_id,pay_type_code,pay_type_code_name,pay_method_code,pay_method_code_name,discount_money,derate_money,medical_money,on_credit_money,voucher_money,bonus_points_money,total_money,balance_money) " +
-		"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING id"
-	insertPaidChargeErr := tx.QueryRow(insertPaidCharge, recordID, outTradeNo, "in", registration["patient_id"], registration["department_id"], registration["personnel_id"], "01", "门诊缴费", payMethodCode, "", discountMoney, derateMoney, medicalMoney, onCreditMoney, voucherMoney, bonusPointsMoney, totalMoneyInt, balanceMoneyInt).Scan(&sID)
+	insertPaidCharge := "insert into charge_detail (pay_record_id,record_type,out_trade_no,in_out,patient_id,department_id,doctor_id,pay_type_code,pay_type_code_name,pay_method_code,pay_method_code_name,discount_money,derate_money,medical_money,on_credit_money,voucher_money,bonus_points_money,total_money,balance_money) " +
+		"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) RETURNING id"
+	insertPaidChargeErr := tx.QueryRow(insertPaidCharge, recordID, 1, outTradeNo, "in", registration["patient_id"], registration["department_id"], registration["personnel_id"], "01", "门诊缴费", payMethodCode, "", discountMoney, derateMoney, medicalMoney, onCreditMoney, voucherMoney, bonusPointsMoney, totalMoneyInt, balanceMoneyInt).Scan(&sID)
 	if insertPaidChargeErr != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "4", "msg": insertPaidChargeErr.Error()})
@@ -632,11 +632,11 @@ func charge(outTradeNo string, tradeNo string, money int64) error {
 		cash = pay["balance_money"].(int64)
 	}
 
-	insertDetails := `insert into charge_detail (pay_record_id,out_trade_no,in_out,clinic_patient_id,department_id,doctor_id,
+	insertDetails := `insert into charge_detail (pay_record_id,record_type,out_trade_no,in_out,clinic_patient_id,department_id,doctor_id,
 		traditional_medical_fee,western_medicine_fee,examination_fee,labortory_fee,treatment_fee,diagnosis_treatment_fee,
 		material_fee,retail_fee,other_fee,discount_money,derate_money,medical_money,voucher_money,bonus_points_money,
-		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)`
-	_, insertDetailErr := tx.Exec(insertDetails, pay["id"], outTradeNo, "in", triage["clinic_patient_id"], triage["department_id"], triage["doctor_id"], typeMoney["2"], typeMoney["1"], typeMoney["4"], typeMoney["3"], typeMoney["7"], typeMoney["8"], typeMoney["5"], 0, typeMoney["6"],
+		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29)`
+	_, insertDetailErr := tx.Exec(insertDetails, pay["id"], 1, outTradeNo, "in", triage["clinic_patient_id"], triage["department_id"], triage["doctor_id"], typeMoney["2"], typeMoney["1"], typeMoney["4"], typeMoney["3"], typeMoney["7"], typeMoney["8"], typeMoney["5"], 0, typeMoney["6"],
 		pay["discount_money"], pay["derate_money"], pay["medical_money"], pay["voucher_money"], pay["bonus_points_money"], pay["on_credit_money"], pay["total_money"], pay["balance_money"], confrimID, cash, wechat, alipay, bank)
 	if insertDetailErr != nil {
 		tx.Rollback()
