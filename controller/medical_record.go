@@ -352,7 +352,7 @@ func MedicalRecordListByPID(ctx iris.Context) {
 	countSQL := `select count(mr.id) as total from medical_record mr 
 	left join clinic_triage_patient ctp on ctp.id = mr.clinic_triage_patient_id 
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
-	where cp.patient_id = $1`
+	where cp.patient_id = $1 and mr.is_default = true`
 	selectSQL := `	select mr.*,
 	c.name as clinic_name,
 	cp.id as clinic_patient_id,
@@ -366,7 +366,7 @@ func MedicalRecordListByPID(ctx iris.Context) {
 	left join department d on d.id = ctp.department_id 
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
 	left join clinic c on cp.clinic_id = c.id 
-	where cp.patient_id = $1 ORDER BY mr.created_time DESC offset $2 limit $3`
+	where cp.patient_id = $1 and mr.is_default = true ORDER BY mr.created_time DESC offset $2 limit $3`
 
 	total := model.DB.QueryRowx(countSQL, patientID)
 
