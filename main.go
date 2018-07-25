@@ -225,6 +225,8 @@ func main() {
 		charge.Post("/traigePatient/paid", controller.GetPaidTraigePatients)
 		// 获取交易流水日报表
 		charge.Post("/business/transaction", controller.BusinessTransaction)
+		// 获取分析类报表
+		charge.Post("/business/transaction/analysis", controller.BusinessTransactionAnalysis)
 		// 获取交易流水月报表
 		charge.Post("/business/transaction/month", controller.BusinessTransactionMonth)
 		// 获取交易详情

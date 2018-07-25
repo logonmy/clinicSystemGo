@@ -727,6 +727,74 @@ func BusinessTransaction(ctx iris.Context) {
 
 }
 
+// BusinessTransactionAnalysis 获取分析类交易
+func BusinessTransactionAnalysis(ctx iris.Context) {
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	if startDate == "" || endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请输入正确的时间范围"})
+		return
+	}
+
+	queryMap := map[string]interface{}{
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+		"startDate": ToNullString(startDate),
+		"endDate":   ToNullString(endDate),
+	}
+
+	sql := `FROM charge_detail where created_time BETWEEN :startDate and :endDate `
+
+	rows, err1 := model.DB.NamedQuery(`SELECT to_char(created_time, 'YYYY-MM-DD') as created_time,
+	sum(wechat) as wechat,sum(cash) as cash,
+	sum(total_money) as total_money,sum(balance_money) as balance_money,
+	sum(bank) as bank,sum(alipay) as alipay,sum(discount_money) as discount_money,
+	sum(derate_money) as derate_money, sum(medical_money) as medical_money,
+	sum(on_credit_money) as on_credit_money,sum(voucher_money) as voucher_money,
+	sum(bonus_points_money) as bonus_points_money,sum(traditional_medical_fee) as traditional_medical_fee,
+	sum(western_medicine_fee) as western_medicine_fee,sum(examination_fee) as examination_fee,
+	sum(labortory_fee) as labortory_fee, sum(treatment_fee) as treatment_fee,sum(diagnosis_treatment_fee) as diagnosis_treatment_fee,
+	sum(material_fee) as material_fee, sum(retail_fee) as retail_fee,sum(other_fee) as other_fee `+sql+" GROUP by to_char(created_time, 'YYYY-MM-DD') order by created_time ASC offset :offset limit :limit", queryMap)
+	if err1 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total,
+	sum(wechat) as wechat,sum(cash) as cash,
+	sum(total_money) as total_money,sum(balance_money) as balance_money,
+	sum(bank) as bank,sum(alipay) as alipay,sum(discount_money) as discount_money,
+	sum(derate_money) as derate_money, sum(medical_money) as medical_money,
+	sum(on_credit_money) as on_credit_money,sum(voucher_money) as voucher_money,
+	sum(bonus_points_money) as bonus_points_money,sum(traditional_medical_fee) as traditional_medical_fee,
+	sum(western_medicine_fee) as western_medicine_fee,sum(examination_fee) as examination_fee,
+	sum(labortory_fee) as labortory_fee, sum(treatment_fee) as treatment_fee,sum(diagnosis_treatment_fee) as diagnosis_treatment_fee,
+	sum(material_fee) as material_fee, sum(retail_fee) as retail_fee,sum(other_fee) as other_fee
+	`+sql, queryMap)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+
+}
+
 // BusinessTransactionMonth 获取交易流水月报表
 func BusinessTransactionMonth(ctx iris.Context) {
 	offset := ctx.PostValue("offset")
