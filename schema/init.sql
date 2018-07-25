@@ -449,6 +449,7 @@ CREATE TABLE charge_detail
 (
   id serial PRIMARY KEY NOT NULL,--id
   pay_record_id INTEGER NOT NULL,--缴费记录
+  record_type INTEGER NOT NULL,--缴费类型   1-门诊缴费， 2-药品零售 3-会员充值  4-挂账还款
   out_trade_no varchar(20),--第三方交易号
   out_refund_no varchar(20) UNIQUE,--第三方退费交易号
   in_out varchar(3) NOT NULL CHECK(in_out = 'in' OR in_out = 'out'),--收入或支出
