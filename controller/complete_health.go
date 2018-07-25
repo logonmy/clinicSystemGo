@@ -42,8 +42,16 @@ func TriageCompleteBodySign(ctx iris.Context) {
 	systolicBloodPressure := ctx.PostValue("systolic_blood_pressure")
 	diastolicBloodPressure := ctx.PostValue("diastolic_blood_pressure")
 	bloodSugarTime := ctx.PostValue("blood_sugar_time")
-	bloodSugarType := ctx.PostValue("blood_sugar_type")
-	bloodSugarConcentration := ctx.PostValue("blood_sugar_concentration")
+	// bloodSugarType := ctx.PostValue("blood_sugar_type")
+	concentrationBeforeRetiring := ctx.PostValue("concentration_before_retiring")
+	concentrationAfterDinner := ctx.PostValue("concentration_after_dinner")
+	concentrationBeforeDinner := ctx.PostValue("concentration_before_dinner")
+	concentrationAfterLunch := ctx.PostValue("concentration_after_lunch")
+	concentrationBeforeLunch := ctx.PostValue("concentration_before_lunch")
+	concentrationAfterBreakfast := ctx.PostValue("concentration_after_breakfast")
+	concentrationBeforeBreakfast := ctx.PostValue("concentration_before_breakfast")
+	concentrationBeforeDawn := ctx.PostValue("concentration_before_dawn")
+	concentrationEmptyStomach := ctx.PostValue("concentration_empty_stomach")
 	leftVision := ctx.PostValue("left_vision")
 	rightVision := ctx.PostValue("right_vision")
 	oxygenSaturation := ctx.PostValue("oxygen_saturation")
@@ -103,8 +111,15 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		systolic_blood_pressure,
 		diastolic_blood_pressure,
 		blood_sugar_time,
-		blood_sugar_type,
-		blood_sugar_concentration,
+		concentration_before_retiring,
+		concentration_after_dinner,
+		concentration_before_dinner,
+		concentration_after_lunch,
+		concentration_before_lunch,
+		concentration_after_breakfast,
+		concentration_before_breakfast,
+		concentration_before_dawn,
+		concentration_empty_stomach,
 		left_vision,
 		right_vision,
 		oxygen_saturation,
@@ -125,8 +140,15 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		ToNullInt64(systolicBloodPressure),
 		ToNullInt64(diastolicBloodPressure),
 		ToNullString(bloodSugarTime),
-		ToNullInt64(bloodSugarType),
-		ToNullFloat64(bloodSugarConcentration),
+		ToNullFloat64(concentrationBeforeRetiring),
+		ToNullFloat64(concentrationAfterDinner),
+		ToNullFloat64(concentrationBeforeDinner),
+		ToNullFloat64(concentrationAfterLunch),
+		ToNullFloat64(concentrationBeforeLunch),
+		ToNullFloat64(concentrationAfterBreakfast),
+		ToNullFloat64(concentrationBeforeBreakfast),
+		ToNullFloat64(concentrationBeforeDawn),
+		ToNullFloat64(concentrationEmptyStomach),
 		ToNullString(leftVision),
 		ToNullString(rightVision),
 		ToNullFloat64(oxygenSaturation),
@@ -249,9 +271,20 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		}
 	}
 
-	if bloodSugarType != "" && bloodSugarConcentration != "" {
+	if concentrationBeforeRetiring != "" || concentrationAfterDinner != "" || concentrationBeforeDinner != "" || concentrationAfterLunch != "" || concentrationBeforeLunch != "" || concentrationAfterBreakfast != "" || concentrationBeforeBreakfast != "" || concentrationBeforeDawn != "" || concentrationEmptyStomach != "" {
 		var results []map[string]string
-		results = append(results, map[string]string{"record_time": bloodSugarTime, "blood_sugar_type": bloodSugarType, "blood_sugar_concentration": bloodSugarConcentration, "upsert_type": "insert"})
+		results = append(results, map[string]string{
+			"record_time":                    bloodSugarTime,
+			"concentration_before_retiring":  concentrationBeforeRetiring,
+			"concentration_after_dinner":     concentrationAfterDinner,
+			"concentration_before_dinner":    concentrationBeforeDinner,
+			"concentration_after_lunch":      concentrationAfterLunch,
+			"concentration_before_lunch":     concentrationBeforeLunch,
+			"concentration_after_breakfast":  concentrationAfterBreakfast,
+			"concentration_before_breakfast": concentrationBeforeBreakfast,
+			"concentration_before_dawn":      concentrationBeforeDawn,
+			"concentration_empty_stomach":    concentrationEmptyStomach,
+			"upsert_type":                    "insert"})
 		err := upsertPatientBloodSugar(patientIDStr, results)
 		if err != nil {
 			tx.Rollback()
@@ -1312,17 +1345,30 @@ func upsertPatientBloodSugar(patientID string, results []map[string]string) erro
 
 	for _, v := range results {
 		recordTime, rok := v["record_time"]
-		bloodSugarType, ttok := v["blood_sugar_type"]
-		bloodSugarConcentration, tok := v["blood_sugar_concentration"]
+		concentrationBeforeRetiring := v["concentration_before_retiring"]
+		concentrationAfterDinner := v["concentration_after_dinner"]
+		concentrationBeforeDinner := v["concentration_before_dinner"]
+		concentrationAfterLunch := v["concentration_after_lunch"]
+		concentrationBeforeLunch := v["concentration_before_lunch"]
+		concentrationAfterBreakfast := v["concentration_after_breakfast"]
+		concentrationBeforeBreakfast := v["concentration_before_breakfast"]
+		concentrationBeforeDawn := v["concentration_before_dawn"]
+		concentrationEmptyStomach := v["concentration_empty_stomach"]
 		upsertType, uok := v["upsert_type"]
-		if !rok || recordTime == "" || !ttok || bloodSugarType == "" || !tok || bloodSugarConcentration == "" || !uok || upsertType == "" {
+		if !rok || recordTime == "" || !uok || upsertType == "" {
 			return errors.New("缺少参数")
 		}
 
 		var err error
 		if upsertType == "update" {
-			exceSQL := `update patient_blood_sugar set blood_sugar_type = $1,blood_sugar_concentration = $2 where patient_id = $3 and record_time = $4`
-			_, err = tx.Exec(exceSQL, ToNullInt64(bloodSugarType), ToNullFloat64(bloodSugarConcentration), ToNullInt64(patientID), ToNullString(recordTime))
+			exceSQL := `update patient_blood_sugar set 
+			concentration_before_retiring=$3,concentration_after_dinner=$4,concentration_before_dinner=$5,
+			concentration_after_lunch=$6,concentration_before_lunch=$7,concentration_after_breakfast=$8,
+			concentration_before_breakfast=$9,concentration_before_dawn=$10,concentration_empty_stomach=$11 where patient_id = $1 and record_time = $2`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime), ToNullFloat64(concentrationBeforeRetiring),
+				ToNullFloat64(concentrationAfterDinner), ToNullFloat64(concentrationBeforeDinner), ToNullFloat64(concentrationAfterLunch),
+				ToNullFloat64(concentrationBeforeLunch), ToNullFloat64(concentrationAfterBreakfast), ToNullFloat64(concentrationBeforeBreakfast),
+				ToNullFloat64(concentrationBeforeDawn), ToNullFloat64(concentrationEmptyStomach))
 		} else if upsertType == "insert" {
 			deleteSQL := `delete from patient_vision where patient_id = $1 and record_time = $2`
 			_, err = tx.Exec(deleteSQL, ToNullInt64(patientID), ToNullString(recordTime))
@@ -1331,8 +1377,15 @@ func upsertPatientBloodSugar(patientID string, results []map[string]string) erro
 				return err
 			}
 
-			exceSQL := `insert into patient_blood_sugar (blood_sugar_type, blood_sugar_concentration, patient_id, record_time) values ($1, $2, $3, $4)`
-			_, err = tx.Exec(exceSQL, ToNullInt64(bloodSugarType), ToNullFloat64(bloodSugarConcentration), ToNullInt64(patientID), ToNullString(recordTime))
+			exceSQL := `insert into patient_blood_sugar (patient_id, record_time, 
+				concentration_before_retiring,concentration_after_dinner,concentration_before_dinner,
+				concentration_after_lunch,concentration_before_lunch,concentration_after_breakfast,
+				concentration_before_breakfast,concentration_before_dawn,concentration_empty_stomach) 
+				values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`
+			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime), ToNullFloat64(concentrationBeforeRetiring),
+				ToNullFloat64(concentrationAfterDinner), ToNullFloat64(concentrationBeforeDinner), ToNullFloat64(concentrationAfterLunch),
+				ToNullFloat64(concentrationBeforeLunch), ToNullFloat64(concentrationAfterBreakfast), ToNullFloat64(concentrationBeforeBreakfast),
+				ToNullFloat64(concentrationBeforeDawn), ToNullFloat64(concentrationEmptyStomach))
 		} else if upsertType == "delete" {
 			exceSQL := `delete from patient_blood_sugar where patient_id = $1 and record_time = $2`
 			_, err = tx.Exec(exceSQL, ToNullInt64(patientID), ToNullString(recordTime))
