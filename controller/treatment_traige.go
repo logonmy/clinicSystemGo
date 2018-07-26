@@ -29,11 +29,14 @@ func TreatmentTriageList(ctx iris.Context) {
 	ep.left_times,
 	ep.illustration,
 	tpr.remark,
-	tpr.id as treatment_patient_record_id
+	tpr.id as treatment_patient_record_id,
+	tpr.created_time as report_time,
+	doc.name as report_doctor_name
 	FROM treatment_patient ep 
 	left join clinic_treatment ce on ce.id = ep.clinic_treatment_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ep.clinic_triage_patient_id and mo.charge_project_type_id=7 and ep.clinic_treatment_id=mo.charge_project_id
 	left join treatment_patient_record tpr on tpr.treatment_patient_id = ep.id
+	left join personnel doc on doc.id = tpr.operation_id
 	where mo.id is not NULL and ep.clinic_triage_patient_id = $1 and ep.order_status=$2`
 
 	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID, status)
@@ -93,25 +96,22 @@ func treatmentTriageList(ctx iris.Context, status string) {
 
 	sql := ` from clinic_triage_patient ctp 
 	left join clinic_patient cp on cp.id = ctp.clinic_patient_id 
-	left join personnel doc on doc.id = ctp.doctor_id 
 	left join department d on d.id = ctp.department_id  
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,count(*) as total_count,max(created_time) as order_time
-		from treatment_patient where order_status = $1 group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
+	left join (select clinic_triage_patient_id,operation_id,count(*) as total_count,max(created_time) as order_time
+		from treatment_patient where order_status = $1 group by(clinic_triage_patient_id,operation_id)) up on up.clinic_triage_patient_id = ctp.id 
 	left join (select clinic_triage_patient_id,count(*) as mz_count 
 		from mz_paid_orders where charge_project_type_id = 7 group by(clinic_triage_patient_id)) mzup on mzup.clinic_triage_patient_id = ctp.id
+	left join personnel doc on doc.id = up.operation_id 
 	where up.total_count > 0 AND mzup.mz_count > 0 AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select
-	((select count(*) 
-	from treatment_patient where order_status = '10' and clinic_triage_patient_id = ctp.id )) as waiting_total_count,
-	((select count(*) 
-	from treatment_patient where order_status = '20' and clinic_triage_patient_id = ctp.id )) as checking_total_count,
-	((select count(*) 
-	from treatment_patient where order_status = '30' and clinic_triage_patient_id = ctp.id )) as checked_total_count,
+	((select count(*) from treatment_patient where order_status = '10' and clinic_triage_patient_id = ctp.id )) as waiting_total_count,
+	((select count(*) from treatment_patient where order_status = '20' and clinic_triage_patient_id = ctp.id )) as checking_total_count,
+	((select count(*) from treatment_patient where order_status = '30' and clinic_triage_patient_id = ctp.id )) as checked_total_count,
 	ctp.id as clinic_triage_patient_id,
 	ctp.clinic_patient_id as clinic_patient_id,
 	ctp.updated_time,
@@ -125,7 +125,7 @@ func treatmentTriageList(ctx iris.Context, status string) {
 	p.birthday,
 	p.sex,
 	p.phone,
-	doc.name as doctor_name,
+	doc.name as order_doctor_name,
 	d.name as department_name ` + sql + `order by up.order_time desc offset $6 limit $7`
 
 	total := model.DB.QueryRowx(countsql, status, clinicID, startDate, endDate, keyword)
@@ -429,23 +429,23 @@ func TreatmentTriagePatientRecordList(ctx iris.Context) {
 
 	querySQL := `select 
 	string_agg (ce.name, '，') as clinic_treatment_name, 
-	max (tp.created_time) as finish_time,
+	max (tp.created_time) as order_time,
 	tp.clinic_triage_patient_id, 
 	ctp.clinic_patient_id, 
 	cp.patient_id,
 	c.name as clinic_name,
 	d.name as department_name,
-	p.name as doctor_name  
+	p.name as order_doctor_name  
 	from treatment_patient tp
 	left join clinic_treatment ce on ce.id = tp.clinic_treatment_id
 	left join clinic_triage_patient ctp on tp.clinic_triage_patient_id = ctp.id
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
 	left join clinic c on c.id = cp.clinic_id
 	left join department d on ctp.department_id = d.id
-	left join personnel p on ctp.doctor_id = p.id
+	left join personnel p on tp.operation_id = p.id
 	where cp.patient_id = $1 and tp.order_status = '30'
-	group by (tp.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, c.name, d.name, p.name)
-	order by finish_time DESC
+	group by (tp.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, c.name, d.name, p.name, tp.operation_id)
+	order by order_time DESC
 	offset $2 limit $3`
 
 	rows, err := model.DB.Queryx(querySQL, patientID, offset, limit)

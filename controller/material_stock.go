@@ -412,6 +412,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
+	fmt.Println("materialInstockRecordID===", materialInstockRecordID)
 
 	row := model.DB.QueryRowx("select * from material_instock_record where id=$1 limit 1", materialInstockRecordID)
 	if row == nil {
@@ -998,7 +999,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-
+	fmt.Println("materialOutstockRecordID===", materialOutstockRecordID)
 	row := model.DB.QueryRowx(`select * from material_outstock_record where id=$1 limit 1`, materialOutstockRecordID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "审核失败"})

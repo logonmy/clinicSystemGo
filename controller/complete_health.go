@@ -139,7 +139,7 @@ func TriageCompleteBodySign(ctx iris.Context) {
 		oxygen_saturation,
 		pain_score,
 		remark
-	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) RETURNING id;`
+	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27) RETURNING id;`
 	_, err = tx.Exec(insertSQL,
 		ToNullInt64(clinicTriagePatientID),
 		ToNullFloat64(weight),
@@ -424,7 +424,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id;`
 
 	_, err = tx.Exec(insertpSQL,
-		ToNullInt64(patientID.(string)),
+		patientID,
 		ToNullBool(hasAllergicHistory),
 		ToNullString(allergicHistory),
 		ToNullString(personalMedicalHistory),
