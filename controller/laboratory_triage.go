@@ -23,6 +23,7 @@ func LaboratoryTriageList(ctx iris.Context) {
 	lp.id as laboratory_patient_id,
 	lp.clinic_triage_patient_id,
 	cl.name as clinic_laboratory_name,
+	cl.laboratory_sample,
 	lp.clinic_laboratory_id,
 	lpr.id as laboratory_patient_record_id,
 	lpr.remark,
