@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -121,17 +120,15 @@ func CreateDrugRetailOrder(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	rand.Seed(time.Now().UnixNano())
 
-	tradeNo := time.Now().Format("20060102150405") + strconv.Itoa((rand.Intn(8999) + 1000))
-
+	recordSn := GetTradeNo("O1")
 	sql := "INSERT INTO drug_retail_temp VALUES "
 
 	var values []string
 	for _, v := range results {
 		var s []string
 
-		s = append(s, tradeNo)
+		s = append(s, "'"+recordSn+"'")
 		s = append(s, v["clinic_drug_id"])
 		s = append(s, v["amount"])
 		s = append(s, v["total_fee"])
@@ -150,13 +147,13 @@ func CreateDrugRetailOrder(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": erre.Error()})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": tradeNo})
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": recordSn})
 
 }
 
 // CreateDrugRetailPaymentOrder 创建支付订单
 func CreateDrugRetailPaymentOrder(ctx iris.Context) {
-	outTradeNo := ctx.PostValue("out_trade_no")
+	recordSn := ctx.PostValue("record_sn")
 	payMethod := ctx.PostValue("pay_method")
 	authCode := ctx.PostValue("auth_code")
 	totalMoney := ctx.PostValue("total_money")
@@ -165,7 +162,7 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 	balanceMoney := ctx.PostValue("balance_money")
 	operationID := ctx.PostValue("operation_id")
 
-	if outTradeNo == "" || payMethod == "" || discountMoney == "" || medicalMoney == "" || totalMoney == "" || balanceMoney == "" || operationID == "" {
+	if recordSn == "" || payMethod == "" || discountMoney == "" || medicalMoney == "" || totalMoney == "" || balanceMoney == "" || operationID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -175,8 +172,11 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 		return
 	}
 
+	outTradeNo := GetTradeNo("T1")
+
 	queryMap := map[string]interface{}{
 		"outTradeNo":    ToNullString(outTradeNo),
+		"recordSn":      ToNullString(recordSn),
 		"payMethod":     ToNullString(payMethod),
 		"authCode":      ToNullString(authCode),
 		"status":        -1,
@@ -187,7 +187,7 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 		"operationID":   ToNullInt64(operationID),
 	}
 
-	row := model.DB.QueryRowx("select out_trade_no, sum(total_fee) as fee from drug_retail_temp where out_trade_no = $1 GROUP by out_trade_no ", outTradeNo)
+	row := model.DB.QueryRowx("select record_sn, sum(total_fee) as fee from drug_retail_temp where record_sn = $1 GROUP by record_sn ", recordSn)
 	rowMap := FormatSQLRowToMap(row)
 
 	if strconv.FormatInt(rowMap["fee"].(int64), 10) != totalMoney {
@@ -197,10 +197,11 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 
 	requestIP := ctx.Host()
 	requestIP = requestIP[0:strings.LastIndex(requestIP, ":")]
+	if strings.ToLower(requestIP) == "localhost" {
+		requestIP = "127.0.0.1"
+	}
 
-	model.DB.NamedExec("DELETE from drug_retail_pay_record where out_trade_no = :outTradeNo and status = -1", queryMap)
-
-	_, err1 := model.DB.NamedExec("INSERT INTO drug_retail_pay_record (out_trade_no,pay_method,auth_code,total_money,discount_money,medical_money,balance_money,operation_id) VALUES (:outTradeNo,:payMethod,:authCode,:totalMoney,:discountMoney,:medicalMoney,:balanceMoney,:operationID)", queryMap)
+	_, err1 := model.DB.NamedExec("INSERT INTO drug_retail_pay_record (record_sn,out_trade_no,pay_method,auth_code,total_money,discount_money,medical_money,balance_money,operation_id) VALUES (:recordSn,:outTradeNo,:payMethod,:authCode,:totalMoney,:discountMoney,:medicalMoney,:balanceMoney,:operationID)", queryMap)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
@@ -215,7 +216,7 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 			payModel = "weixin_f2f"
 		}
 
-		result := FaceToFace(outTradeNo, authCode, merID, payModel, "ls", balanceMoney, "药品零售", "127.0.0.1", "", "")
+		result := FaceToFace(outTradeNo, authCode, merID, payModel, "ls", balanceMoney, "药品零售", requestIP, "", "")
 		if result["code"].(string) != "200" {
 			if result["code"].(string) == "2" {
 				_, err := model.DB.Exec("update drug_retail_pay_record set status = 1 where out_trade_no = $1", outTradeNo)
@@ -223,13 +224,14 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 					ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 					return
 				}
-				ctx.JSON(iris.Map{"code": "300", "msg": result["msg"]})
+				ctx.JSON(iris.Map{"code": "300", "msg": result["msg"], "data": outTradeNo})
 			} else {
 				model.DB.Exec("update drug_retail_pay_record set status = 3 where out_trade_no = $1", outTradeNo)
 				ctx.JSON(iris.Map{"code": result["code"], "msg": result["msg"]})
 			}
 		} else {
-			err := paySuccessNotice(outTradeNo)
+			data := result["data"].(map[string]interface{})
+			err := paySuccessNotice(outTradeNo, data["transaction_id"].(string))
 			if err != nil {
 				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 				return
@@ -237,7 +239,7 @@ func CreateDrugRetailPaymentOrder(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "200", "data": 1})
 		}
 	} else if payMethod == "cash" {
-		err := paySuccessNotice(outTradeNo)
+		err := paySuccessNotice(outTradeNo, "")
 		fmt.Println("现金支付结果", err)
 		if err != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -262,7 +264,7 @@ func DrugRetailPaymentStatus(ctx iris.Context) {
 		data := res["data"].(map[string]interface{})
 		tradeStatus := data["trade_status"].(string)
 		if tradeStatus == "SUCCESS" {
-			err := paySuccessNotice(outTradeNo)
+			err := paySuccessNotice(outTradeNo, data["transaction_id"].(string))
 			if err != nil {
 				fmt.Println("缴费通知失败", err.Error())
 			}
@@ -306,7 +308,7 @@ func DrugRetailRefund(ctx iris.Context) {
 		return
 	}
 
-	tradeRefundNo := "41" + time.Now().Format("20060102150405") + strconv.Itoa((rand.Intn(8999) + 1000))
+	tradeRefundNo := GetTradeNo("R1")
 
 	refundTotalFee := int64(0)
 
@@ -338,7 +340,7 @@ func DrugRetailRefund(ctx iris.Context) {
 		fee := price * amountInt
 		refundTotalFee += fee
 
-		_, err1 := tx.Exec(`INSERT INTO drug_retail (out_trade_no,refund_trade_no,clinic_drug_id,drug_stock_id,amount,total_fee) VALUES ($1,$2,$3,$4,$5,$6)`, outTradeNo, tradeRefundNo, rowMap["clinic_drug_id"], rowMap["drug_stock_id"], amountInt, fee)
+		_, err1 := tx.Exec(`INSERT INTO drug_retail (out_trade_no,out_refund_no,clinic_drug_id,drug_stock_id,amount,total_fee) VALUES ($1,$2,$3,$4,$5,$6)`, outTradeNo, tradeRefundNo, rowMap["clinic_drug_id"], rowMap["drug_stock_id"], amountInt, fee)
 
 		if err1 != nil {
 			tx.Rollback()
@@ -369,7 +371,7 @@ func DrugRetailRefund(ctx iris.Context) {
 	}
 
 	var refundID int
-	err3 := tx.QueryRow(`INSERT INTO drug_retail_refund_record (out_trade_no,refund_trade_no,status,refund_money,operation_id,refund_time) VALUES ($1,$2,$3,$4,$5,LOCALTIMESTAMP) RETURNING id `, outTradeNo, tradeRefundNo, 2, refundTotalFee, operationID).Scan(&refundID)
+	err3 := tx.QueryRow(`INSERT INTO drug_retail_refund_record (out_trade_no,out_refund_no,refund_no,status,refund_money,operation_id,refund_time) VALUES ($1,$2,$3,$4,$5,$6,LOCALTIMESTAMP) RETURNING id `, outTradeNo, tradeRefundNo, "", 2, refundTotalFee, operationID).Scan(&refundID)
 
 	if err3 != nil {
 		tx.Rollback()
@@ -377,7 +379,7 @@ func DrugRetailRefund(ctx iris.Context) {
 		return
 	}
 
-	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo, operationID, refundID)
+	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo, operationID, refundID, tx)
 	if refundErr != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-4", "msg": refundErr.Error()})
@@ -395,7 +397,7 @@ func DrugRetailRefund(ctx iris.Context) {
 }
 
 // 支付成功后通知
-func paySuccessNotice(outTradeNo string) error {
+func paySuccessNotice(outTradeNo string, tradeNo string) error {
 	payRecordRow := model.DB.QueryRowx("SELECT * FROM drug_retail_pay_record WHERE out_trade_no = $1", outTradeNo)
 	payRecordMap := FormatSQLRowToMap(payRecordRow)
 	if payRecordMap["out_trade_no"] == nil {
@@ -406,7 +408,7 @@ func paySuccessNotice(outTradeNo string) error {
 		return errors.New("订单已处理过")
 	}
 
-	rows, _ := model.DB.Queryx("SELECT * FROM drug_retail_temp WHERE out_trade_no = $1", outTradeNo)
+	rows, _ := model.DB.Queryx("SELECT * FROM drug_retail_temp WHERE record_sn = $1", payRecordMap["record_sn"])
 	rowsMap := FormatSQLRowsToMapArray(rows)
 
 	tx, txErr := model.DB.Beginx()
@@ -414,7 +416,7 @@ func paySuccessNotice(outTradeNo string) error {
 		return txErr
 	}
 
-	_, err := tx.Exec("update drug_retail_pay_record set status = 2,pay_time = LOCALTIMESTAMP where out_trade_no = $1", outTradeNo)
+	_, err := tx.Exec("update drug_retail_pay_record set status = 2,trade_no = $1,pay_time = LOCALTIMESTAMP where out_trade_no = $2", tradeNo, outTradeNo)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -465,7 +467,7 @@ func paySuccessNotice(outTradeNo string) error {
 	return nil
 }
 
-func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operationID string, refundID int) error {
+func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operationID string, refundID int, tx *sqlx.Tx) error {
 	rowPayRecord := model.DB.QueryRowx("select * from drug_retail_pay_record where out_trade_no = $1 ", outTradeNo)
 	rowPayRecordMap := FormatSQLRowToMap(rowPayRecord)
 	if rowPayRecordMap["pay_method"] == nil {
@@ -489,6 +491,15 @@ func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operati
 			if res["code"] != "200" {
 				return errors.New(res["msg"].(string))
 			}
+
+			data := res["data"].(map[string]interface{})
+			_, err := tx.Exec(`update drug_retail_refund_record set refund_no = $1 where id = $2 `, data["refund_id"], refundID)
+
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
+
 		}
 
 	case "alipay":
@@ -497,6 +508,14 @@ func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operati
 			res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "", "药品零售退药")
 			if res["code"] != "200" {
 				return errors.New(res["msg"].(string))
+			}
+
+			data := res["data"].(map[string]interface{})
+			_, err := tx.Exec(`update drug_retail_refund_record set refund_no = $1 where id = $2`, data["refund_id"], refundID)
+
+			if err != nil {
+				tx.Rollback()
+				return err
 			}
 		}
 	case "bank":
