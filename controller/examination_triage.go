@@ -123,6 +123,7 @@ func examinationTriageList(ctx iris.Context, status string) {
 	ctp.status,
 	ctp.visit_date,
 	ctp.register_type,
+	cp.patient_id,
 	p.name as patient_name,
 	p.birthday,
 	p.sex,

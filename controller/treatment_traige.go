@@ -125,6 +125,7 @@ func treatmentTriageList(ctx iris.Context, status string) {
 	p.birthday,
 	p.sex,
 	p.phone,
+	cp.patient_id,
 	doc.name as order_doctor_name,
 	d.name as department_name ` + sql + `order by up.order_time desc offset $6 limit $7`
 

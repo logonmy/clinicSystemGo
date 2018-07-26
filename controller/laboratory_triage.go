@@ -163,6 +163,7 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 	p.birthday,
 	p.sex,
 	p.phone,
+	cp.patient_id,
 	doc.name as order_doctor_name,
 	d.name as department_name,
 	mr.diagnosis,

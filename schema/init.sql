@@ -435,7 +435,7 @@ CREATE TABLE mz_paid_orders
   total INTEGER NOT NULL,--总价格
   discount INTEGER NOT NULL DEFAULT 0,--打折金额
   fee INTEGER NOT NULL,--缴费金额
-  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+  operation_id INTEGER NOT NULL references personnel(id),--已缴费创建人id
   confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
   refund_id INTEGER references personnel(id), --退费操作员
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
