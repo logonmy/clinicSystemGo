@@ -435,7 +435,7 @@ func TreatmentTriagePatientRecordList(ctx iris.Context) {
 	cp.patient_id,
 	c.name as clinic_name,
 	d.name as department_name,
-	p.name as doctor_name  
+	p.name as order_doctor_name  
 	from treatment_patient tp
 	left join clinic_treatment ce on ce.id = tp.clinic_treatment_id
 	left join clinic_triage_patient ctp on tp.clinic_triage_patient_id = ctp.id
