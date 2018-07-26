@@ -2,7 +2,9 @@ package controller
 
 import (
 	"database/sql"
+	"math/rand"
 	"strconv"
+	"time"
 )
 
 // ToNullString 处理空字符串
@@ -26,4 +28,14 @@ func ToNullFloat64(s string) sql.NullFloat64 {
 func ToNullBool(s string) sql.NullBool {
 	b, err := strconv.ParseBool(s)
 	return sql.NullBool{Bool: bool(b), Valid: err == nil}
+}
+
+// GetTradeNo 生成交易编号
+func GetTradeNo(keyword string) string {
+	// keyword    O - 订单标识     T-缴费交易      R-退费标识
+	//  1代表零售
+	rand.Seed(time.Now().UnixNano())
+	tradeNo := time.Now().Format("20060102150405") + strconv.Itoa((rand.Intn(8999) + 1000))
+	return keyword + tradeNo
+
 }
