@@ -1460,6 +1460,7 @@ CREATE TABLE laboratory_patient
   times INTEGER NOT NULL CHECK(times > 0),--次数
   illustration text,--说明
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  checking_time timestamp with time zone,--接收时间(待检验变为检验中的时间)
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
