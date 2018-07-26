@@ -974,26 +974,58 @@ func TriagePatientRecord(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select 
+	resData := make(map[string]interface{})
+
+	selectLaboratorySQL := `select 
 	lp.id as laboratory_patient_id,
 	lp.clinic_triage_patient_id,
-	lp.checking_time,
 	cl.name as clinic_laboratory_name,
 	cl.laboratory_sample,
 	lp.clinic_laboratory_id,
 	lpr.id as laboratory_patient_record_id,
 	lpr.remark,
+	lp.created_time as order_time,
 	lpr.created_time as report_time,
-	doc.name as report_doctor_name
+	doc.name as report_doctor_name,
+	p.name as order_doctor_name
 	FROM laboratory_patient lp 
 	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = lp.clinic_triage_patient_id and mo.charge_project_type_id=3 and lp.clinic_laboratory_id=mo.charge_project_id
 	left join laboratory_patient_record lpr on lpr.laboratory_patient_id = lp.id
 	left join personnel doc on doc.id = lpr.operation_id
+	left join personnel p on p.id = lp.operation_id
 	where lp.clinic_triage_patient_id = $1 and lp.order_status=$2`
 
-	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID)
-	results := FormatSQLRowsToMapArray(rows)
+	laboratoryRows, _ := model.DB.Queryx(selectLaboratorySQL, clinicTriagePatientID, "30")
+	laboratoryResults := FormatSQLRowsToMapArray(laboratoryRows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": results})
+	selectExaminationSQL := `select 
+	ep.id as examination_patient_id,
+	ep.clinic_triage_patient_id,
+	ce.name as clinic_examination_name,
+	ce.organ,
+	ep.clinic_examination_id,
+	mpr.id as examination_patient_record_id,
+	mpr.picture_examination,
+	mpr.result_examination,
+	mpr.conclusion_examination,
+	mpr.created_time as report_time,
+	ep.created_time as order_time,
+	doc.name as report_doctor_name,
+	p.name as order_doctor_name
+	FROM examination_patient ep 
+	left join clinic_examination ce on ce.id = ep.clinic_examination_id
+	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ep.clinic_triage_patient_id and mo.charge_project_type_id=4 and ep.clinic_examination_id=mo.charge_project_id
+	left join examination_patient_record mpr on mpr.examination_patient_id = ep.id
+	left join personnel doc on doc.id = mpr.operation_id
+	left join personnel p on p.id = ep.operation_id
+	where mo.id is not NULL and ep.clinic_triage_patient_id = $1 and ep.order_status=$2`
+
+	examinationRows, _ := model.DB.Queryx(selectExaminationSQL, clinicTriagePatientID, "30")
+	examinationresults := FormatSQLRowsToMapArray(examinationRows)
+
+	resData["laboratory_results"] = laboratoryResults
+	resData["examination_results"] = examinationresults
+
+	ctx.JSON(iris.Map{"code": "200", "data": resData})
 }
