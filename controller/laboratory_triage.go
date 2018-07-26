@@ -460,23 +460,23 @@ func LaboratoryTriagePatientRecordList(ctx iris.Context) {
 
 	querySQL := `select 
 	string_agg (ce.name, '，') as clinic_laboratory_name, 
-	max (lp.created_time) as finish_time,
+	max (lp.created_time) as order_time,
 	lp.clinic_triage_patient_id, 
 	ctp.clinic_patient_id, 
 	cp.patient_id,
 	c.name as clinic_name,
 	d.name as department_name,
-	p.name as doctor_name  
+	p.name as order_doctor_name  
 	from laboratory_patient lp
 	left join clinic_laboratory ce on ce.id = lp.clinic_laboratory_id
 	left join clinic_triage_patient ctp on lp.clinic_triage_patient_id = ctp.id
 	left join clinic_patient cp on ctp.clinic_patient_id = cp.id
 	left join clinic c on c.id = cp.clinic_id
 	left join department d on ctp.department_id = d.id
-	left join personnel p on ctp.doctor_id = p.id
+	left join personnel p on lp.operation_id = p.id
 	where cp.patient_id = $1 and lp.order_status = '30'
-	group by (lp.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, c.name, d.name, p.name)
-	order by finish_time DESC
+	group by (lp.clinic_triage_patient_id, ctp.clinic_patient_id, cp.patient_id, c.name, d.name, p.name, lp.operation_id)
+	order by order_time DESC
 	offset $2 limit $3`
 
 	rows, err := model.DB.Queryx(querySQL, patientID, offset, limit)
