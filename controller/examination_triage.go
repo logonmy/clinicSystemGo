@@ -23,6 +23,7 @@ func ExaminationTriageList(ctx iris.Context) {
 	ep.id as examination_patient_id,
 	ep.clinic_triage_patient_id,
 	ce.name as clinic_examination_name,
+	ce.organ,
 	ep.clinic_examination_id,
 	mpr.id as examination_patient_record_id,
 	mpr.picture_examination,

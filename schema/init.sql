@@ -1815,7 +1815,7 @@ CREATE TABLE examination_patient_record
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   examination_patient_id INTEGER NOT NULL references examination_patient(id),--所开检查id
   picture_examination text, --检查图片
-  result_examination text, --检查结果
+  result_examination text, --检查结果/描述
   conclusion_examination text, --检查结论
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

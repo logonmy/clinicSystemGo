@@ -964,3 +964,36 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "data": result})
 }
+
+// TriagePatientRecord 分诊记录报告
+func TriagePatientRecord(ctx iris.Context) {
+	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
+
+	if clinicTriagePatientID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	selectSQL := `select 
+	lp.id as laboratory_patient_id,
+	lp.clinic_triage_patient_id,
+	lp.checking_time,
+	cl.name as clinic_laboratory_name,
+	cl.laboratory_sample,
+	lp.clinic_laboratory_id,
+	lpr.id as laboratory_patient_record_id,
+	lpr.remark,
+	lpr.created_time as report_time,
+	doc.name as report_doctor_name
+	FROM laboratory_patient lp 
+	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
+	left join mz_paid_orders mo on mo.clinic_triage_patient_id = lp.clinic_triage_patient_id and mo.charge_project_type_id=3 and lp.clinic_laboratory_id=mo.charge_project_id
+	left join laboratory_patient_record lpr on lpr.laboratory_patient_id = lp.id
+	left join personnel doc on doc.id = lpr.operation_id
+	where lp.clinic_triage_patient_id = $1 and lp.order_status=$2`
+
+	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID)
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results})
+}
