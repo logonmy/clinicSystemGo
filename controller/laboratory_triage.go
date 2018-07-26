@@ -19,12 +19,20 @@ func LaboratoryTriageList(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select lp.id as laboratory_patient_id,lp.clinic_triage_patient_id,
-	cl.name as clinic_laboratory_name,lp.clinic_laboratory_id,lpr.id as laboratory_patient_record_id,lpr.remark
+	selectSQL := `select 
+	lp.id as laboratory_patient_id,
+	lp.clinic_triage_patient_id,
+	cl.name as clinic_laboratory_name,
+	lp.clinic_laboratory_id,
+	lpr.id as laboratory_patient_record_id,
+	lpr.remark,
+	lpr.created_time as report_time,
+	doc.name as report_doctor_name
 	FROM laboratory_patient lp 
 	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = lp.clinic_triage_patient_id and mo.charge_project_type_id=3 and lp.clinic_laboratory_id=mo.charge_project_id
 	left join laboratory_patient_record lpr on lpr.laboratory_patient_id = lp.id
+	left join personnel doc on doc.id = lpr.operation_id
 	where lp.clinic_triage_patient_id = $1 and lp.order_status=$2`
 
 	rows, _ := model.DB.Queryx(selectSQL, clinicTriagePatientID, status)
@@ -120,16 +128,16 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 
 	sql := ` from clinic_triage_patient ctp 
 	left join clinic_patient cp on cp.id = ctp.clinic_patient_id 
-	left join personnel doc on doc.id = ctp.doctor_id 
 	left join department d on d.id = ctp.department_id  
 	left join patient p on p.id = cp.patient_id 
 	left join medical_record mr on mr.clinic_triage_patient_id = ctp.id and mr.is_default = true
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,count(*) as total_count,max(created_time) as order_time
-		from laboratory_patient where order_status = $1 group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
+	left join (select clinic_triage_patient_id,operation_id,count(*) as total_count,max(created_time) as order_time
+		from laboratory_patient where order_status = $1 group by(clinic_triage_patient_id,operation_id)) up on up.clinic_triage_patient_id = ctp.id 
 	left join (select clinic_triage_patient_id,count(*) as mz_count 
-	from mz_paid_orders where charge_project_type_id = 3 group by(clinic_triage_patient_id)) mzup on mzup.clinic_triage_patient_id = ctp.id
+		from mz_paid_orders where charge_project_type_id = 3 group by(clinic_triage_patient_id)) mzup on mzup.clinic_triage_patient_id = ctp.id
+	left join personnel doc on doc.id = up.operation_id 
 	where up.total_count > 0 AND mzup.mz_count > 0 AND cp.clinic_id=$2 AND ctp.updated_time BETWEEN $3 and $4 AND (p.name ~$5 OR p.cert_no ~$5 OR p.phone ~$5) `
 
 	countsql := `select count(*) as total` + sql
@@ -153,7 +161,7 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 	p.birthday,
 	p.sex,
 	p.phone,
-	doc.name as doctor_name,
+	doc.name as order_doctor_name,
 	d.name as department_name,
 	mr.diagnosis,
 	mr.allergic_history ` + sql + `order by up.order_time desc offset $6 limit $7`
