@@ -331,9 +331,9 @@ CREATE TABLE pre_diagnosis
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL UNIQUE references clinic_triage_patient(id),--分诊记录id
   chief_complaint text,--主诉
-  history_of_rresent_illness text,--现病史
+  history_of_present_illness text,--现病史
   history_of_past_illness text,--既往史
-  physical_examination text,--体格检查
+  body_examination text,--体格检查
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
