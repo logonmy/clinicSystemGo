@@ -22,7 +22,9 @@ func LaboratoryTriageList(ctx iris.Context) {
 	selectSQL := `select 
 	lp.id as laboratory_patient_id,
 	lp.clinic_triage_patient_id,
+	lp.checking_time,
 	cl.name as clinic_laboratory_name,
+	cl.laboratory_sample,
 	lp.clinic_laboratory_id,
 	lpr.id as laboratory_patient_record_id,
 	lpr.remark,
@@ -161,6 +163,7 @@ func laboratoryTriageList(ctx iris.Context, status string) {
 	p.birthday,
 	p.sex,
 	p.phone,
+	cp.patient_id,
 	doc.name as order_doctor_name,
 	d.name as department_name,
 	mr.diagnosis,
@@ -393,10 +396,15 @@ func LaboratoryTriageUpdate(ctx iris.Context) {
 		return
 	}
 
+	updateSQL := `UPDATE laboratory_patient set order_status=$1,updated_time=LOCALTIMESTAMP where id=$2 and clinic_triage_patient_id=$3`
+	if status == "20" {
+		updateSQL = `UPDATE laboratory_patient set order_status=$1,updated_time=LOCALTIMESTAMP,checking_time=LOCALTIMESTAMP where id=$2 and clinic_triage_patient_id=$3`
+	}
+
 	for _, v := range results {
 		laboratoryPatientID := v["laboratory_patient_id"]
 
-		_, err := tx.Exec(`UPDATE laboratory_patient set order_status=$1,updated_time=LOCALTIMESTAMP where id=$2 and clinic_triage_patient_id=$3`, status, laboratoryPatientID, clinicTriagePatientID)
+		_, err := tx.Exec(updateSQL, status, laboratoryPatientID, clinicTriagePatientID)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

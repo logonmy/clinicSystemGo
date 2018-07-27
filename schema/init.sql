@@ -435,7 +435,7 @@ CREATE TABLE mz_paid_orders
   total INTEGER NOT NULL,--总价格
   discount INTEGER NOT NULL DEFAULT 0,--打折金额
   fee INTEGER NOT NULL,--缴费金额
-  operation_id INTEGER NOT NULL references personnel(id),--未交费创建人id
+  operation_id INTEGER NOT NULL references personnel(id),--已缴费创建人id
   confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
   refund_id INTEGER references personnel(id), --退费操作员
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1460,6 +1460,7 @@ CREATE TABLE laboratory_patient
   times INTEGER NOT NULL CHECK(times > 0),--次数
   illustration text,--说明
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  checking_time timestamp with time zone,--接收时间(待检验变为检验中的时间)
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
@@ -1814,7 +1815,7 @@ CREATE TABLE examination_patient_record
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   examination_patient_id INTEGER NOT NULL references examination_patient(id),--所开检查id
   picture_examination text, --检查图片
-  result_examination text, --检查结果
+  result_examination text, --检查结果/描述
   conclusion_examination text, --检查结论
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,

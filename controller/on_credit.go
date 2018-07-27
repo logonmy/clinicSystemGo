@@ -152,8 +152,9 @@ func OnCreditTraigePatient(ctx iris.Context) {
 	p.birthday,
 	p.sex,
 	p.phone,
+	cp.patient_id,
 	doc.name as doctor_name,
-	d.name as department_name ` + sql + `offset $5 limit $6`
+	d.name as department_name ` + sql + ` offset $5 limit $6`
 
 	total := model.DB.QueryRowx(countsql, clinicID, startDate, endDate, keyword)
 
