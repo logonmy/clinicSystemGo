@@ -823,7 +823,7 @@ func BusinessTransactionMonth(ctx iris.Context) {
 
 	sql := `from charge_detail where created_time BETWEEN :startDate and :endDate `
 
-	rows, err1 := model.DB.NamedQuery(`select 
+	rows, err1 := model.DB.NamedQuery(`select count(DISTINCT clinic_patient_id) as total,
 	to_char(created_time, 'YYYY-MM-DD') as date,
 	sum(total_money) as total_money,sum(balance_money) as balance_money,
 	sum(wechat) as wechat,sum(cash) as cash,
@@ -839,6 +839,7 @@ func BusinessTransactionMonth(ctx iris.Context) {
 	}
 
 	total, err2 := model.DB.NamedQuery(` SELECT count(distinct to_char(created_time, 'YYYY-MM-DD')) as total,
+	count(DISTINCT clinic_patient_id) as people_count,
 	sum(wechat) as wechat,sum(cash) as cash, 
 	sum(total_money) as total_money,sum(balance_money) as balance_money,
 	sum(bank) as bank,sum(alipay) as alipay,sum(discount_money) as discount_money,

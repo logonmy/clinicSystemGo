@@ -479,9 +479,9 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 func TriageCompletePreDiagnosis(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	chiefComplaint := ctx.PostValue("chief_complaint")
-	historyOfRresentIllness := ctx.PostValue("history_of_rresent_illness")
+	historyOfRresentIllness := ctx.PostValue("history_of_present_illness")
 	historyOfPastIllness := ctx.PostValue("history_of_past_illness")
-	physicalExamination := ctx.PostValue("physical_examination")
+	physicalExamination := ctx.PostValue("body_examination")
 	remark := ctx.PostValue("remark")
 
 	if clinicTriagePatientID == "" {
@@ -504,9 +504,9 @@ func TriageCompletePreDiagnosis(ctx iris.Context) {
 	insertSQL := `insert into pre_diagnosis (
 		clinic_triage_patient_id,
 		chief_complaint,
-		history_of_rresent_illness,
+		history_of_present_illness,
 		history_of_past_illness,
-		physical_examination,
+		body_examination,
 		remark
 	) values ($1, $2, $3, $4, $5, $6) RETURNING id;`
 

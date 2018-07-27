@@ -526,7 +526,7 @@ func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operati
 	}
 
 	_, err := model.DB.Exec(`insert into charge_detail (pay_record_id,record_type,out_trade_no,out_refund_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`, refundID, 2, rowPayRecordMap["out_trade_no"], outRefundNo, "out", refundFee*-1, rowPayRecordMap["discount_money"].(int64)*-1, rowPayRecordMap["medical_money"].(int64)*-1, refundFee*-1, refundFee*-1+rowPayRecordMap["medical_money"].(int64)*-1+rowPayRecordMap["discount_money"].(int64)*-1, 0, operationID, cash, wechat, alipay, bank)
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`, refundID, 2, rowPayRecordMap["out_trade_no"], outRefundNo, "out", refundFee*-1, rowPayRecordMap["discount_money"].(int64)*-1, rowPayRecordMap["medical_money"].(int64)*-1, refundFee*-1+rowPayRecordMap["medical_money"].(int64)*-1+rowPayRecordMap["discount_money"].(int64)*-1, refundFee*-1, 0, operationID, cash, wechat, alipay, bank)
 
 	return err
 }
