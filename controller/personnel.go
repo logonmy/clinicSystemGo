@@ -299,7 +299,10 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 	left join department_personnel dp on p.id = dp.personnel_id
 	left join department d on dp.department_id = d.id
 	left join (select count(pr.personnel_id) as total,pr.personnel_id from personnel_role pr 
-		left join personnel p on p.id=pr.personnel_id group by pr.personnel_id) prc on prc.personnel_id=p.id
+		left join personnel p on p.id=pr.personnel_id 
+		left join role r on r.id = pr.role_id
+		where r.status=true and r.deleted_time is null
+		group by pr.personnel_id) prc on prc.personnel_id=p.id
 	where p.clinic_id=:clinic_id and p.deleted_time is null and prc.total>0 and (p.code ~:keyword or p.name ~:keyword)`
 
 	var queryOption = map[string]interface{}{
@@ -327,11 +330,14 @@ func PersonnelWithAuthorizationList(ctx iris.Context) {
 	left join department_personnel dp on p.id = dp.personnel_id
 	left join department d on dp.department_id = d.id
 	left join (select count(pr.personnel_id) as total,pr.personnel_id,pr.status from personnel_role pr 
-		left join personnel p on p.id=pr.personnel_id group by pr.personnel_id,pr.status) prc on prc.personnel_id=p.id
+		left join personnel p on p.id=pr.personnel_id 
+		left join role r on r.id = pr.role_id
+		where r.status=true and r.deleted_time is null
+		group by pr.personnel_id,pr.status) prc on prc.personnel_id=p.id
 	where p.clinic_id=:clinic_id and p.deleted_time is null and prc.total>0 and (p.code ~:keyword or p.name ~:keyword) offset :offset limit :limit`
 
 	selectSQL := `select pr.personnel_id,pr.role_id,r.name as role_name from personnel_role pr
-		left join role r on r.id = pr.role_id`
+		left join role r on r.id = pr.role_id where r.status=true and r.deleted_time is null`
 
 	rows, err1 := model.DB.NamedQuery(rowSQL, queryOption)
 	if err1 != nil {
@@ -470,7 +476,7 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 		return
 	}
 
-	lrow := model.DB.QueryRowx("select id from personnel where id=$1 limit 1", id)
+	lrow := model.DB.QueryRowx("select id from personnel where id=$1 and deleted_time is null limit 1", id)
 	if lrow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 		return
@@ -508,7 +514,7 @@ func PersonnelAuthorizationAllocation(ctx iris.Context) {
 	insertSQL := `insert into personnel_role (personnel_id,role_id) values ($1,$2)`
 	for _, v := range results {
 		roleID := v["role_id"]
-		rrow := model.DB.QueryRowx("select id from role where id=$1 limit 1", roleID)
+		rrow := model.DB.QueryRowx("select id from role where id=$1 and status = true and deleted_time is null limit 1", roleID)
 		if rrow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
 			return
@@ -555,7 +561,7 @@ func PersonnelDelete(ctx iris.Context) {
 	personnel := FormatSQLRowToMap(crow)
 	_, rok := personnel["id"]
 	if !rok {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "科室数据错误"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除的人员不存在"})
 		return
 	}
 	code := personnel["code"]
@@ -583,8 +589,9 @@ func FunMenusByPersonnel(ctx iris.Context) {
 	selectSQL := `select DISTINCT fm.parent_function_menu_id, fm.id as function_menu_id, fm.url as menu_url, fm.name as menu_name, fm.weight, fm.level, fm.icon from personnel_role pr 
 	left join role_clinic_function_menu rcfm on pr.role_id = rcfm.role_id
 	left join clinic_function_menu cfm on rcfm.clinic_function_menu_id = cfm.id
-	left join function_menu fm on cfm.function_menu_id = fm.id 
-	where cfm.status = true and rcfm.status = true and pr.personnel_id = $1
+	left join function_menu fm on cfm.function_menu_id = fm.id
+	left join role r on r.id = pr.role_id
+	where cfm.status = true and rcfm.status = true and r.status = true and r.deleted_time is null and pr.personnel_id = $1
 	order by fm.level, fm.weight asc `
 
 	rows, err := model.DB.Queryx(selectSQL, personnelID)
@@ -610,7 +617,7 @@ func PersonnelRoles(ctx iris.Context) {
 
 	selectSQL := `select r.id as role_id,r.name,r.status,r.created_time from personnel_role pr 
 	left join role r on pr.role_id = r.id
-	where pr.personnel_id = $1 and r.status=true;`
+	where pr.personnel_id = $1 and r.status=true and r.deleted_time is null;`
 
 	rows, err := model.DB.Queryx(selectSQL, personnelID)
 	if err != nil {
@@ -666,8 +673,8 @@ func PersonnelWithUsername(ctx iris.Context) {
 	left join department_personnel dp on dp.personnel_id = p.id
 	left join department d on dp.department_id = d.id 
 	left join personnel_role pr on p.id = pr.personnel_id
-	left join role r on pr.role_id = r.id
-	where p.username is not null and p.deleted_time is null and p.clinic_id = :clinic_id `
+	left join role r on pr.role_id = r.id and r.status=true and r.deleted_time is null
+	where p.username is not null and p.deleted_time is null and p.clinic_id = :clinic_id`
 
 	if keyword != "" {
 		countSQL += ` and (name ~*:keyword or username ~*:keyword) `

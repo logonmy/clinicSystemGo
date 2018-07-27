@@ -295,6 +295,7 @@ func main() {
 	{
 		role.Post("/create", controller.RoleCreate)
 		role.Post("/update", controller.RoleUpdate)
+		role.Post("/delete", controller.RoleDelete)
 		role.Post("/listByClinicID", controller.RoleList)
 		role.Post("/roleDetail", controller.RoleDetail)
 		role.Post("/RoleFunctionUnset", controller.RoleFunctionUnset)

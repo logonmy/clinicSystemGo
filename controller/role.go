@@ -4,6 +4,8 @@ import (
 	"clinicSystemGo/model"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -177,29 +179,97 @@ func RoleUpdate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": roleID})
 }
 
+//RoleDelete 删除角色
+func RoleDelete(ctx iris.Context) {
+	roleID := ctx.PostValue("role_id")
+	if roleID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	crow := model.DB.QueryRowx("select id,code from role where id=$1 limit 1", roleID)
+	if crow == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除失败"})
+		return
+	}
+	role := FormatSQLRowToMap(crow)
+	_, rok := role["id"]
+	if !rok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "删除的角色不存在"})
+		return
+	}
+	name := role["name"]
+	name = name.(string) + "#" + strconv.Itoa(int(time.Now().Unix()))
+
+	_, err := model.DB.Exec("update role set name=$1,deleted_time=LOCALTIMESTAMP WHERE id=$2", name, roleID)
+	if err != nil {
+		fmt.Println("Perr ===", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
 //RoleList 权限角色列表
 func RoleList(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+
+	if limit == "" {
+		limit = "10"
+	}
+
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
 
 	sql := `SELECT r.id as role_id,r.name,r.status,r.created_time, string_agg( fm.name,  ',') as function_menu_name FROM role r 
 	left join role_clinic_function_menu rcfm on r.id = rcfm.role_id 
 	left join clinic_function_menu cfm on rcfm.clinic_function_menu_id = cfm.id
 	left join function_menu fm on fm.id = cfm.function_menu_id
-	 where r.clinic_id=:clinic_id and r.status = true
-	 group by (r.id, r.name, r.status, r.created_time)
-	 order by r.created_time desc`
+	where r.clinic_id=:clinic_id and r.status = true and r.deleted_time is null
+	group by (r.id, r.name, r.status, r.created_time)
+	order by r.created_time desc`
+
+	countSQL := `SELECT count(*) as total FROM role where clinic_id=:clinic_id and status = true and deleted_time is null`
 
 	if keyword != "" {
 		sql += ` and r.name ~*:keyword`
+		countSQL += ` and name ~*:keyword`
 	}
 
 	var queryOptions = map[string]interface{}{
 		"clinic_id": ToNullInt64(clinicID),
 		"keyword":   ToNullString(keyword),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
 	}
 
-	rows, err := model.DB.NamedQuery(sql, queryOptions)
+	total, err2 := model.DB.NamedQuery(countSQL, queryOptions)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.NamedQuery(sql+" offset :offset limit :limit", queryOptions)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -208,7 +278,7 @@ func RoleList(ctx iris.Context) {
 
 	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": results})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 //RoleDetail 权限角色详情
