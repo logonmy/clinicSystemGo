@@ -823,7 +823,7 @@ func BusinessTransactionMonth(ctx iris.Context) {
 
 	sql := `from charge_detail where created_time BETWEEN :startDate and :endDate `
 
-	rows, err1 := model.DB.NamedQuery(`select count(*) as total, 
+	rows, err1 := model.DB.NamedQuery(`select 
 	to_char(created_time, 'YYYY-MM-DD') as date,
 	sum(total_money) as total_money,sum(balance_money) as balance_money,
 	sum(wechat) as wechat,sum(cash) as cash,
@@ -838,8 +838,8 @@ func BusinessTransactionMonth(ctx iris.Context) {
 		return
 	}
 
-	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total,
-	sum(wechat) as wechat,sum(cash) as cash,
+	total, err2 := model.DB.NamedQuery(` SELECT count(distinct to_char(created_time, 'YYYY-MM-DD')) as total,
+	sum(wechat) as wechat,sum(cash) as cash, 
 	sum(total_money) as total_money,sum(balance_money) as balance_money,
 	sum(bank) as bank,sum(alipay) as alipay,sum(discount_money) as discount_money,
 	sum(derate_money) as derate_money, sum(medical_money) as medical_money,
@@ -893,14 +893,16 @@ func BusinessTransactionDetail(ctx iris.Context) {
 		"io":          ToNullString(io),
 	}
 
-	sql := `from charge_detail cd left join mz_paid_orders mpo on mpo.mz_paid_record_id = cd.pay_record_id 
-	left join personnel ope on mpo.confrim_id = ope.id 
+	sql := `from charge_detail cd left join mz_paid_orders mpo on mpo.mz_paid_record_id = cd.pay_record_id and cd.record_type = 1 
+	left join personnel ope on cd.operation_id = ope.id 
 	left join charge_project_type cpt on cpt.id = mpo.charge_project_type_id 
 	left join clinic_triage_patient ctp on mpo.clinic_triage_patient_id = ctp.id 
 	left join personnel doc on doc.id = cd.doctor_id 
 	left join department d on d.id = cd.department_id 
 	left join clinic_patient cp on cp.id = cd.clinic_patient_id 
 	left join patient pa on pa.id = cp.patient_id 
+	left join drug_retail dr on (dr.out_trade_no = cd.out_trade_no and cd.in_out = 'in' and dr.amount > 0) or (cd.out_refund_no = dr.out_refund_no and cd.in_out = 'out') 
+	left join clinic_drug drug on drug.id = dr.clinic_drug_id 
 	where cd.created_time BETWEEN :startDate and :endDate `
 
 	if patientName != "" {
@@ -912,16 +914,19 @@ func BusinessTransactionDetail(ctx iris.Context) {
 	}
 
 	if porjectName != "" {
-		sql += " and mpo.name ~:porjectName "
+		sql += " and (mpo.name ~:porjectName or drug.name ~:porjectName)"
 	}
 
 	if io != "" {
 		sql += " and cd.in_out ~:io "
 	}
 
-	rows, err1 := model.DB.NamedQuery(`select mpo.name,mpo.price,mpo.amount,
+	rows, err1 := model.DB.NamedQuery(`select 
+		drug.packing_unit_name as drug_unit,drug.name as drug_name,drug.ret_price as drug_price,
+		dr.amount as drug_mount, dr.total_fee as drug_total,
+	  mpo.name,mpo.price,mpo.amount,
 		mpo.total,mpo.fee,mpo.unit,ope.name as operarion,cpt.name as charge_project_type,
-		cd.created_time,cd.out_trade_no,ctp.visit_date,doc.name as doctorName,d.name as deptName,
+		cd.created_time,cd.out_trade_no,cd.record_type,ctp.visit_date,doc.name as doctorName,d.name as deptName,
 		pa.name as patientName,pa.sex,pa.birthday,pa.phone 
 		 `+sql+" order by cd.created_time ASC offset :offset limit :limit", queryMap)
 	if err1 != nil {
