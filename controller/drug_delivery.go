@@ -173,6 +173,7 @@ func drugDeliveryTriageList(ctx iris.Context, status string) {
 	p.birthday,
 	p.sex,
 	p.phone,
+	cp.patient_id,
 	doc.name as doctor_name,
 	d.name as department_name ` + sql + ` order by ctp.updated_time ASC offset $5 limit $6`
 
