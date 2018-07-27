@@ -187,7 +187,7 @@ func RoleDelete(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id from role where id=$1 limit 1", roleID)
+	crow := model.DB.QueryRowx("select id,name from role where id=$1 limit 1", roleID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "删除失败"})
 		return
