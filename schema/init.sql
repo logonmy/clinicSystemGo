@@ -333,7 +333,7 @@ CREATE TABLE pre_diagnosis
   chief_complaint text,--主诉
   history_of_present_illness text,--现病史
   history_of_past_illness text,--既往史
-  physical_examination text,--体格检查
+  body_examination text,--体格检查
   remark text,--备注
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
