@@ -914,7 +914,7 @@ func BusinessTransactionDetail(ctx iris.Context) {
 	}
 
 	if porjectName != "" {
-		sql += " and mpo.name ~:porjectName "
+		sql += " and (mpo.name ~:porjectName or drug.name ~:porjectName)"
 	}
 
 	if io != "" {
