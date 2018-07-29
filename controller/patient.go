@@ -325,7 +325,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 	allergicHistory := ctx.PostValue("allergic_history")
 	personalMedicalHistory := ctx.PostValue("personal_medical_history")
 	familyMedicalHistory := ctx.PostValue("family_medical_history")
-	vaccination := ctx.PostValue("vaccination")
+	immunizations := ctx.PostValue("immunizations")
 	menarcheAge := ctx.PostValue("menarche_age")
 	menstrualPeriodStartDay := ctx.PostValue("menstrual_period_start_day")
 	menstrualPeriodEndDay := ctx.PostValue("menstrual_period_end_day")
@@ -359,7 +359,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 		allergic_history,
 		personal_medical_history,
 		family_medical_history,
-		vaccination,
+		immunizations,
 		menarche_age,
 		menstrual_period_start_day,
 		menstrual_period_end_day,
@@ -376,7 +376,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 		ToNullString(allergicHistory),
 		ToNullString(personalMedicalHistory),
 		ToNullString(familyMedicalHistory),
-		ToNullString(vaccination),
+		ToNullString(immunizations),
 		ToNullInt64(menarcheAge),
 		ToNullString(menstrualPeriodStartDay),
 		ToNullString(menstrualPeriodEndDay),

@@ -310,7 +310,7 @@ CREATE TABLE pre_medical_record
   allergic_history text,--过敏史
   personal_medical_history text,--个人病史
   family_medical_history text,--家族病史
-  vaccination text,--接种疫苗
+  immunizations text,--接种疫苗
   menarche_age integer,--月经初潮年龄
   menstrual_period_start_day varchar(10),--月经经期开始时间
   menstrual_period_end_day varchar(10),--月经经期结束时间
