@@ -215,6 +215,9 @@ func main() {
 		// charge.Post("/unPay/delete", controller.ChargeUnPayDelete)
 		// 创建支付订单
 		charge.Post("/payment/create", controller.ChargePaymentCreate)
+		// 获取支付状态
+		charge.Post("/payment/query", controller.ChargePaymentQuery)
+
 		// 支付到账通知
 		charge.Post("/payment/notice", controller.ChargeNotice)
 		charge.Post("/paid/list", controller.ChargePaidList)

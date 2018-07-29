@@ -357,6 +357,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 	voucherMoney, _ := strconv.Atoi(ctx.PostValue("voucher_money"))
 	bonusPointsMoney, _ := strconv.Atoi(ctx.PostValue("bonus_points_money"))
 	money, baerr := strconv.Atoi(ctx.PostValue("balance_money"))
+	authCode := ctx.PostValue("auth_code")
 
 	if baerr != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "无效的金额"})
@@ -368,14 +369,19 @@ func ChargePaymentCreate(ctx iris.Context) {
 	operationID := ctx.PostValue("operation_id")
 	payMethodCode := ctx.PostValue("pay_method_code")
 
-	outTradeNo := time.Now().Format("20060102150405")
+	outTradeNo := GetTradeNo("T2")
 
 	if clinicTriagePatientID == "" || ordersIds == "" || operationID == "" || payMethodCode == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	row := model.DB.QueryRowx(`select count(*) as count, sum(fee) as charge_toral from mz_unpaid_orders where id in (` + ordersIds + `) AND clinic_triage_patient_id = ` + clinicTriagePatientID)
+	if (payMethodCode == "1" || payMethodCode == "2") && authCode == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少认证码"})
+		return
+	}
+
+	row := model.DB.QueryRowx(`select count(*) as count, sum(fee) as charge_total from mz_unpaid_orders where id in (` + ordersIds + `) AND clinic_triage_patient_id = ` + clinicTriagePatientID)
 	orderArray := strings.Split(ordersIds, ",")
 	rowMap := FormatSQLRowToMap(row)
 
@@ -384,12 +390,12 @@ func ChargePaymentCreate(ctx iris.Context) {
 		return
 	}
 
-	if rowMap["charge_toral"] == nil {
+	if rowMap["charge_total"] == nil {
 		ctx.JSON(iris.Map{"code": "2", "msg": "收费金额异常"})
 		return
 	}
 
-	totalMoney := rowMap["charge_toral"]
+	totalMoney := rowMap["charge_total"]
 
 	balanceMoney := int(totalMoney.(int64)) - (derateMoney + voucherMoney + discountMoney + bonusPointsMoney + onCreditMoney + medicalMoney)
 
@@ -428,22 +434,82 @@ func ChargePaymentCreate(ctx iris.Context) {
 
 	// 如果金额为0 直接通知
 	if balanceMoney == 0 || payMethodCode == "4" {
-		chaerr := charge(outTradeNo, outTradeNo, int64(balanceMoney))
+		chaerr := charge(outTradeNo, outTradeNo)
 		if chaerr != nil {
 			fmt.Println(chaerr)
 			ctx.JSON(iris.Map{"code": "-1", "msg": "缴费通知失败"})
 			return
 		}
-		ctx.JSON(iris.Map{"code": "300", "msg": "直接缴费成功"})
+		ctx.JSON(iris.Map{"code": "200", "msg": "直接缴费成功"})
+		return
+	} else if payMethodCode == "1" || payMethodCode == "2" {
+
+		requestIP := ctx.Host()
+		requestIP = requestIP[0:strings.LastIndex(requestIP, ":")]
+		if strings.ToLower(requestIP) == "localhost" {
+			requestIP = "127.0.0.1"
+		}
+
+		merID := "ali"
+		payModel := "alipay_f2f"
+		if payMethodCode == "2" {
+			merID = "wx"
+			payModel = "weixin_f2f"
+		}
+
+		result := FaceToFace(outTradeNo, authCode, merID, payModel, "mz", strconv.Itoa(balanceMoney), "门诊缴费", requestIP, "", "")
+		if result["code"].(string) != "200" {
+			if result["code"].(string) == "2" {
+				_, err := model.DB.Exec("update mz_paid_record set status = 'WATTING_PASSWORD' where out_trade_no = $1", outTradeNo)
+				if err != nil {
+					ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+					return
+				}
+				ctx.JSON(iris.Map{"code": "300", "msg": result["msg"], "data": outTradeNo})
+			} else {
+				model.DB.Exec("update mz_paid_record set status = 'TRADE_FAILED' where out_trade_no = $1", outTradeNo)
+				ctx.JSON(iris.Map{"code": result["code"], "msg": result["msg"]})
+				return
+			}
+		} else {
+			data := result["data"].(map[string]interface{})
+			err := charge(outTradeNo, data["transaction_id"].(string))
+			if err != nil {
+				ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+				return
+			}
+			ctx.JSON(iris.Map{"code": "200", "data": 1})
+			return
+		}
+	} else {
+		ctx.JSON(iris.Map{"code": "200", "msg": "不支持的缴费方式"})
 		return
 	}
+}
 
-	data := map[string]interface{}{}
-	data["total_money"] = totalMoney
-	data["balance_money"] = balanceMoney
-	data["out_trade_no"] = outTradeNo
+// ChargePaymentQuery 获取支付状态
+func ChargePaymentQuery(ctx iris.Context) {
+	outTradeNo := ctx.PostValue("out_trade_no")
+	if outTradeNo == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+	res := QueryHcOrder(outTradeNo, "")
 
-	ctx.JSON(iris.Map{"code": "200", "data": data, "msg": "成功"})
+	if res["code"] == "200" {
+		data := res["data"].(map[string]interface{})
+		tradeStatus := data["trade_status"].(string)
+		if tradeStatus == "SUCCESS" {
+			err := charge(outTradeNo, data["transaction_id"].(string))
+			if err != nil {
+				fmt.Println("缴费通知失败", err.Error())
+			}
+		}
+		ctx.JSON(iris.Map{"code": "200", "data": res["data"]})
+	} else {
+		ctx.JSON(iris.Map{"code": "-1", "msg": res["msg"]})
+	}
+
 }
 
 // ChargePaidList 根据预约编码查询已缴费缴费列表
@@ -515,18 +581,13 @@ func ChargePaidList(ctx iris.Context) {
 func ChargeNotice(ctx iris.Context) {
 	outTradeNo := ctx.PostValue("out_trade_no")
 	tradeNo := ctx.PostValue("trade_no")
-	money, merr := ctx.PostValueInt64("money") //钱以分为单位
-	if merr != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "无效的输入金额"})
-		return
-	}
 
 	if outTradeNo == "" || tradeNo == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
 
-	err := charge(outTradeNo, tradeNo, money)
+	err := charge(outTradeNo, tradeNo)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
@@ -536,16 +597,12 @@ func ChargeNotice(ctx iris.Context) {
 }
 
 // 处理缴费通知
-func charge(outTradeNo string, tradeNo string, money int64) error {
+func charge(outTradeNo string, tradeNo string) error {
 	payment := model.DB.QueryRowx("select * from mz_paid_record where out_trade_no = $1", outTradeNo)
 	pay := FormatSQLRowToMap(payment)
 	_, ok := pay["id"]
 	if !ok {
 		return errors.New("未找到指定的待缴费单")
-	}
-	balanceMoney := pay["balance_money"]
-	if balanceMoney.(int64) != money {
-		return errors.New("缴费金额不匹配")
 	}
 	tx, txErr := model.DB.Beginx()
 	if txErr != nil {
