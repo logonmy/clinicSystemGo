@@ -33,28 +33,95 @@ func MedicalRecordCreate(ctx iris.Context) {
 		return
 	}
 
+	prow := model.DB.QueryRowx(`select p.id from clinic_triage_patient ctp
+	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
+	left join patient p on p.id = cp.patient_id
+	where ctp.id=$1`, clinicTriagePatientID)
+	patient := FormatSQLRowToMap(prow)
+
+	_, pok := patient["id"]
+	if !pok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "患者信息错误"})
+		return
+	}
+	patientID := patient["id"]
+
 	row := model.DB.QueryRowx("select id from medical_record where clinic_triage_patient_id=$1", clinicTriagePatientID)
 	clinicTriagePatient := FormatSQLRowToMap(row)
 	_, ok := clinicTriagePatient["id"]
+
+	tx, err := model.DB.Begin()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
 	if !ok {
 		sql := `INSERT INTO  medical_record ( clinic_triage_patient_id, morbidity_date, chief_complaint, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id, files, is_default ) 
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16) RETURNING id`
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`
 
-		var id int
-		err := model.DB.QueryRow(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, true).Scan(&id)
+		_, err := tx.Exec(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, true)
 		if err != nil {
+			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 	} else {
 		sql := `UPDATE medical_record SET morbidity_date=$1, chief_complaint=$2, history_of_present_illness=$3, history_of_past_illness=$4, family_medical_history=$5, allergic_history=$6, allergic_reaction=$7, immunizations=$8, body_examination=$9, diagnosis=$10, cure_suggestion=$11, remark=$12, operation_id=$13, files=$14, updated_time=LOCALTIMESTAMP WHERE clinic_triage_patient_id=$15`
 
-		_, err := model.DB.Exec(sql, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, clinicTriagePatientID)
+		_, err := tx.Exec(sql, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, clinicTriagePatientID)
 		if err != nil {
+			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
+	}
 
+	mrow := model.DB.QueryRowx(`select id from personal_medical_record where patient_id=$1`, patientID)
+	patientPersonalMedicalRecord := FormatSQLRowToMap(mrow)
+
+	_, mok := patientPersonalMedicalRecord["id"]
+	if !mok {
+		insertpSQL := `insert into personal_medical_record (
+			patient_id,
+			allergic_history,
+			family_medical_history,
+			immunizations
+		) values ($1, $2, $3, $4)`
+
+		_, err := tx.Exec(insertpSQL,
+			patientID,
+			ToNullString(allergicHistory),
+			ToNullString(familyMedicalHistory),
+			ToNullString(immunizations))
+
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	} else {
+		updatepSQL := `update set personal_medical_record 
+		allergic_history=$2,family_medical_history=$3,immunizations=$4 
+		where patient_id=$1`
+
+		_, err := tx.Exec(updatepSQL,
+			patientID,
+			ToNullString(allergicHistory),
+			ToNullString(familyMedicalHistory),
+			ToNullString(immunizations))
+
+		if err != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "data": nil})
