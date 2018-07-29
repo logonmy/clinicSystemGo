@@ -403,7 +403,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		gestational_weeks,
 		childbearing_history,
 		remark
-	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id;`
+	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
 
 	insertSQL := `insert into pre_medical_record (
 		clinic_triage_patient_id,
@@ -421,7 +421,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		gestational_weeks,
 		childbearing_history,
 		remark
-	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id;`
+	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
 
 	_, err = tx.Exec(insertpSQL,
 		patientID,
