@@ -371,7 +371,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 		gestational_weeks,
 		childbearing_history,
 		remark
-	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id;`
+	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id;`
 	_, err = tx.Exec(insertSQL,
 		ToNullInt64(patientID),
 		ToNullBool(hasAllergicHistory),
