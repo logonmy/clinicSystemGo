@@ -1742,6 +1742,20 @@ CREATE TABLE treatment_patient_model_item
   deleted_time timestamp with time zone
 );
 
+--检查报告模板
+CREATE TABLE examination_report_model
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  model_name varchar(30) NOT NULL,--模板名称
+  result_examination text, --检查结果/描述
+  conclusion_examination text, --检查结论
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
+  status boolean NOT NULL DEFAULT true,--是否启用
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
 CREATE TABLE chief_complaint 
 (
   name varchar(20) NOT NULL UNIQUE --主诉名称

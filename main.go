@@ -354,6 +354,11 @@ func main() {
 		examination.Post("/ExaminationPatientModelDetail", controller.ExaminationPatientModelDetail)
 		examination.Post("/ExaminationPatientModelUpdate", controller.ExaminationPatientModelUpdate)
 		examination.Post("/ExaminationPatientModelDelete", controller.ExaminationPatientModelDelete)
+		examination.Post("/ExaminationReportModelCreate", controller.ExaminationReportModelCreate)
+		examination.Post("/ExaminationReportModelList", controller.ExaminationReportModelList)
+		examination.Post("/ExaminationReportModelDetail", controller.ExaminationReportModelDetail)
+		examination.Post("/ExaminationReportModelUpdate", controller.ExaminationReportModelUpdate)
+		examination.Post("/ExaminationReportModelDelete", controller.ExaminationReportModelDelete)
 	}
 
 	treatment := app.Party("/treatment", crs).AllowMethods(iris.MethodOptions)
