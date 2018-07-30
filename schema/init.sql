@@ -1439,7 +1439,7 @@ CREATE TABLE treatment_patient
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   clinic_treatment_id INTEGER NOT NULL references clinic_treatment(id),--治疗项目id
   order_status varchar(2)  NOT NULL DEFAULT '10',  --状态，10-待使用，20-使用中， 30-已使用 40-已退回
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   times INTEGER NOT NULL CHECK(times > 0),--次数
   left_times INTEGER NOT NULL CHECK(left_times >= 0),--剩余次数
@@ -1536,7 +1536,7 @@ CREATE TABLE examination_patient
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   clinic_examination_id INTEGER NOT NULL references clinic_examination(id),--检查项目id
   order_status varchar(2)  NOT NULL DEFAULT '10',  --状态，10-待使用，20-使用中， 30-已使用 40-已退回
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   times INTEGER NOT NULL CHECK(times > 0),--次数
   organ varchar(20),--检查部位
@@ -1554,7 +1554,7 @@ CREATE TABLE material_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   clinic_material_id INTEGER NOT NULL references clinic_material(id),--诊所药品id
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
   illustration text,--说明
@@ -1571,7 +1571,7 @@ CREATE TABLE other_cost_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   clinic_other_cost_id INTEGER NOT NULL references clinic_other_cost(id),--其它费用项目id
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
   illustration text,--说明
@@ -1588,7 +1588,7 @@ CREATE TABLE diagnosis_treatment_patient
   id serial PRIMARY KEY NOT NULL,--id
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   clinic_diagnosis_treatment_id INTEGER NOT NULL references clinic_diagnosis_treatment(id),--诊疗项目id
-  order_sn varchar(20) NOT NULL,--单号
+  order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
   illustration text,--说明
@@ -2110,6 +2110,7 @@ CREATE TABLE personal_medical_record
   has_allergic_history boolean,--是否有过敏
   allergic_history text,--过敏史
   personal_medical_history text,--个人病史
+  allergic_reaction text,--过敏反应
   family_medical_history text,--家族病史
   immunizations text,--接种疫苗
   menarche_age integer,--月经初潮年龄
