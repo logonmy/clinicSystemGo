@@ -308,6 +308,7 @@ CREATE TABLE pre_medical_record
   clinic_triage_patient_id INTEGER NOT NULL UNIQUE references clinic_triage_patient(id),--分诊记录id
   has_allergic_history boolean,--是否有过敏
   allergic_history text,--过敏史
+  allergic_reaction text,--过敏反应
   personal_medical_history text,--个人病史
   family_medical_history text,--家族病史
   immunizations text,--接种疫苗
@@ -985,6 +986,7 @@ CREATE TABLE medical_record
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--预约编号
   morbidity_date varchar(10), --发病日期
   chief_complaint text NOT NULL, --主诉
+  personal_medical_history text,--个人病史
   history_of_present_illness text,-- 现病史
   history_of_past_illness text, --既往史
   family_medical_history text, --家族史
@@ -1011,6 +1013,7 @@ CREATE TABLE medical_record_model
   model_name varchar(20) NOT NULL,--模板名称
   is_common boolean NOT NULL DEFAULT false,--是否通用
   chief_complaint text NOT NULL, --主诉
+  personal_medical_history text,--个人病史
   history_of_present_illness text,-- 现病史
   history_of_past_illness text, --既往史
   family_medical_history text, --家族史

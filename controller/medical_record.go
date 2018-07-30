@@ -15,6 +15,7 @@ func MedicalRecordCreate(ctx iris.Context) {
 	chiefComplaint := ctx.PostValue("chief_complaint")
 
 	morbidityDate := ctx.PostValue("morbidity_date")
+	personalMedicalHistory := ctx.PostValue("personal_medical_history")
 	historyOfPresentIllness := ctx.PostValue("history_of_present_illness")
 	historyOfPastIllness := ctx.PostValue("history_of_past_illness")
 	familyMedicalHistory := ctx.PostValue("family_medical_history")
@@ -57,19 +58,36 @@ func MedicalRecordCreate(ctx iris.Context) {
 	}
 
 	if !ok {
-		sql := `INSERT INTO  medical_record ( clinic_triage_patient_id, morbidity_date, chief_complaint, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id, files, is_default ) 
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`
+		sql := `INSERT INTO  medical_record (
+			clinic_triage_patient_id,
+			morbidity_date, 
+			chief_complaint, 
+			personal_medical_history,
+			history_of_present_illness, 
+			history_of_past_illness, 
+			family_medical_history, 
+			allergic_history, 
+			allergic_reaction, 
+			immunizations, 
+			body_examination, 
+			diagnosis, 
+			cure_suggestion, 
+			remark, 
+			operation_id, 
+			files, 
+			is_default ) 
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`
 
-		_, err := tx.Exec(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, true)
+		_, err := tx.Exec(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, personalMedicalHistory, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, true)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 	} else {
-		sql := `UPDATE medical_record SET morbidity_date=$1, chief_complaint=$2, history_of_present_illness=$3, history_of_past_illness=$4, family_medical_history=$5, allergic_history=$6, allergic_reaction=$7, immunizations=$8, body_examination=$9, diagnosis=$10, cure_suggestion=$11, remark=$12, operation_id=$13, files=$14, updated_time=LOCALTIMESTAMP WHERE clinic_triage_patient_id=$15`
+		sql := `UPDATE medical_record SET morbidity_date=$1, chief_complaint=$2, history_of_present_illness=$3, history_of_past_illness=$4, family_medical_history=$5, allergic_history=$6, allergic_reaction=$7, immunizations=$8, body_examination=$9, diagnosis=$10, cure_suggestion=$11, remark=$12, operation_id=$13, files=$14,personal_medical_history=$15, updated_time=LOCALTIMESTAMP WHERE clinic_triage_patient_id=$16`
 
-		_, err := tx.Exec(sql, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, clinicTriagePatientID)
+		_, err := tx.Exec(sql, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files, personalMedicalHistory, clinicTriagePatientID)
 		if err != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -83,11 +101,12 @@ func MedicalRecordCreate(ctx iris.Context) {
 	_, mok := patientPersonalMedicalRecord["id"]
 	if !mok {
 		insertpSQL := `insert into personal_medical_record 
-		(patient_id,allergic_history,family_medical_history,immunizations) 
+		(patient_id,personal_medical_history,allergic_history,family_medical_history,immunizations) 
 		values ($1, $2, $3, $4)`
 
 		_, err := tx.Exec(insertpSQL,
 			patientID,
+			ToNullString(personalMedicalHistory),
 			ToNullString(allergicHistory),
 			ToNullString(familyMedicalHistory),
 			ToNullString(immunizations))
@@ -99,14 +118,15 @@ func MedicalRecordCreate(ctx iris.Context) {
 		}
 	} else {
 		updatepSQL := `update personal_medical_record set 
-		allergic_history=$2,family_medical_history=$3,immunizations=$4 
+		allergic_history=$2,family_medical_history=$3,immunizations=$4,personal_medical_history=$5
 		where patient_id=$1`
 
 		_, err := tx.Exec(updatepSQL,
 			patientID,
 			ToNullString(allergicHistory),
 			ToNullString(familyMedicalHistory),
-			ToNullString(immunizations))
+			ToNullString(immunizations),
+			ToNullString(personalMedicalHistory))
 
 		if err != nil {
 			tx.Rollback()
@@ -131,6 +151,7 @@ func MedicalRecordRenew(ctx iris.Context) {
 	chiefComplaint := ctx.PostValue("chief_complaint")
 
 	morbidityDate := ctx.PostValue("morbidity_date")
+	personalMedicalHistory := ctx.PostValue("personal_medical_history")
 	historyOfPresentIllness := ctx.PostValue("history_of_present_illness")
 	historyOfPastIllness := ctx.PostValue("history_of_past_illness")
 	familyMedicalHistory := ctx.PostValue("family_medical_history")
@@ -156,10 +177,10 @@ func MedicalRecordRenew(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "没有主病历,不能续写"})
 		return
 	}
-	sql := `INSERT INTO  medical_record ( clinic_triage_patient_id, morbidity_date, chief_complaint, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id, files ) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`
+	sql := `INSERT INTO  medical_record ( clinic_triage_patient_id, morbidity_date, chief_complaint,personal_medical_history, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id, files ) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`
 
-	_, err := model.DB.Exec(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files)
+	_, err := model.DB.Exec(sql, clinicTriagePatientID, morbidityDate, chiefComplaint, personalMedicalHistory, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID, files)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
@@ -265,6 +286,7 @@ func MedicalRecordModelCreate(ctx iris.Context) {
 	isCommon := ctx.PostValue("is_common")
 
 	chiefComplaint := ctx.PostValue("chief_complaint")
+	personalMedicalHistory := ctx.PostValue("personal_medical_history")
 	historyOfPresentIllness := ctx.PostValue("history_of_present_illness")
 	historyOfPastIllness := ctx.PostValue("history_of_past_illness")
 	familyMedicalHistory := ctx.PostValue("family_medical_history")
@@ -282,11 +304,11 @@ func MedicalRecordModelCreate(ctx iris.Context) {
 		return
 	}
 
-	sql := `INSERT INTO  medical_record_model ( model_name, is_common, chief_complaint, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id ) 
+	sql := `INSERT INTO  medical_record_model ( model_name, is_common, chief_complaint,personal_medical_history, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id ) 
 	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`
 
 	var id int
-	err := model.DB.QueryRow(sql, modelName, isCommon, chiefComplaint, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID).Scan(&id)
+	err := model.DB.QueryRow(sql, modelName, isCommon, chiefComplaint, personalMedicalHistory, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID).Scan(&id)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
@@ -301,6 +323,7 @@ func MedicalRecordModelUpdate(ctx iris.Context) {
 	isCommon := ctx.PostValue("is_common")
 
 	chiefComplaint := ctx.PostValue("chief_complaint")
+	personalMedicalHistory := ctx.PostValue("personal_medical_history")
 	historyOfPresentIllness := ctx.PostValue("history_of_present_illness")
 	historyOfPastIllness := ctx.PostValue("history_of_past_illness")
 	familyMedicalHistory := ctx.PostValue("family_medical_history")
@@ -359,6 +382,7 @@ func MedicalRecordModelUpdate(ctx iris.Context) {
 		"model_name":                 modelName,
 		"is_common":                  isCommon,
 		"chief_complaint":            chiefComplaint,
+		"personal_medical_history":   personalMedicalHistory,
 		"history_of_present_illness": historyOfPresentIllness,
 		"history_of_past_illness":    historyOfPastIllness,
 		"family_medical_history":     familyMedicalHistory,
@@ -373,7 +397,7 @@ func MedicalRecordModelUpdate(ctx iris.Context) {
 	}
 
 	var s []string
-	s = append(s, "id=:id", "model_name=:model_name", "chief_complaint=:chief_complaint",
+	s = append(s, "id=:id", "model_name=:model_name", "chief_complaint=:chief_complaint", "personal_medical_history=:personal_medical_history",
 		"history_of_present_illness=:history_of_present_illness", "history_of_past_illness=:history_of_past_illness",
 		"family_medical_history=:family_medical_history", "allergic_history=:allergic_history", "allergic_reaction=:allergic_reaction",
 		"immunizations=:immunizations", "body_examination=:body_examination", "diagnosis=:diagnosis", "cure_suggestion=:cure_suggestion",

@@ -332,6 +332,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 	hasAllergicHistory := ctx.PostValue("has_allergic_history")
 	allergicHistory := ctx.PostValue("allergic_history")
+	allergicReaction := ctx.PostValue("allergic_reaction")
 	personalMedicalHistory := ctx.PostValue("personal_medical_history")
 	familyMedicalHistory := ctx.PostValue("family_medical_history")
 	immunizations := ctx.PostValue("immunizations")
@@ -409,6 +410,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		clinic_triage_patient_id,
 		has_allergic_history,
 		allergic_history,
+		allergic_reaction,
 		personal_medical_history,
 		family_medical_history,
 		immunizations,
@@ -421,7 +423,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		gestational_weeks,
 		childbearing_history,
 		remark
-	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
+	) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`
 
 	_, err = tx.Exec(insertpSQL,
 		patientID,
@@ -450,6 +452,7 @@ func TriageCompletePreMedicalRecord(ctx iris.Context) {
 		ToNullInt64(clinicTriagePatientID),
 		ToNullBool(hasAllergicHistory),
 		ToNullString(allergicHistory),
+		ToNullString(allergicReaction),
 		ToNullString(personalMedicalHistory),
 		ToNullString(familyMedicalHistory),
 		ToNullString(immunizations),
