@@ -992,7 +992,7 @@ func BusinessTransactionDetail(ctx iris.Context) {
 		return
 	}
 
-	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total `+sql, queryMap)
+	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total, sum(dr.total_fee)+sum(mpo.total) as total_fee, sum(dr.total_fee)+sum(mpo.fee) as banance_fee `+sql, queryMap)
 	if err2 != nil {
 		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
 		return
