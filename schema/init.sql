@@ -163,7 +163,7 @@ CREATE TABLE clinic_triage_patient
   am_pm varchar(1) CHECK(am_pm = 'a' OR am_pm = 'p'),--出诊上下午
   start_time varchar(10),--开始时间
   end_time varchar(10),--结束时间
-  register_type INTEGER NOT NULL,--登记类型：1预约，2线下分诊
+  register_type INTEGER NOT NULL,--登记类型：1预约，2线下分诊 3快速接诊
   visit_type integer NOT NULL,--出诊类型 1: 首诊， 2复诊，3：术后复诊
   status integer NOT NULL,--状态，对应 分诊就诊人操作记录表 type
   doctor_visit_schedule_id integer,--排版id

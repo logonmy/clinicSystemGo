@@ -1029,3 +1029,127 @@ func TriagePatientRecord(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "data": resData})
 }
+
+// QuickReception 快速接诊
+func QuickReception(ctx iris.Context) {
+	qPatientID := ctx.PostValue("patient_id")
+	certNo := ctx.PostValue("cert_no")
+	name := ctx.PostValue("name")
+	birthday := ctx.PostValue("birthday")
+	sex := ctx.PostValue("sex")
+	phone := ctx.PostValue("phone")
+	province := ctx.PostValue("province")
+	city := ctx.PostValue("city")
+	district := ctx.PostValue("district")
+	address := ctx.PostValue("address")
+	clinicID := ctx.PostValue("clinic_id")
+	visitType := ctx.PostValue("visit_type")
+	personnelID := ctx.PostValue("personnel_id")
+	departmentID := ctx.PostValue("department_id")
+	if departmentID == "" || name == "" || birthday == "" || sex == "" || phone == "" || clinicID == "" || personnelID == "" || visitType == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	var row *sqlx.Row
+
+	if qPatientID != "" {
+		row = model.DB.QueryRowx("select * from patient where id = $1", qPatientID)
+	} else if certNo != "" {
+		row = model.DB.QueryRowx("select * from patient where cert_no = $1", certNo)
+	} else {
+		row = model.DB.QueryRowx("select * from patient where name = $1 and birthday = $2 and phone = $3", name, birthday, phone)
+	}
+
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "登记失败"})
+		return
+	}
+	tx, err := model.DB.Begin()
+	patient := FormatSQLRowToMap(row)
+	_, ok := patient["id"]
+	patientID := patient["id"]
+	if !ok {
+		insertKeys := `name, birthday, sex, phone, address, province, city, district`
+		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`
+		if certNo != "" {
+			insertKeys += ", cert_no"
+			insertValues += ", " + certNo
+		}
+		err = tx.QueryRow(`INSERT INTO patient (`+insertKeys+`) 
+		VALUES (`+insertValues+`) RETURNING id`, name, birthday, sex, phone, address, province, city, district).Scan(&patientID)
+		if err != nil {
+			tx.Rollback()
+			fmt.Println("err2 ===", err)
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	} else {
+		updateSQL := `update patient set name=$1,birthday=$2,sex=$3, phone=$4, address=$5, province = $6, city = $7, district = $8 where id = $9`
+		if certNo != "" {
+			updateSQL = `update patient set cert_no = ` + certNo + `, name= $1,birthday=$2,sex=$3, phone=$4, address=$5, province = $6, city = $7, district = $8  where id = $9`
+		}
+		_, err = tx.Exec(updateSQL, ToNullString(name), ToNullString(birthday), ToNullInt64(sex), ToNullString(phone), ToNullString(address), ToNullString(province), ToNullString(city), ToNullString(district), patientID)
+		if err != nil {
+			tx.Rollback()
+			fmt.Println("err3 ===", err)
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	}
+
+	fmt.Println("' ======= '", patientID)
+
+	row = model.DB.QueryRowx("select * from clinic_patient where patient_id= $1 and clinic_id = $2", patientID, clinicID)
+	if row == nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": "登记失败"})
+		return
+	}
+	clinicPatient := FormatSQLRowToMap(row)
+	_, ok = clinicPatient["id"]
+	var clinicPatientID interface{}
+	if !ok {
+		err = tx.QueryRow("INSERT INTO clinic_patient (patient_id, clinic_id, personnel_id) VALUES ($1, $2, $3) RETURNING id", patientID, clinicID, personnelID).Scan(&clinicPatientID)
+		if err != nil {
+			fmt.Println("clinic_patient ======", err)
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+	} else {
+		clinicPatientID = clinicPatient["id"]
+	}
+
+	insertKeys := `(department_id, doctor_id, clinic_patient_id, visit_type, register_type, status)`
+	insertValues := `($1, $2, $3, $4, 3, 30)`
+
+	insertSQL := "INSERT INTO clinic_triage_patient " + insertKeys + " VALUES " + insertValues + " RETURNING id"
+
+	fmt.Println("insertSQL ======", insertSQL)
+
+	var clinicTriagePatientID int
+	err = tx.QueryRow(insertSQL, departmentID, personnelID, clinicPatientID, visitType).Scan(&clinicTriagePatientID)
+	if err != nil {
+		fmt.Println("clinic_triage_patient ======", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 30, 1, personnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": nil})
+}
