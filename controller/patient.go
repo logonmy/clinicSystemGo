@@ -323,6 +323,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 	patientID := ctx.PostValue("patient_id")
 	hasAllergicHistory := ctx.PostValue("has_allergic_history")
 	allergicHistory := ctx.PostValue("allergic_history")
+	allergicReaction := ctx.PostValue("allergic_reaction")
 	personalMedicalHistory := ctx.PostValue("personal_medical_history")
 	familyMedicalHistory := ctx.PostValue("family_medical_history")
 	immunizations := ctx.PostValue("immunizations")
@@ -357,6 +358,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 		patient_id,
 		has_allergic_history,
 		allergic_history,
+		allergic_reaction,
 		personal_medical_history,
 		family_medical_history,
 		immunizations,
@@ -374,6 +376,7 @@ func PersonalMedicalRecordUpsert(ctx iris.Context) {
 		ToNullInt64(patientID),
 		ToNullBool(hasAllergicHistory),
 		ToNullString(allergicHistory),
+		ToNullString(allergicReaction),
 		ToNullString(personalMedicalHistory),
 		ToNullString(familyMedicalHistory),
 		ToNullString(immunizations),
