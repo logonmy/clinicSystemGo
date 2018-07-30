@@ -2110,6 +2110,7 @@ CREATE TABLE personal_medical_record
   has_allergic_history boolean,--是否有过敏
   allergic_history text,--过敏史
   personal_medical_history text,--个人病史
+  allergic_reaction text,--过敏反应
   family_medical_history text,--家族病史
   immunizations text,--接种疫苗
   menarche_age integer,--月经初潮年龄
