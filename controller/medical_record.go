@@ -305,8 +305,23 @@ func MedicalRecordModelCreate(ctx iris.Context) {
 		return
 	}
 
-	sql := `INSERT INTO  medical_record_model ( model_name, is_common, chief_complaint,personal_medical_history, history_of_present_illness, history_of_past_illness, family_medical_history, allergic_history, allergic_reaction, immunizations, body_examination, diagnosis, cure_suggestion, remark, operation_id ) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING id`
+	sql := `INSERT INTO  medical_record_model ( 
+		model_name, 
+		is_common, 
+		chief_complaint,
+		personal_medical_history, 
+		history_of_present_illness, 
+		history_of_past_illness, 
+		family_medical_history, 
+		allergic_history, 
+		allergic_reaction, 
+		immunizations, 
+		body_examination, 
+		diagnosis, 
+		cure_suggestion, 
+		remark, 
+		operation_id ) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`
 
 	var id int
 	err := model.DB.QueryRow(sql, modelName, isCommon, chiefComplaint, personalMedicalHistory, historyOfPresentIllness, historyOfPastIllness, familyMedicalHistory, allergicHistory, allergicReaction, immunizations, bodyExamination, diagnosis, cureSuggestion, remark, operationID).Scan(&id)
