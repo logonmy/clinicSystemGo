@@ -753,7 +753,7 @@ func BusinessTransaction(ctx iris.Context) {
 		sql += ` and p.name ~:oprationName `
 	}
 
-	rows, err1 := model.DB.NamedQuery("SELECT cd.*,p.name as operation,d.name as departmentName, pa.name as patientName, cp.id as pid, doc.name as doctorName "+sql+" offset :offset limit :limit", queryMap)
+	rows, err1 := model.DB.NamedQuery("SELECT cp.patient_id,cd.*,p.name as operation,d.name as departmentName, pa.name as patientName, cp.id as pid, doc.name as doctorName "+sql+" offset :offset limit :limit", queryMap)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
