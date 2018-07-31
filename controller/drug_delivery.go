@@ -24,10 +24,12 @@ func DrugDeliveryList(ctx iris.Context) {
 		return
 	}
 
+	timeNow := time.Now().Format("2006-01-02")
+
 	SQL := `FROM mz_paid_orders mpo 
 	left join clinic_drug cd on cd.id = mpo.charge_project_id 
 	left join prescription_chinese_patient pcp on pcp.order_sn = mpo.order_sn
-	left join (select clinic_drug_id, sum(stock_amount) as stock_amount from drug_stock group by clinic_drug_id ) ds on ds.clinic_drug_id = cd.id 
+	left join (select clinic_drug_id, sum(stock_amount) as stock_amount from drug_stock where eff_date > '` + timeNow + `' group by clinic_drug_id ) ds on ds.clinic_drug_id = cd.id 
 	left join drug_delivery_record_item ddri on ddri.mz_paid_orders_id = mpo.id 
 	where mpo.clinic_triage_patient_id = $1 and mpo.order_status = $2 and mpo.charge_project_type_id in (1,2)`
 
