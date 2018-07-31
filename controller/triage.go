@@ -1151,5 +1151,5 @@ func QuickReception(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": nil})
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": clinicTriagePatientID})
 }
