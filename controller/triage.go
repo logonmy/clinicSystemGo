@@ -1071,7 +1071,7 @@ func QuickReception(ctx iris.Context) {
 	patientID := patient["id"]
 	if !ok {
 		insertKeys := `name, birthday, sex, phone, address, province, city, district`
-		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`
+		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8`
 		if certNo != "" {
 			insertKeys += ", cert_no"
 			insertValues += ", " + certNo
