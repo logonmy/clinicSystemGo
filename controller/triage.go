@@ -1128,7 +1128,7 @@ func QuickReception(ctx iris.Context) {
 
 	fmt.Println("insertSQL ======", insertSQL)
 
-	var clinicTriagePatientID int
+	var clinicTriagePatientID interface{}
 	err = tx.QueryRow(insertSQL, departmentID, personnelID, clinicPatientID, visitType).Scan(&clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
@@ -1151,5 +1151,10 @@ func QuickReception(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": clinicTriagePatientID})
+
+	resData := make(map[string]interface{})
+	resData["patient_id"] = patientID
+	resData["clinic_triage_patient_id"] = clinicTriagePatientID
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": resData})
 }
