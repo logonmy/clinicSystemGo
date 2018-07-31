@@ -3,8 +3,11 @@ package controller
 import (
 	"clinicSystemGo/model"
 	"encoding/json"
+	"errors"
 	"strconv"
+	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/kataras/iris"
 )
 
@@ -240,8 +243,8 @@ func DrugDeliveryRecordCreate(ctx iris.Context) {
 		row := tx.QueryRowx(`select * from mz_paid_orders where id = $1`, orderID)
 		rowMap := FormatSQLRowToMap(row)
 
-		// 这里有个坑 ， 发药没有指定药房。
-		_, err2 := tx.Exec(`UPDATE drug_stock set stock_amount = stock_amount - $1 where clinic_drug_id = $2`, rowMap["amount"], rowMap["charge_project_id"])
+		err2 := updateDrugStock2(tx, rowMap["charge_project_id"].(int64), rowMap["amount"].(int64))
+
 		if err2 != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-6", "msg": err2.Error()})
@@ -257,6 +260,41 @@ func DrugDeliveryRecordCreate(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "操作成功"})
 
+}
+
+func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64) error {
+	if amount < 0 {
+		return errors.New("库存数量有误")
+	}
+	if amount == 0 {
+		return nil
+	}
+
+	timeNow := time.Now().Format("2006-01-02")
+	row := model.DB.QueryRowx("select * from drug_stock where clinic_drug_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1", clinicDrugID, timeNow)
+	rowMap := FormatSQLRowToMap(row)
+	if rowMap["stock_amount"] == nil {
+		return errors.New("库存不足")
+	}
+
+	stockAmount := rowMap["stock_amount"].(int64)
+
+	if stockAmount >= amount {
+		_, err := tx.Exec("update drug_stock set stock_amount = $1 where id = $2", stockAmount-amount, rowMap["id"])
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		return nil
+	}
+	_, err := tx.Exec("update drug_stock set 0 where id = $1", rowMap["id"])
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return updateDrugStock2(tx, clinicDrugID, amount-stockAmount)
 }
 
 // DrugDeliveryRecordRefund 退药
@@ -311,8 +349,7 @@ func DrugDeliveryRecordRefund(ctx iris.Context) {
 		row := tx.QueryRowx(`select * from mz_paid_orders where id = $1`, orderID)
 		rowMap := FormatSQLRowToMap(row)
 
-		// 这里有个坑 ， 发药没有指定药房。
-		_, err2 := tx.Exec(`UPDATE drug_stock set stock_amount = stock_amount + $1 where clinic_drug_id = $2`, rowMap["amount"], rowMap["charge_project_id"])
+		_, err2 := tx.Exec(`UPDATE drug_stock set stock_amount = stock_amount + $1 where id in (select id from drug_stock where clinic_drug_id = $2 order by eff_date DESC limit 1)`, rowMap["amount"], rowMap["charge_project_id"])
 		if err2 != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-6", "msg": err2.Error()})
