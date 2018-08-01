@@ -399,16 +399,6 @@ func RoleAllocation(ctx iris.Context) {
 			return
 		}
 
-		prrow := model.DB.QueryRowx("select personnel_id from personnel_role where personnel_id=$1 and role_id=$2 limit 1", personnelID, roleID)
-		if prrow == nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "分配失败"})
-			return
-		}
-		personnelRole := FormatSQLRowToMap(prrow)
-		_, prok := personnelRole["personnel_id"]
-		if prok {
-			continue
-		}
 		_, err := tx.Exec("insert into personnel_role (personnel_id, role_id) values ($1,$2)", personnelID, roleID)
 
 		if err != nil {
