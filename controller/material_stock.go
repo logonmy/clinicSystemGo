@@ -245,7 +245,7 @@ func MaterialInstockRecordDetail(ctx iris.Context) {
 		return
 	}
 
-	sql := `select ir.id as material_instock_record_id,ir.instock_date,ir.order_number,ir.created_time,ir.supplier_name,ir.remark,ir.verify_status,
+	sql := `select ir.id as material_instock_record_id,ir.instock_date,ir.order_number,ir.created_time,ir.updated_time,ir.supplier_name,ir.remark,ir.verify_status,
 		ir.verify_operation_id,vp.name as verify_operation_name,ir.instock_way_name,ir.instock_operation_id,p.name as instock_operation_name 
 		from material_instock_record ir
 		left join personnel p on ir.instock_operation_id = p.id
@@ -829,7 +829,7 @@ func MaterialOutstockRecordDetail(ctx iris.Context) {
 		return
 	}
 
-	sql := `select outr.id as material_outstock_record_id,outr.outstock_date,outr.order_number,outr.created_time,
+	sql := `select outr.id as material_outstock_record_id,outr.outstock_date,outr.order_number,outr.created_time,outr.updated_time,
 		dept.name as department_name,outr.department_id,outr.remark,outr.verify_operation_id,vp.name as verify_operation_name,
 		outr.personnel_id,p.name as personnel_name,outr.outstock_way_name,
 		outr.outstock_operation_id,op.name as outstock_operation_name 

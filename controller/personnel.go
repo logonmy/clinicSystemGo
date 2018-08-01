@@ -41,7 +41,7 @@ func PersonnelLogin(ctx iris.Context) {
 		md5Ctx.Write([]byte(password))
 		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
 		row := model.DB.QueryRowx(`select a.id, a.code, a.name, a.username, 
-			b.id as clinic_id, b.name as clinic_name 
+			b.id as clinic_id, b.name as clinic_name , a.is_clinic_admin
 			from personnel a left join clinic b on a.clinic_id = b.id 
 			where a.username = $1 and a.password = $2`, username, passwordMd5)
 		if row == nil {
