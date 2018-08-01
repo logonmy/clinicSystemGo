@@ -376,6 +376,14 @@ func RoleAllocation(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
+	_, errd := tx.Exec("delete from personnel_role where role_id=$1", roleID)
+
+	if errd != nil {
+		fmt.Println("errd ===", errd)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
+		return
+	}
 
 	for _, personnel := range results {
 		personnelID := personnel["personnel_id"]
@@ -406,7 +414,7 @@ func RoleAllocation(ctx iris.Context) {
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 	}
