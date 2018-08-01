@@ -122,6 +122,11 @@ func MaterialPatientCreate(ctx iris.Context) {
 		times := v["amount"]
 		illustration := v["illustration"]
 		fmt.Println("clinicMaterialID====", clinicMaterialID)
+		if times == "" {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请填写数量"})
+			return
+		}
 
 		clinicMaterialSQL := `select id as clinic_material_id,ret_price,discount_price,is_discount,name,unit_name from clinic_material where id=$1`
 		trow := model.DB.QueryRowx(clinicMaterialSQL, clinicMaterialID)

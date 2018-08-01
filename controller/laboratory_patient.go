@@ -121,6 +121,11 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 		times := v["times"]
 		illustration := v["illustration"]
 		fmt.Println("clinicLaboratoryID====", clinicLaboratoryID)
+		if times == "" {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请填写次数"})
+			return
+		}
 		clinicLaboratorySQL := `select id as clinic_laboratory_id,price,is_discount,name,unit_name,discount_price from clinic_laboratory where id=$1`
 		trow := model.DB.QueryRowx(clinicLaboratorySQL, clinicLaboratoryID)
 		if trow == nil {

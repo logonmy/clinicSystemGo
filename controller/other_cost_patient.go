@@ -121,6 +121,11 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		times := v["amount"]
 		illustration := v["illustration"]
 		fmt.Println("clinicOtherCostID====", clinicOtherCostID)
+		if times == "" {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "请填写次数"})
+			return
+		}
 
 		trow := model.DB.QueryRowx(clinicOtherCostSQL, clinicOtherCostID)
 		if trow == nil {
