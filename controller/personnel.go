@@ -746,3 +746,22 @@ func UpdatePersonnelUsername(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "修改成功"})
 }
+
+//PersonnelDepartmentList 获取医生所属科室
+func PersonnelDepartmentList(ctx iris.Context) {
+	personnelID := ctx.PostValue("personnel_id")
+
+	if personnelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(`SELECT dp.department_id,d.name as department_name FROM personnel p
+	left join department_personnel dp on dp.personnel_id = p.id
+	left join department d on dp.department_id = d.id
+	WHERE personnel_id=$1 and d.status=true and d.deleted_time is null`, personnelID)
+	results = FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results})
+}
