@@ -1185,6 +1185,8 @@ func DrugStockList(ctx iris.Context) {
 		cd.name,
 		cd.specification,
 		cd.packing_unit_name,
+		cd.day_warning,
+		cd.stock_warning,
 		cd.manu_factory_name,
 		ds.supplier_name,
 		cd.ret_price,
