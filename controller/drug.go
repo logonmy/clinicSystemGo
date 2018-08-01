@@ -77,7 +77,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 	drugMap := FormatSQLRowToMap(drugRow)
 	_, ok := drugMap["id"]
 	if ok {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "拆零价格必填"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "药品已添加,请勿重复添加"})
 		return
 	}
 
