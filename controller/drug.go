@@ -49,6 +49,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 	countryFlag := ctx.PostValue("country_flag")
 	selfSlag := ctx.PostValue("self_flag")
 	drugDlag := ctx.PostValue("drug_flag")
+	fmt.Println("isBulkSales====", isBulkSales)
 
 	if clinicID == "" || name == "" || retPrice == "" || isBulkSales == "" || drugType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
