@@ -1213,8 +1213,8 @@ func DrugStockList(ctx iris.Context) {
 		selectSQL += " and ds.stock_amount>0"
 	}
 	if dateWarning != "" {
-		countSQL += " and (ds.eff_date <= (CURRENT_DATE + cd.day_warning))"
-		selectSQL += " and (ds.eff_date <= (CURRENT_DATE + cd.day_warning))"
+		countSQL += " and (ds.eff_date <= (CURRENT_DATE + COALESCE(cd.day_warning, 0)))"
+		selectSQL += " and (ds.eff_date <= (CURRENT_DATE + COALESCE(cd.day_warning, 0)))"
 	}
 
 	var queryOption = map[string]interface{}{
