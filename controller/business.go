@@ -437,6 +437,10 @@ func AdminList(ctx iris.Context) {
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	keyword := ctx.PostValue("keyword")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+	status := ctx.PostValue("status")
+
 	if offset == "" {
 		offset = "0"
 	}
@@ -456,17 +460,44 @@ func AdminList(ctx iris.Context) {
 		return
 	}
 
+	if startDate != "" && endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
+		return
+	}
+	if startDate == "" && endDate != "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
+		return
+	}
+
 	countSQL := `select count(id) as total from admin where id>0`
 	rowSQL := `select id as admin_id,created_time,name,username,phone,status from admin where id>0`
+
 	if keyword != "" {
 		countSQL += ` and name ~*:keyword`
 		rowSQL += ` and name ~*:keyword`
 	}
 
+	if startDate != "" && endDate != "" {
+		if startDate > endDate {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
+			return
+		}
+		countSQL += " and created_time between :start_date and :end_date"
+		rowSQL += " and created_time between :start_date and :end_date"
+	}
+
+	if status != "" {
+		countSQL += " and status =:status"
+		rowSQL += " and status =:status"
+	}
+
 	var queryOptions = map[string]interface{}{
-		"keyword": ToNullString(keyword),
-		"offset":  ToNullInt64(offset),
-		"limit":   ToNullInt64(limit),
+		"keyword":    ToNullString(keyword),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
+		"start_date": ToNullString(startDate),
+		"end_date":   ToNullString(endDate),
+		"status":     ToNullString(status),
 	}
 
 	totalrow, err1 := model.DB.NamedQuery(countSQL, queryOptions)
