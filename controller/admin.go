@@ -324,6 +324,7 @@ func AdminGetByID(ctx iris.Context) {
 	fm.name as menu_name,
 	fm.url as menu_url,
 	fm.level,
+	fm.title,
 	fm.weight,
 	fm.ascription,
 	fm.status,
@@ -339,19 +340,20 @@ func AdminGetByID(ctx iris.Context) {
 	}
 	admin := FormatSQLRowToMap(arows)
 
-	var funtionmenu []Funtionmenu
-	for rows.Next() {
-		var f Funtionmenu
-		err := rows.StructScan(&f)
-		if err != nil {
-			fmt.Println("err=====", err.Error())
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
-		}
-		funtionmenu = append(funtionmenu, f)
-	}
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	funtionmenu = append(funtionmenu, f)
+	// }
 
-	adminFunctionMenu := FormatMenu(funtionmenu)
+	// adminFunctionMenu := FormatMenu(funtionmenu)
+	adminFunctionMenu := FormatSQLRowsToMapArray(rows)
 
 	admin["funtionMenus"] = adminFunctionMenu
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": admin})
