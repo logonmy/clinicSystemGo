@@ -965,8 +965,8 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": result})
 }
 
-// TriagePatientRecord 分诊记录报告
-func TriagePatientRecord(ctx iris.Context) {
+// TriagePatientReport 分诊记录报告
+func TriagePatientReport(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 
 	if clinicTriagePatientID == "" {
