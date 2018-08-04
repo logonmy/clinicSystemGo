@@ -166,50 +166,6 @@ func BusinessAssign(ctx iris.Context) {
 		return
 	}
 	var sets []string
-	// if len(results) > 0 {
-	// 	for _, v := range results {
-	// 		childrenFunctionMenuID := v["function_menu_id"]
-	// 		crow := model.DB.QueryRowx("select id from children_function_menu where id=$1 limit 1", childrenFunctionMenuID)
-	// 		if crow == nil {
-	// 			ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
-	// 			return
-	// 		}
-	// 		childrenFunctionMenu := FormatSQLRowToMap(crow)
-	// 		_, cok := childrenFunctionMenu["id"]
-	// 		if !cok {
-	// 			ctx.JSON(iris.Map{"code": "-1", "msg": "菜单项不存在"})
-	// 			return
-	// 		}
-	// 		sets = append(sets, childrenFunctionMenuID)
-	// 	}
-	// 	setStr := strings.Join(sets, ",")
-	// 	insertSQL := `insert into clinic_children_function_menu (clinic_id, children_function_menu_id)
-	// 	select ` + clinicID + `, id from children_function_menu
-	// 	where id in (` + setStr +
-	// 		`)and id not in (select children_function_menu_id from clinic_children_function_menu where clinic_id = ` + clinicID + `);`
-
-	// 	_, errtx1 := tx.Exec(insertSQL)
-	// 	if errtx1 != nil {
-	// 		tx.Rollback()
-	// 		ctx.JSON(iris.Map{"code": "-1", "msg": errtx1.Error()})
-	// 		return
-	// 	}
-
-	// 	_, errtx2 := tx.Exec("update clinic_children_function_menu set status=false where clinic_id=$1", clinicID)
-	// 	if errtx2 != nil {
-	// 		tx.Rollback()
-	// 		ctx.JSON(iris.Map{"code": "-1", "msg": errtx2.Error()})
-	// 		return
-	// 	}
-	// 	updateSQL := "update clinic_children_function_menu set status=true where clinic_id=$1 and children_function_menu_id in (" + setStr + ")"
-	// 	fmt.Println("updateSQL===", updateSQL)
-	// 	_, errtx3 := tx.Exec(updateSQL, clinicID)
-	// 	if errtx3 != nil {
-	// 		tx.Rollback()
-	// 		ctx.JSON(iris.Map{"code": "-1", "msg": errtx3.Error()})
-	// 		return
-	// 	}
-	// }
 
 	if len(results) > 0 {
 		for _, v := range results {
@@ -445,6 +401,37 @@ func AdminUpdate(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": adminID})
 }
 
+// AdminOnOff 启用和停用
+func AdminOnOff(ctx iris.Context) {
+	adminID := ctx.PostValue("admin_id")
+	status := ctx.PostValue("status")
+	if adminID == "" || status == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	row := model.DB.QueryRowx("select id from admin where id=$1 limit 1", adminID)
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
+		return
+	}
+	admin := FormatSQLRowToMap(row)
+	_, ok := admin["id"]
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "账号不存在"})
+		return
+	}
+
+	_, err1 := model.DB.Exec("update admin set status=$1 where id=$2", status, adminID)
+	if err1 != nil {
+		fmt.Println(" err1====", err1)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": nil})
+}
+
 //AdminList 平台账号列表
 func AdminList(ctx iris.Context) {
 	offset := ctx.PostValue("offset")
@@ -595,4 +582,51 @@ func MenuGetByClinicID(ctx iris.Context) {
 	result := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+}
+
+// AdminLogin 登录
+func AdminLogin(ctx iris.Context) {
+	IP := ctx.RemoteAddr()
+	username := ctx.PostValue("username")
+	password := ctx.PostValue("password")
+	if username != "" && password != "" {
+		md5Ctx := md5.New()
+		md5Ctx.Write([]byte(password))
+		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
+		row := model.DB.QueryRowx(`select id, phone, name, title, username, is_clinic_admin
+			from admin
+			where username = $1 and password = $2 and status=true`, username, passwordMd5)
+		if row == nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误或账号未启用"})
+			return
+		}
+		result := FormatSQLRowToMap(row)
+		if _, ok := result["id"]; ok {
+			adminID := result["id"]
+			_ = model.DB.MustExec("INSERT INTO admin_login_record (admin_id, ip) VALUES ($1, $2) RETURNING id", adminID, IP)
+			countRow := model.DB.QueryRowx("select count(*) as count from admin_login_record where admin_id = $1", adminID)
+			count := FormatSQLRowToMap(countRow)
+
+			// token := jwt.New(jwt.SigningMethodHS256)
+			// claims := make(jwt.MapClaims)
+			// claims["exp"] = time.Now().Add(time.Hour * time.Duration(1)).Unix()
+			// claims["iat"] = time.Now().Unix()
+			// claims["admin_id"] = adminID
+			// token.Claims = claims
+			// tokenString, err := token.SignedString([]byte(secretKey))
+
+			// if err != nil {
+			// 	fmt.Println("Error while signing the token", err)
+			// 	ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			// 	return
+			// }
+
+			ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result, "login_times": count["count"]})
+			// ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": tokenString})
+			return
+		}
+		ctx.JSON(iris.Map{"code": "-1", "msg": "用户名或密码错误或账号未启用"})
+		return
+	}
+	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
 }

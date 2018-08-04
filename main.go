@@ -316,10 +316,16 @@ func main() {
 		business.Post("/menubar/list/clinicUnset", controller.MenubarListByClinicID)
 		business.Post("/clinic/assign", controller.BusinessAssign)
 		business.Post("/clinic/menubar", controller.MenuGetByClinicID)
-		business.Post("/admin/create", controller.AdminCreate)
-		business.Post("/admin/list", controller.AdminList)
-		business.Post("/admin/update", controller.AdminUpdate)
-		business.Post("/admin/getByID", controller.AdminGetByID)
+	}
+
+	admin := app.Party("/admin", crs).AllowMethods(iris.MethodOptions)
+	{
+		admin.Post("/login", controller.AdminLogin)
+		admin.Post("/create", controller.AdminCreate)
+		admin.Post("/list", controller.AdminList)
+		admin.Post("/update", controller.AdminUpdate)
+		admin.Post("/getByID", controller.AdminGetByID)
+		admin.Post("/onOff", controller.AdminOnOff)
 	}
 
 	diagnosis := app.Party("/diagnosis", crs).AllowMethods(iris.MethodOptions)

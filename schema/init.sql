@@ -538,6 +538,18 @@ CREATE TABLE admin
   deleted_time timestamp with time zone
 );
 
+--平台管理人员登录记录
+CREATE TABLE admin_login_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  admin_id INTEGER NOT NULL references admin(id),--平台管理人员id
+  ip VARCHAR(20) NOT NULL,--登录ip
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
 -- --一级菜单功能项
 -- CREATE TABLE parent_function_menu
 -- (
