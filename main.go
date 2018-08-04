@@ -326,6 +326,7 @@ func main() {
 		admin.Post("/update", controller.AdminUpdate)
 		admin.Post("/getByID", controller.AdminGetByID)
 		admin.Post("/onOff", controller.AdminOnOff)
+		admin.Post("/menubarUnset", controller.MenubarListByAdminID)
 	}
 
 	diagnosis := app.Party("/diagnosis", crs).AllowMethods(iris.MethodOptions)
