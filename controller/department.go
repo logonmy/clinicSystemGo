@@ -131,7 +131,7 @@ func DepartmentDelete(ctx iris.Context) {
 		return
 	}
 
-	crow := model.DB.QueryRowx("select id,code from department where id=$1 limit 1", departmentID)
+	crow := model.DB.QueryRowx("select id,code,name from department where id=$1 limit 1", departmentID)
 	if crow == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "删除失败"})
 		return
@@ -143,15 +143,17 @@ func DepartmentDelete(ctx iris.Context) {
 		return
 	}
 	code := department["code"]
+	name := department["name"]
 	code = code.(string) + "#" + strconv.Itoa(int(time.Now().Unix()))
+	name = name.(string) + "#" + strconv.Itoa(int(time.Now().Unix()))
 
-	stmt, err := model.DB.Prepare("update department set code=$1,deleted_time=LOCALTIMESTAMP WHERE id=$2")
+	stmt, err := model.DB.Prepare("update department set code=$1,name=$2,deleted_time=LOCALTIMESTAMP WHERE id=$3")
 	if err != nil {
 		fmt.Println("Perr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	res, err := stmt.Exec(code, departmentID)
+	res, err := stmt.Exec(code, name, departmentID)
 	if err != nil {
 		fmt.Println("Eerr ===", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

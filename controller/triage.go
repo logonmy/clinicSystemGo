@@ -965,8 +965,8 @@ func TriagePatientVisitDetail(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": result})
 }
 
-// TriagePatientRecord 分诊记录报告
-func TriagePatientRecord(ctx iris.Context) {
+// TriagePatientReport 分诊记录报告
+func TriagePatientReport(ctx iris.Context) {
 	clinicTriagePatientID := ctx.PostValue("clinic_triage_patient_id")
 
 	if clinicTriagePatientID == "" {
@@ -987,13 +987,15 @@ func TriagePatientRecord(ctx iris.Context) {
 	lp.created_time as order_time,
 	lpr.created_time as report_time,
 	doc.name as report_doctor_name,
-	p.name as order_doctor_name
+	p.name as order_doctor_name,
+	c.name as clinic_name
 	FROM laboratory_patient lp 
 	left join clinic_laboratory cl on cl.id = lp.clinic_laboratory_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = lp.clinic_triage_patient_id and mo.charge_project_type_id=3 and lp.clinic_laboratory_id=mo.charge_project_id
 	left join laboratory_patient_record lpr on lpr.laboratory_patient_id = lp.id
 	left join personnel doc on doc.id = lpr.operation_id
 	left join personnel p on p.id = lp.operation_id
+	left join clinic c on c.id = p.clinic_id
 	where lp.clinic_triage_patient_id = $1 and lp.order_status=$2`
 
 	laboratoryRows, _ := model.DB.Queryx(selectLaboratorySQL, clinicTriagePatientID, "30")
@@ -1012,13 +1014,15 @@ func TriagePatientRecord(ctx iris.Context) {
 	mpr.created_time as report_time,
 	ep.created_time as order_time,
 	doc.name as report_doctor_name,
-	p.name as order_doctor_name
+	p.name as order_doctor_name,
+	c.name as clinic_name
 	FROM examination_patient ep 
 	left join clinic_examination ce on ce.id = ep.clinic_examination_id
 	left join mz_paid_orders mo on mo.clinic_triage_patient_id = ep.clinic_triage_patient_id and mo.charge_project_type_id=4 and ep.clinic_examination_id=mo.charge_project_id
 	left join examination_patient_record mpr on mpr.examination_patient_id = ep.id
 	left join personnel doc on doc.id = mpr.operation_id
 	left join personnel p on p.id = ep.operation_id
+	left join clinic c on c.id = p.clinic_id
 	where mo.id is not NULL and ep.clinic_triage_patient_id = $1 and ep.order_status=$2`
 
 	examinationRows, _ := model.DB.Queryx(selectExaminationSQL, clinicTriagePatientID, "30")
@@ -1071,7 +1075,7 @@ func QuickReception(ctx iris.Context) {
 	patientID := patient["id"]
 	if !ok {
 		insertKeys := `name, birthday, sex, phone, address, province, city, district`
-		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11`
+		insertValues := `$1, $2, $3, $4, $5, $6, $7, $8`
 		if certNo != "" {
 			insertKeys += ", cert_no"
 			insertValues += ", " + certNo
@@ -1128,7 +1132,7 @@ func QuickReception(ctx iris.Context) {
 
 	fmt.Println("insertSQL ======", insertSQL)
 
-	var clinicTriagePatientID int
+	var clinicTriagePatientID interface{}
 	err = tx.QueryRow(insertSQL, departmentID, personnelID, clinicPatientID, visitType).Scan(&clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
@@ -1151,5 +1155,10 @@ func QuickReception(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": nil})
+
+	resData := make(map[string]interface{})
+	resData["patient_id"] = patientID
+	resData["clinic_triage_patient_id"] = clinicTriagePatientID
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": resData})
 }

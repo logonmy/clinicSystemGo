@@ -91,6 +91,7 @@ func main() {
 		personnel.Post("/UpdatePersonnelStatus", controller.UpdatePersonnelStatus)
 		personnel.Post("/UpdatePersonnelUsername", controller.UpdatePersonnelUsername)
 		personnel.Post("/PersonnelRoles", controller.PersonnelRoles)
+		personnel.Post("/PersonnelDepartmentList", controller.PersonnelDepartmentList)
 	}
 
 	// visitType := app.Party("/visitType", crs).AllowMethods(iris.MethodOptions)
@@ -194,7 +195,7 @@ func main() {
 		triage.Post("/ReceiveRecord", controller.ReceiveRecord)
 		triage.Post("/DiagnosisTreatmentPatientCreate", controller.DiagnosisTreatmentPatientCreate)
 		triage.Post("/TriagePatientVisitDetail", controller.TriagePatientVisitDetail)
-		triage.Post("/TriagePatientRecord", controller.TriagePatientRecord)
+		triage.Post("/TriagePatientReport", controller.TriagePatientReport)
 		triage.Post("/QuickReception", controller.QuickReception)
 	}
 
@@ -311,13 +312,21 @@ func main() {
 	{
 		business.Post("/menubar/create", controller.MenubarCreate)
 		business.Post("/menubar/list", controller.MenubarList)
-		business.Post("/menubar/list/clinicUnset", controller.MenubarListByClinicID)
+		business.Post("/menubar/list/clinicUnset", controller.MenubarUnsetByClinicID)
 		business.Post("/clinic/assign", controller.BusinessAssign)
 		business.Post("/clinic/menubar", controller.MenuGetByClinicID)
-		business.Post("/admin/create", controller.AdminCreate)
-		business.Post("/admin/list", controller.AdminList)
-		business.Post("/admin/update", controller.AdminUpdate)
-		business.Post("/admin/getByID", controller.AdminGetByID)
+	}
+
+	admin := app.Party("/admin", crs).AllowMethods(iris.MethodOptions)
+	{
+		admin.Post("/login", controller.AdminLogin)
+		admin.Post("/create", controller.AdminCreate)
+		admin.Post("/list", controller.AdminList)
+		admin.Post("/update", controller.AdminUpdate)
+		admin.Post("/getByID", controller.AdminGetByID)
+		admin.Post("/onOff", controller.AdminOnOff)
+		admin.Post("/menubarUnset", controller.MenubarUnsetByAdminID)
+		admin.Post("/menubarList", controller.MenuGetByAdminID)
 	}
 
 	diagnosis := app.Party("/diagnosis", crs).AllowMethods(iris.MethodOptions)

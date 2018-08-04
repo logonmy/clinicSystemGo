@@ -531,6 +531,18 @@ CREATE TABLE admin
   deleted_time timestamp with time zone
 );
 
+--平台管理人员登录记录
+CREATE TABLE admin_login_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  admin_id INTEGER NOT NULL references admin(id),--平台管理人员id
+  ip VARCHAR(20) NOT NULL,--登录ip
+  remark VARCHAR(100),
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
 -- --一级菜单功能项
 -- CREATE TABLE parent_function_menu
 -- (
@@ -1519,7 +1531,7 @@ CREATE TABLE prescription_chinese_item
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (prescription_chinese_patient_id, soft_sn)
+  UNIQUE (order_sn, soft_sn)
 );
 
 --开检查
@@ -1538,7 +1550,7 @@ CREATE TABLE examination_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, clinic_examination_id, order_sn, soft_sn)
+  UNIQUE (order_sn, soft_sn)
 );
 
 --开材料费
@@ -1555,7 +1567,7 @@ CREATE TABLE material_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, clinic_material_id, order_sn, soft_sn)
+  UNIQUE (order_sn, soft_sn)
 );
 
 --开其它费用

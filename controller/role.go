@@ -376,6 +376,14 @@ func RoleAllocation(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
+	_, errd := tx.Exec("delete from personnel_role where role_id=$1", roleID)
+
+	if errd != nil {
+		fmt.Println("errd ===", errd)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": errd.Error()})
+		return
+	}
 
 	for _, personnel := range results {
 		personnelID := personnel["personnel_id"]
@@ -391,22 +399,12 @@ func RoleAllocation(ctx iris.Context) {
 			return
 		}
 
-		prrow := model.DB.QueryRowx("select personnel_id from personnel_role where personnel_id=$1 and role_id=$2 limit 1", personnelID, roleID)
-		if prrow == nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "分配失败"})
-			return
-		}
-		personnelRole := FormatSQLRowToMap(prrow)
-		_, prok := personnelRole["personnel_id"]
-		if prok {
-			continue
-		}
 		_, err := tx.Exec("insert into personnel_role (personnel_id, role_id) values ($1,$2)", personnelID, roleID)
 
 		if err != nil {
 			fmt.Println("err ===", err)
 			tx.Rollback()
-			ctx.JSON(iris.Map{"code": "-1", "msg": err})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 			return
 		}
 	}

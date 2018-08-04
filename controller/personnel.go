@@ -41,7 +41,7 @@ func PersonnelLogin(ctx iris.Context) {
 		md5Ctx.Write([]byte(password))
 		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
 		row := model.DB.QueryRowx(`select a.id, a.code, a.name, a.username, 
-			b.id as clinic_id, b.name as clinic_name 
+			b.id as clinic_id, b.name as clinic_name , a.is_clinic_admin
 			from personnel a left join clinic b on a.clinic_id = b.id 
 			where a.username = $1 and a.password = $2`, username, passwordMd5)
 		if row == nil {
@@ -745,4 +745,23 @@ func UpdatePersonnelUsername(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "修改成功"})
+}
+
+//PersonnelDepartmentList 获取医生所属科室
+func PersonnelDepartmentList(ctx iris.Context) {
+	personnelID := ctx.PostValue("personnel_id")
+
+	if personnelID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	var results []map[string]interface{}
+	rows, _ := model.DB.Queryx(`SELECT dp.department_id,d.name as department_name FROM personnel p
+	left join department_personnel dp on dp.personnel_id = p.id
+	left join department d on dp.department_id = d.id
+	WHERE personnel_id=$1 and d.status=true and d.deleted_time is null`, personnelID)
+	results = FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results})
 }

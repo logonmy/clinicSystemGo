@@ -49,6 +49,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 	countryFlag := ctx.PostValue("country_flag")
 	selfSlag := ctx.PostValue("self_flag")
 	drugDlag := ctx.PostValue("drug_flag")
+	fmt.Println("isBulkSales====", isBulkSales)
 
 	if clinicID == "" || name == "" || retPrice == "" || isBulkSales == "" || drugType == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
@@ -76,7 +77,7 @@ func ClinicDrugCreate(ctx iris.Context) {
 	drugMap := FormatSQLRowToMap(drugRow)
 	_, ok := drugMap["id"]
 	if ok {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "拆零价格必填"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "药品已添加,请勿重复添加"})
 		return
 	}
 
