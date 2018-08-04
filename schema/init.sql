@@ -394,25 +394,17 @@ CREATE TABLE mz_paid_record
 );
 
 --门诊缴费记录子表
-CREATE TABLE mz_paid_record_detail
+CREATE TABLE mz_refund_record
 (
   id serial PRIMARY KEY NOT NULL,--id
   mz_paid_record_id INTEGER NOT NULL references mz_paid_record(id),
-  out_trade_no varchar(20) UNIQUE,--第三方交易号
-  refund_status boolean NOT NULL DEFAULT false,--退费标识
-  soft_sns varchar(30) NOT NULL,--序号
-  order_sn varchar(50) NOT NULL,--单号
-  confrim_id INTEGER NOT NULL references personnel(id),--确认操作员id
+  out_refund_no varchar(20) NOT NULL,--系统退费交易号
+  refund_no varchar(30) NOT NULL,--第三方退费交易号
+  status INTEGER NOT NULL DEFAULT -1, --订单状态, -1--待确认， 2--退费成功， 3-退费失败
+  orders_ids text NOT NULL, --已缴费与未交费的记录id
+  refund_money INTEGER NOT NULL, --交易总金额金额
 
-  derate_money INTEGER NOT NULL DEFAULT 0 ,--减免金额
-  voucher_money INTEGER NOT NULL DEFAULT 0 ,--抵金券金额
-  discount_money INTEGER NOT NULL DEFAULT 0,--折扣金额
-  bonus_points_money INTEGER NOT NULL DEFAULT 0 ,--积分兑换金额
-  on_credit_money INTEGER NOT NULL DEFAULT 0 ,--挂账金额
-  medical_money INTEGER NOT NULL DEFAULT 0 ,--医保金额
-  total_money  INTEGER NOT NULL  ,--应收金额
-  balance_money INTEGER NOT NULL ,--实收金额
-
+  operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -423,6 +415,7 @@ CREATE TABLE mz_paid_orders
 (
   id serial PRIMARY KEY NOT NULL,--id
   order_status varchar(2)  NOT NULL DEFAULT '10',  --状态，10-待使用，20-使用中， 30-已使用 40-已退回
+  refund_status boolean NOT NULL DEFAULT false,  --退费状态 
   mz_paid_record_id INTEGER NOT NULL references mz_paid_record(id),
   clinic_triage_patient_id INTEGER NOT NULL references clinic_triage_patient(id),--分诊就诊人id
   charge_project_type_id INTEGER NOT NULL references charge_project_type(id),--收费类型id
