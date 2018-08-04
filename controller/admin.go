@@ -259,7 +259,7 @@ func AdminList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from admin where id>0`
-	rowSQL := `select id as admin_id,created_time,name,username,phone,status from admin where id>0`
+	rowSQL := `select id as admin_id,created_time,name,username,phone,status,title from admin where id>0`
 
 	if keyword != "" {
 		countSQL += ` and name ~*:keyword`
@@ -309,6 +309,7 @@ func AdminList(ctx iris.Context) {
 //AdminGetByID 获取平台账号信息
 func AdminGetByID(ctx iris.Context) {
 	adminID := ctx.PostValue("admin_id")
+
 	if adminID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
@@ -408,12 +409,9 @@ func AdminLogin(ctx iris.Context) {
 func MenubarUnsetByAdminID(ctx iris.Context) {
 	adminID := ctx.PostValue("admin_id")
 
-	if adminID == "" {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
-		return
-	}
-
-	selectSQL := `select 
+	var result []map[string]interface{}
+	if adminID != "" {
+		selectSQL := `select 
 		fm.id as function_menu_id,
 		fm.name as menu_name,
 		fm.url as menu_url,
@@ -426,10 +424,34 @@ func MenubarUnsetByAdminID(ctx iris.Context) {
 		from function_menu fm
 		left join admin_function_menu afm on afm.function_menu_id = fm.id and afm.admin_id = $1 and afm.status=true
 		where afm.function_menu_id IS NULL and fm.ascription='02' order by fm.level asc,fm.weight asc`
-	rows, err := model.DB.Queryx(selectSQL, adminID)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-		return
+		rows, err := model.DB.Queryx(selectSQL, adminID)
+		if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+
+		result = FormatSQLRowsToMapArray(rows)
+	} else {
+		selectSQL := `select 
+		id as function_menu_id,
+		name as menu_name,
+		url as menu_url,
+		level,
+		weight,
+		ascription,
+		status,
+		icon,
+		parent_function_menu_id
+		from function_menu
+		where ascription='02' order by level asc,weight asc`
+
+		rows, err := model.DB.Queryx(selectSQL)
+		if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+
+		result = FormatSQLRowsToMapArray(rows)
 	}
 
 	// var funtionmenu []Funtionmenu
@@ -446,7 +468,6 @@ func MenubarUnsetByAdminID(ctx iris.Context) {
 	// }
 
 	// result := FormatMenu(funtionmenu)
-	result := FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 }
