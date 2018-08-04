@@ -1526,7 +1526,7 @@ CREATE TABLE prescription_chinese_item
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (prescription_chinese_patient_id, soft_sn)
+  UNIQUE (order_sn, soft_sn)
 );
 
 --开检查
@@ -1545,7 +1545,7 @@ CREATE TABLE examination_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, clinic_examination_id, order_sn, soft_sn)
+  UNIQUE (order_sn, soft_sn)
 );
 
 --开材料费
@@ -1562,7 +1562,7 @@ CREATE TABLE material_patient
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
-  UNIQUE (clinic_triage_patient_id, clinic_material_id, order_sn, soft_sn)
+  UNIQUE (order_sn, soft_sn)
 );
 
 --开其它费用
