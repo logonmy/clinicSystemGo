@@ -87,8 +87,8 @@ func MenubarList(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 }
 
-//MenubarListByClinicID 获取诊所未开通的菜单项
-func MenubarListByClinicID(ctx iris.Context) {
+//MenubarUnsetByClinicID 获取诊所未开通的菜单项
+func MenubarUnsetByClinicID(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	selectSQL := `select 
 		fm.id as function_menu_id,

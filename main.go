@@ -313,7 +313,7 @@ func main() {
 	{
 		business.Post("/menubar/create", controller.MenubarCreate)
 		business.Post("/menubar/list", controller.MenubarList)
-		business.Post("/menubar/list/clinicUnset", controller.MenubarListByClinicID)
+		business.Post("/menubar/list/clinicUnset", controller.MenubarUnsetByClinicID)
 		business.Post("/clinic/assign", controller.BusinessAssign)
 		business.Post("/clinic/menubar", controller.MenuGetByClinicID)
 	}
@@ -326,7 +326,8 @@ func main() {
 		admin.Post("/update", controller.AdminUpdate)
 		admin.Post("/getByID", controller.AdminGetByID)
 		admin.Post("/onOff", controller.AdminOnOff)
-		admin.Post("/menubarUnset", controller.MenubarListByAdminID)
+		admin.Post("/menubarUnset", controller.MenubarUnsetByAdminID)
+		admin.Post("/menubarList", controller.MenuGetByAdminID)
 	}
 
 	diagnosis := app.Party("/diagnosis", crs).AllowMethods(iris.MethodOptions)

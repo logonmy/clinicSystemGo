@@ -404,9 +404,15 @@ func AdminLogin(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "-1", "msg": "请输入用户名或密码"})
 }
 
-//MenubarListByAdminID 获取平台未开通的菜单项
-func MenubarListByAdminID(ctx iris.Context) {
+//MenubarUnsetByAdminID 获取平台未开通的菜单项
+func MenubarUnsetByAdminID(ctx iris.Context) {
 	adminID := ctx.PostValue("admin_id")
+
+	if adminID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
 	selectSQL := `select 
 		fm.id as function_menu_id,
 		fm.name as menu_name,
@@ -437,6 +443,53 @@ func MenubarListByAdminID(ctx iris.Context) {
 	// 	}
 	// 	formatUnsetMenu := FormatUnsetMenu(f)
 	// 	funtionmenu = append(funtionmenu, formatUnsetMenu...)
+	// }
+
+	// result := FormatMenu(funtionmenu)
+	result := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+}
+
+//MenuGetByAdminID 获取平台开通菜单项
+func MenuGetByAdminID(ctx iris.Context) {
+	adminID := ctx.PostValue("admin_id")
+	if adminID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	selectSQL := `select 
+	afm.id as clinic_function_menu_id,
+	afm.function_menu_id as function_menu_id,
+	fm.name as menu_name,
+	fm.url as menu_url,
+	fm.level,
+	fm.weight,
+	fm.ascription,
+	fm.status,
+	fm.icon,
+	fm.parent_function_menu_id
+	from admin_function_menu afm
+	left join function_menu fm on fm.id = afm.function_menu_id
+	where afm.admin_id=$1 and afm.status=true order by fm.level asc,fm.weight asc`
+
+	rows, err2 := model.DB.Queryx(selectSQL, adminID)
+	if err2 != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+		return
+	}
+
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	funtionmenu = append(funtionmenu, f)
 	// }
 
 	// result := FormatMenu(funtionmenu)
