@@ -195,7 +195,7 @@ func main() {
 		triage.Post("/ReceiveRecord", controller.ReceiveRecord)
 		triage.Post("/DiagnosisTreatmentPatientCreate", controller.DiagnosisTreatmentPatientCreate)
 		triage.Post("/TriagePatientVisitDetail", controller.TriagePatientVisitDetail)
-		triage.Post("/TriagePatientRecord", controller.TriagePatientRecord)
+		triage.Post("/TriagePatientReport", controller.TriagePatientReport)
 		triage.Post("/QuickReception", controller.QuickReception)
 	}
 
