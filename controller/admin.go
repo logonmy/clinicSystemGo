@@ -314,7 +314,7 @@ func AdminGetByID(ctx iris.Context) {
 		return
 	}
 
-	arows := model.DB.QueryRowx("select id as admin_id,created_time,name,username,phone,status from admin where id=$1", adminID)
+	arows := model.DB.QueryRowx("select id as admin_id,created_time,name,username,phone,status,title from admin where id=$1", adminID)
 	if arows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 		return
@@ -324,7 +324,6 @@ func AdminGetByID(ctx iris.Context) {
 	fm.name as menu_name,
 	fm.url as menu_url,
 	fm.level,
-	fm.title,
 	fm.weight,
 	fm.ascription,
 	fm.status,
