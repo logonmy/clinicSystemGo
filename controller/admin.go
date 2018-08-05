@@ -44,7 +44,7 @@ func AdminCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-	err = tx.QueryRow("insert into admin(name, title, phone, username, password, is_clinic_admin) values ($1, $2, $3, $4, $5, true) RETURNING id", name, title, phone, username, passwordMd5).Scan(&adminID)
+	err = tx.QueryRow("insert into admin(name, title, phone, username, password) values ($1, $2, $3, $4, $5) RETURNING id", name, title, phone, username, passwordMd5).Scan(&adminID)
 	if err != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -491,41 +491,70 @@ func MenuGetByAdminID(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select 
-	afm.id as clinic_function_menu_id,
-	afm.function_menu_id as function_menu_id,
-	fm.name as menu_name,
-	fm.url as menu_url,
-	fm.level,
-	fm.weight,
-	fm.ascription,
-	fm.status,
-	fm.icon,
-	fm.parent_function_menu_id
-	from admin_function_menu afm
-	left join function_menu fm on fm.id = afm.function_menu_id
-	where afm.admin_id=$1 and afm.status=true order by fm.level asc,fm.weight asc`
+	row := model.DB.QueryRowx(`select * from admin where id = $1`, adminID)
 
-	rows, err2 := model.DB.Queryx(selectSQL, adminID)
-	if err2 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "人员不存在"})
 		return
 	}
 
-	// var funtionmenu []Funtionmenu
-	// for rows.Next() {
-	// 	var f Funtionmenu
-	// 	err := rows.StructScan(&f)
-	// 	if err != nil {
-	// 		fmt.Println("err=====", err.Error())
-	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-	// 		return
-	// 	}
-	// 	funtionmenu = append(funtionmenu, f)
-	// }
+	adminMap := FormatSQLRowToMap(row)
 
-	// result := FormatMenu(funtionmenu)
-	result := FormatSQLRowsToMapArray(rows)
+	isClinicAdmin, ok := adminMap["is_clinic_admin"]
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "人员不存在"})
+		return
+	}
+
+	if !isClinicAdmin.(bool) {
+		selectSQL := `select 
+		afm.id as clinic_function_menu_id,
+		afm.function_menu_id as function_menu_id,
+		fm.name as menu_name,
+		fm.url as menu_url,
+		fm.level,
+		fm.weight,
+		fm.ascription,
+		fm.status,
+		fm.icon,
+		fm.parent_function_menu_id
+		from admin_function_menu afm
+		left join function_menu fm on fm.id = afm.function_menu_id
+		where afm.admin_id=$1 and afm.status=true order by fm.level asc,fm.weight asc`
+
+		rows, err2 := model.DB.Queryx(selectSQL, adminID)
+		if err2 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+			return
+		}
+
+		result := FormatSQLRowsToMapArray(rows)
+
+		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	} else {
+		selectSQL := `select 
+		id as clinic_function_menu_id,
+		function_menu_id as function_menu_id,
+		name as menu_name,
+		url as menu_url,
+		level,
+		weight,
+		ascription,
+		status,
+		icon,
+		parent_function_menu_id
+		from function_menu
+		where ascription = '02' order by fm.level asc,fm.weight asc`
+
+		rows, err2 := model.DB.Queryx(selectSQL, adminID)
+		if err2 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+			return
+		}
+
+		result := FormatSQLRowsToMapArray(rows)
+
+		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	}
 }
