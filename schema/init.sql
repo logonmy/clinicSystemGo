@@ -351,7 +351,7 @@ CREATE TABLE mz_unpaid_orders
   order_sn varchar(50) NOT NULL,--单号
   soft_sn INTEGER NOT NULL,--序号
   name varchar(20) NOT NULL,--收费名称
-  cost INTEGER NOT NULL DEFAULT 0 CHECK(cost >= 0),--成本价
+  cost INTEGER NOT NULL DEFAULT 0,--成本价
   price INTEGER NOT NULL CHECK(price > 0),--单价
   amount INTEGER NOT NULL CHECK(amount > 0),--数量
   unit varchar(20),--单位

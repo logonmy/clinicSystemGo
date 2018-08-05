@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/kataras/iris"
 )
 
@@ -320,8 +321,8 @@ func ChargePay(ctx iris.Context) {
 	}
 
 	//插入已缴费
-	insertPaidOrders := "insert into mz_paid_orders (id,mz_paid_record_id,registration_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
-		" select id," + strconv.Itoa(recordID) + ",registration_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id," + confrimID + " from mz_unpaid_orders where order_sn='" + orderSn + "' AND soft_sn in (" + softSn + ")"
+	insertPaidOrders := "insert into mz_paid_orders (id,mz_paid_record_id,registration_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,cost,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
+		" select id," + strconv.Itoa(recordID) + ",registration_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,cost,price,amount,unit,total,discount,fee,operation_id," + confrimID + " from mz_unpaid_orders where order_sn='" + orderSn + "' AND soft_sn in (" + softSn + ")"
 	_, insertPaidOrdersErr := tx.Query(insertPaidOrders)
 	if insertPaidOrdersErr != nil {
 		tx.Rollback()
@@ -750,6 +751,15 @@ func charge(outTradeNo string, tradeNo string) error {
 		return deleteUnPaidErr
 	}
 
+	//更新材料费库存
+	materialsql := `select charge_project_id,amount from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) and charge_project_type_id=5`
+	materialrows, _ := model.DB.Queryx(materialsql)
+	materials := FormatSQLRowsToMapArray(materialrows)
+
+	for _, material := range materials {
+		updateMaterialStock(tx, material["charge_project_id"].(int64), material["amount"].(int64))
+	}
+
 	//插入交易明细表
 	triagePatient := model.DB.QueryRowx("select * from clinic_triage_patient where id = $1", pay["clinic_triage_patient_id"])
 	triage := FormatSQLRowToMap(triagePatient)
@@ -831,6 +841,42 @@ func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) error 
 
 	_, err := model.DB.Exec("update mz_paid_record set refund_money = $1+refund_money where id = $2", refundFee, pay["id"])
 	return err
+}
+
+//updateMaterialStock
+func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64) error {
+	if amount < 0 {
+		return errors.New("库存数量有误")
+	}
+	if amount == 0 {
+		return nil
+	}
+
+	timeNow := time.Now().Format("2006-01-02")
+	row := model.DB.QueryRowx("select * from material_stock where clinic_material_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1", clinicMaterialID, timeNow)
+	rowMap := FormatSQLRowToMap(row)
+	if rowMap["stock_amount"] == nil {
+		return errors.New("库存不足")
+	}
+
+	stockAmount := rowMap["stock_amount"].(int64)
+
+	if stockAmount >= amount {
+		_, err := tx.Exec("update material_stock set stock_amount = $1 where id = $2", stockAmount-amount, rowMap["id"])
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		return nil
+	}
+	_, err := tx.Exec("update material_stock set 0 where id = $1", rowMap["id"])
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return updateMaterialStock(tx, clinicMaterialID, amount-stockAmount)
 }
 
 // BusinessTransaction 获取交易流水
