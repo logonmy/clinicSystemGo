@@ -895,6 +895,21 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 		return nil
 	}
 
+	mrow := tx.QueryRowx(`select 
+	mpo.id as mz_paid_orders_id,mpr.id as mz_paid_record_id, cd.id as charge_detail_id from mz_paid_orders mpo 
+	left join mz_paid_record mpr on mpr.id = mpo.mz_paid_record_id
+	left join charge_detail cd on cd.out_trade_no = mpr.out_trade_no 
+	where mpo.id = $1 and cd.record_type=1`, mzUnpaidOrdersID)
+
+	mrowMap := FormatSQLRowToMap(mrow)
+
+	if mrowMap["charge_detail_id"] == nil {
+		return errors.New("记录交易查询失败")
+	}
+
+	chargeDetailID := mrowMap["charge_detail_id"]
+	updateSQL := "update charge_detail set material_cost = material_cost + $1 where id = $2"
+
 	timeNow := time.Now().Format("2006-01-02")
 	row := model.DB.QueryRowx("select * from material_stock where clinic_material_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1", clinicMaterialID, timeNow)
 	rowMap := FormatSQLRowToMap(row)
@@ -919,6 +934,12 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 			return errm
 		}
 
+		_, errc := tx.Exec(updateSQL, cost, chargeDetailID)
+		if errc != nil {
+			tx.Rollback()
+			return errc
+		}
+
 		return nil
 	}
 
@@ -934,6 +955,12 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 	if err != nil {
 		tx.Rollback()
 		return err
+	}
+
+	_, errc := tx.Exec(updateSQL, cost, chargeDetailID)
+	if errc != nil {
+		tx.Rollback()
+		return errc
 	}
 
 	return updateMaterialStock(tx, clinicMaterialID, amount-stockAmount, mzUnpaidOrdersID)
