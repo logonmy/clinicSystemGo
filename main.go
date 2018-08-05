@@ -215,21 +215,20 @@ func main() {
 	{
 		charge.Post("/type/init", controller.ChargeTypeInit)
 		charge.Post("/type/create", controller.ChargeTypeCreate)
-		// 创建代缴费项目
-		// charge.Post("/unPay/create", controller.ChargeUnPayCreate)
-		// charge.Post("/unPay/delete", controller.ChargeUnPayDelete)
 		// 创建支付订单
 		charge.Post("/payment/create", controller.ChargePaymentCreate)
 		// 获取支付状态
 		charge.Post("/payment/query", controller.ChargePaymentQuery)
+		// 门诊已缴费 退费
+		charge.Post("/payment/refund", controller.ChargePaymentRefund)
 
 		// 支付到账通知
 		charge.Post("/payment/notice", controller.ChargeNotice)
-		charge.Post("/paid/list", controller.ChargePaidList)
 		// 查询有待缴费的就诊记录
 		charge.Post("/traigePatient/unpay", controller.GetUnChargeTraigePatients)
 		// 查询待缴费的项目列表
 		charge.Post("/unPay/list", controller.ChargeUnPayList)
+		// 查询已缴费的项目列表
 		charge.Post("/paid/list", controller.ChargePaidList)
 		// 查询已缴费的就诊记录
 		charge.Post("/traigePatient/paid", controller.GetPaidTraigePatients)
@@ -316,7 +315,7 @@ func main() {
 	{
 		business.Post("/menubar/create", controller.MenubarCreate)
 		business.Post("/menubar/list", controller.MenubarList)
-		business.Post("/menubar/list/clinicUnset", controller.MenubarListByClinicID)
+		business.Post("/menubar/list/clinicUnset", controller.MenubarUnsetByClinicID)
 		business.Post("/clinic/assign", controller.BusinessAssign)
 		business.Post("/clinic/menubar", controller.MenuGetByClinicID)
 	}
@@ -329,6 +328,8 @@ func main() {
 		admin.Post("/update", controller.AdminUpdate)
 		admin.Post("/getByID", controller.AdminGetByID)
 		admin.Post("/onOff", controller.AdminOnOff)
+		admin.Post("/menubarUnset", controller.MenubarUnsetByAdminID)
+		admin.Post("/menubarList", controller.MenuGetByAdminID)
 	}
 
 	diagnosis := app.Party("/diagnosis", crs).AllowMethods(iris.MethodOptions)

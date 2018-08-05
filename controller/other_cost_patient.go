@@ -69,6 +69,7 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		"order_sn",
 		"soft_sn",
 		"name",
+		"cost",
 		"price",
 		"amount",
 		"unit",
@@ -112,9 +113,9 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errdm.Error()})
 		return
 	}
-	clinicOtherCostSQL := `select id as clinic_other_cost_id,price,is_discount,name,unit_name,discount_price from clinic_other_cost where id=$1`
+	clinicOtherCostSQL := `select id as clinic_other_cost_id,price,is_discount,name,unit_name,discount_price,COALESCE(cost, 0) as cost_price from clinic_other_cost where id=$1`
 	inserttSQL := "insert into other_cost_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
-	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
+	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)"
 
 	for index, v := range results {
 		clinicOtherCostID := v["clinic_other_cost_id"]
@@ -140,6 +141,7 @@ func OtherCostPatientCreate(ctx iris.Context) {
 			return
 		}
 		isDiscount := clinicOtherCost["is_discount"].(bool)
+		cost := clinicOtherCost["cost_price"].(int64)
 		price := clinicOtherCost["price"].(int64)
 		discountPrice := clinicOtherCost["discount_price"].(int64)
 		name := clinicOtherCost["name"].(string)
@@ -176,6 +178,7 @@ func OtherCostPatientCreate(ctx iris.Context) {
 			ToNullString(orderSn),
 			index,
 			ToNullString(name),
+			cost,
 			price,
 			amount,
 			ToNullString(unitName),

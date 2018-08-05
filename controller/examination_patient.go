@@ -103,20 +103,21 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		order_sn,
 		soft_sn,
 		name,
+		cost,
 		price,
 		amount,
 		unit,
 		total,
 		fee,
 		discount,
-		operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`
+		operation_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,$14)`
 
 	for index, v := range results {
 		clinicExaminationID := v["clinic_examination_id"]
 		times := v["times"]
 		illustration := v["illustration"]
 		organ := v["organ"]
-		clinicExaminationSQL := `select * from clinic_examination	where id=$1`
+		clinicExaminationSQL := `select *,COALESCE(cost, 0) as cost_price from clinic_examination	where id=$1`
 		trow := model.DB.QueryRowx(clinicExaminationSQL, clinicExaminationID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "检查项错误"})
@@ -138,6 +139,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 			return
 		}
 
+		cost := int(clinicExamination["cost_price"].(int64))
 		price := int(clinicExamination["price"].(int64))
 		discountPrice := int(clinicExamination["discount_price"].(int64))
 		isDiscount := clinicExamination["is_discount"].(bool)
@@ -160,6 +162,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 			orderSn,
 			index,
 			name,
+			cost,
 			price,
 			amount,
 			unitName,

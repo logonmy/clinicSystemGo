@@ -69,6 +69,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 		"order_sn",
 		"soft_sn",
 		"name",
+		"cost",
 		"price",
 		"amount",
 		"unit",
@@ -114,7 +115,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 		return
 	}
 	inserttSQL := "insert into laboratory_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7)"
-	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
+	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)"
 
 	for index, v := range results {
 		clinicLaboratoryID := v["clinic_laboratory_id"]
@@ -126,7 +127,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "请填写次数"})
 			return
 		}
-		clinicLaboratorySQL := `select id as clinic_laboratory_id,price,is_discount,name,unit_name,discount_price from clinic_laboratory where id=$1`
+		clinicLaboratorySQL := `select id as clinic_laboratory_id,price,is_discount,name,unit_name,discount_price,COALESCE(cost, 0) as cost_price from clinic_laboratory where id=$1`
 		trow := model.DB.QueryRowx(clinicLaboratorySQL, clinicLaboratoryID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "检验项错误"})
@@ -140,6 +141,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 			return
 		}
 		isDiscount := clinicLaboratory["is_discount"].(bool)
+		cost := clinicLaboratory["cost_price"].(int64)
 		price := clinicLaboratory["price"].(int64)
 		discountPrice := clinicLaboratory["discount_price"].(int64)
 		name := clinicLaboratory["name"].(string)
@@ -176,6 +178,7 @@ func LaboratoryPatientCreate(ctx iris.Context) {
 			ToNullString(orderSn),
 			index,
 			ToNullString(name),
+			cost,
 			price,
 			amount,
 			ToNullString(unitName),

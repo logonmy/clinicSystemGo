@@ -512,6 +512,104 @@ func ChargePaymentQuery(ctx iris.Context) {
 
 }
 
+// ChargePaymentRefund 门诊退费
+func ChargePaymentRefund(ctx iris.Context) {
+	outTradeNo := ctx.PostValue("out_trade_no")
+	refundIDs := ctx.PostValue("refundIds")
+	operarion := ctx.PostValue("operarion_id")
+	if outTradeNo == "" || refundIDs == "" || operarion == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	var results []string
+	err := json.Unmarshal([]byte(refundIDs), &results)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	paidRecordRow := model.DB.QueryRowx("select * from mz_paid_record where out_trade_no = $1", outTradeNo)
+	paidRecord := FormatSQLRowToMap(paidRecordRow)
+	if paidRecord["id"] == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "未找到指定的缴费记录"})
+		return
+	}
+
+	balanceMoney := paidRecord["balance_money"].(int64)
+	totalMoney := paidRecord["total_money"].(int64)
+
+	tx, txErr := model.DB.Beginx()
+	if txErr != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": txErr.Error()})
+		return
+	}
+
+	refundFee := int64(0)
+
+	for _, id := range results {
+		row := model.DB.QueryRowx(`select * from mz_paid_orders where id = $1 and mz_paid_record_id = $2`, id, paidRecord["id"])
+		rowMap := FormatSQLRowToMap(row)
+
+		if rowMap["id"] == nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "存在未知收费项"})
+			return
+		}
+
+		orderStatus := rowMap["order_status"].(string)
+		refundStatus := rowMap["refund_status"].(bool)
+		fee := rowMap["fee"].(int64)
+		if refundStatus == true {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "存在已退费的项目：" + rowMap["name"].(string)})
+			return
+		}
+		if orderStatus != "10" && orderStatus != "40" {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "存在无法退费的项目：" + rowMap["name"].(string)})
+			return
+		}
+		tx.Exec("update mz_paid_orders set refund_status=true where id=$1", rowMap["id"])
+		refundFee += fee
+	}
+
+	// 部分退款
+	if refundFee != totalMoney {
+		// 存在优惠
+		if balanceMoney != totalMoney {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": "存在优惠的情况下 无法部分退费"})
+			return
+		}
+	} else {
+		if balanceMoney != totalMoney {
+			refundFee = balanceMoney
+		}
+	}
+
+	outRefundNo := GetTradeNo("R2")
+
+	refundErr := refundNotice(outTradeNo, outRefundNo, refundFee)
+	if refundErr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": refundErr.Error()})
+		return
+	}
+
+	tx.Exec("insert into mz_refund_record ")
+
+	cerr := tx.Commit()
+	if cerr != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": cerr.Error()})
+		return
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "msg": ""})
+
+}
+
 // ChargePaidList 根据预约编码查询已缴费缴费列表
 func ChargePaidList(ctx iris.Context) {
 	mzPaidRecordID := ctx.PostValue("mz_paid_record_id")
@@ -705,6 +803,34 @@ func charge(outTradeNo string, tradeNo string) error {
 		return err
 	}
 	return nil
+}
+
+func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) error {
+	payment := model.DB.QueryRowx("select * from mz_paid_record where out_trade_no = $1", outTradeNo)
+	pay := FormatSQLRowToMap(payment)
+	_, ok := pay["id"]
+	if !ok {
+		return errors.New("未找到指定的待缴费单")
+	}
+
+	// --支付方式编码，1-支付宝，2-微信, 3-银行卡, 4-现金
+
+	methodCode := pay["pay_method_code"].(string)
+	if methodCode == "1" || methodCode == "2" {
+
+		res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "", "门诊退费")
+		if res["code"] != "200" {
+			return errors.New(res["msg"].(string))
+		}
+
+	}
+
+	if methodCode == "4" {
+		return errors.New("未找到指定的待缴费单")
+	}
+
+	_, err := model.DB.Exec("update mz_paid_record set refund_money = $1+refund_money where id = $2", refundFee, pay["id"])
+	return err
 }
 
 // BusinessTransaction 获取交易流水
