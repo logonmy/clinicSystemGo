@@ -755,6 +755,7 @@ func charge(outTradeNo string, tradeNo string) error {
 	materialsql := `select id,charge_project_id,amount from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) and charge_project_type_id=5`
 	materialrows, _ := model.DB.Queryx(materialsql)
 	materials := FormatSQLRowsToMapArray(materialrows)
+	ftm.Println("=================", materials)
 
 	for _, material := range materials {
 		erru := updateMaterialStock(tx, material["charge_project_id"].(int64), material["amount"].(int64), material["id"])
