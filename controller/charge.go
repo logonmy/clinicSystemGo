@@ -929,7 +929,7 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 			return err
 		}
 
-		_, errm := tx.Exec("update mz_unpaid_orders set cost = cost + $1 where id = $2", cost, mzUnpaidOrdersID)
+		_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzUnpaidOrdersID)
 		if errm != nil {
 			tx.Rollback()
 			return errm
@@ -946,7 +946,7 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 
 	cost := buyPrice * stockAmount
 
-	_, errm := tx.Exec("update mz_unpaid_orders set cost = cost + $1 where id = $2", cost, mzUnpaidOrdersID)
+	_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzUnpaidOrdersID)
 	if errm != nil {
 		tx.Rollback()
 		return errm
