@@ -311,6 +311,7 @@ func DrugRetailRefund(ctx iris.Context) {
 	tradeRefundNo := GetTradeNo("R1")
 
 	refundTotalFee := int64(0)
+	refundTotalCost := int64(0)
 
 	for _, item := range results {
 		retailID := item["retail_id"]
@@ -336,9 +337,12 @@ func DrugRetailRefund(ctx iris.Context) {
 		}
 
 		price := rowMap["total_fee"].(int64) / rowMap["amount"].(int64)
+		cost := rowMap["cost"].(int64) / rowMap["amount"].(int64)
 
 		fee := price * amountInt
+		costFee := cost * amountInt
 		refundTotalFee += fee
+		refundTotalCost += costFee
 
 		_, err1 := tx.Exec(`INSERT INTO drug_retail (out_trade_no,out_refund_no,clinic_drug_id,drug_stock_id,amount,total_fee) VALUES ($1,$2,$3,$4,$5,$6)`, outTradeNo, tradeRefundNo, rowMap["clinic_drug_id"], rowMap["drug_stock_id"], amountInt, fee)
 
@@ -379,7 +383,7 @@ func DrugRetailRefund(ctx iris.Context) {
 		return
 	}
 
-	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo, operationID, refundID, tx)
+	refundErr := refundTrade(outTradeNo, refundTotalFee*-1, tradeRefundNo, operationID, refundID, refundTotalCost, tx)
 	if refundErr != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-4", "msg": refundErr.Error()})
@@ -422,19 +426,6 @@ func paySuccessNotice(outTradeNo string, tradeNo string) error {
 		return err
 	}
 
-	for _, item := range rowsMap {
-
-		clinicDrugID := item["clinic_drug_id"]
-		amount := item["amount"]
-		price := item["total_fee"].(int64) / item["amount"].(int64)
-		uperr := updateDrugStock(tx, clinicDrugID.(int64), amount.(int64), outTradeNo, price)
-
-		if uperr != nil {
-			return uperr
-		}
-
-	}
-
 	cash := int64(0)
 	wechat := int64(0)
 	alipay := int64(0)
@@ -451,12 +442,29 @@ func paySuccessNotice(outTradeNo string, tradeNo string) error {
 		alipay = payRecordMap["balance_money"].(int64)
 	}
 
-	_, crer := tx.Exec(`insert into charge_detail (pay_record_id,record_type,out_trade_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`, payRecordMap["id"], 2, payRecordMap["out_trade_no"], "in", payRecordMap["balance_money"], payRecordMap["discount_money"], payRecordMap["medical_money"], payRecordMap["total_money"], payRecordMap["balance_money"], 0, payRecordMap["operation_id"], cash, wechat, alipay, bank)
+	var chargeDetailID int
+	crer := tx.QueryRow(`insert into charge_detail (
+		pay_record_id,record_type,out_trade_no,in_out,retail_fee,
+		discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15) RETURNING id`, payRecordMap["id"], 2,
+		payRecordMap["out_trade_no"], "in", payRecordMap["balance_money"], payRecordMap["discount_money"],
+		payRecordMap["medical_money"], payRecordMap["total_money"], payRecordMap["balance_money"], 0,
+		payRecordMap["operation_id"], cash, wechat, alipay, bank).Scan(&chargeDetailID)
 
 	if crer != nil {
 		tx.Rollback()
 		return crer
+	}
+
+	for _, item := range rowsMap {
+		clinicDrugID := item["clinic_drug_id"]
+		amount := item["amount"]
+		price := item["total_fee"].(int64) / item["amount"].(int64)
+		uperr := updateDrugStock(tx, clinicDrugID.(int64), amount.(int64), outTradeNo, price, chargeDetailID)
+
+		if uperr != nil {
+			return uperr
+		}
 	}
 
 	crr := tx.Commit()
@@ -467,7 +475,7 @@ func paySuccessNotice(outTradeNo string, tradeNo string) error {
 	return nil
 }
 
-func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operationID string, refundID int, tx *sqlx.Tx) error {
+func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operationID string, refundID int, refundTotalCost int64, tx *sqlx.Tx) error {
 	rowPayRecord := model.DB.QueryRowx("select * from drug_retail_pay_record where out_trade_no = $1 ", outTradeNo)
 	rowPayRecordMap := FormatSQLRowToMap(rowPayRecord)
 	if rowPayRecordMap["pay_method"] == nil {
@@ -525,13 +533,13 @@ func refundTrade(outTradeNo string, refundFee int64, outRefundNo string, operati
 		return errors.New("未知的支付方式")
 	}
 
-	_, err := model.DB.Exec(`insert into charge_detail (pay_record_id,record_type,out_trade_no,out_refund_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`, refundID, 2, rowPayRecordMap["out_trade_no"], outRefundNo, "out", refundFee*-1, rowPayRecordMap["discount_money"].(int64)*-1, rowPayRecordMap["medical_money"].(int64)*-1, refundFee*-1+rowPayRecordMap["medical_money"].(int64)*-1+rowPayRecordMap["discount_money"].(int64)*-1, refundFee*-1, 0, operationID, cash, wechat, alipay, bank)
+	_, err := model.DB.Exec(`insert into charge_detail (pay_record_id,record_type,out_trade_no,out_refund_no,in_out,retail_fee,discount_money,medical_money,total_money,balance_money,on_credit_money,operation_id,cash,wechat,alipay,bank,retail_cost) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`, refundID, 2, rowPayRecordMap["out_trade_no"], outRefundNo, "out", refundFee*-1, rowPayRecordMap["discount_money"].(int64)*-1, rowPayRecordMap["medical_money"].(int64)*-1, refundFee*-1+rowPayRecordMap["medical_money"].(int64)*-1+rowPayRecordMap["discount_money"].(int64)*-1, refundFee*-1, 0, operationID, cash, wechat, alipay, bank, refundTotalCost*-1)
 
 	return err
 }
 
-func updateDrugStock(tx *sqlx.Tx, clinicDrugID int64, amount int64, outTradeNo string, price int64) error {
+func updateDrugStock(tx *sqlx.Tx, clinicDrugID int64, amount int64, outTradeNo string, price int64, chargeDetailID int) error {
 	if amount < 0 {
 		return errors.New("库存数量有误")
 	}
@@ -547,32 +555,48 @@ func updateDrugStock(tx *sqlx.Tx, clinicDrugID int64, amount int64, outTradeNo s
 	}
 
 	stockAmount := rowMap["stock_amount"].(int64)
+	buyPrice := rowMap["buy_price"].(int64)
 
 	if stockAmount >= amount {
+		cost := buyPrice * amount
 		_, err := tx.Exec("update drug_stock set stock_amount = $1 where id = $2", stockAmount-amount, rowMap["id"])
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
-		_, errIn := tx.Exec("insert into drug_retail (out_trade_no,clinic_drug_id,drug_stock_id,amount,total_fee) VALUES ($1,$2,$3,$4,$5)", outTradeNo, clinicDrugID, rowMap["id"], amount, price*amount)
+		_, errIn := tx.Exec("insert into drug_retail (out_trade_no,clinic_drug_id,drug_stock_id,amount,total_fee,cost) VALUES ($1,$2,$3,$4,$5,$6)", outTradeNo, clinicDrugID, rowMap["id"], amount, price*amount, cost)
 		if errIn != nil {
 			tx.Rollback()
 			return errIn
 		}
 
+		_, errc := tx.Exec("update charge_detail set retail_cost = retail_cost + $1 where id = $2", cost, chargeDetailID)
+		if errc != nil {
+			tx.Rollback()
+			return errc
+		}
+
 		return nil
 	}
+
+	cost := buyPrice * stockAmount
 	_, err := tx.Exec("update drug_stock set 0 where id = $1", rowMap["id"])
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	_, errIn := tx.Exec("insert into drug_retail (out_trade_no,clinic_drug_id,drug_stock_id,amount,total_fee) VALUES ($1,$2,$3,$4,$5)", outTradeNo, clinicDrugID, rowMap["id"], stockAmount, price*stockAmount)
+	_, errIn := tx.Exec("insert into drug_retail (out_trade_no,clinic_drug_id,drug_stock_id,amount,total_fee,cost) VALUES ($1,$2,$3,$4,$5,$6)", outTradeNo, clinicDrugID, rowMap["id"], stockAmount, price*stockAmount, cost)
 	if errIn != nil {
 		tx.Rollback()
 		return errIn
 	}
 
-	return updateDrugStock(tx, clinicDrugID, amount-stockAmount, outTradeNo, price)
+	_, errc := tx.Exec("update charge_detail set retail_cost = retail_cost + $1 where id = $2", cost, chargeDetailID)
+	if errc != nil {
+		tx.Rollback()
+		return errc
+	}
+
+	return updateDrugStock(tx, clinicDrugID, amount-stockAmount, outTradeNo, price, chargeDetailID)
 }

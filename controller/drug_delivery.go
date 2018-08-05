@@ -245,7 +245,7 @@ func DrugDeliveryRecordCreate(ctx iris.Context) {
 		row := tx.QueryRowx(`select * from mz_paid_orders where id = $1`, orderID)
 		rowMap := FormatSQLRowToMap(row)
 
-		err2 := updateDrugStock2(tx, rowMap["charge_project_id"].(int64), rowMap["amount"].(int64))
+		err2 := updateDrugStock2(tx, rowMap["charge_project_id"].(int64), rowMap["amount"].(int64), orderID, rowMap["charge_project_type_id"])
 
 		if err2 != nil {
 			tx.Rollback()
@@ -264,12 +264,35 @@ func DrugDeliveryRecordCreate(ctx iris.Context) {
 
 }
 
-func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64) error {
+func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64, mzPaidOrderID interface{}, chargeProjectTypeID interface{}) error {
 	if amount < 0 {
 		return errors.New("库存数量有误")
 	}
 	if amount == 0 {
 		return nil
+	}
+
+	mrow := model.DB.QueryRowx(`select 
+	mpo.id as mz_paid_orders_id,mpr.id as mz_paid_record_id, cd.id as charge_detail_id from mz_paid_orders mpo 
+	left join mz_paid_record mpr on mpr.id = mpo.mz_paid_record_id
+	left join charge_detail cd on cd.out_trade_no = mpr.out_trade_no 
+	where mpo.id = $1 and cd.record_type=1`, mzPaidOrderID)
+
+	mrowMap := FormatSQLRowToMap(mrow)
+
+	if mrowMap["charge_detail_id"] == nil {
+		return errors.New("记录交易查询失败")
+	}
+
+	chargeDetailID := mrowMap["charge_detail_id"]
+
+	var updateSQL string
+	if chargeProjectTypeID.(string) == "1" {
+		updateSQL = "update charge_detail set western_medicine_cost = western_medicine_cost + $1 where id = $2"
+	} else if chargeProjectTypeID.(string) == "2" {
+		updateSQL = "update charge_detail set traditional_medical_cost = traditional_medical_cost + $1 where id = $2"
+	} else {
+		return errors.New("收费类型错误")
 	}
 
 	timeNow := time.Now().Format("2006-01-02")
@@ -280,23 +303,52 @@ func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64) error {
 	}
 
 	stockAmount := rowMap["stock_amount"].(int64)
+	buyPrice := rowMap["buy_price"].(int64)
 
 	if stockAmount >= amount {
+		cost := buyPrice * amount
 		_, err := tx.Exec("update drug_stock set stock_amount = $1 where id = $2", stockAmount-amount, rowMap["id"])
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
 
+		_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzPaidOrderID)
+		if errm != nil {
+			tx.Rollback()
+			return errm
+		}
+
+		_, errc := tx.Exec(updateSQL, cost, chargeDetailID)
+		if errc != nil {
+			tx.Rollback()
+			return errc
+		}
+
 		return nil
 	}
+
+	cost := buyPrice * stockAmount
+
 	_, err := tx.Exec("update drug_stock set 0 where id = $1", rowMap["id"])
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	return updateDrugStock2(tx, clinicDrugID, amount-stockAmount)
+	_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzPaidOrderID)
+	if errm != nil {
+		tx.Rollback()
+		return errm
+	}
+
+	_, errc := tx.Exec(updateSQL, cost, chargeDetailID)
+	if errc != nil {
+		tx.Rollback()
+		return errc
+	}
+
+	return updateDrugStock2(tx, clinicDrugID, amount-stockAmount, mzPaidOrderID, chargeProjectTypeID)
 }
 
 // DrugDeliveryRecordRefund 退药
