@@ -563,6 +563,17 @@ func main() {
 		drugRetail.Post("/refund", controller.DrugRetailRefund)
 	}
 
+	financilAnalysis := app.Party("/financialAnalysis", crs).AllowMethods(iris.MethodOptions)
+	{
+		financilAnalysis.Post("/ChargeDayReportByPayWay", controller.ChargeDayReportByPayWay)
+		financilAnalysis.Post("/ChargeDayReportByBusiness", controller.ChargeDayReportByBusiness)
+		financilAnalysis.Post("/ChargeMonthReportByPayWay", controller.ChargeMonthReportByPayWay)
+	}
+	totalAmount := app.Party("/platform", crs).AllowMethods(iris.MethodOptions)
+	{
+		totalAmount.Post("/totalAmount", controller.PlatformTotalAmount)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello

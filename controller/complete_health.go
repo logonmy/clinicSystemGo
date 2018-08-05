@@ -2581,16 +2581,16 @@ func PatientCountByAge(ctx iris.Context) {
 	now := time.Now()
 
 	type agerange struct {
-		Age   string
-		Total int
+		Age   string `json:"age"`
+		Total int    `json:"total"`
 	}
 
 	var results []agerange
 
-	for i := 10; i < 80; i += 10 {
+	for i := 0; i < 90; i += 10 {
 		len := 10
-		key := "[" + strconv.Itoa(i-len) + " - " + strconv.Itoa(i) + ") "
-		if i == 70 {
+		key := "[" + strconv.Itoa(i) + " - " + strconv.Itoa(i+10) + ") "
+		if i == 80 {
 			len = 100
 			key = "[" + strconv.Itoa(i) + "-) "
 		}
