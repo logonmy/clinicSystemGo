@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -241,8 +242,8 @@ func AdminList(ctx iris.Context) {
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	keyword := ctx.PostValue("keyword")
-	startDate := ctx.PostValue("start_date")
-	endDate := ctx.PostValue("end_date")
+	startDateStr := ctx.PostValue("start_date")
+	endDateStr := ctx.PostValue("end_date")
 	status := ctx.PostValue("status")
 
 	if offset == "" {
@@ -264,11 +265,11 @@ func AdminList(ctx iris.Context) {
 		return
 	}
 
-	if startDate != "" && endDate == "" {
+	if startDateStr != "" && endDateStr == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
-	if startDate == "" && endDate != "" {
+	if startDateStr == "" && endDateStr != "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
 		return
 	}
@@ -281,11 +282,26 @@ func AdminList(ctx iris.Context) {
 		rowSQL += ` and name ~*:keyword`
 	}
 
-	if startDate != "" && endDate != "" {
-		if startDate > endDate {
+	if startDateStr != "" && endDateStr != "" {
+		if startDateStr > endDateStr {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
 			return
 		}
+
+		startDate, errs := time.Parse("2006-01-02", startDateStr)
+		if errs != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+			return
+		}
+
+		endDate, erre := time.Parse("2006-01-02", endDateStr)
+		if erre != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+			return
+		}
+
+		startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
+		endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 		countSQL += " and created_time between :start_date and :end_date"
 		rowSQL += " and created_time between :start_date and :end_date"
 	}
@@ -299,8 +315,8 @@ func AdminList(ctx iris.Context) {
 		"keyword":    ToNullString(keyword),
 		"offset":     ToNullInt64(offset),
 		"limit":      ToNullInt64(limit),
-		"start_date": ToNullString(startDate),
-		"end_date":   ToNullString(endDate),
+		"start_date": ToNullString(startDateStr),
+		"end_date":   ToNullString(endDateStr),
 		"status":     ToNullString(status),
 	}
 

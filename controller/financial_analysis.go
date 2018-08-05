@@ -31,8 +31,8 @@ func ChargeDayReportByPayWay(ctx iris.Context) {
 		return
 	}
 
-	startDateStr = startDate.AddDate(0, 0, 1).Format("2006-01-02")
-	endDateStr = endDate.AddDate(0, 0, -1).Format("2006-01-02")
+	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
+	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 
 	querySQL := `select 
 		c.id as clinic_id,
@@ -97,8 +97,8 @@ func ChargeDayReportByBusiness(ctx iris.Context) {
 		return
 	}
 
-	startDateStr = startDate.AddDate(0, 0, 1).Format("2006-01-02")
-	endDateStr = endDate.AddDate(0, 0, -1).Format("2006-01-02")
+	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
+	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 
 	querySQL := `select 
 		c.id as clinic_id,
