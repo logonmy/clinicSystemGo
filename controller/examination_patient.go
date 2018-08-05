@@ -139,7 +139,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 			return
 		}
 
-		cost := int(clinicExamination["cost_price"].(int64))
+		costPrice := int(clinicExamination["cost_price"].(int64))
 		price := int(clinicExamination["price"].(int64))
 		discountPrice := int(clinicExamination["discount_price"].(int64))
 		isDiscount := clinicExamination["is_discount"].(bool)
@@ -147,6 +147,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		unitName := clinicExamination["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := price * amount
+		cost := costPrice * amount
 		discount := 0
 		fee := total
 		if isDiscount {

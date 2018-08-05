@@ -358,7 +358,6 @@ CREATE TABLE mz_unpaid_orders
   total INTEGER NOT NULL,--折前总价格
   discount INTEGER NOT NULL DEFAULT 0,--打折总金额金额
   fee INTEGER NOT NULL,--折后金额  fee = total - discount
-  cost INTEGER NOT NULL DEFAULT 0, --成本价
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
