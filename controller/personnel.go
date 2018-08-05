@@ -586,24 +586,49 @@ func FunMenusByPersonnel(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select DISTINCT fm.parent_function_menu_id, fm.id as function_menu_id, fm.url as menu_url, fm.name as menu_name, fm.weight, fm.level, fm.icon from personnel_role pr 
-	left join role_clinic_function_menu rcfm on pr.role_id = rcfm.role_id
-	left join clinic_function_menu cfm on rcfm.clinic_function_menu_id = cfm.id
-	left join function_menu fm on cfm.function_menu_id = fm.id
-	left join role r on r.id = pr.role_id
-	where cfm.status = true and rcfm.status = true and r.status = true and r.deleted_time is null and pr.personnel_id = $1
-	order by fm.level, fm.weight asc `
+	row := model.DB.QueryRowx(`select * from personnel where id = $1`, personnelID)
 
-	rows, err := model.DB.Queryx(selectSQL, personnelID)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "人员不存在"})
 		return
 	}
 
-	result := FormatSQLRowsToMapArray(rows)
+	personnelMap := FormatSQLRowToMap(row)
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	isClinicAdmin, ok := personnelMap["is_clinic_admin"]
+	clinicID, _ := personnelMap["clinic_id"]
 
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "人员不存在"})
+		return
+	}
+
+	if !isClinicAdmin.(bool) {
+		selectSQL := `select DISTINCT fm.parent_function_menu_id, fm.id as function_menu_id, fm.url as menu_url, fm.name as menu_name, fm.weight, fm.level, fm.icon from personnel_role pr 
+		left join role_clinic_function_menu rcfm on pr.role_id = rcfm.role_id
+		left join clinic_function_menu cfm on rcfm.clinic_function_menu_id = cfm.id
+		left join function_menu fm on cfm.function_menu_id = fm.id
+		left join role r on r.id = pr.role_id
+		where cfm.status = true and rcfm.status = true and r.status = true and r.deleted_time is null and pr.personnel_id = $1
+		order by fm.level, fm.weight asc `
+		rows, err := model.DB.Queryx(selectSQL, personnelID)
+		if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+		result := FormatSQLRowsToMapArray(rows)
+
+		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	} else {
+		selectSQL := `select DISTINCT fm.parent_function_menu_id, fm.id as function_menu_id, fm.url as menu_url, fm.name as menu_name, fm.weight, fm.level, fm.icon from clinic_function_menu cfm left join function_menu fm on cfm.function_menu_id = fm.id where cfm.clinic_id = $1 order by fm.level, fm.weight asc;`
+		rows, err := model.DB.Queryx(selectSQL, clinicID)
+		if err != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+			return
+		}
+		result := FormatSQLRowsToMapArray(rows)
+		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	}
 }
 
 //PersonnelRoles 通过用户查询用户角色

@@ -142,15 +142,15 @@ func ChargeMonthReportByPayWay(ctx iris.Context) {
 		return
 	}
 
-	_, errs := time.Parse("2006-01-02", startDateStr)
+	_, errs := time.Parse("2006-01", startDateStr)
 	if errs != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM 的 有效日期格式"})
 		return
 	}
 
-	_, erre := time.Parse("2006-01-02", endDateStr)
+	_, erre := time.Parse("2006-01", endDateStr)
 	if erre != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM 的 有效日期格式"})
 		return
 	}
 
