@@ -509,7 +509,7 @@ func MenuGetByAdminID(ctx iris.Context) {
 
 	if !isClinicAdmin.(bool) {
 		selectSQL := `select 
-		afm.id as clinic_function_menu_id,
+		afm.id as admin_function_menu_id,
 		afm.function_menu_id as function_menu_id,
 		fm.name as menu_name,
 		fm.url as menu_url,
@@ -534,8 +534,7 @@ func MenuGetByAdminID(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
 	} else {
 		selectSQL := `select 
-		id as clinic_function_menu_id,
-		function_menu_id as function_menu_id,
+		id as function_menu_id,
 		name as menu_name,
 		url as menu_url,
 		level,
