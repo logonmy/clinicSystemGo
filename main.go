@@ -568,6 +568,10 @@ func main() {
 		financilAnalysis.Post("/ChargeDayReportByPayWay", controller.ChargeDayReportByPayWay)
 		financilAnalysis.Post("/ChargeDayReportByBusiness", controller.ChargeDayReportByBusiness)
 	}
+	totalAmount := app.Party("/platform", crs).AllowMethods(iris.MethodOptions)
+	{
+		totalAmount.Post("/totalAmount", controller.PlatformTotalAmount)
+	}
 
 	// http://localhost:8080
 	// http://localhost:8080/ping
