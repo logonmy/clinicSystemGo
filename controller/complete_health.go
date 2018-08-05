@@ -2562,3 +2562,64 @@ func PatientBloodSugarListByDate(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
+
+// PatientCountBySex 患者统计 按性别
+func PatientCountBySex(ctx iris.Context) {
+	querySQL := `select sex, count(sex) as total from patient group by sex;`
+	rows, err := model.DB.Queryx(querySQL)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results})
+}
+
+// PatientCountByAge 患者统计 按年龄
+func PatientCountByAge(ctx iris.Context) {
+	now := time.Now()
+
+	type agerange struct {
+		Age   string `json:"age"`
+		Total int    `json:"total"`
+	}
+
+	var results []agerange
+
+	for i := 0; i < 90; i += 10 {
+		len := 10
+		key := "[" + strconv.Itoa(i) + " - " + strconv.Itoa(i+10) + ") "
+		if i == 80 {
+			len = 100
+			key = "[" + strconv.Itoa(i) + "-) "
+		}
+		begin := now.AddDate(-i-len, 0, 1).Format("20060102")
+		end := now.AddDate(-i, 0, 0).Format("20060102")
+
+		querySQL := "select count(birthday) as total from patient where birthday BETWEEN $1 and $2"
+		row := model.DB.QueryRowx(querySQL, begin, end)
+		result := FormatSQLRowToMap(row)
+
+		item := agerange{
+			Age:   key,
+			Total: int(result["total"].(int64)),
+		}
+		results = append(results, item)
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": results})
+}
+
+// PatientCountByChannel 患者统计 按性别
+func PatientCountByChannel(ctx iris.Context) {
+	querySQL := `select patient_channel_name, count(patient_channel_name) as total from (select case when pc.name is null then '未知' else pc.name end as patient_channel_name from patient p left join patient_channel pc on pc.id = p.patient_channel_id) aaa group by aaa.patient_channel_name;`
+	rows, err := model.DB.Queryx(querySQL)
+
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results})
+}
