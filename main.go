@@ -563,6 +563,12 @@ func main() {
 		drugRetail.Post("/refund", controller.DrugRetailRefund)
 	}
 
+	financilAnalysis := app.Party("/financialAnalysis", crs).AllowMethods(iris.MethodOptions)
+	{
+		financilAnalysis.Post("/ChargeDayReportByPayWay", controller.ChargeDayReportByPayWay)
+		financilAnalysis.Post("/ChargeDayReportByBusiness", controller.ChargeDayReportByBusiness)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
