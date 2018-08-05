@@ -99,7 +99,7 @@ func OtherCostPatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
-	_, errdlp := tx.Exec("delete from other_cost_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
+	_, errdlp := tx.Exec("delete from other_cost_patient where clinic_triage_patient_id=$1 and order_sn in (select order_sn from mz_unpaid_orders where clinic_triage_patient_id = $1 and charge_project_type_id=6)", clinicTriagePatientID)
 	if errdlp != nil {
 		fmt.Println("errdlp ===", errdlp)
 		tx.Rollback()
@@ -141,13 +141,14 @@ func OtherCostPatientCreate(ctx iris.Context) {
 			return
 		}
 		isDiscount := clinicOtherCost["is_discount"].(bool)
-		cost := clinicOtherCost["cost_price"].(int64)
+		costPrice := clinicOtherCost["cost_price"].(int64)
 		price := clinicOtherCost["price"].(int64)
 		discountPrice := clinicOtherCost["discount_price"].(int64)
 		name := clinicOtherCost["name"].(string)
 		unitName := clinicOtherCost["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
+		cost := int(costPrice) * amount
 		discount := 0
 		fee := total
 		if isDiscount {
@@ -213,8 +214,10 @@ func OtherCostPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select ocp.*, coc.name, coc.unit_name, coc.price from other_cost_patient ocp 
+	rows, err := model.DB.Queryx(`select ocp.*, coc.name, coc.unit_name, coc.price, case when mpo.id is not null then true else false end as paid_status 
+	 from other_cost_patient ocp 
 		left join clinic_other_cost coc on ocp.clinic_other_cost_id = coc.id 
+		left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = ocp.clinic_triage_patient_id and ocp.order_sn=mpo.order_sn and ocp.soft_sn=mpo.soft_sn 
 		where ocp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

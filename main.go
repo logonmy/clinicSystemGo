@@ -567,6 +567,7 @@ func main() {
 	{
 		financilAnalysis.Post("/ChargeDayReportByPayWay", controller.ChargeDayReportByPayWay)
 		financilAnalysis.Post("/ChargeDayReportByBusiness", controller.ChargeDayReportByBusiness)
+		financilAnalysis.Post("/ChargeMonthReportByPayWay", controller.ChargeMonthReportByPayWay)
 	}
 	totalAmount := app.Party("/platform", crs).AllowMethods(iris.MethodOptions)
 	{

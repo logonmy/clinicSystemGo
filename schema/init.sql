@@ -358,7 +358,6 @@ CREATE TABLE mz_unpaid_orders
   total INTEGER NOT NULL,--折前总价格
   discount INTEGER NOT NULL DEFAULT 0,--打折总金额金额
   fee INTEGER NOT NULL,--折后金额  fee = total - discount
-  cost INTEGER NOT NULL DEFAULT 0, --成本价
   operation_id INTEGER NOT NULL references personnel(id),--操作员id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -478,6 +477,16 @@ CREATE TABLE charge_detail
 
   total_money  INTEGER NOT NULL ,--应收金额
   balance_money INTEGER NOT NULL,--实收金额
+  
+  traditional_medical_cost INTEGER NOT NULL DEFAULT 0, --中药费成本价
+  western_medicine_cost INTEGER NOT NULL DEFAULT 0, --西/成药费成本价
+  examination_cost INTEGER NOT NULL DEFAULT 0, --检查费成本价
+  labortory_cost INTEGER NOT NULL DEFAULT 0, --检验费成本价
+  treatment_cost INTEGER NOT NULL DEFAULT 0, --治疗费成本价
+  diagnosis_treatment_cost INTEGER NOT NULL DEFAULT 0, --诊疗费成本价
+  material_cost INTEGER NOT NULL DEFAULT 0, --材料费成本价
+  retail_cost INTEGER NOT NULL DEFAULT 0, --零售费成本价
+  other_cost INTEGER NOT NULL DEFAULT 0, --其他费用成本价
 
   operation_id INTEGER NOT NULL references personnel(id),--创建人id
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
@@ -1962,6 +1971,7 @@ CREATE TABLE drug_retail
   drug_stock_id INTEGER NOT NULL references drug_stock(id),
   amount INTEGER NOT NULL, --药品数量
   total_fee INTEGER NOT NULL, --总费用
+  cost INTEGER NOT NULL DEFAULT 0, --成本价
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP
 );
 

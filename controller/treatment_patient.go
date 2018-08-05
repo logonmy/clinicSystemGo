@@ -101,7 +101,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		return
 	}
 
-	_, errdtp := tx.Exec("delete from treatment_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
+	_, errdtp := tx.Exec("delete from treatment_patient where clinic_triage_patient_id=$1 and order_sn in (select order_sn from mz_unpaid_orders where clinic_triage_patient_id = $1 and charge_project_type_id=7)", clinicTriagePatientID)
 	if errdtp != nil {
 		fmt.Println("errdtp ===", errdtp)
 		tx.Rollback()
@@ -143,13 +143,14 @@ func TreatmentPatientCreate(ctx iris.Context) {
 			return
 		}
 		isDiscount := clinicTreatment["is_discount"].(bool)
-		cost := clinicTreatment["cost_price"].(int64)
+		costPrice := clinicTreatment["cost_price"].(int64)
 		price := clinicTreatment["price"].(int64)
 		discountPrice := clinicTreatment["discount_price"].(int64)
 		name := clinicTreatment["name"].(string)
 		unitName := clinicTreatment["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
+		cost := int(costPrice) * amount
 		discount := 0
 		fee := total
 		if isDiscount {
@@ -215,8 +216,11 @@ func TreatmentPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select tp.*, ct.name as treatment_name, ct.unit_name, ct.price from treatment_patient tp 
+	rows, err := model.DB.Queryx(`select tp.*, ct.name as treatment_name, ct.unit_name, ct.price, 
+	case when mpo.id is not null then true else false end as paid_status
+	 from treatment_patient tp 
 		left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
+		left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = tp.clinic_triage_patient_id and tp.order_sn=mpo.order_sn and tp.soft_sn=mpo.soft_sn
 		where tp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

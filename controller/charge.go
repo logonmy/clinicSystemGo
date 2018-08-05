@@ -809,8 +809,8 @@ func charge(outTradeNo string, tradeNo string) error {
 	confrimID := pay["operation_id"]
 
 	//插入已缴费
-	insertPaidOrders := "insert into mz_paid_orders (id,mz_paid_record_id,clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
-		" select id," + strconv.Itoa(int(recordID.(int64))) + ",clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id," + strconv.Itoa(int(confrimID.(int64))) + " from mz_unpaid_orders where id in (" + orderIDs.(string) + ")"
+	insertPaidOrders := "insert into mz_paid_orders (id,mz_paid_record_id,clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,cost,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
+		" select id," + strconv.Itoa(int(recordID.(int64))) + ",clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,cost,price,amount,unit,total,discount,fee,operation_id," + strconv.Itoa(int(confrimID.(int64))) + " from mz_unpaid_orders where id in (" + orderIDs.(string) + ")"
 	_, insertPaidOrdersErr := tx.Query(insertPaidOrders)
 	if insertPaidOrdersErr != nil {
 		tx.Rollback()
@@ -825,33 +825,29 @@ func charge(outTradeNo string, tradeNo string) error {
 		return deleteUnPaidErr
 	}
 
-	//更新材料费库存
-	materialsql := `select charge_project_id,amount from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) and charge_project_type_id=5`
-	materialrows, _ := model.DB.Queryx(materialsql)
-	materials := FormatSQLRowsToMapArray(materialrows)
-
-	for _, material := range materials {
-		updateMaterialStock(tx, material["charge_project_id"].(int64), material["amount"].(int64))
-	}
-
 	//插入交易明细表
 	triagePatient := model.DB.QueryRowx("select * from clinic_triage_patient where id = $1", pay["clinic_triage_patient_id"])
 	triage := FormatSQLRowToMap(triagePatient)
 
-	typesql := `select sum(fee) as type_charge_total, charge_project_type_id from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) group by charge_project_type_id`
+	typesql := `select sum(fee) as type_charge_total,sum(cost) as cost_total, charge_project_type_id from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) group by charge_project_type_id`
 	typetotal, _ := model.DB.Queryx(typesql)
 	typearray := FormatSQLRowsToMapArray(typetotal)
 
 	typeMoney := map[string]interface{}{}
+	typeCost := map[string]interface{}{}
 
 	for _, item := range typearray {
 		typeMoney[strconv.FormatInt(item["charge_project_type_id"].(int64), 10)] = item["type_charge_total"]
+		typeCost[strconv.FormatInt(item["charge_project_type_id"].(int64), 10)] = item["cost_total"]
 	}
 
 	for index := 0; index < 9; index++ {
 		i := strconv.Itoa(index)
 		if typeMoney[i] == nil {
 			typeMoney[i] = 0
+		}
+		if typeCost[i] == nil {
+			typeCost[i] = 0
 		}
 	}
 
@@ -871,15 +867,62 @@ func charge(outTradeNo string, tradeNo string) error {
 		cash = pay["balance_money"].(int64)
 	}
 
-	insertDetails := `insert into charge_detail (pay_record_id,record_type,out_trade_no,in_out,clinic_patient_id,department_id,doctor_id,
+	insertDetails := `insert into charge_detail (
+		pay_record_id,record_type,out_trade_no,in_out,clinic_patient_id,department_id,doctor_id,
 		traditional_medical_fee,western_medicine_fee,examination_fee,labortory_fee,treatment_fee,diagnosis_treatment_fee,
 		material_fee,retail_fee,other_fee,discount_money,derate_money,medical_money,voucher_money,bonus_points_money,
-		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29)`
-	_, insertDetailErr := tx.Exec(insertDetails, pay["id"], 1, outTradeNo, "in", triage["clinic_patient_id"], triage["department_id"], triage["doctor_id"], typeMoney["2"], typeMoney["1"], typeMoney["4"], typeMoney["3"], typeMoney["7"], typeMoney["8"], typeMoney["5"], 0, typeMoney["6"],
-		pay["discount_money"], pay["derate_money"], pay["medical_money"], pay["voucher_money"], pay["bonus_points_money"], pay["on_credit_money"], pay["total_money"], pay["balance_money"], confrimID, cash, wechat, alipay, bank)
+		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank,
+		traditional_medical_cost,western_medicine_cost,examination_cost,labortory_cost,treatment_cost,
+		diagnosis_treatment_cost,material_cost,retail_cost,other_cost) 
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38)`
+	_, insertDetailErr := tx.Exec(insertDetails,
+		pay["id"],
+		1,
+		outTradeNo,
+		"in",
+		triage["clinic_patient_id"],
+		triage["department_id"],
+		triage["doctor_id"],
+		typeMoney["2"],
+		typeMoney["1"],
+		typeMoney["4"],
+		typeMoney["3"],
+		typeMoney["7"],
+		typeMoney["8"],
+		typeMoney["5"],
+		0,
+		typeMoney["6"],
+		pay["discount_money"],
+		pay["derate_money"],
+		pay["medical_money"],
+		pay["voucher_money"],
+		pay["bonus_points_money"],
+		pay["on_credit_money"],
+		pay["total_money"],
+		pay["balance_money"],
+		confrimID,
+		cash,
+		wechat,
+		alipay,
+		bank,
+		typeCost["2"], typeCost["1"], typeCost["4"], typeCost["3"], typeCost["7"], typeCost["8"], typeCost["5"], 0, typeCost["6"])
 	if insertDetailErr != nil {
 		tx.Rollback()
 		return insertDetailErr
+	}
+
+	//更新材料费库存
+	materialsql := `select id,charge_project_id,amount from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) and charge_project_type_id=5`
+	materialrows, _ := model.DB.Queryx(materialsql)
+	materials := FormatSQLRowsToMapArray(materialrows)
+
+	for _, material := range materials {
+		erru := updateMaterialStock(tx, material["charge_project_id"].(int64), material["amount"].(int64), material["id"])
+
+		if erru != nil {
+			tx.Rollback()
+			return erru
+		}
 	}
 
 	err := tx.Commit()
@@ -922,13 +965,29 @@ func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) (strin
 }
 
 //updateMaterialStock
-func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64) error {
+func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUnpaidOrdersID interface{}) error {
 	if amount < 0 {
 		return errors.New("库存数量有误")
 	}
 	if amount == 0 {
 		return nil
 	}
+
+	mrow := tx.QueryRowx(`select 
+	mpo.id as mz_paid_orders_id,mpr.id as mz_paid_record_id, cd.id as charge_detail_id from mz_paid_orders mpo 
+	left join mz_paid_record mpr on mpr.id = mpo.mz_paid_record_id
+	left join charge_detail cd on cd.out_trade_no = mpr.out_trade_no 
+	where mpo.id = $1 and cd.record_type=1`, mzUnpaidOrdersID)
+
+	mrowMap := FormatSQLRowToMap(mrow)
+	fmt.Println("++++++++++++++", mrowMap)
+
+	if mrowMap["charge_detail_id"] == nil {
+		return errors.New("记录交易查询失败")
+	}
+
+	chargeDetailID := mrowMap["charge_detail_id"]
+	updateSQL := "update charge_detail set material_cost = material_cost + $1 where id = $2"
 
 	timeNow := time.Now().Format("2006-01-02")
 	row := model.DB.QueryRowx("select * from material_stock where clinic_material_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1", clinicMaterialID, timeNow)
@@ -938,23 +997,52 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64) erro
 	}
 
 	stockAmount := rowMap["stock_amount"].(int64)
+	buyPrice := rowMap["buy_price"].(int64)
 
 	if stockAmount >= amount {
+		cost := buyPrice * amount
 		_, err := tx.Exec("update material_stock set stock_amount = $1 where id = $2", stockAmount-amount, rowMap["id"])
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
 
+		_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzUnpaidOrdersID)
+		if errm != nil {
+			tx.Rollback()
+			return errm
+		}
+
+		_, errc := tx.Exec(updateSQL, cost, chargeDetailID)
+		if errc != nil {
+			tx.Rollback()
+			return errc
+		}
+
 		return nil
 	}
+
+	cost := buyPrice * stockAmount
+
+	_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzUnpaidOrdersID)
+	if errm != nil {
+		tx.Rollback()
+		return errm
+	}
+
 	_, err := tx.Exec("update material_stock set 0 where id = $1", rowMap["id"])
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	return updateMaterialStock(tx, clinicMaterialID, amount-stockAmount)
+	_, errc := tx.Exec(updateSQL, cost, chargeDetailID)
+	if errc != nil {
+		tx.Rollback()
+		return errc
+	}
+
+	return updateMaterialStock(tx, clinicMaterialID, amount-stockAmount, mzUnpaidOrdersID)
 }
 
 // BusinessTransaction 获取交易流水

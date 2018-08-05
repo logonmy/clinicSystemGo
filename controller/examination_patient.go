@@ -71,11 +71,11 @@ func ExaminationPatientCreate(ctx iris.Context) {
 
 	orderSn := FormatPayOrderSn(clinicTriagePatientID, "4")
 
-	_, errdlp := tx.Exec("delete from examination_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
-	if errdlp != nil {
-		fmt.Println("errdlp ===", errdlp)
+	_, errdce := tx.Exec("delete from examination_patient where clinic_triage_patient_id=$1 and order_sn in (select order_sn from mz_unpaid_orders where clinic_triage_patient_id = $1 and charge_project_type_id=4)", clinicTriagePatientID)
+	if errdce != nil {
+		fmt.Println("errdce ===", errdce)
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": errdlp.Error()})
+		ctx.JSON(iris.Map{"code": "-1", "msg": errdce.Error()})
 		return
 	}
 	_, errdm := tx.Exec("delete from mz_unpaid_orders where clinic_triage_patient_id=$1 and charge_project_type_id=4", clinicTriagePatientID)
@@ -139,7 +139,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 			return
 		}
 
-		cost := int(clinicExamination["cost_price"].(int64))
+		costPrice := int(clinicExamination["cost_price"].(int64))
 		price := int(clinicExamination["price"].(int64))
 		discountPrice := int(clinicExamination["discount_price"].(int64))
 		isDiscount := clinicExamination["is_discount"].(bool)
@@ -147,6 +147,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 		unitName := clinicExamination["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := price * amount
+		cost := costPrice * amount
 		discount := 0
 		fee := total
 		if isDiscount {
@@ -196,8 +197,11 @@ func ExaminationPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select ep.*, ce.name, ce.price from examination_patient ep 
+	rows, err := model.DB.Queryx(`select ep.*, ce.name, ce.price,
+	case when mpo.id is not null then true else false end as paid_status  
+	from examination_patient ep 
 		left join clinic_examination ce on ep.clinic_examination_id = ce.id 
+		left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = ep.clinic_triage_patient_id and ep.order_sn=mpo.order_sn and ep.soft_sn=mpo.soft_sn 
 		where ep.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

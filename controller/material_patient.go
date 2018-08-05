@@ -100,7 +100,7 @@ func MaterialPatientCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": errb})
 		return
 	}
-	_, errdlp := tx.Exec("delete from material_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
+	_, errdlp := tx.Exec("delete from material_patient where clinic_triage_patient_id=$1 and order_sn in (select order_sn from mz_unpaid_orders where clinic_triage_patient_id = $1 and charge_project_type_id=5)", clinicTriagePatientID)
 	if errdlp != nil {
 		fmt.Println("errdlp ===", errdlp)
 		tx.Rollback()
@@ -212,11 +212,14 @@ func MaterialPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name, cm.ret_price as price, sum( ms.stock_amount ) as stock_amount from material_patient mp 
+	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name, cm.ret_price as price, sum( ms.stock_amount ) as stock_amount, 
+	case when mpo.id is not null then true else false end as paid_status 
+	 from material_patient mp 
 	left join clinic_material cm on mp.clinic_material_id = cm.id 
-	left join material_stock ms on cm.id = ms.clinic_material_id
+	left join material_stock ms on cm.id = ms.clinic_material_id 
+	left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = mp.clinic_triage_patient_id and mp.order_sn=mpo.order_sn and mp.soft_sn=mpo.soft_sn
 	where mp.clinic_triage_patient_id = $1
-	group by (mp.id, mp.clinic_triage_patient_id, mp.clinic_material_id, mp.order_sn, mp.soft_sn, mp.amount, mp.illustration, mp.operation_id, mp.created_time, cm.name, cm.specification, cm.unit_name,cm.ret_price)`, clinicTriagePatientID)
+	group by (mpo.id, mp.id, mp.clinic_triage_patient_id, mp.clinic_material_id, mp.order_sn, mp.soft_sn, mp.amount, mp.illustration, mp.operation_id, mp.created_time, cm.name, cm.specification, cm.unit_name,cm.ret_price)`, clinicTriagePatientID)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
