@@ -219,7 +219,7 @@ func MaterialPatientGet(ctx iris.Context) {
 	left join material_stock ms on cm.id = ms.clinic_material_id 
 	left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = mp.clinic_triage_patient_id and mp.order_sn=mpo.order_sn and mp.soft_sn=mpo.soft_sn
 	where mp.clinic_triage_patient_id = $1
-	group by (mp.id, mp.clinic_triage_patient_id, mp.clinic_material_id, mp.order_sn, mp.soft_sn, mp.amount, mp.illustration, mp.operation_id, mp.created_time, cm.name, cm.specification, cm.unit_name,cm.ret_price)`, clinicTriagePatientID)
+	group by (mpo.id, mp.id, mp.clinic_triage_patient_id, mp.clinic_material_id, mp.order_sn, mp.soft_sn, mp.amount, mp.illustration, mp.operation_id, mp.created_time, cm.name, cm.specification, cm.unit_name,cm.ret_price)`, clinicTriagePatientID)
 
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
