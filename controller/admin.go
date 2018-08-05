@@ -525,7 +525,7 @@ func MenuGetByAdminID(ctx iris.Context) {
 
 		rows, err2 := model.DB.Queryx(selectSQL, adminID)
 		if err2 != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 			return
 		}
 
@@ -546,9 +546,9 @@ func MenuGetByAdminID(ctx iris.Context) {
 		from function_menu
 		where ascription = '02' order by level asc,weight asc`
 
-		rows, err2 := model.DB.Queryx(selectSQL, adminID)
+		rows, err2 := model.DB.Queryx(selectSQL)
 		if err2 != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
 			return
 		}
 
