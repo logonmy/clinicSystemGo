@@ -141,13 +141,14 @@ func OtherCostPatientCreate(ctx iris.Context) {
 			return
 		}
 		isDiscount := clinicOtherCost["is_discount"].(bool)
-		cost := clinicOtherCost["cost_price"].(int64)
+		costPrice := clinicOtherCost["cost_price"].(int64)
 		price := clinicOtherCost["price"].(int64)
 		discountPrice := clinicOtherCost["discount_price"].(int64)
 		name := clinicOtherCost["name"].(string)
 		unitName := clinicOtherCost["unit_name"].(string)
 		amount, _ := strconv.Atoi(times)
 		total := int(price) * amount
+		cost := int(costPrice) * amount
 		discount := 0
 		fee := total
 		if isDiscount {
