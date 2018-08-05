@@ -751,20 +751,6 @@ func charge(outTradeNo string, tradeNo string) error {
 		return deleteUnPaidErr
 	}
 
-	//更新材料费库存
-	materialsql := `select charge_project_id,amount from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) and charge_project_type_id=5`
-	materialrows, _ := model.DB.Queryx(materialsql)
-	materials := FormatSQLRowsToMapArray(materialrows)
-
-	for _, material := range materials {
-		erru := updateMaterialStock(tx, material["charge_project_id"].(int64), material["amount"].(int64), material["id"])
-
-		if erru != nil {
-			tx.Rollback()
-			return erru
-		}
-	}
-
 	//插入交易明细表
 	triagePatient := model.DB.QueryRowx("select * from clinic_triage_patient where id = $1", pay["clinic_triage_patient_id"])
 	triage := FormatSQLRowToMap(triagePatient)
@@ -851,6 +837,20 @@ func charge(outTradeNo string, tradeNo string) error {
 		return insertDetailErr
 	}
 
+	//更新材料费库存
+	materialsql := `select id,charge_project_id,amount from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) and charge_project_type_id=5`
+	materialrows, _ := model.DB.Queryx(materialsql)
+	materials := FormatSQLRowsToMapArray(materialrows)
+
+	for _, material := range materials {
+		erru := updateMaterialStock(tx, material["charge_project_id"].(int64), material["amount"].(int64), material["id"])
+
+		if erru != nil {
+			tx.Rollback()
+			return erru
+		}
+	}
+
 	err := tx.Commit()
 	if err != nil {
 		return err
@@ -902,6 +902,7 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 	where mpo.id = $1 and cd.record_type=1`, mzUnpaidOrdersID)
 
 	mrowMap := FormatSQLRowToMap(mrow)
+	fmt.Println("++++++++++++++", mrowMap)
 
 	if mrowMap["charge_detail_id"] == nil {
 		return errors.New("记录交易查询失败")
