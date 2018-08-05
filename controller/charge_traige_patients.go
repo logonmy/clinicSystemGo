@@ -127,7 +127,8 @@ func GetPaidTraigePatients(ctx iris.Context) {
 
 	countsql := `select count(*) as total` + sql
 	querysql := `select 
-	mpr.total_money - mpr.refund_money as charge_total_fee,
+	mpr.refund_money,
+	mpr.total_money as charge_total_fee,
 	ctp.id as clinic_triage_patient_id,
 	ctp.clinic_patient_id as clinic_patient_id,
 	mpr.id as mz_paid_record_id,
