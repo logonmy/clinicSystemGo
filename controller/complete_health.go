@@ -2587,7 +2587,7 @@ func PatientCountByAge(ctx iris.Context) {
 
 	var results []agerange
 
-	for i := 10; i < 90; i += 10 {
+	for i := 0; i < 90; i += 10 {
 		len := 10
 		key := "[" + strconv.Itoa(i-len) + " - " + strconv.Itoa(i) + ") "
 		if i == 80 {
