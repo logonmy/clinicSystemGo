@@ -201,7 +201,7 @@ func ExaminationPatientGet(ctx iris.Context) {
 	case when mpo.id is not null then true else false end as paid_status  
 	from examination_patient ep 
 		left join clinic_examination ce on ep.clinic_examination_id = ce.id 
-		left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = ce.clinic_triage_patient_id and ce.order_sn=mpo.order_sn and ce.soft_sn=mpo.soft_sn 
+		left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = ep.clinic_triage_patient_id and ep.order_sn=mpo.order_sn and ep.soft_sn=mpo.soft_sn 
 		where ep.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

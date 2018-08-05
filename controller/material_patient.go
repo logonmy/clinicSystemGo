@@ -217,7 +217,7 @@ func MaterialPatientGet(ctx iris.Context) {
 	 from material_patient mp 
 	left join clinic_material cm on mp.clinic_material_id = cm.id 
 	left join material_stock ms on cm.id = ms.clinic_material_id 
-	left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = cm.clinic_triage_patient_id and cm.order_sn=mpo.order_sn and cm.soft_sn=mpo.soft_sn
+	left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = mp.clinic_triage_patient_id and mp.order_sn=mpo.order_sn and mp.soft_sn=mpo.soft_sn
 	where mp.clinic_triage_patient_id = $1
 	group by (mp.id, mp.clinic_triage_patient_id, mp.clinic_material_id, mp.order_sn, mp.soft_sn, mp.amount, mp.illustration, mp.operation_id, mp.created_time, cm.name, cm.specification, cm.unit_name,cm.ret_price)`, clinicTriagePatientID)
 
