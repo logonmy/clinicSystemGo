@@ -287,9 +287,9 @@ func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64, mzPaidOrder
 	chargeDetailID := mrowMap["charge_detail_id"]
 
 	var updateSQL string
-	if chargeProjectTypeID.(string) == "1" {
+	if chargeProjectTypeID.(int64) == 1 {
 		updateSQL = "update charge_detail set western_medicine_cost = western_medicine_cost + $1 where id = $2"
-	} else if chargeProjectTypeID.(string) == "2" {
+	} else if chargeProjectTypeID.(int64) == 2 {
 		updateSQL = "update charge_detail set traditional_medical_cost = traditional_medical_cost + $1 where id = $2"
 	} else {
 		return errors.New("收费类型错误")
