@@ -2587,12 +2587,12 @@ func PatientCountByAge(ctx iris.Context) {
 
 	var results []agerange
 
-	for i := 10; i < 80; i += 10 {
+	for i := 10; i < 90; i += 10 {
 		len := 10
 		key := "[" + strconv.Itoa(i-len) + " - " + strconv.Itoa(i) + ") "
-		if i == 70 {
+		if i == 80 {
 			len = 100
-			key = "[" + strconv.Itoa(i) + "-) "
+			key = "[" + strconv.Itoa(i-10) + "-) "
 		}
 		begin := now.AddDate(-i-len, 0, 1).Format("20060102")
 		end := now.AddDate(-i, 0, 0).Format("20060102")
