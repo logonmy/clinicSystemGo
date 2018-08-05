@@ -98,13 +98,11 @@ func AdminUpdate(ctx iris.Context) {
 	username := ctx.PostValue("username")
 	password := ctx.PostValue("password")
 	items := ctx.PostValue("items")
-	if adminID == "" || name == "" || title == "" || phone == "" || username == "" || password == "" {
+	if adminID == "" || name == "" || title == "" || phone == "" || username == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	md5Ctx := md5.New()
-	md5Ctx.Write([]byte(password))
-	passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
+
 	row := model.DB.QueryRowx("select id from admin where id=$1 limit 1", adminID)
 	if row == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "修改失败"})
@@ -134,11 +132,28 @@ func AdminUpdate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-	_, erra := tx.Exec("update admin set name=$1, title=$2, phone=$3, username=$4, password=$5, is_clinic_admin=true, updated_time=LOCALTIMESTAMP where id=$6", name, title, phone, username, passwordMd5, adminID)
-	if erra != nil {
-		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": erra})
-		return
+
+	updateSQL := `update admin set name=$1, title=$2, phone=$3, username=$4, is_clinic_admin=true, updated_time=LOCALTIMESTAMP where id=$5`
+
+	if password != "" {
+		md5Ctx := md5.New()
+		md5Ctx.Write([]byte(password))
+		passwordMd5 := hex.EncodeToString(md5Ctx.Sum(nil))
+		updateSQL = `update admin set name=$1, title=$2, phone=$3, username=$4, password=$5, is_clinic_admin=true, updated_time=LOCALTIMESTAMP where id=$6`
+
+		_, erru := tx.Exec(updateSQL, name, title, phone, username, passwordMd5, adminID)
+		if erru != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": erru.Error()})
+			return
+		}
+	} else {
+		_, erra := tx.Exec(updateSQL, name, title, phone, username, adminID)
+		if erra != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": erra.Error()})
+			return
+		}
 	}
 
 	if items != "" {
@@ -259,7 +274,7 @@ func AdminList(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) as total from admin where id>0`
-	rowSQL := `select id as admin_id,created_time,name,username,phone,status from admin where id>0`
+	rowSQL := `select id as admin_id,created_time,name,username,phone,status,title from admin where id>0`
 
 	if keyword != "" {
 		countSQL += ` and name ~*:keyword`
@@ -314,7 +329,7 @@ func AdminGetByID(ctx iris.Context) {
 		return
 	}
 
-	arows := model.DB.QueryRowx("select id as admin_id,created_time,name,username,phone,status from admin where id=$1", adminID)
+	arows := model.DB.QueryRowx("select id as admin_id,created_time,name,username,phone,status,title from admin where id=$1", adminID)
 	if arows == nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
 		return
@@ -339,19 +354,20 @@ func AdminGetByID(ctx iris.Context) {
 	}
 	admin := FormatSQLRowToMap(arows)
 
-	var funtionmenu []Funtionmenu
-	for rows.Next() {
-		var f Funtionmenu
-		err := rows.StructScan(&f)
-		if err != nil {
-			fmt.Println("err=====", err.Error())
-			ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-			return
-		}
-		funtionmenu = append(funtionmenu, f)
-	}
+	// var funtionmenu []Funtionmenu
+	// for rows.Next() {
+	// 	var f Funtionmenu
+	// 	err := rows.StructScan(&f)
+	// 	if err != nil {
+	// 		fmt.Println("err=====", err.Error())
+	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 		return
+	// 	}
+	// 	funtionmenu = append(funtionmenu, f)
+	// }
 
-	adminFunctionMenu := FormatMenu(funtionmenu)
+	// adminFunctionMenu := FormatMenu(funtionmenu)
+	adminFunctionMenu := FormatSQLRowsToMapArray(rows)
 
 	admin["funtionMenus"] = adminFunctionMenu
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": admin})

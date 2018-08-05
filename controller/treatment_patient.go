@@ -69,6 +69,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		"order_sn",
 		"soft_sn",
 		"name",
+		"cost",
 		"price",
 		"amount",
 		"unit",
@@ -115,7 +116,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		return
 	}
 	inserttSQL := "insert into treatment_patient (" + tSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8)"
-	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)"
+	insertmSQL := "insert into mz_unpaid_orders (" + mSetStr + ") values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)"
 
 	for index, v := range results {
 		clinicTreatmentID := v["clinic_treatment_id"]
@@ -128,7 +129,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 			return
 		}
 
-		treatmentSQL := `select id as clinic_treatment_id,price,discount_price,is_discount,name,unit_name from clinic_treatment where id=$1`
+		treatmentSQL := `select id as clinic_treatment_id,price,discount_price,is_discount,name,unit_name,COALESCE(cost, 0) as cost_price from clinic_treatment where id=$1`
 		trow := model.DB.QueryRowx(treatmentSQL, clinicTreatmentID)
 		if trow == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "治疗项错误"})
@@ -142,6 +143,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 			return
 		}
 		isDiscount := clinicTreatment["is_discount"].(bool)
+		cost := clinicTreatment["cost_price"].(int64)
 		price := clinicTreatment["price"].(int64)
 		discountPrice := clinicTreatment["discount_price"].(int64)
 		name := clinicTreatment["name"].(string)
@@ -178,6 +180,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 			ToNullString(orderSn),
 			index,
 			ToNullString(name),
+			cost,
 			price,
 			amount,
 			ToNullString(unitName),
