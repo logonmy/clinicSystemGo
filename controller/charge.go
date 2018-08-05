@@ -735,8 +735,8 @@ func charge(outTradeNo string, tradeNo string) error {
 	confrimID := pay["operation_id"]
 
 	//插入已缴费
-	insertPaidOrders := "insert into mz_paid_orders (id,mz_paid_record_id,clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
-		" select id," + strconv.Itoa(int(recordID.(int64))) + ",clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,price,amount,unit,total,discount,fee,operation_id," + strconv.Itoa(int(confrimID.(int64))) + " from mz_unpaid_orders where id in (" + orderIDs.(string) + ")"
+	insertPaidOrders := "insert into mz_paid_orders (id,mz_paid_record_id,clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,cost,price,amount,unit,total,discount,fee,operation_id,confrim_id)" +
+		" select id," + strconv.Itoa(int(recordID.(int64))) + ",clinic_triage_patient_id,charge_project_type_id,charge_project_id,order_sn,soft_sn,name,cost,price,amount,unit,total,discount,fee,operation_id," + strconv.Itoa(int(confrimID.(int64))) + " from mz_unpaid_orders where id in (" + orderIDs.(string) + ")"
 	_, insertPaidOrdersErr := tx.Query(insertPaidOrders)
 	if insertPaidOrdersErr != nil {
 		tx.Rollback()
@@ -814,7 +814,7 @@ func charge(outTradeNo string, tradeNo string) error {
 		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank,
 		traditional_medical_cost,western_medicine_cost,examination_cost,labortory_cost,treatment_cost,
 		diagnosis_treatment_cost,material_cost,retail_cost,other_cost) 
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30)`
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$31,$32,$33,$34,$35,$36,$37,$38)`
 	_, insertDetailErr := tx.Exec(insertDetails, pay["id"], 1, outTradeNo, "in", triage["clinic_patient_id"], triage["department_id"], triage["doctor_id"], typeMoney["2"], typeMoney["1"], typeMoney["4"], typeMoney["3"], typeMoney["7"], typeMoney["8"], typeMoney["5"], 0, typeMoney["6"],
 		pay["discount_money"], pay["derate_money"], pay["medical_money"], pay["voucher_money"], pay["bonus_points_money"], pay["on_credit_money"], pay["total_money"], pay["balance_money"], confrimID, cash, wechat, alipay, bank,
 		typeCost["2"], typeCost["1"], typeCost["4"], typeCost["3"], typeCost["7"], typeCost["8"], typeCost["5"], 0, typeCost["6"])
