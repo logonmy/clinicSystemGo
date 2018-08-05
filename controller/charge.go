@@ -517,8 +517,8 @@ func ChargePaymentQuery(ctx iris.Context) {
 func ChargePaymentRefund(ctx iris.Context) {
 	outTradeNo := ctx.PostValue("out_trade_no")
 	refundIDs := ctx.PostValue("refundIds")
-	operarion := ctx.PostValue("operarion_id")
-	if outTradeNo == "" || refundIDs == "" || operarion == "" {
+	operarton := ctx.PostValue("operation_id")
+	if outTradeNo == "" || refundIDs == "" || operarton == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -538,6 +538,9 @@ func ChargePaymentRefund(ctx iris.Context) {
 		return
 	}
 
+	triagePatient := model.DB.QueryRowx("select * from clinic_triage_patient where id = $1", paidRecord["clinic_triage_patient_id"])
+	triage := FormatSQLRowToMap(triagePatient)
+
 	balanceMoney := paidRecord["balance_money"].(int64)
 	totalMoney := paidRecord["total_money"].(int64)
 
@@ -548,6 +551,15 @@ func ChargePaymentRefund(ctx iris.Context) {
 	}
 
 	refundFee := int64(0)
+
+	traditionalMedicalFee := int64(0)
+	westernMedicineFee := int64(0)
+	examinationFee := int64(0)
+	labortoryFee := int64(0)
+	treatmentFee := int64(0)
+	diagnosisTreatmentFee := int64(0)
+	materialFee := int64(0)
+	otherFee := int64(0)
 
 	for _, id := range results {
 		row := model.DB.QueryRowx(`select * from mz_paid_orders where id = $1 and mz_paid_record_id = $2`, id, paidRecord["id"])
@@ -561,6 +573,7 @@ func ChargePaymentRefund(ctx iris.Context) {
 
 		orderStatus := rowMap["order_status"].(string)
 		refundStatus := rowMap["refund_status"].(bool)
+		projectType := rowMap["charge_project_type_id"].(int64)
 		fee := rowMap["fee"].(int64)
 		if refundStatus == true {
 			tx.Rollback()
@@ -572,9 +585,31 @@ func ChargePaymentRefund(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "存在无法退费的项目：" + rowMap["name"].(string)})
 			return
 		}
-		tx.Exec("update mz_paid_orders set refund_status=true where id=$1", rowMap["id"])
+		tx.Exec("update mz_paid_orders set refund_status=true,refund_id=$1 where id=$2", operarton, rowMap["id"])
 		refundFee += fee
+
+		switch projectType {
+		case 1:
+			westernMedicineFee += fee * -1
+		case 2:
+			traditionalMedicalFee += fee * -1
+		case 3:
+			labortoryFee += fee * -1
+		case 4:
+			examinationFee += fee * -1
+		case 5:
+			materialFee += fee * -1
+		case 6:
+			otherFee += fee * -1
+		case 7:
+			treatmentFee += fee * -1
+		case 8:
+			diagnosisTreatmentFee += fee * -1
+		}
+
 	}
+
+	totalFefundFee := refundFee * -1
 
 	// 部分退款
 	if refundFee != totalMoney {
@@ -592,14 +627,53 @@ func ChargePaymentRefund(ctx iris.Context) {
 
 	outRefundNo := GetTradeNo("R2")
 
-	refundErr := refundNotice(outTradeNo, outRefundNo, refundFee)
+	refundNo, refundErr := refundNotice(outTradeNo, outRefundNo, refundFee)
 	if refundErr != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": refundErr.Error()})
 		return
 	}
 
-	tx.Exec("insert into mz_refund_record ")
+	var refundID int
+	er := tx.QueryRow(`insert into mz_refund_record (mz_paid_record_id,out_refund_no,refund_no,status,orders_ids,refund_money,operation_id) values 
+	($1,$2,$3,$4,$5,$6,$7) RETURNING id`, paidRecord["id"], outRefundNo, refundNo, 2, strings.Join(results, ","), refundFee*-1, operarton).Scan(&refundID)
+	if er != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": er.Error()})
+		return
+	}
+
+	cash := int64(0)
+	wechat := int64(0)
+	alipay := int64(0)
+	bank := int64(0)
+
+	switch paidRecord["pay_method_code"].(string) {
+	case "3":
+		bank = refundFee * -1
+	case "4":
+		cash = refundFee * -1
+	case "2":
+		wechat = refundFee * -1
+	case "1":
+		alipay = refundFee * -1
+	}
+
+	_, inserErr := tx.Exec(`insert into charge_detail 
+	(
+		pay_record_id,record_type,out_trade_no,out_refund_no,in_out,clinic_patient_id,department_id,doctor_id,traditional_medical_fee,western_medicine_fee,
+		examination_fee,labortory_fee,treatment_fee,diagnosis_treatment_fee,material_fee,other_fee,discount_money,derate_money,medical_money,bonus_points_money,
+		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)`,
+		refundID, 1, paidRecord["out_trade_no"], outRefundNo, "out", triage["clinic_patient_id"], triage["department_id"], triage["doctor_id"], traditionalMedicalFee, westernMedicineFee,
+		examinationFee, labortoryFee, treatmentFee, diagnosisTreatmentFee, materialFee, otherFee, paidRecord["discount_money"], paidRecord["derate_money"], paidRecord["medical_money"], paidRecord["bonus_points_money"],
+		paidRecord["on_credit_money"], totalFefundFee, refundFee*-1, operarton, cash, wechat, alipay, bank)
+
+	if inserErr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": inserErr.Error()})
+		return
+	}
 
 	cerr := tx.Commit()
 	if cerr != nil {
@@ -815,13 +889,15 @@ func charge(outTradeNo string, tradeNo string) error {
 	return nil
 }
 
-func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) error {
+func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) (string, error) {
 	payment := model.DB.QueryRowx("select * from mz_paid_record where out_trade_no = $1", outTradeNo)
 	pay := FormatSQLRowToMap(payment)
 	_, ok := pay["id"]
 	if !ok {
-		return errors.New("未找到指定的待缴费单")
+		return "", errors.New("未找到指定的待缴费单")
 	}
+
+	refundNo := outRefundNo
 
 	// --支付方式编码，1-支付宝，2-微信, 3-银行卡, 4-现金
 
@@ -830,17 +906,19 @@ func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) error 
 
 		res := HcRefund(outTradeNo, strconv.FormatInt(refundFee, 10), outRefundNo, "", "门诊退费")
 		if res["code"] != "200" {
-			return errors.New(res["msg"].(string))
+			return "", errors.New(res["msg"].(string))
 		}
 
+		data := res["data"].(map[string]interface{})
+		refundNo = data["refund_id"].(string)
 	}
 
-	if methodCode == "4" {
-		return errors.New("未找到指定的待缴费单")
+	if methodCode == "3" {
+		return "", errors.New("不支持的退费方式")
 	}
 
-	_, err := model.DB.Exec("update mz_paid_record set refund_money = $1+refund_money where id = $2", refundFee, pay["id"])
-	return err
+	_, err := model.DB.Exec("update mz_paid_record set refund_money = $1+refund_money where id = $2", refundFee*-1, pay["id"])
+	return refundNo, err
 }
 
 //updateMaterialStock
