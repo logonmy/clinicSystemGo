@@ -752,7 +752,7 @@ func charge(outTradeNo string, tradeNo string) error {
 	}
 
 	//更新材料费库存
-	materialsql := `select charge_project_id,amount from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) and charge_project_type_id=5`
+	materialsql := `select id,charge_project_id,amount from mz_unpaid_orders where id in (` + pay["orders_ids"].(string) + `) and charge_project_type_id=5`
 	materialrows, _ := model.DB.Queryx(materialsql)
 	materials := FormatSQLRowsToMapArray(materialrows)
 
