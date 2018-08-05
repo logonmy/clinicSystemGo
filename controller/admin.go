@@ -544,7 +544,7 @@ func MenuGetByAdminID(ctx iris.Context) {
 		icon,
 		parent_function_menu_id
 		from function_menu
-		where ascription = '02' order by fm.level asc,fm.weight asc`
+		where ascription = '02' order by level asc,weight asc`
 
 		rows, err2 := model.DB.Queryx(selectSQL, adminID)
 		if err2 != nil {
