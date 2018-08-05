@@ -216,8 +216,11 @@ func TreatmentPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select tp.*, ct.name as treatment_name, ct.unit_name, ct.price from treatment_patient tp 
+	rows, err := model.DB.Queryx(`select tp.*, ct.name as treatment_name, ct.unit_name, ct.price, 
+	case when mpo.id is not null then true else false end as paid_status
+	 from treatment_patient tp 
 		left join clinic_treatment ct on tp.clinic_treatment_id = ct.id 
+		left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = ct.clinic_triage_patient_id and ct.order_sn=mpo.order_sn and ct.soft_sn=mpo.soft_sn
 		where tp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

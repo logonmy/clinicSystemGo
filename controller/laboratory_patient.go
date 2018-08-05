@@ -215,8 +215,11 @@ func LaboratoryPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select lp.*, cl.name as laboratory_name, cl.price from laboratory_patient lp 
+	rows, err := model.DB.Queryx(`select lp.*, cl.name as laboratory_name, cl.price, 
+	case when mpo.id is not null then true else false end as paid_status  
+	from laboratory_patient lp 
 		left join clinic_laboratory cl on lp.clinic_laboratory_id = cl.id 
+		left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = lp.clinic_triage_patient_id and lp.order_sn=mpo.order_sn and lp.soft_sn=mpo.soft_sn
 		where lp.clinic_triage_patient_id = $1`, clinicTriagePatientID)
 
 	if err != nil {

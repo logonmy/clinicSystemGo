@@ -212,9 +212,12 @@ func MaterialPatientGet(ctx iris.Context) {
 		return
 	}
 
-	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name, cm.ret_price as price, sum( ms.stock_amount ) as stock_amount from material_patient mp 
+	rows, err := model.DB.Queryx(`select mp.*, cm.name, cm.specification, cm.unit_name, cm.ret_price as price, sum( ms.stock_amount ) as stock_amount, 
+	case when mpo.id is not null then true else false end as paid_status 
+	 from material_patient mp 
 	left join clinic_material cm on mp.clinic_material_id = cm.id 
-	left join material_stock ms on cm.id = ms.clinic_material_id
+	left join material_stock ms on cm.id = ms.clinic_material_id 
+	left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = cm.clinic_triage_patient_id and cm.order_sn=mpo.order_sn and cm.soft_sn=mpo.soft_sn
 	where mp.clinic_triage_patient_id = $1
 	group by (mp.id, mp.clinic_triage_patient_id, mp.clinic_material_id, mp.order_sn, mp.soft_sn, mp.amount, mp.illustration, mp.operation_id, mp.created_time, cm.name, cm.specification, cm.unit_name,cm.ret_price)`, clinicTriagePatientID)
 
