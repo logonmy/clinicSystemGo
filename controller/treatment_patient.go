@@ -101,7 +101,7 @@ func TreatmentPatientCreate(ctx iris.Context) {
 		return
 	}
 
-	_, errdtp := tx.Exec("delete from treatment_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
+	_, errdtp := tx.Exec("delete from treatment_patient where clinic_triage_patient_id=$1 and order_sn in (select order_sn from mz_unpaid_orders where clinic_triage_patient_id = $1 and charge_project_type_id=7)", clinicTriagePatientID)
 	if errdtp != nil {
 		fmt.Println("errdtp ===", errdtp)
 		tx.Rollback()

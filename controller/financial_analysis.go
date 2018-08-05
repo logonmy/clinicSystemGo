@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"time"
 
 	"clinicSystemGo/model"
@@ -145,7 +144,6 @@ func ChargeMonthReportByPayWay(ctx iris.Context) {
 
 	startDate, errs := time.Parse("2006-01", startDateStr)
 	if errs != nil {
-		fmt.Println("errs =======", errs)
 		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM 的 有效日期格式"})
 		return
 	}

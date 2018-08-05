@@ -71,7 +71,7 @@ func ExaminationPatientCreate(ctx iris.Context) {
 
 	orderSn := FormatPayOrderSn(clinicTriagePatientID, "4")
 
-	_, errdlp := tx.Exec("delete from examination_patient where clinic_triage_patient_id=$1", clinicTriagePatientID)
+	_, errdlp := tx.Exec("delete from examination_patient where clinic_triage_patient_id=$1 and order_sn in (select order_sn from mz_unpaid_orders where clinic_triage_patient_id = $1 and charge_project_type_id=4)", clinicTriagePatientID)
 	if errdlp != nil {
 		fmt.Println("errdlp ===", errdlp)
 		tx.Rollback()
