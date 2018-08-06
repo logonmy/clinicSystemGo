@@ -737,6 +737,9 @@ func ChargePaidList(ctx iris.Context) {
 		return
 	}
 
+	IDS := model.DB.QueryRowx("select string_agg (cast (id as TEXT ), ',')  as order_ids from mz_paid_orders where mz_paid_record_id = $1 and refund_status != true", mzPaidRecordID)
+	IDSMAP := FormatSQLRowToMap(IDS)
+
 	payment := model.DB.QueryRowx(`select * from mz_paid_record where id=$1`, mzPaidRecordID)
 	total := model.DB.QueryRowx(`select count(id) as total,sum(total) as charge_total,sum(discount) as discount_total,sum(fee) as charge_total_fee from mz_paid_orders where mz_paid_record_id=$1`, mzPaidRecordID)
 	pageInfo := FormatSQLRowToMap(payment)
@@ -748,13 +751,20 @@ func ChargePaidList(ctx iris.Context) {
 	pageInfo["discount_total"] = totalMap["discount_total"]
 	pageInfo["charge_total_fee"] = totalMap["charge_total_fee"]
 
+	if IDSMAP["order_ids"] == nil {
+		pageInfo["orders_ids"] = ""
+	} else {
+		pageInfo["orders_ids"] = IDSMAP["order_ids"]
+	}
+
 	typesql := `select sum(total) as type_charge_total, charge_project_type_id from mz_paid_orders where mz_paid_record_id = $1 group by charge_project_type_id`
 
 	typetotal, _ := model.DB.Queryx(typesql, mzPaidRecordID)
 
 	typetotalfomat := FormatSQLRowsToMapArray(typetotal)
 
-	rowSQL := `select m.id as mz_paid_orders_id,m.name,m.price,m.amount,m.total,m.discount,m.fee,p.name as doctor_name,d.name as department_name from mz_paid_orders m 
+	rowSQL := `select m.id as mz_paid_orders_id,m.name,m.price,m.amount,m.total,m.discount,m.fee,m.refund_status,
+	p.name as doctor_name,d.name as department_name from mz_paid_orders m 
 	left join personnel p on p.id = m.operation_id 
 	left join department_personnel dp on dp.personnel_id = p.id 
 	left join department d on d.id = dp.department_id
