@@ -561,6 +561,15 @@ func ChargePaymentRefund(ctx iris.Context) {
 	materialFee := int64(0)
 	otherFee := int64(0)
 
+	traditionalMedicalCost := int64(0)
+	westernMedicineCost := int64(0)
+	examinationCost := int64(0)
+	labortoryCost := int64(0)
+	treatmentCost := int64(0)
+	diagnosisTreatmentCost := int64(0)
+	materialCost := int64(0)
+	otherCost := int64(0)
+
 	for _, id := range results {
 		row := model.DB.QueryRowx(`select * from mz_paid_orders where id = $1 and mz_paid_record_id = $2`, id, paidRecord["id"])
 		rowMap := FormatSQLRowToMap(row)
@@ -575,6 +584,7 @@ func ChargePaymentRefund(ctx iris.Context) {
 		refundStatus := rowMap["refund_status"].(bool)
 		projectType := rowMap["charge_project_type_id"].(int64)
 		fee := rowMap["fee"].(int64)
+		cost := rowMap["cost"].(int64)
 		if refundStatus == true {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-1", "msg": "存在已退费的项目：" + rowMap["name"].(string)})
@@ -591,20 +601,28 @@ func ChargePaymentRefund(ctx iris.Context) {
 		switch projectType {
 		case 1:
 			westernMedicineFee += fee * -1
+			westernMedicineCost += cost * -1
 		case 2:
 			traditionalMedicalFee += fee * -1
+			traditionalMedicalCost += cost * -1
 		case 3:
 			labortoryFee += fee * -1
+			labortoryCost += cost * -1
 		case 4:
 			examinationFee += fee * -1
+			examinationCost += cost * -1
 		case 5:
 			materialFee += fee * -1
+			materialCost += cost * -1
 		case 6:
 			otherFee += fee * -1
+			otherCost += cost * -1
 		case 7:
 			treatmentFee += fee * -1
+			treatmentCost += cost * -1
 		case 8:
 			diagnosisTreatmentFee += fee * -1
+			diagnosisTreatmentCost += cost * -1
 		}
 
 	}
@@ -663,11 +681,15 @@ func ChargePaymentRefund(ctx iris.Context) {
 	(
 		pay_record_id,record_type,out_trade_no,out_refund_no,in_out,clinic_patient_id,department_id,doctor_id,traditional_medical_fee,western_medicine_fee,
 		examination_fee,labortory_fee,treatment_fee,diagnosis_treatment_fee,material_fee,other_fee,discount_money,derate_money,medical_money,bonus_points_money,
-		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank) 
-	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)`,
+		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank,
+		traditional_medical_cost,western_medicine_cost,examination_cost,labortory_cost,treatment_cost,
+		diagnosis_treatment_cost,material_cost,other_cost) 
+	VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36)`,
 		refundID, 1, paidRecord["out_trade_no"], outRefundNo, "out", triage["clinic_patient_id"], triage["department_id"], triage["doctor_id"], traditionalMedicalFee, westernMedicineFee,
 		examinationFee, labortoryFee, treatmentFee, diagnosisTreatmentFee, materialFee, otherFee, paidRecord["discount_money"], paidRecord["derate_money"], paidRecord["medical_money"], paidRecord["bonus_points_money"],
-		paidRecord["on_credit_money"], totalFefundFee, refundFee*-1, operarton, cash, wechat, alipay, bank)
+		paidRecord["on_credit_money"], totalFefundFee, refundFee*-1, operarton, cash, wechat, alipay, bank,
+		traditionalMedicalCost, westernMedicineCost, examinationCost, labortoryCost, treatmentCost,
+		diagnosisTreatmentCost, materialCost, otherCost)
 
 	if inserErr != nil {
 		tx.Rollback()
@@ -870,11 +892,11 @@ func charge(outTradeNo string, tradeNo string) error {
 	insertDetails := `insert into charge_detail (
 		pay_record_id,record_type,out_trade_no,in_out,clinic_patient_id,department_id,doctor_id,
 		traditional_medical_fee,western_medicine_fee,examination_fee,labortory_fee,treatment_fee,diagnosis_treatment_fee,
-		material_fee,retail_fee,other_fee,discount_money,derate_money,medical_money,voucher_money,bonus_points_money,
+		material_fee,other_fee,discount_money,derate_money,medical_money,voucher_money,bonus_points_money,
 		on_credit_money,total_money,balance_money,operation_id,cash,wechat,alipay,bank,
 		traditional_medical_cost,western_medicine_cost,examination_cost,labortory_cost,treatment_cost,
-		diagnosis_treatment_cost,material_cost,retail_cost,other_cost) 
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38)`
+		diagnosis_treatment_cost,material_cost,other_cost) 
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36)`
 	_, insertDetailErr := tx.Exec(insertDetails,
 		pay["id"],
 		1,
@@ -890,7 +912,6 @@ func charge(outTradeNo string, tradeNo string) error {
 		typeMoney["7"],
 		typeMoney["8"],
 		typeMoney["5"],
-		0,
 		typeMoney["6"],
 		pay["discount_money"],
 		pay["derate_money"],
@@ -905,7 +926,14 @@ func charge(outTradeNo string, tradeNo string) error {
 		wechat,
 		alipay,
 		bank,
-		typeCost["2"], typeCost["1"], typeCost["4"], typeCost["3"], typeCost["7"], typeCost["8"], typeCost["5"], 0, typeCost["6"])
+		typeCost["2"],
+		typeCost["1"],
+		typeCost["4"],
+		typeCost["3"],
+		typeCost["7"],
+		typeCost["8"],
+		typeCost["5"],
+		typeCost["6"])
 	if insertDetailErr != nil {
 		tx.Rollback()
 		return insertDetailErr

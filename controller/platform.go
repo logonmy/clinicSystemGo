@@ -6,7 +6,7 @@ import (
 	"github.com/kataras/iris"
 )
 
-//PlatformTotalAmountDay 挂账还款
+//PlatformTotalAmount 挂账还款
 func PlatformTotalAmount(ctx iris.Context) {
 	startDate := ctx.PostValue("start_date")
 	endDate := ctx.PostValue("end_date")
