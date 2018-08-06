@@ -232,6 +232,8 @@ func main() {
 		charge.Post("/paid/list", controller.ChargePaidList)
 		// 查询已缴费的就诊记录
 		charge.Post("/traigePatient/paid", controller.GetPaidTraigePatients)
+		// 获取已退费的就诊记录
+		charge.Post("/traigePatient/refund", controller.GetRefundTraigePatients)
 		// 获取交易流水日报表
 		charge.Post("/business/transaction", controller.BusinessTransaction)
 		// 获取分析类报表

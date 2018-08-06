@@ -595,7 +595,7 @@ func ChargePaymentRefund(ctx iris.Context) {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "存在无法退费的项目：" + rowMap["name"].(string)})
 			return
 		}
-		tx.Exec("update mz_paid_orders set refund_status=true,refund_id=$1 where id=$2", operarton, rowMap["id"])
+		tx.Exec("update mz_paid_orders set refund_status=true,refund_id=$1,order_status='40' where id=$2", operarton, rowMap["id"])
 		refundFee += fee
 
 		switch projectType {
