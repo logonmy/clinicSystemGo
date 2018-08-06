@@ -246,6 +246,8 @@ func main() {
 		charge.Post("/business/transaction/credit", controller.BusinessTransactionCredit)
 		// 患者支付列表
 		charge.Post("/PatientChargeList", controller.PatientChargeList)
+		// 获取交易订单信息
+		charge.Post("/managerment/order", controller.ManagermentOrder)
 
 	}
 

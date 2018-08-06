@@ -1488,3 +1488,78 @@ func PatientChargeList(ctx iris.Context) {
 	results := FormatSQLRowsToMapArray(rows)
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
+
+// ManagermentOrder 获取订单
+func ManagermentOrder(ctx iris.Context) {
+
+	clinicID := ctx.PostValue("clinic_id")
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+	keyword := ctx.PostValue("keyword")
+	orderType := ctx.PostValue("orderType")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	if orderType == "" {
+		limit = "10"
+	}
+
+	if clinicID == "" || startDate == "" || endDate == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	queryMap := map[string]interface{}{
+		"clinicID":  ToNullInt64(clinicID),
+		"offset":    ToNullInt64(offset),
+		"limit":     ToNullInt64(limit),
+		"startDate": ToNullString(startDate),
+		"endDate":   ToNullString(endDate),
+		"keyword":   ToNullString(keyword),
+	}
+
+	SQL := ` from (select out_trade_no as number,
+		case pay_method_code when '1' then 'alipay' when '2' then 'wechat' when '3' then 'bank' when '4' then 'cash' else '' end as pay_method_code,
+		created_time,'门诊缴费' as order_type, operation_id,balance_money,clinic_triage_patient_id from mz_paid_record 
+	union select mrr.out_refund_no as number,
+		case mpd.pay_method_code when '1' then 'alipay' when '2' then 'wechat' when '3' then 'bank' when '4' then 'cash' else '' end as pay_method_code,
+		mrr.created_time,'门诊退费' as order_type,mrr.operation_id,mrr.refund_money as balance_money,mpd.clinic_triage_patient_id from mz_refund_record mrr left join mz_paid_record mpd on mpd.id = mrr.mz_paid_record_id 
+	union select out_trade_no as number,pay_method as pay_method_code,created_time,'零售缴费' as order_type,operation_id,balance_money,-1 as clinic_triage_patient_id from drug_retail_pay_record 
+	union select out_refund_no as number,drp.pay_method as pay_method_code,drr.created_time,'零售退费' as order_type,drr.operation_id,drr.refund_money as balance_money,-1 as clinic_triage_patient_id from drug_retail_refund_record drr left JOIN drug_retail_pay_record drp on drp.out_trade_no = drr.out_trade_no) as item 
+	left join clinic_triage_patient ctp on ctp.id = item.clinic_triage_patient_id 
+	left join clinic_patient cp on cp.id = ctp.clinic_patient_id 
+	left join personnel p on p.id = item.operation_id 
+	left join patient pa on pa.id = cp.patient_id 
+	left join pay_order po on po.out_trade_no = item.number 
+	left join refund_order ro on ro.out_refund_no = item.number 
+	where item.created_time BETWEEN :startDate and :endDate and p.clinic_id = :clinicID  
+	`
+
+	if keyword != "" {
+		SQL += " and (pa.name ~:keyword or pa.phone ~:keyword ) "
+	}
+
+	querySQL := `select item.number,item.created_time,
+	case when item.pay_method_code='cash' then 'SUCCESS' when po.order_status is null then ro.refund_status else po.order_status end as order_status,
+	pa.name as patient_name,pa.id as patient_id,
+	item.pay_method_code,item.order_type,item.pay_method_code,item.balance_money,
+	p.name as operation ` + SQL + ` order by item.created_time DESC offset :offset limit :limit`
+	countSQL := `select count(*) as total` + SQL
+
+	rows, _ := model.DB.NamedQuery(querySQL, queryMap)
+	total, _ := model.DB.NamedQuery(countSQL, queryMap)
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+	results := FormatSQLRowsToMapArray(rows)
+
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
+
+}
