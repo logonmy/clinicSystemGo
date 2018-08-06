@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/kataras/iris"
 )
@@ -43,7 +44,7 @@ func AdminCreate(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-	err = tx.QueryRow("insert into admin(name, title, phone, username, password, is_clinic_admin) values ($1, $2, $3, $4, $5, true) RETURNING id", name, title, phone, username, passwordMd5).Scan(&adminID)
+	err = tx.QueryRow("insert into admin(name, title, phone, username, password) values ($1, $2, $3, $4, $5) RETURNING id", name, title, phone, username, passwordMd5).Scan(&adminID)
 	if err != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -241,8 +242,8 @@ func AdminList(ctx iris.Context) {
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 	keyword := ctx.PostValue("keyword")
-	startDate := ctx.PostValue("start_date")
-	endDate := ctx.PostValue("end_date")
+	startDateStr := ctx.PostValue("start_date")
+	endDateStr := ctx.PostValue("end_date")
 	status := ctx.PostValue("status")
 
 	if offset == "" {
@@ -264,11 +265,11 @@ func AdminList(ctx iris.Context) {
 		return
 	}
 
-	if startDate != "" && endDate == "" {
+	if startDateStr != "" && endDateStr == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择结束日期"})
 		return
 	}
-	if startDate == "" && endDate != "" {
+	if startDateStr == "" && endDateStr != "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "请选择开始日期"})
 		return
 	}
@@ -281,11 +282,26 @@ func AdminList(ctx iris.Context) {
 		rowSQL += ` and name ~*:keyword`
 	}
 
-	if startDate != "" && endDate != "" {
-		if startDate > endDate {
+	if startDateStr != "" && endDateStr != "" {
+		if startDateStr > endDateStr {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "开始日期必须大于结束日期"})
 			return
 		}
+
+		startDate, errs := time.Parse("2006-01-02", startDateStr)
+		if errs != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+			return
+		}
+
+		endDate, erre := time.Parse("2006-01-02", endDateStr)
+		if erre != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+			return
+		}
+
+		startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
+		endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 		countSQL += " and created_time between :start_date and :end_date"
 		rowSQL += " and created_time between :start_date and :end_date"
 	}
@@ -299,8 +315,8 @@ func AdminList(ctx iris.Context) {
 		"keyword":    ToNullString(keyword),
 		"offset":     ToNullInt64(offset),
 		"limit":      ToNullInt64(limit),
-		"start_date": ToNullString(startDate),
-		"end_date":   ToNullString(endDate),
+		"start_date": ToNullString(startDateStr),
+		"end_date":   ToNullString(endDateStr),
 		"status":     ToNullString(status),
 	}
 
@@ -475,41 +491,69 @@ func MenuGetByAdminID(ctx iris.Context) {
 		return
 	}
 
-	selectSQL := `select 
-	afm.id as clinic_function_menu_id,
-	afm.function_menu_id as function_menu_id,
-	fm.name as menu_name,
-	fm.url as menu_url,
-	fm.level,
-	fm.weight,
-	fm.ascription,
-	fm.status,
-	fm.icon,
-	fm.parent_function_menu_id
-	from admin_function_menu afm
-	left join function_menu fm on fm.id = afm.function_menu_id
-	where afm.admin_id=$1 and afm.status=true order by fm.level asc,fm.weight asc`
+	row := model.DB.QueryRowx(`select * from admin where id = $1`, adminID)
 
-	rows, err2 := model.DB.Queryx(selectSQL, adminID)
-	if err2 != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err2})
+	if row == nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "人员不存在"})
 		return
 	}
 
-	// var funtionmenu []Funtionmenu
-	// for rows.Next() {
-	// 	var f Funtionmenu
-	// 	err := rows.StructScan(&f)
-	// 	if err != nil {
-	// 		fmt.Println("err=====", err.Error())
-	// 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-	// 		return
-	// 	}
-	// 	funtionmenu = append(funtionmenu, f)
-	// }
+	adminMap := FormatSQLRowToMap(row)
 
-	// result := FormatMenu(funtionmenu)
-	result := FormatSQLRowsToMapArray(rows)
+	isClinicAdmin, ok := adminMap["is_clinic_admin"]
 
-	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	if !ok {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "人员不存在"})
+		return
+	}
+
+	if !isClinicAdmin.(bool) {
+		selectSQL := `select 
+		afm.id as admin_function_menu_id,
+		afm.function_menu_id as function_menu_id,
+		fm.name as menu_name,
+		fm.url as menu_url,
+		fm.level,
+		fm.weight,
+		fm.ascription,
+		fm.status,
+		fm.icon,
+		fm.parent_function_menu_id
+		from admin_function_menu afm
+		left join function_menu fm on fm.id = afm.function_menu_id
+		where afm.admin_id=$1 and afm.status=true order by fm.level asc,fm.weight asc`
+
+		rows, err2 := model.DB.Queryx(selectSQL, adminID)
+		if err2 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+			return
+		}
+
+		result := FormatSQLRowsToMapArray(rows)
+
+		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	} else {
+		selectSQL := `select 
+		id as function_menu_id,
+		name as menu_name,
+		url as menu_url,
+		level,
+		weight,
+		ascription,
+		status,
+		icon,
+		parent_function_menu_id
+		from function_menu
+		where ascription = '02' order by level asc,weight asc`
+
+		rows, err2 := model.DB.Queryx(selectSQL)
+		if err2 != nil {
+			ctx.JSON(iris.Map{"code": "-1", "msg": err2.Error()})
+			return
+		}
+
+		result := FormatSQLRowsToMapArray(rows)
+
+		ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": result})
+	}
 }
