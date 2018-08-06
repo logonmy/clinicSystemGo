@@ -548,7 +548,7 @@ func updateDrugStock(tx *sqlx.Tx, clinicDrugID int64, amount int64, outTradeNo s
 	}
 
 	timeNow := time.Now().Format("2006-01-02")
-	row := model.DB.QueryRowx("select * from drug_stock where clinic_drug_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1", clinicDrugID, timeNow)
+	row := tx.QueryRowx("select * from drug_stock where clinic_drug_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1 FOR UPDATE", clinicDrugID, timeNow)
 	rowMap := FormatSQLRowToMap(row)
 	if rowMap["stock_amount"] == nil {
 		return errors.New("库存不足")

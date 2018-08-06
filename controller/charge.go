@@ -1028,7 +1028,7 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 	updateSQL := "update charge_detail set material_cost = material_cost + $1 where id = $2"
 
 	timeNow := time.Now().Format("2006-01-02")
-	row := model.DB.QueryRowx("select * from material_stock where clinic_material_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1", clinicMaterialID, timeNow)
+	row := tx.QueryRowx("select * from material_stock where clinic_material_id = $1 and stock_amount > 0 and eff_date > $2 ORDER by created_time asc limit 1 FOR UPDATE", clinicMaterialID, timeNow)
 	rowMap := FormatSQLRowToMap(row)
 	if rowMap["stock_amount"] == nil {
 		return errors.New("库存不足")
