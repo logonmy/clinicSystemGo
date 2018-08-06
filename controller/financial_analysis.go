@@ -288,5 +288,11 @@ from charge_detail`
 	}
 	results := FormatSQLRowsToMapArray(rows)
 
-	ctx.JSON(iris.Map{"code": "200", "data": results[0]})
+	var resData map[string]interface{}
+
+	if len(results) != 0 {
+		resData = results[0]
+	}
+
+	ctx.JSON(iris.Map{"code": "200", "data": resData})
 }
