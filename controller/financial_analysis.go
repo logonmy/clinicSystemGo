@@ -225,33 +225,54 @@ func ProfitReport(ctx iris.Context) {
 	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 
 	querySQL := `select 
-	c.id as clinic_id,
-	c.name as clinic_name,
-	sum(cd.traditional_medical_fee) as total_traditional_medical_fee,
-	sum(cd.western_medicine_fee) as total_western_medicine_fee,
-	sum(cd.examination_fee) as total_examination_fee,
-	sum(cd.labortory_fee) as total_labortory_fee,
-	sum(cd.treatment_fee) as total_treatment_fee,
-	sum(cd.diagnosis_treatment_fee) as total_diagnosis_treatment_fee,
-	sum(cd.material_fee) as total_material_fee,
-	sum(cd.retail_fee) as total_retail_fee,
-	sum(cd.other_fee) as total_other_fee,
-	sum(cd.traditional_medical_cost) as total_traditional_medical_cost,
-	sum(cd.western_medicine_cost) as total_western_medicine_cost,
-	sum(cd.examination_cost) as total_examination_cost,
-	sum(cd.labortory_cost) as total_labortory_cost,
-	sum(cd.treatment_cost) as total_treatment_cost,
-	sum(cd.diagnosis_treatment_cost) as total_diagnosis_treatment_cost,
-	sum(cd.material_cost) as total_material_cost,
-	sum(cd.retail_cost) as total_retail_cost,
-	sum(cd.other_cost) as total_other_cost
-from charge_detail cd 
-left join personnel p on p.id = cd.operation_id
-left join clinic c on p.clinic_id = c.id 
-where cd.created_time between :start_date and :end_date`
+	sum(traditional_medical_fee) as total_traditional_medical_fee,
+	sum(western_medicine_fee) as total_western_medicine_fee,
+	sum(examination_fee) as total_examination_fee,
+	sum(labortory_fee) as total_labortory_fee,
+	sum(treatment_fee) as total_treatment_fee,
+	sum(diagnosis_treatment_fee) as total_diagnosis_treatment_fee,
+	sum(material_fee) as total_material_fee,
+	sum(retail_fee) as total_retail_fee,
+	sum(other_fee) as total_other_fee,
+	sum(traditional_medical_cost) as total_traditional_medical_cost,
+	sum(western_medicine_cost) as total_western_medicine_cost,
+	sum(examination_cost) as total_examination_cost,
+	sum(labortory_cost) as total_labortory_cost,
+	sum(treatment_cost) as total_treatment_cost,
+	sum(diagnosis_treatment_cost) as total_diagnosis_treatment_cost,
+	sum(material_cost) as total_material_cost,
+	sum(retail_cost) as total_retail_cost,
+	sum(other_cost) as total_other_cost
+from charge_detail`
 
 	if clinicID != "" {
-		querySQL += " and clinic_id = :clinic_id"
+		querySQL = `select 
+		c.id as clinic_id,
+		c.name as clinic_name,
+		sum(cd.traditional_medical_fee) as total_traditional_medical_fee,
+		sum(cd.western_medicine_fee) as total_western_medicine_fee,
+		sum(cd.examination_fee) as total_examination_fee,
+		sum(cd.labortory_fee) as total_labortory_fee,
+		sum(cd.treatment_fee) as total_treatment_fee,
+		sum(cd.diagnosis_treatment_fee) as total_diagnosis_treatment_fee,
+		sum(cd.material_fee) as total_material_fee,
+		sum(cd.retail_fee) as total_retail_fee,
+		sum(cd.other_fee) as total_other_fee,
+		sum(cd.traditional_medical_cost) as total_traditional_medical_cost,
+		sum(cd.western_medicine_cost) as total_western_medicine_cost,
+		sum(cd.examination_cost) as total_examination_cost,
+		sum(cd.labortory_cost) as total_labortory_cost,
+		sum(cd.treatment_cost) as total_treatment_cost,
+		sum(cd.diagnosis_treatment_cost) as total_diagnosis_treatment_cost,
+		sum(cd.material_cost) as total_material_cost,
+		sum(cd.retail_cost) as total_retail_cost,
+		sum(cd.other_cost) as total_other_cost
+	from charge_detail cd 
+	left join personnel p on p.id = cd.operation_id
+	left join clinic c on p.clinic_id = c.id 
+	where cd.created_time between :start_date and :end_date`
+
+		querySQL += " and clinic_id = :clinic_id group by (c.id, c.name)"
 	}
 
 	var queryOptions = map[string]interface{}{
@@ -260,11 +281,12 @@ where cd.created_time between :start_date and :end_date`
 		"end_date":   ToNullString(endDateStr),
 	}
 
-	rows, err := model.DB.NamedQuery(querySQL+" group by (c.id, c.name);", queryOptions)
+	rows, err := model.DB.NamedQuery(querySQL, queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	results := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": results})
+
+	ctx.JSON(iris.Map{"code": "200", "data": results[0]})
 }
