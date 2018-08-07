@@ -584,7 +584,7 @@ func main() {
 		medicalReport.Post("/outPatient/record", controller.OutPatietnRecords)
 
 		// 接诊类型
-		medicalReport.Post("/outPatietn/type", controller.OutPatietnType)
+		medicalReport.Post("/outPatient/type", controller.OutPatietnType)
 
 	}
 
