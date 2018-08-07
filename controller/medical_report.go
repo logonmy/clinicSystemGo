@@ -118,7 +118,7 @@ func ExaminationStatistics(ctx iris.Context) {
  left join personnel ps on ps.id = ep.operation_id 
  left join clinic_examination ce on ce.id = ep.clinic_examination_id
  where ep.order_status = '30'
-	and personnel.clinic_id = :clinic_id 
+	and ps.clinic_id = :clinic_id 
 	and ep.updated_time between :start_date and :end_date `
 
 	rows, err := model.DB.NamedQuery(querySQL, queryOptions)
@@ -182,7 +182,7 @@ func LaboratoryStatistics(ctx iris.Context) {
 	left join personnel ps on ps.id = el.operation_id 
 	left join clinic_laboratory cl on cl.id = el.clinic_laboratory_id
 	where el.order_status = '30' 
-	and personnel.clinic_id = :clinic_id 
+	and ps.clinic_id = :clinic_id 
 	and el.updated_time between :start_date and :end_date `
 
 	rows, err := model.DB.NamedQuery(querySQL, queryOptions)
@@ -246,7 +246,7 @@ func TreatmentStatistics(ctx iris.Context) {
 	left join personnel ps on ps.id = tp.operation_id 
 	left join clinic_treatment ct on ct.id = tp.clinic_treatment_id
 	where tp.order_status = '30' 
-	and personnel.clinic_id = :clinic_id 
+	and ps.clinic_id = :clinic_id 
 	and tp.updated_time between :start_date and :end_date `
 
 	rows, err := model.DB.NamedQuery(querySQL, queryOptions)
