@@ -44,8 +44,15 @@ func ReceiveTreatment(ctx iris.Context) {
 	querySQL := `select 
 	p.name as personnel_name,
 	d.name as department_name,
-	mpo.charge_project_type_id,
-	sum(fee) as fee
+	sum(fee) as total_fee,
+	sum(case when mpo.charge_project_type_id = 1 then fee ELSE 0 end) as west_pre_fee,
+	sum(case when mpo.charge_project_type_id = 2 then fee ELSE 0 end) as east_pre_fee,
+	sum(case when mpo.charge_project_type_id = 3 then fee ELSE 0 end) as labora_pre_fee,
+	sum(case when mpo.charge_project_type_id = 4 then fee ELSE 0 end) as exam_pre_fee,
+	sum(case when mpo.charge_project_type_id = 5 then fee ELSE 0 end) as material_fee,
+	sum(case when mpo.charge_project_type_id = 6 then fee ELSE 0 end) as west_pre_fee,
+	sum(case when mpo.charge_project_type_id = 7 then fee ELSE 0 end) as other_fee,
+	sum(case when mpo.charge_project_type_id = 8 then fee ELSE 0 end) as diagnosis_treatment_fee
 	 from clinic_triage_patient ctp 
 	left join department d on ctp.department_id = d.id
 	left join personnel p on ctp.doctor_id = p.id 
@@ -290,9 +297,13 @@ func RegisterStatistics(ctx iris.Context) {
 		"end_date":   ToNullString(endDateStr),
 	}
 
-	querySQL := `select to_char(ctpo.created_time, 'YYYY-MM-DD') as visit_date, ctp.register_type, count(ctp.id) from clinic_triage_patient ctp
-	left join clinic_triage_patient_operation ctpo on ctpo.clinic_triage_patient_id = ctp.id and times = 1 and type = 30 
-	left join personnel p on p.id = ctp.doctor_id 
+	querySQL := `select to_char(ctpo.created_time, 'YYYY-MM-DD') as visit_date,  
+	count(ctp.id) as total_count,
+	count(case when ctp.register_type = 1 then null else 1 end) as register_count,
+	count(case when ctp.register_type = 1 then 1 else null end) as appointment_count
+	from clinic_triage_patient ctp
+		left join clinic_triage_patient_operation ctpo on ctpo.clinic_triage_patient_id = ctp.id and times = 1 and type = 30 
+		left join personnel p on p.id = ctp.doctor_id 
 	where ctp.status >= 40 and p.clinic_id = :clinic_id 
 	and ctpo.created_time between :start_date and :end_date `
 
