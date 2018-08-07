@@ -301,6 +301,12 @@ func main() {
 		drug.Post("/PrescriptionChinesePatientModelDetail", controller.PrescriptionChinesePatientModelDetail)
 		drug.Post("/PrescriptionChinesePatientModelUpdate", controller.PrescriptionChinesePatientModelUpdate)
 		drug.Post("/PrescriptionChinesePatientModelDelete", controller.PrescriptionChinesePatientModelDelete)
+		drug.Post("/DrugInventoryCreate", controller.DrugInventoryCreate)
+		drug.Post("/DrugInventoryList", controller.DrugInventoryList)
+		drug.Post("/DrugInventoryRecordDetail", controller.DrugInventoryRecordDetail)
+		drug.Post("/DrugInventoryUpdate", controller.DrugInventoryUpdate)
+		drug.Post("/DrugInventoryCheck", controller.DrugInventoryCheck)
+		drug.Post("/DrugInventoryRecordDelete", controller.DrugInventoryRecordDelete)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
@@ -420,6 +426,12 @@ func main() {
 		material.Post("/outstockCheck", controller.MaterialOutstockCheck)
 		material.Post("/outstockDelete", controller.MaterialOutstockRecordDelete)
 		material.Post("/MaterialStockList", controller.MaterialStockList)
+		material.Post("/MaterialInventoryCreate", controller.MaterialInventoryCreate)
+		material.Post("/MaterialInventoryList", controller.MaterialInventoryList)
+		material.Post("/MaterialInventoryRecordDetail", controller.MaterialInventoryRecordDetail)
+		material.Post("/MaterialInventoryUpdate", controller.MaterialInventoryUpdate)
+		material.Post("/MaterialInventoryCheck", controller.MaterialInventoryCheck)
+		material.Post("/MaterialInventoryRecordDelete", controller.MaterialInventoryRecordDelete)
 	}
 
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
@@ -585,6 +597,11 @@ func main() {
 
 		// 接诊类型
 		medicalReport.Post("/outPatient/type", controller.OutPatietnType)
+		medicalReport.Post("/ReceiveTreatment", controller.ReceiveTreatment)
+		medicalReport.Post("/ExaminationStatistics", controller.ExaminationStatistics)
+		medicalReport.Post("/LaboratoryStatistics", controller.LaboratoryStatistics)
+		medicalReport.Post("/TreatmentStatistics", controller.TreatmentStatistics)
+		medicalReport.Post("/RegisterStatistics", controller.RegisterStatistics)
 
 	}
 
