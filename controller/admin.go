@@ -288,20 +288,13 @@ func AdminList(ctx iris.Context) {
 			return
 		}
 
-		startDate, errs := time.Parse("2006-01-02", startDateStr)
-		if errs != nil {
-			ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-			return
-		}
-
 		endDate, erre := time.Parse("2006-01-02", endDateStr)
 		if erre != nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
 			return
 		}
-
-		startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
 		endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
+
 		countSQL += " and created_time between :start_date and :end_date"
 		rowSQL += " and created_time between :start_date and :end_date"
 	}
