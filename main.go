@@ -578,6 +578,9 @@ func main() {
 	{
 		totalAmount.Post("/totalAmount", controller.PlatformTotalAmount)
 	}
+	medicalReport := app.Party("/medicalReport", crs).AllowMethods(iris.MethodOptions)
+	{
+	}
 
 	// http://localhost:8080
 	// http://localhost:8080/ping
