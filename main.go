@@ -580,6 +580,12 @@ func main() {
 	}
 	medicalReport := app.Party("/medicalReport", crs).AllowMethods(iris.MethodOptions)
 	{
+		// 门诊日志
+		medicalReport.Post("/outPatietn/record", controller.OutPatietnRecords)
+
+		// 接诊类型
+		medicalReport.Post("/outPatietn/type", controller.OutPatietnType)
+
 	}
 
 	// http://localhost:8080
