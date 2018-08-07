@@ -597,6 +597,9 @@ func main() {
 
 		// 接诊类型
 		medicalReport.Post("/outPatient/type", controller.OutPatietnType)
+
+		// 科室统计
+		medicalReport.Post("/outPatient/department", controller.OutPatietnDepartment)
 		medicalReport.Post("/ReceiveTreatment", controller.ReceiveTreatment)
 		medicalReport.Post("/ExaminationStatistics", controller.ExaminationStatistics)
 		medicalReport.Post("/LaboratoryStatistics", controller.LaboratoryStatistics)

@@ -127,6 +127,14 @@ func ClinicAdd(ctx iris.Context) {
 		return
 	}
 
+	_, er := tx.Exec(`insert into storehouse (name,clinic_id) VALUES ($1,$2)`, name+"-默认", clinicID)
+
+	if er != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": er.Error()})
+		return
+	}
+
 	if err != nil {
 		fmt.Println("err ===", err.Error())
 		tx.Rollback()
@@ -287,7 +295,7 @@ func ClinicGetByID(ctx iris.Context) {
 
 // GetClinicCode 获取最新的诊所编码
 func GetClinicCode(ctx iris.Context) {
-	row := model.DB.QueryRowx("select code from clinic order by created_time DESC")
+	row := model.DB.QueryRowx("select code from clinic order by code DESC limit 1")
 	rowMap := FormatSQLRowToMap(row)
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok", "data": rowMap})
 }
