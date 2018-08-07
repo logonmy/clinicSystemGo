@@ -127,6 +127,14 @@ func ClinicAdd(ctx iris.Context) {
 		return
 	}
 
+	_, er := tx.Exec(`insert into storehouse (name,clinic_id) VALUES ($1,$2)`, name+"-默认", clinicID)
+
+	if er != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": er.Error()})
+		return
+	}
+
 	if err != nil {
 		fmt.Println("err ===", err.Error())
 		tx.Rollback()
