@@ -402,7 +402,7 @@ func OutPatietnRecords(ctx iris.Context) {
 
 }
 
-// OutPatietnType 门诊日志
+// OutPatietnType 接诊类型
 func OutPatietnType(ctx iris.Context) {
 	startDate := ctx.PostValue("start_date")
 	endDate := ctx.PostValue("end_date")
@@ -473,5 +473,10 @@ func OutPatietnType(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	ctx.JSON(iris.Map{"code": "200", "data": itemMap, "page_info": pageInfo, "total": totalMap})
+
+}
+
+// OutPatietnDepartment 科室统计
+func OutPatietnDepartment(ctx iris.Context) {
 
 }
