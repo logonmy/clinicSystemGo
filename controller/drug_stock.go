@@ -514,7 +514,7 @@ func DrugInstockCheck(ctx iris.Context) {
 		}
 	}
 
-	_, err3 := tx.Exec("update drug_instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP where id=$3", "02", operationID, drugInstockRecordID)
+	_, err3 := tx.Exec("update drug_instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP,verify_time=LOCALTIMESTAMP where id=$3", "02", operationID, drugInstockRecordID)
 	if err3 != nil {
 		fmt.Println("err3 ===", err3)
 		tx.Rollback()
@@ -1037,7 +1037,7 @@ func DrugOutstockCheck(ctx iris.Context) {
 		return
 	}
 
-	_, err2 := tx.Exec("update drug_outstock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP where id=$3", "02", operationID, drugOutstockRecordID)
+	_, err2 := tx.Exec("update drug_outstock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP,verify_time=LOCALTIMESTAMP where id=$3", "02", operationID, drugOutstockRecordID)
 	if err2 != nil {
 		fmt.Println("err2 ===", err2)
 		tx.Rollback()
@@ -1607,7 +1607,7 @@ func DrugInventoryCheck(ctx iris.Context) {
 		return
 	}
 
-	_, err3 := model.DB.Exec("update drug_inventory_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP where id=$3", "02", operationID, drugInventoryRecordID)
+	_, err3 := model.DB.Exec("update drug_inventory_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP,verify_time=LOCALTIMESTAMP where id=$3", "02", operationID, drugInventoryRecordID)
 	if err3 != nil {
 		fmt.Println("err3 ===", err3)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err3.Error()})

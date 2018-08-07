@@ -933,6 +933,7 @@ CREATE TABLE drug_instock_record
   instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核 
+  verify_time timestamp with time zone,--审核时间
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -967,6 +968,7 @@ CREATE TABLE drug_outstock_record
   outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
+  verify_time timestamp with time zone,--审核时间
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -994,6 +996,7 @@ CREATE TABLE drug_inventory_record
   inventory_operation_id INTEGER NOT NULL references personnel(id),--创建盘点人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
+  verify_time timestamp with time zone,--审核时间
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone,
@@ -1391,6 +1394,7 @@ CREATE TABLE material_instock_record
   instock_operation_id INTEGER NOT NULL references personnel(id),--入库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核 
+  verify_time timestamp with time zone,--审核时间
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1425,6 +1429,7 @@ CREATE TABLE material_outstock_record
   outstock_operation_id INTEGER NOT NULL references personnel(id),--出库人员id
   verify_operation_id INTEGER references personnel(id),--审核人员id
   verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
+  verify_time timestamp with time zone,--审核时间
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

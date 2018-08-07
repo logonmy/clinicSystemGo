@@ -605,6 +605,22 @@ func main() {
 
 	}
 
+	invoicingStatistics := app.Party("/invoicingStatistics", crs).AllowMethods(iris.MethodOptions)
+	{
+		// 药品入库统计
+		invoicingStatistics.Post("/DrugInstockStatistics", controller.DrugInstockStatistics)
+		// 药品出库统计
+		invoicingStatistics.Post("/DrugOutstockStatistics", controller.DrugOutstockStatistics)
+		// 药品进存销统计
+		invoicingStatistics.Post("/DrugInvoicingStatistics", controller.DrugInvoicingStatistics)
+		// 耗材入库统计
+		invoicingStatistics.Post("/MaterialInstockStatistics", controller.MaterialInstockStatistics)
+		// 耗材出库统计
+		invoicingStatistics.Post("/MaterialOutstockStatistics", controller.MaterialOutstockStatistics)
+		// 耗材进存销统计
+		invoicingStatistics.Post("/MaterialInvoicingStatistics", controller.MaterialInvoicingStatistics)
+	}
+
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
