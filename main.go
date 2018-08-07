@@ -590,6 +590,20 @@ func main() {
 	{
 		totalAmount.Post("/totalAmount", controller.PlatformTotalAmount)
 	}
+	medicalReport := app.Party("/medicalReport", crs).AllowMethods(iris.MethodOptions)
+	{
+		// 门诊日志
+		medicalReport.Post("/outPatient/record", controller.OutPatietnRecords)
+
+		// 接诊类型
+		medicalReport.Post("/outPatient/type", controller.OutPatietnType)
+		medicalReport.Post("/ReceiveTreatment", controller.ReceiveTreatment)
+		medicalReport.Post("/ExaminationStatistics", controller.ExaminationStatistics)
+		medicalReport.Post("/LaboratoryStatistics", controller.LaboratoryStatistics)
+		medicalReport.Post("/TreatmentStatistics", controller.TreatmentStatistics)
+		medicalReport.Post("/RegisterStatistics", controller.RegisterStatistics)
+
+	}
 
 	// http://localhost:8080
 	// http://localhost:8080/ping
