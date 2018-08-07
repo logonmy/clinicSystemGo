@@ -121,17 +121,50 @@ func OutPatietnType(ctx iris.Context) {
 		"endDate":   ToNullString(endDate),
 		"offset":    ToNullInt64(offset),
 		"limit":     ToNullInt64(limit),
+		"clinicID":  ToNullInt64(clinicID),
 	}
 
-	querySQL := `select ctpo.created_time FROM clinic_triage_patient ctp 
+	querySQL := `select to_char(ctpo.created_time, 'YYYY-MM-DD') as created_time, 
+	sum(case when ctp.visit_type = 1 then 1 else 0 end) as type1,
+	sum(case when ctp.visit_type = 2 then 1 else 0 end) as type2, 
+	sum(case when ctp.visit_type = 3 then 1 else 0 end) as type3 
+	FROM clinic_triage_patient ctp 
 	left join clinic_triage_patient_operation ctpo on ctpo.clinic_triage_patient_id = ctp.id and type = 30 
-	where ctp.status = 40 and ctpo.created_time between :startDate and :endDate group by ctpo.created_time 
-	order by ctpo.created_time ASC offset :offset limit : limit
+	left join personnel p on p.id = ctpo.personnel_id 
+	where ctp.status = 40 and ctpo.created_time between :startDate and :endDate and p.clinic_id = :clinicID
+	group by to_char(ctpo.created_time, 'YYYY-MM-DD') 
+	order by created_time ASC offset :offset limit :limit
 	`
+
+	countSQL := `select count(1) as total from (
+	select 1
+	FROM clinic_triage_patient ctp 
+	left join clinic_triage_patient_operation ctpo on ctpo.clinic_triage_patient_id = ctp.id and type = 30 
+	left join personnel p on p.id = ctpo.personnel_id 
+	where ctp.status = 40 and ctpo.created_time between :startDate and :endDate and p.clinic_id = :clinicID
+	group by to_char(ctpo.created_time, 'YYYY-MM-DD') ) as a`
+
+	totalSQL := `select 
+	sum(case when ctp.visit_type = 1 then 1 else 0 end) as type1,
+	sum(case when ctp.visit_type = 2 then 1 else 0 end) as type2, 
+	sum(case when ctp.visit_type = 3 then 1 else 0 end) as type3 
+	FROM clinic_triage_patient ctp 
+	left join clinic_triage_patient_operation ctpo on ctpo.clinic_triage_patient_id = ctp.id and type = 30 
+	left join personnel p on p.id = ctpo.personnel_id 
+	where ctp.status = 40 and ctpo.created_time between :startDate and :endDate and p.clinic_id = :clinicID`
 
 	items, _ := model.DB.NamedQuery(querySQL, queryOptions)
 	itemMap := FormatSQLRowsToMapArray(items)
 
-	ctx.JSON(iris.Map{"code": "200", "data": itemMap})
+	count, _ := model.DB.NamedQuery(countSQL, queryOptions)
+	pageInfo := FormatSQLRowsToMapArray(count)[0]
+
+	total, _ := model.DB.NamedQuery(totalSQL, queryOptions)
+	totalMap := FormatSQLRowsToMapArray(total)[0]
+
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	ctx.JSON(iris.Map{"code": "200", "data": itemMap, "page_info": pageInfo, "total": totalMap})
 
 }
