@@ -984,6 +984,34 @@ CREATE TABLE drug_outstock_record_item
   deleted_time timestamp with time zone
 );
 
+--药品盘点记录
+CREATE TABLE drug_inventory_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  order_number varchar(20) NOT NULL,--盘点单号
+  inventory_date DATE NOT NULL DEFAULT CURRENT_DATE,--盘点日期
+  inventory_operation_id INTEGER NOT NULL references personnel(id),--创建盘点人员id
+  verify_operation_id INTEGER references personnel(id),--审核人员id
+  verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (storehouse_id, order_number)
+);
+
+--药品盘点记录item
+CREATE TABLE drug_inventory_record_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  drug_inventory_record_id integer NOT NULL references drug_inventory_record(id),--药品盘点记录id
+  drug_stock_id INTEGER NOT NULL references drug_stock(id),--药品库存id
+  actual_amount INTEGER NOT NULL CHECK(actual_amount > 0) DEFAULT 0,--药品实际数量
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
 --诊断字典
 CREATE TABLE diagnosis
 (
@@ -1409,6 +1437,34 @@ CREATE TABLE material_outstock_record_item
   material_outstock_record_id integer NOT NULL references material_outstock_record(id),--材料出库记录id
   material_stock_id INTEGER NOT NULL references material_stock(id),--材料库存id
   outstock_amount INTEGER NOT NULL CHECK(outstock_amount > 0),--出库数量
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
+--耗材盘点记录
+CREATE TABLE material_inventory_record
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  storehouse_id integer NOT NULL references storehouse(id),--库房id
+  order_number varchar(20) NOT NULL,--盘点单号
+  inventory_date DATE NOT NULL DEFAULT CURRENT_DATE,--盘点日期
+  inventory_operation_id INTEGER NOT NULL references personnel(id),--创建盘点人员id
+  verify_operation_id INTEGER references personnel(id),--审核人员id
+  verify_status varchar(2) NOT NULL DEFAULT '01',--审核状态 01 未审核 02 已审核
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone,
+  UNIQUE (storehouse_id, order_number)
+);
+
+--耗材盘点记录item
+CREATE TABLE material_inventory_record_item
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  material_inventory_record_id integer NOT NULL references material_inventory_record(id),--耗材盘点记录id
+  material_stock_id INTEGER NOT NULL references drug_stock(id),--耗材库存id
+  actual_amount INTEGER NOT NULL CHECK(actual_amount > 0) DEFAULT 0,--耗材实际数量
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
