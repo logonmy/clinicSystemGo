@@ -2,6 +2,7 @@ package controller
 
 import (
 	"clinicSystemGo/model"
+	"strconv"
 	"time"
 
 	"github.com/kataras/iris"
@@ -79,9 +80,28 @@ func ExaminationStatistics(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	startDateStr := ctx.PostValue("start_date")
 	endDateStr := ctx.PostValue("end_date")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
 
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
 
@@ -104,8 +124,19 @@ func ExaminationStatistics(ctx iris.Context) {
 		"clinic_id":  ToNullInt64(clinicID),
 		"start_date": ToNullString(startDateStr),
 		"end_date":   ToNullString(endDateStr),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
 	}
 
+	countSQL := `select count(*) as total from examination_patient ep 
+ left join clinic_triage_patient ctp on ep.clinic_triage_patient_id = ctp.id
+ left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+ left join patient p on cp.patient_id = p.id 
+ left join personnel ps on ps.id = ep.operation_id 
+ left join clinic_examination ce on ce.id = ep.clinic_examination_id
+ where ep.order_status = '30'
+	and ps.clinic_id = :clinic_id 
+	and ep.updated_time between :start_date and :end_date`
 	querySQL := `select 
 	ep.created_time,
 	ep.updated_time,
@@ -128,13 +159,23 @@ func ExaminationStatistics(ctx iris.Context) {
 	and ps.clinic_id = :clinic_id 
 	and ep.updated_time between :start_date and :end_date `
 
-	rows, err := model.DB.NamedQuery(querySQL, queryOptions)
+	total, err := model.DB.NamedQuery(countSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.NamedQuery(querySQL+"offset :offset limit :limit", queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	results := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": results})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 // LaboratoryStatistics 检验统计
@@ -142,9 +183,28 @@ func LaboratoryStatistics(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	startDateStr := ctx.PostValue("start_date")
 	endDateStr := ctx.PostValue("end_date")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
 
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
 
@@ -167,8 +227,20 @@ func LaboratoryStatistics(ctx iris.Context) {
 		"clinic_id":  ToNullInt64(clinicID),
 		"start_date": ToNullString(startDateStr),
 		"end_date":   ToNullString(endDateStr),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
 	}
 
+	countSQL := `select count(*) as total
+	from laboratory_patient el 
+ left join clinic_triage_patient ctp on el.clinic_triage_patient_id = ctp.id
+ left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+ left join patient p on cp.patient_id = p.id 
+ left join personnel ps on ps.id = el.operation_id 
+ left join clinic_laboratory cl on cl.id = el.clinic_laboratory_id
+ where el.order_status = '30' 
+ and ps.clinic_id = :clinic_id 
+ and el.updated_time between :start_date and :end_date`
 	querySQL := `
 	select 
 	 el.created_time,
@@ -192,13 +264,23 @@ func LaboratoryStatistics(ctx iris.Context) {
 	and ps.clinic_id = :clinic_id 
 	and el.updated_time between :start_date and :end_date `
 
-	rows, err := model.DB.NamedQuery(querySQL, queryOptions)
+	total, err := model.DB.NamedQuery(countSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.NamedQuery(querySQL+"offset :offset limit :limit", queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	results := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": results})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 // TreatmentStatistics 治疗统计
@@ -206,9 +288,28 @@ func TreatmentStatistics(ctx iris.Context) {
 	clinicID := ctx.PostValue("clinic_id")
 	startDateStr := ctx.PostValue("start_date")
 	endDateStr := ctx.PostValue("end_date")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
 
 	if clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
 
@@ -231,8 +332,20 @@ func TreatmentStatistics(ctx iris.Context) {
 		"clinic_id":  ToNullInt64(clinicID),
 		"start_date": ToNullString(startDateStr),
 		"end_date":   ToNullString(endDateStr),
+		"offset":     ToNullInt64(offset),
+		"limit":      ToNullInt64(limit),
 	}
 
+	countSQL := `select count(*) as total
+	from treatment_patient tp 
+	left join clinic_triage_patient ctp on tp.clinic_triage_patient_id = ctp.id
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+	left join patient p on cp.patient_id = p.id 
+	left join personnel ps on ps.id = tp.operation_id 
+	left join clinic_treatment ct on ct.id = tp.clinic_treatment_id
+	where tp.order_status = '30' 
+	and ps.clinic_id = :clinic_id 
+	and tp.updated_time between :start_date and :end_date `
 	querySQL := `
 	select 
 	tp.created_time,
@@ -256,13 +369,23 @@ func TreatmentStatistics(ctx iris.Context) {
 	and ps.clinic_id = :clinic_id 
 	and tp.updated_time between :start_date and :end_date `
 
-	rows, err := model.DB.NamedQuery(querySQL, queryOptions)
+	total, err := model.DB.NamedQuery(countSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.NamedQuery(querySQL+"offset :offset limit :limit", queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 	results := FormatSQLRowsToMapArray(rows)
-	ctx.JSON(iris.Map{"code": "200", "data": results})
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
 
 // RegisterStatistics 登记统计
@@ -479,4 +602,109 @@ func OutPatietnType(ctx iris.Context) {
 // OutPatietnDepartment 科室统计
 func OutPatietnDepartment(ctx iris.Context) {
 
+}
+
+// OutPatietnEfficiencyStatistics 门诊效率统计
+func OutPatietnEfficiencyStatistics(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	departmentID := ctx.PostValue("department_id")
+	startDateStr := ctx.PostValue("start_date")
+	endDateStr := ctx.PostValue("end_date")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	startDate, errs := time.Parse("2006-01-02", startDateStr)
+	if errs != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+		return
+	}
+
+	endDate, erre := time.Parse("2006-01-02", endDateStr)
+	if erre != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
+		return
+	}
+
+	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
+	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
+
+	countSQL := `	select 
+	count(*) as total
+	FROM clinic_triage_patient ctp
+	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
+	left join patient p on p.id = cp.patient_id
+	left join department d on d.id = ctp.department_id
+	where cp.clinic_id =:clinic_id and ctp.visit_date between :start_date and :end_date`
+	querySQL := `
+	select 
+	ctp.visit_date,
+	p.name as patient_name,
+	ctp.department_id,
+	ctp.status,
+	ctp.id as clinic_triage_patient_id,
+	d.name as department_name,
+	(select max(created_time) from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id and type='10') as register_time,
+	(select max(created_time) from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id and type='20') as triage_time,
+	(select max(created_time) from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id and type='30') as reception_time,
+	(select max(created_time) from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id and type='40') as finish_time,
+	(select max(created_time) from mz_paid_orders where clinic_triage_patient_id=ctp.id) as pay_time
+	FROM clinic_triage_patient ctp
+	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
+	left join patient p on p.id = cp.patient_id
+	left join department d on d.id = ctp.department_id
+	where cp.clinic_id =:clinic_id and ctp.visit_date between :start_date and :end_date`
+
+	if departmentID != "" {
+		countSQL += " and ctp.department_id =:department_id"
+		querySQL += " and ctp.department_id =:department_id"
+	}
+
+	var queryOptions = map[string]interface{}{
+		"clinic_id":     ToNullInt64(clinicID),
+		"department_id": ToNullInt64(departmentID),
+		"start_date":    ToNullString(startDateStr),
+		"end_date":      ToNullString(endDateStr),
+		"offset":        ToNullInt64(offset),
+		"limit":         ToNullInt64(limit),
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.NamedQuery(querySQL+" order by ctp.visit_date asc offset :offset limit :limit", queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
