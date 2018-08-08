@@ -46,13 +46,14 @@ func ReceiveTreatment(ctx iris.Context) {
 	p.name as personnel_name,
 	d.name as department_name,
 	sum(fee) as total_fee,
+	count(ctp.id) tatol_count,
 	sum(case when mpo.charge_project_type_id = 1 then fee ELSE 0 end) as west_pre_fee,
 	sum(case when mpo.charge_project_type_id = 2 then fee ELSE 0 end) as east_pre_fee,
 	sum(case when mpo.charge_project_type_id = 3 then fee ELSE 0 end) as labora_pre_fee,
 	sum(case when mpo.charge_project_type_id = 4 then fee ELSE 0 end) as exam_pre_fee,
 	sum(case when mpo.charge_project_type_id = 5 then fee ELSE 0 end) as material_fee,
-	sum(case when mpo.charge_project_type_id = 6 then fee ELSE 0 end) as west_pre_fee,
-	sum(case when mpo.charge_project_type_id = 7 then fee ELSE 0 end) as other_fee,
+	sum(case when mpo.charge_project_type_id = 6 then fee ELSE 0 end) as other_fee,
+	sum(case when mpo.charge_project_type_id = 7 then fee ELSE 0 end) as treatement_fee,
 	sum(case when mpo.charge_project_type_id = 8 then fee ELSE 0 end) as diagnosis_treatment_fee
 	 from clinic_triage_patient ctp 
 	left join department d on ctp.department_id = d.id
@@ -66,7 +67,7 @@ func ReceiveTreatment(ctx iris.Context) {
 		querySQL += ` and ctp.department_id = :department_id`
 	}
 
-	rows, err := model.DB.NamedQuery(querySQL+" group by (p.name, d.name, mpo.charge_project_type_id);", queryOptions)
+	rows, err := model.DB.NamedQuery(querySQL+" group by (p.name, d.name);", queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
