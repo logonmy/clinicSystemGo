@@ -513,7 +513,7 @@ func MaterialInstockCheck(ctx iris.Context) {
 		}
 	}
 
-	_, err3 := tx.Exec("update material_instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP where id=$3", "02", operationID, materialInstockRecordID)
+	_, err3 := tx.Exec("update material_instock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP,verify_time=LOCALTIMESTAMP where id=$3", "02", operationID, materialInstockRecordID)
 	if err3 != nil {
 		fmt.Println("err3 ===", err3)
 		tx.Rollback()
@@ -1032,7 +1032,7 @@ func MaterialOutstockCheck(ctx iris.Context) {
 		return
 	}
 
-	_, err2 := tx.Exec("update material_outstock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP where id=$3", "02", operationID, materialOutstockRecordID)
+	_, err2 := tx.Exec("update material_outstock_record set verify_status=$1,verify_operation_id=$2,updated_time=LOCALTIMESTAMP,verify_time=LOCALTIMESTAMP where id=$3", "02", operationID, materialOutstockRecordID)
 	if err2 != nil {
 		fmt.Println("err2 ===", err2)
 		tx.Rollback()

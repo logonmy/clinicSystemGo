@@ -67,7 +67,7 @@ func ClinicList(ctx iris.Context) {
 	}
 
 	var results []map[string]interface{}
-	rows, err1 := model.DB.NamedQuery("SELECT c.*,p.phone,p.username,p.clinic_id "+sql+" order by c.created_time DESC offset :offset limit :limit", queryMap)
+	rows, err1 := model.DB.NamedQuery("SELECT c.*,p.phone,p.username,p.clinic_id "+sql+" order by c.created_time desc offset :offset limit :limit", queryMap)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
