@@ -1425,8 +1425,31 @@ func MaterialInventoryList(ctx iris.Context) {
 //MaterialInventoryRecordDetail 耗材盘点记录详情
 func MaterialInventoryRecordDetail(ctx iris.Context) {
 	materialInventoryRecordID := ctx.PostValue("material_inventory_record_id")
+	keyword := ctx.PostValue("keyword")
+	status := ctx.PostValue("status")
+	amount := ctx.PostValue("amount")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
 	if materialInventoryRecordID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
 		return
 	}
 
@@ -1440,21 +1463,60 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 	arow := model.DB.QueryRowx(sql, materialInventoryRecordID)
 	result := FormatSQLRowToMap(arow)
 
-	isql := `select iri.material_stock_id,cd.name as material_name,cd.specification,cd.unit_name,
-	cd.manu_factory_name,ds.supplier_name,ds.serial,ds.eff_date,ds.stock_amount,iri.actual_amount,cd.status
-	from material_inventory_record_item iri
-	left join material_stock ds on iri.material_stock_id= ds.id
-	left join clinic_material cd on cd.id = ds.clinic_material_id
-	where iri.material_inventory_record_id=$1`
+	var queryOption = map[string]interface{}{
+		"material_inventory_record_id": ToNullInt64(materialInventoryRecordID),
+		"status":                       ToNullString(status),
+		"keyword":                      ToNullString(keyword),
+		"offset":                       ToNullInt64(offset),
+		"limit":                        ToNullInt64(limit),
+	}
 
-	irows, err := model.DB.Queryx(isql, materialInventoryRecordID)
+	countSQL := `select count(*) as total from material_stock ms
+	left join material_inventory_record_item iri on iri.material_stock_id= ms.id and iri.material_inventory_record_id=:material_inventory_record_id
+	left join clinic_material cm on cm.id = ms.clinic_material_id
+	where ms.id>0`
+
+	selectSQL := `select ms.id as material_stock_id,cm.name as material_name,cm.specification,cm.unit_name,
+	cm.manu_factory_name,ms.supplier_name,ms.serial,ms.eff_date,ms.stock_amount,iri.actual_amount,cm.status
+	from material_stock ms
+	left join material_inventory_record_item iri on iri.material_stock_id= ms.id and iri.material_inventory_record_id=:material_inventory_record_id
+	left join clinic_material cm on cm.id = ms.clinic_material_id
+	where ms.id>0`
+
+	if status != "" {
+		countSQL += " and cm.status = :status"
+		selectSQL += " and cm.status= :status"
+	}
+	if keyword != "" {
+		countSQL += ` and (cm.name ~*:keyword or cm.py_code ~*:keyword)`
+		selectSQL += ` and (cm.name ~*:keyword or cm.py_code ~*:keyword)`
+	}
+
+	if amount != "" {
+		countSQL += " and ms.stock_amount>0"
+		selectSQL += " and ms.stock_amount>0"
+	}
+
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
-	item := FormatSQLRowsToMapArray(irows)
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	rows, err := model.DB.NamedQuery(selectSQL+" order by iri.material_inventory_record_id asc offset :offset limit :limit", queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	item := FormatSQLRowsToMapArray(rows)
 	result["items"] = item
-	ctx.JSON(iris.Map{"code": "200", "data": result})
+
+	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
 
 //MaterialInventoryUpdate 修改耗材盘点
@@ -1665,4 +1727,107 @@ func MaterialInventoryRecordDelete(ctx iris.Context) {
 	}
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "ok"})
+}
+
+//MaterialStockInventoryList 耗材盘点列表
+func MaterialStockInventoryList(ctx iris.Context) {
+	clinicID := ctx.PostValue("clinic_id")
+	keyword := ctx.PostValue("keyword")
+	status := ctx.PostValue("status")
+	amount := ctx.PostValue("amount")
+	offset := ctx.PostValue("offset")
+	limit := ctx.PostValue("limit")
+
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
+		return
+	}
+
+	if offset == "" {
+		offset = "0"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	_, err := strconv.Atoi(offset)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "offset 必须为数字"})
+		return
+	}
+	_, err = strconv.Atoi(limit)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "limit 必须为数字"})
+		return
+	}
+
+	var storehouseID string
+	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
+	if errs != nil {
+		fmt.Println("errs ===", errs)
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
+		return
+	}
+
+	countSQL := `select count(*) as total from material_stock ms 
+		left join clinic_material cm on ms.clinic_material_id = cm.id
+		where ms.storehouse_id=:storehouse_id`
+	selectSQL := `select 
+		cm.name,
+		cm.status,
+		cm.specification,
+		cm.unit_name,
+		cm.day_warning,
+		cm.stock_warning,
+		cm.manu_factory_name,
+		ms.supplier_name,
+		cm.ret_price,
+		ms.buy_price,
+		ms.serial,
+		ms.eff_date,
+		ms.stock_amount,
+		ms.id as material_stock_id
+		from material_stock ms
+		left join clinic_material cm on ms.clinic_material_id = cm.id
+		where ms.storehouse_id=:storehouse_id`
+
+	if status != "" {
+		countSQL += " and cm.status = :status"
+		selectSQL += " and cm.status= :status"
+	}
+	if keyword != "" {
+		countSQL += ` and (cm.name ~*:keyword or cm.py_code ~*:keyword)`
+		selectSQL += ` and (cm.name ~*:keyword or cm.py_code ~*:keyword)`
+	}
+
+	if amount != "" {
+		countSQL += " and ms.stock_amount>0"
+		selectSQL += " and ms.stock_amount>0"
+	}
+
+	var queryOption = map[string]interface{}{
+		"storehouse_id": ToNullInt64(storehouseID),
+		"status":        ToNullString(status),
+		"keyword":       ToNullString(keyword),
+		"offset":        ToNullInt64(offset),
+		"limit":         ToNullInt64(limit),
+	}
+	total, err := model.DB.NamedQuery(countSQL, queryOption)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["offset"] = offset
+	pageInfo["limit"] = limit
+
+	var results []map[string]interface{}
+	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	results = FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
