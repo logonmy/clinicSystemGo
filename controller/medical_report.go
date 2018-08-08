@@ -552,7 +552,7 @@ func RegisterStatistics(ctx iris.Context) {
 
 	rows, err := model.DB.NamedQuery(querySQL+`
 	group by (to_char(ctpo.created_time, 'YYYY-MM-DD'), ctp.register_type)
-	order by visit_date DESC`, queryOptions)
+	order by visit_date ASC`, queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
