@@ -661,6 +661,14 @@ func ChargePaymentRefund(ctx iris.Context) {
 		return
 	}
 
+	_, eerr := tx.Exec(`update mz_paid_orders set mz_refund_record_id = $1 where refund_status = true and id in ($2)`, refundID, strings.Join(results, ","))
+
+	if eerr != nil {
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": eerr.Error()})
+		return
+	}
+
 	cash := int64(0)
 	wechat := int64(0)
 	alipay := int64(0)
@@ -1327,7 +1335,7 @@ func BusinessTransactionDetail(ctx iris.Context) {
 		"io":          ToNullString(io),
 	}
 
-	sql := `from charge_detail cd left join mz_paid_orders mpo on mpo.mz_paid_record_id = cd.pay_record_id and cd.record_type = 1 
+	sql := `from charge_detail cd left join mz_paid_orders mpo on mpo.mz_paid_record_id = cd.pay_record_id and cd.record_type = 1 and cd.in_out = 'in' 
 	left join personnel ope on cd.operation_id = ope.id 
 	left join charge_project_type cpt on cpt.id = mpo.charge_project_type_id 
 	left join clinic_triage_patient ctp on mpo.clinic_triage_patient_id = ctp.id 
