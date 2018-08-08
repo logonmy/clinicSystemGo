@@ -66,7 +66,7 @@ func ReceiveTreatment(ctx iris.Context) {
 		querySQL += ` and ctp.department_id = :department_id`
 	}
 
-	rows, err := model.DB.NamedQuery(querySQL+" group by (p.name, d.name, mpo.charge_project_type_id);", queryOptions)
+	rows, err := model.DB.NamedQuery(querySQL+" group by (p.name, d.name);", queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
