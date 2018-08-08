@@ -160,13 +160,53 @@ func ExaminationStatistics(ctx iris.Context) {
 	and ps.clinic_id = :clinic_id 
 	and ep.updated_time between :start_date and :end_date `
 
+	patientCountSQL := `select 
+	count(distinct p.name) as patient_count
+	from examination_patient ep 
+ left join clinic_triage_patient ctp on ep.clinic_triage_patient_id = ctp.id
+ left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+ left join patient p on cp.patient_id = p.id 
+ left join personnel ps on ps.id = ep.operation_id 
+ left join clinic_examination ce on ce.id = ep.clinic_examination_id
+ where ep.order_status = '30'
+	and ps.clinic_id = :clinic_id 
+	and ep.updated_time between :start_date and :end_date`
+
+	timesSQL := `select 
+	sum(ep.times) as total_times
+	from examination_patient ep 
+ left join clinic_triage_patient ctp on ep.clinic_triage_patient_id = ctp.id
+ left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+ left join patient p on cp.patient_id = p.id 
+ left join personnel ps on ps.id = ep.operation_id 
+ left join clinic_examination ce on ce.id = ep.clinic_examination_id
+ where ep.order_status = '30'
+	and ps.clinic_id = :clinic_id 
+	and ep.updated_time between :start_date and :end_date`
+
+	patientCountRows, err := model.DB.NamedQuery(patientCountSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	patientCount := FormatSQLRowsToMapArray(patientCountRows)[0]["patient_count"]
+
+	timesRows, err := model.DB.NamedQuery(timesSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	tiemsTotal := FormatSQLRowsToMapArray(timesRows)[0]["total_times"]
+
 	total, err := model.DB.NamedQuery(countSQL, queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
 		return
 	}
-
 	pageInfo := FormatSQLRowsToMapArray(total)[0]
+
+	pageInfo["patient_count"] = patientCount
+	pageInfo["tiems_total"] = tiemsTotal
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
@@ -265,6 +305,42 @@ func LaboratoryStatistics(ctx iris.Context) {
 	and ps.clinic_id = :clinic_id 
 	and el.updated_time between :start_date and :end_date `
 
+	patientCountSQL := `select 
+	count(distinct p.name) as patient_count
+	from laboratory_patient el 
+	left join clinic_triage_patient ctp on el.clinic_triage_patient_id = ctp.id
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+	left join patient p on cp.patient_id = p.id 
+	left join personnel ps on ps.id = el.operation_id 
+	left join clinic_laboratory cl on cl.id = el.clinic_laboratory_id
+	where el.order_status = '30' 
+	and ps.clinic_id = 1`
+
+	timesSQL := `	select 
+	sum(el.times) as total_times
+ 	from laboratory_patient el 
+	left join clinic_triage_patient ctp on el.clinic_triage_patient_id = ctp.id
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+	left join patient p on cp.patient_id = p.id 
+	left join personnel ps on ps.id = el.operation_id 
+	left join clinic_laboratory cl on cl.id = el.clinic_laboratory_id
+	where el.order_status = '30' 
+	and ps.clinic_id = 1`
+
+	patientCountRows, err := model.DB.NamedQuery(patientCountSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	patientCount := FormatSQLRowsToMapArray(patientCountRows)[0]["patient_count"]
+
+	timesRows, err := model.DB.NamedQuery(timesSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	tiemsTotal := FormatSQLRowsToMapArray(timesRows)[0]["total_times"]
+
 	total, err := model.DB.NamedQuery(countSQL, queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -272,6 +348,9 @@ func LaboratoryStatistics(ctx iris.Context) {
 	}
 
 	pageInfo := FormatSQLRowsToMapArray(total)[0]
+
+	pageInfo["patient_count"] = patientCount
+	pageInfo["tiems_total"] = tiemsTotal
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
@@ -370,6 +449,44 @@ func TreatmentStatistics(ctx iris.Context) {
 	and ps.clinic_id = :clinic_id 
 	and tp.updated_time between :start_date and :end_date `
 
+	patientCountSQL := `select 
+	count(distinct p.name) as patient_count
+	from treatment_patient tp 
+	left join clinic_triage_patient ctp on tp.clinic_triage_patient_id = ctp.id
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+	left join patient p on cp.patient_id = p.id 
+	left join personnel ps on ps.id = tp.operation_id 
+	left join clinic_treatment ct on ct.id = tp.clinic_treatment_id
+	where tp.order_status = '30' 
+	and ps.clinic_id = :clinic_id 
+	and tp.updated_time between :start_date and :end_date`
+
+	timesSQL := `	select 
+	sum(tp.times) as total_times
+	from treatment_patient tp 
+	left join clinic_triage_patient ctp on tp.clinic_triage_patient_id = ctp.id
+	left join clinic_patient cp on ctp.clinic_patient_id = cp.id 
+	left join patient p on cp.patient_id = p.id 
+	left join personnel ps on ps.id = tp.operation_id 
+	left join clinic_treatment ct on ct.id = tp.clinic_treatment_id
+	where tp.order_status = '30' 
+	and ps.clinic_id = :clinic_id 
+	and tp.updated_time between :start_date and :end_date`
+
+	patientCountRows, err := model.DB.NamedQuery(patientCountSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	patientCount := FormatSQLRowsToMapArray(patientCountRows)[0]["patient_count"]
+
+	timesRows, err := model.DB.NamedQuery(timesSQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		return
+	}
+	tiemsTotal := FormatSQLRowsToMapArray(timesRows)[0]["total_times"]
+
 	total, err := model.DB.NamedQuery(countSQL, queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err})
@@ -377,6 +494,8 @@ func TreatmentStatistics(ctx iris.Context) {
 	}
 
 	pageInfo := FormatSQLRowsToMapArray(total)[0]
+	pageInfo["patient_count"] = patientCount
+	pageInfo["tiems_total"] = tiemsTotal
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
