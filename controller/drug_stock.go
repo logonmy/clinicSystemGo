@@ -1483,7 +1483,7 @@ func DrugInventoryRecordDetail(ctx iris.Context) {
 	left join clinic_drug cd on cd.id = ds.clinic_drug_id
 	where ds.id>0`
 
-	selectSQL := `select ds.id as drug_stock_id,cd.name as drug_name,cd.specification,cd.packing_unit_name,
+	selectSQL := `select ds.id as drug_stock_id,cd.name,cd.specification,cd.packing_unit_name,
 	cd.manu_factory_name,ds.supplier_name,ds.serial,ds.eff_date,ds.stock_amount,iri.actual_amount,cd.status
 	from drug_stock ds
 	left join drug_inventory_record_item iri on iri.drug_stock_id= ds.id and iri.drug_inventory_record_id=:drug_inventory_record_id

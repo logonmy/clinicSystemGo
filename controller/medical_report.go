@@ -784,6 +784,7 @@ func OutPatietnEfficiencyStatistics(ctx iris.Context) {
 	ctp.department_id,
 	ctp.status,
 	ctp.id as clinic_triage_patient_id,
+	cp.patient_id,
 	d.name as department_name,
 	(select max(created_time) from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id and type='10') as register_time,
 	(select max(created_time) from clinic_triage_patient_operation where clinic_triage_patient_id=ctp.id and type='20') as triage_time,
@@ -794,7 +795,7 @@ func OutPatietnEfficiencyStatistics(ctx iris.Context) {
 	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
 	left join patient p on p.id = cp.patient_id
 	left join department d on d.id = ctp.department_id
-	where cp.clinic_id =:clinic_id and ctp.visit_date between :start_date and :end_date`
+	where ctp.status = '40' and cp.clinic_id =:clinic_id and ctp.visit_date between :start_date and :end_date`
 
 	if departmentID != "" {
 		countSQL += " and ctp.department_id =:department_id"
@@ -819,6 +820,13 @@ func OutPatietnEfficiencyStatistics(ctx iris.Context) {
 	pageInfo := FormatSQLRowsToMapArray(total)[0]
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
+
+	totalRows, err := model.DB.NamedQuery(querySQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	totalResults := FormatSQLRowsToMapArray(totalRows)
 
 	rows, err := model.DB.NamedQuery(querySQL+" order by ctp.visit_date asc offset :offset limit :limit", queryOptions)
 	if err != nil {
