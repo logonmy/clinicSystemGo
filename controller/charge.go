@@ -1335,7 +1335,7 @@ func BusinessTransactionDetail(ctx iris.Context) {
 		"io":          ToNullString(io),
 	}
 
-	sql := `from charge_detail cd left join mz_paid_orders mpo on mpo.mz_paid_record_id = cd.pay_record_id and cd.record_type = 1 and cd.in_out = 'in' 
+	sql := `from charge_detail cd left join mz_paid_orders mpo on (mpo.mz_paid_record_id = cd.pay_record_id and cd.record_type = 1 and cd.in_out = 'in') or (mpo.mz_refund_record_id = cd.pay_record_id and cd.record_type = 1 and cd.in_out = 'out')  
 	left join personnel ope on cd.operation_id = ope.id 
 	left join charge_project_type cpt on cpt.id = mpo.charge_project_type_id 
 	left join clinic_triage_patient ctp on mpo.clinic_triage_patient_id = ctp.id 
@@ -1366,8 +1366,10 @@ func BusinessTransactionDetail(ctx iris.Context) {
 	rows, err1 := model.DB.NamedQuery(`select 
 		drug.packing_unit_name as drug_unit,drug.name as drug_name,drug.ret_price as drug_price,
 		dr.amount as drug_mount, dr.total_fee as drug_total,
-	  mpo.name,mpo.price,mpo.amount,
-		mpo.total,mpo.fee,mpo.unit,ope.name as operarion,cpt.name as charge_project_type,
+		case when cd.in_out='out' then mpo.amount*-1 else mpo.amount end as amount,
+		case when cd.in_out='out' then mpo.total*-1 else mpo.total end as total,
+		case when cd.in_out='out' then mpo.fee*-1 else mpo.fee end as fee,
+	  mpo.name,mpo.price,mpo.unit,ope.name as operarion,cpt.name as charge_project_type,
 		cd.created_time,cd.out_trade_no,cd.record_type,ctp.visit_date,doc.name as doctorName,d.name as deptName,
 		pa.name as patientName,pa.sex,pa.birthday,pa.phone 
 		 `+sql+" order by cd.created_time ASC offset :offset limit :limit", queryMap)
@@ -1376,7 +1378,9 @@ func BusinessTransactionDetail(ctx iris.Context) {
 		return
 	}
 
-	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total, sum(dr.total_fee)+sum(mpo.total) as total_fee, sum(dr.total_fee)+sum(mpo.fee) as banance_fee `+sql, queryMap)
+	total, err2 := model.DB.NamedQuery(`SELECT COUNT (*) as total, 
+	sum(dr.total_fee)+sum(case when cd.in_out='out' then mpo.total*-1 else mpo.total end) as total_fee, 
+	sum(dr.total_fee)+sum(case when cd.in_out='out' then mpo.fee*-1 else mpo.fee end) as banance_fee `+sql, queryMap)
 	if err2 != nil {
 		ctx.JSON(iris.Map{"code": "-2", "msg": err2.Error()})
 		return
