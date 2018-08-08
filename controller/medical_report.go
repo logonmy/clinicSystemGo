@@ -828,6 +828,30 @@ func OutPatietnEfficiencyStatistics(ctx iris.Context) {
 	// }
 	// totalResults := FormatSQLRowsToMapArray(totalRows)
 
+	// for _, v := range totalResults {
+	// 	registerTime := v["register_time"]
+	// 	triageTime := v["triage_time"]
+	// 	receptionTime := v["reception_time"]
+	// 	finishTime := v["finish_time"]
+	// 	payTime := v["pay_time"]
+
+	// 	if registerTime != nil && triageTime != nil {
+	// 		triageFinishTime := registerTime.(time.Time).Sub(triageTime.(time.Time))
+	// 		fmt.Println("triageFinishTime===========", triageFinishTime)
+	// 	}
+
+	// 	if triageTime != nil && receptionTime != nil {
+	// 		receptionFinishTime := triageTime.(time.Time).Sub(receptionTime.(time.Time))
+	// 		fmt.Println("triageFinishTime===========", receptionFinishTime)
+	// 	}
+
+	// 	fmt.Println("register_time===========", registerTime)
+	// 	fmt.Println("triage_time===========", triageTime)
+	// 	fmt.Println("reception_time===========", receptionTime)
+	// 	fmt.Println("finish_time===========", finishTime)
+	// 	fmt.Println("pay_time===========", payTime)
+	// }
+
 	rows, err := model.DB.NamedQuery(querySQL+" order by ctp.visit_date asc offset :offset limit :limit", queryOptions)
 	if err != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
