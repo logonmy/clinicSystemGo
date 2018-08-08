@@ -68,7 +68,7 @@ func GetUnChargeTraigePatients(ctx iris.Context) {
 	p.phone,
 	cp.patient_id,
 	doc.name as doctor_name,
-	d.name as department_name ` + sql + ` order by ctp.updated_time DESC offset $5 limit $6`
+	d.name as department_name ` + sql + ` order by ctp.updated_time ASC offset $5 limit $6`
 
 	total := model.DB.QueryRowx(countsql, clinicID, startDate, endDate, keyword)
 
