@@ -65,6 +65,7 @@ func GetUnChargeTraigePatients(ctx iris.Context) {
 	p.name as patient_name,
 	p.birthday,
 	p.sex,
+	p.cert_no,
 	p.phone,
 	cp.patient_id,
 	doc.name as doctor_name,
@@ -142,6 +143,7 @@ func GetPaidTraigePatients(ctx iris.Context) {
 	p.birthday,
 	p.sex,
 	p.phone,
+	p.cert_no,
 	cp.patient_id,
 	doc.name as doctor_name,
 	d.name as department_name ` + sql + `order by mpr.updated_time DESC offset $5 limit $6`
