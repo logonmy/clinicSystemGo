@@ -605,6 +605,8 @@ func main() {
 		medicalReport.Post("/LaboratoryStatistics", controller.LaboratoryStatistics)
 		medicalReport.Post("/TreatmentStatistics", controller.TreatmentStatistics)
 		medicalReport.Post("/RegisterStatistics", controller.RegisterStatistics)
+		// 门诊效率统计
+		medicalReport.Post("/OutPatietnEfficiencyStatistics", controller.OutPatietnEfficiencyStatistics)
 
 	}
 
