@@ -2,6 +2,7 @@ package controller
 
 import (
 	"clinicSystemGo/model"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -19,21 +20,6 @@ func ReceiveTreatment(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
 		return
 	}
-
-	startDate, errs := time.Parse("2006-01-02", startDateStr)
-	if errs != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-		return
-	}
-
-	endDate, erre := time.Parse("2006-01-02", endDateStr)
-	if erre != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-		return
-	}
-
-	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
-	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 
 	var queryOptions = map[string]interface{}{
 		"clinic_id":     ToNullInt64(clinicID),
@@ -106,19 +92,12 @@ func ExaminationStatistics(ctx iris.Context) {
 		return
 	}
 
-	startDate, errs := time.Parse("2006-01-02", startDateStr)
-	if errs != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-		return
-	}
-
 	endDate, erre := time.Parse("2006-01-02", endDateStr)
 	if erre != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
 		return
 	}
 
-	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
 	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 
 	var queryOptions = map[string]interface{}{
@@ -249,19 +228,12 @@ func LaboratoryStatistics(ctx iris.Context) {
 		return
 	}
 
-	startDate, errs := time.Parse("2006-01-02", startDateStr)
-	if errs != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-		return
-	}
-
 	endDate, erre := time.Parse("2006-01-02", endDateStr)
 	if erre != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
 		return
 	}
 
-	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
 	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 
 	var queryOptions = map[string]interface{}{
@@ -393,19 +365,11 @@ func TreatmentStatistics(ctx iris.Context) {
 		return
 	}
 
-	startDate, errs := time.Parse("2006-01-02", startDateStr)
-	if errs != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-		return
-	}
-
 	endDate, erre := time.Parse("2006-01-02", endDateStr)
 	if erre != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
 		return
 	}
-
-	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
 	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 
 	var queryOptions = map[string]interface{}{
@@ -519,19 +483,11 @@ func RegisterStatistics(ctx iris.Context) {
 		return
 	}
 
-	startDate, errs := time.Parse("2006-01-02", startDateStr)
-	if errs != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-		return
-	}
-
 	endDate, erre := time.Parse("2006-01-02", endDateStr)
 	if erre != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
 		return
 	}
-
-	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
 	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
 
 	var queryOptions = map[string]interface{}{
@@ -755,28 +711,13 @@ func OutPatietnEfficiencyStatistics(ctx iris.Context) {
 		return
 	}
 
-	startDate, errs := time.Parse("2006-01-02", startDateStr)
-	if errs != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "start_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-		return
-	}
-
-	endDate, erre := time.Parse("2006-01-02", endDateStr)
-	if erre != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": "end_date 必须为 YYYY-MM-DD 的 有效日期格式"})
-		return
-	}
-
-	startDateStr = startDate.AddDate(0, 0, -1).Format("2006-01-02")
-	endDateStr = endDate.AddDate(0, 0, 1).Format("2006-01-02")
-
 	countSQL := `	select 
 	count(*) as total
 	FROM clinic_triage_patient ctp
 	left join clinic_patient cp on cp.id = ctp.clinic_patient_id
 	left join patient p on p.id = cp.patient_id
 	left join department d on d.id = ctp.department_id
-	where cp.clinic_id =:clinic_id and ctp.visit_date between :start_date and :end_date`
+	where ctp.status = '40' and cp.clinic_id =:clinic_id and ctp.visit_date between :start_date and :end_date`
 	querySQL := `
 	select 
 	ctp.visit_date,
@@ -821,36 +762,66 @@ func OutPatietnEfficiencyStatistics(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	// totalRows, err := model.DB.NamedQuery(querySQL, queryOptions)
-	// if err != nil {
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-	// 	return
-	// }
-	// totalResults := FormatSQLRowsToMapArray(totalRows)
+	totalRows, err := model.DB.NamedQuery(querySQL, queryOptions)
+	if err != nil {
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	totalResults := FormatSQLRowsToMapArray(totalRows)
 
-	// for _, v := range totalResults {
-	// 	registerTime := v["register_time"]
-	// 	triageTime := v["triage_time"]
-	// 	receptionTime := v["reception_time"]
-	// 	finishTime := v["finish_time"]
-	// 	payTime := v["pay_time"]
+	var triageFinishedTime float64
+	var triageFinishedCount float64
 
-	// 	if registerTime != nil && triageTime != nil {
-	// 		triageFinishTime := registerTime.(time.Time).Sub(triageTime.(time.Time))
-	// 		fmt.Println("triageFinishTime===========", triageFinishTime)
-	// 	}
+	var receptionedTime float64
+	var receptionedCount float64
 
-	// 	if triageTime != nil && receptionTime != nil {
-	// 		receptionFinishTime := triageTime.(time.Time).Sub(receptionTime.(time.Time))
-	// 		fmt.Println("triageFinishTime===========", receptionFinishTime)
-	// 	}
+	var receptionFinishedTime float64
+	var receptionFinishedCount float64
 
-	// 	fmt.Println("register_time===========", registerTime)
-	// 	fmt.Println("triage_time===========", triageTime)
-	// 	fmt.Println("reception_time===========", receptionTime)
-	// 	fmt.Println("finish_time===========", finishTime)
-	// 	fmt.Println("pay_time===========", payTime)
-	// }
+	var payFinishedTime float64
+	var payFinishedCount float64
+
+	for _, v := range totalResults {
+		registerTime := v["register_time"]
+		triageTime := v["triage_time"]
+		receptionTime := v["reception_time"]
+		finishTime := v["finish_time"]
+		payTime := v["pay_time"]
+
+		if registerTime != nil && triageTime != nil {
+			triageFinishTime := triageTime.(time.Time).Sub(registerTime.(time.Time)).Minutes()
+			triageFinishedTime += triageFinishTime
+			triageFinishedCount++
+		}
+
+		if triageTime != nil && receptionTime != nil {
+			receptionFinishTime := receptionTime.(time.Time).Sub(triageTime.(time.Time)).Minutes()
+			receptionedTime += receptionFinishTime
+			receptionedCount++
+		}
+
+		if receptionTime != nil && finishTime != nil {
+			receptionTotalTime := finishTime.(time.Time).Sub(receptionTime.(time.Time)).Minutes()
+			receptionFinishedTime += receptionTotalTime
+			receptionFinishedCount++
+		}
+
+		if finishTime != nil && payTime != nil {
+			payFinishTime := payTime.(time.Time).Sub(finishTime.(time.Time)).Minutes()
+			payFinishedTime += payFinishTime
+			payFinishedCount++
+		}
+	}
+
+	averageTriageFinishedTime, _ := strconv.ParseFloat(fmt.Sprintf("%.1f", triageFinishedTime/triageFinishedCount), 64)
+	averageReceptionedTime, _ := strconv.ParseFloat(fmt.Sprintf("%.1f", receptionedTime/receptionedCount), 64)
+	averageReceptionFinishedTime, _ := strconv.ParseFloat(fmt.Sprintf("%.1f", receptionFinishedTime/receptionFinishedCount), 64)
+	averagePayFinishedTime, _ := strconv.ParseFloat(fmt.Sprintf("%.1f", payFinishedTime/payFinishedCount), 64)
+
+	pageInfo["average_triage_finished_time"] = averageTriageFinishedTime
+	pageInfo["average_receptioned_time"] = averageReceptionedTime
+	pageInfo["average_reception_finished_time"] = averageReceptionFinishedTime
+	pageInfo["average_pay_finished_time"] = averagePayFinishedTime
 
 	rows, err := model.DB.NamedQuery(querySQL+" order by ctp.visit_date asc offset :offset limit :limit", queryOptions)
 	if err != nil {
