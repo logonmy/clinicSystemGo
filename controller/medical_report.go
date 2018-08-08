@@ -821,12 +821,12 @@ func OutPatietnEfficiencyStatistics(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	totalRows, err := model.DB.NamedQuery(querySQL, queryOptions)
-	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
-		return
-	}
-	totalResults := FormatSQLRowsToMapArray(totalRows)
+	// totalRows, err := model.DB.NamedQuery(querySQL, queryOptions)
+	// if err != nil {
+	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+	// 	return
+	// }
+	// totalResults := FormatSQLRowsToMapArray(totalRows)
 
 	rows, err := model.DB.NamedQuery(querySQL+" order by ctp.visit_date asc offset :offset limit :limit", queryOptions)
 	if err != nil {
