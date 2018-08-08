@@ -307,6 +307,7 @@ func main() {
 		drug.Post("/DrugInventoryUpdate", controller.DrugInventoryUpdate)
 		drug.Post("/DrugInventoryCheck", controller.DrugInventoryCheck)
 		drug.Post("/DrugInventoryRecordDelete", controller.DrugInventoryRecordDelete)
+		drug.Post("/DrugStockInventoryList", controller.DrugStockInventoryList)
 	}
 
 	role := app.Party("/role", crs).AllowMethods(iris.MethodOptions)
@@ -432,6 +433,7 @@ func main() {
 		material.Post("/MaterialInventoryUpdate", controller.MaterialInventoryUpdate)
 		material.Post("/MaterialInventoryCheck", controller.MaterialInventoryCheck)
 		material.Post("/MaterialInventoryRecordDelete", controller.MaterialInventoryRecordDelete)
+		material.Post("/MaterialStockInventoryList", controller.MaterialStockInventoryList)
 	}
 
 	laboratory := app.Party("/laboratory", crs).AllowMethods(iris.MethodOptions)
