@@ -1425,13 +1425,14 @@ func MaterialInventoryList(ctx iris.Context) {
 //MaterialInventoryRecordDetail 耗材盘点记录详情
 func MaterialInventoryRecordDetail(ctx iris.Context) {
 	materialInventoryRecordID := ctx.PostValue("material_inventory_record_id")
+	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 	status := ctx.PostValue("status")
 	amount := ctx.PostValue("amount")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
-	if materialInventoryRecordID == "" {
+	if materialInventoryRecordID == "" || clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -1453,6 +1454,14 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 		return
 	}
 
+	var storehouseID string
+	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
+	if errs != nil {
+		fmt.Println("errs ===", errs)
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
+		return
+	}
+
 	sql := `select ir.id as material_inventory_record_id,ir.inventory_date,ir.order_number,ir.created_time,ir.updated_time,ir.verify_status,
 		ir.verify_operation_id,vp.name as verify_operation_name,ir.inventory_operation_id,p.name as inventory_operation_name 
 		from material_inventory_record ir
@@ -1465,6 +1474,7 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 
 	var queryOption = map[string]interface{}{
 		"material_inventory_record_id": ToNullInt64(materialInventoryRecordID),
+		"storehouse_id":                ToNullInt64(storehouseID),
 		"status":                       ToNullString(status),
 		"keyword":                      ToNullString(keyword),
 		"offset":                       ToNullInt64(offset),
