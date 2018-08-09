@@ -1477,7 +1477,7 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 	where ms.id>0`
 
 	selectSQL := `select ms.id as material_stock_id,cm.name as material_name,cm.specification,cm.unit_name,
-	cm.manu_factory_name,ms.supplier_name,ms.serial,ms.eff_date,ms.stock_amount,iri.actual_amount,cm.status
+	cm.manu_factory_name,ms.supplier_name,ms.serial,ms.buy_price,ms.eff_date,ms.stock_amount,iri.actual_amount,cm.status
 	from material_stock ms
 	left join material_inventory_record_item iri on iri.material_stock_id= ms.id and iri.material_inventory_record_id=:material_inventory_record_id
 	left join clinic_material cm on cm.id = ms.clinic_material_id
