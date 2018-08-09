@@ -1772,7 +1772,7 @@ func MaterialStockInventoryList(ctx iris.Context) {
 		left join clinic_material cm on ms.clinic_material_id = cm.id
 		where ms.storehouse_id=:storehouse_id`
 	selectSQL := `select 
-		cm.name,
+		cm.name as material_name,
 		cm.status,
 		cm.specification,
 		cm.unit_name,
