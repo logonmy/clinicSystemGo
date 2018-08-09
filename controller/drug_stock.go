@@ -1500,6 +1500,8 @@ func DrugInventoryRecordDetail(ctx iris.Context) {
 	left join clinic_drug cd on cd.id = ds.clinic_drug_id
 	where ds.storehouse_id=:storehouse_id`
 
+	selectTotalSQL := `select drug_stock_id,actual_amount from drug_inventory_record_item where drug_inventory_record_id=:drug_inventory_record_id`
+
 	if status != "" {
 		countSQL += " and cd.status = :status"
 		selectSQL += " and cd.status= :status"
@@ -1531,7 +1533,17 @@ func DrugInventoryRecordDetail(ctx iris.Context) {
 		return
 	}
 	item := FormatSQLRowsToMapArray(rows)
+
+	trows, err := model.DB.NamedQuery(selectTotalSQL, queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	totalItem := FormatSQLRowsToMapArray(trows)
+
 	result["items"] = item
+	pageInfo["total_item"] = totalItem
 
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }

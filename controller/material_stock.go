@@ -1493,6 +1493,8 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 	left join clinic_material cm on cm.id = ms.clinic_material_id
 	where ms.id>0`
 
+	selectTotalSQL := `select material_stock_id,actual_amount from material_inventory_record_item where material_inventory_record_id=:material_inventory_record_id`
+
 	if status != "" {
 		countSQL += " and cm.status = :status"
 		selectSQL += " and cm.status= :status"
@@ -1525,6 +1527,15 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 	}
 	item := FormatSQLRowsToMapArray(rows)
 	result["items"] = item
+
+	trows, err := model.DB.NamedQuery(selectTotalSQL, queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	totalItem := FormatSQLRowsToMapArray(trows)
+	pageInfo["total_item"] = totalItem
 
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
