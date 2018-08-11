@@ -191,12 +191,13 @@ CREATE TABLE clinic_triage_patient_operation
 CREATE TABLE role
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(50) UNIQUE NOT NULL,--名称
+  name varchar(50) NOT NULL,--名称
   clinic_id integer NOT NULL references clinic(id),--诊所编码
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE(name,clinic_id)
 );
 
 

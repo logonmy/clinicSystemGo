@@ -286,7 +286,8 @@ func LaboratoryStatistics(ctx iris.Context) {
 	left join personnel ps on ps.id = el.operation_id 
 	left join clinic_laboratory cl on cl.id = el.clinic_laboratory_id
 	where el.order_status = '30' 
-	and ps.clinic_id = 1`
+	and ps.clinic_id = 1
+	and el.updated_time between :start_date and :end_date `
 
 	timesSQL := `	select 
 	sum(el.times) as total_times
@@ -297,7 +298,8 @@ func LaboratoryStatistics(ctx iris.Context) {
 	left join personnel ps on ps.id = el.operation_id 
 	left join clinic_laboratory cl on cl.id = el.clinic_laboratory_id
 	where el.order_status = '30' 
-	and ps.clinic_id = 1`
+	and ps.clinic_id = 1
+	and el.updated_time between :start_date and :end_date `
 
 	patientCountRows, err := model.DB.NamedQuery(patientCountSQL, queryOptions)
 	if err != nil {
