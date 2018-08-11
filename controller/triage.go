@@ -419,7 +419,7 @@ func RecptionPatientList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.NamedQuery(querySQL+" order by ctp.id "+sort+" offset :offset limit :limit", queryMap)
+	rows, err1 := model.DB.NamedQuery(querySQL+" order by ctp.updated_time "+sort+" offset :offset limit :limit", queryMap)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
