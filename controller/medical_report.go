@@ -679,7 +679,25 @@ func OutPatietnType(ctx iris.Context) {
 
 // OutPatietnDepartment 科室统计
 func OutPatietnDepartment(ctx iris.Context) {
+	startDate := ctx.PostValue("start_date")
+	endDate := ctx.PostValue("end_date")
+	clinicID := ctx.PostValue("clinic_id")
+	if clinicID == "" {
+		ctx.JSON(iris.Map{"code": "-1", "msg": "参数错误"})
+		return
+	}
 
+	SQL := `SELECT ctp.department_id,to_char(ctp.visit_date, 'YYYY-MM-DD') as date,count(distinct(ctp.clinic_patient_id)) as total, SUM(cd.balance_money) AS balance_money  FROM clinic_triage_patient ctp 
+	left join personnel p on p.id = ctp.doctor_id 
+	left join charge_detail cd on cd.department_id = ctp.department_id and to_char(cd.created_time, 'YYYY-MM-DD') = to_char(ctp.visit_date, 'YYYY-MM-DD') 
+	WHERE ctp.status = 40 and ctp.visit_date between $1 and $2 and p.clinic_id = $3 group by ctp.department_id, to_char(ctp.visit_date, 'YYYY-MM-DD') order by date asc`
+
+	rows, err := model.DB.Queryx(SQL, startDate, endDate, clinicID)
+
+	fmt.Println(err)
+
+	res := FormatSQLRowsToMapArray(rows)
+	ctx.JSON(iris.Map{"code": "200", "data": res})
 }
 
 // OutPatietnEfficiencyStatistics 门诊效率统计
