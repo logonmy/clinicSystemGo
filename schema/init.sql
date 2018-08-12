@@ -191,12 +191,13 @@ CREATE TABLE clinic_triage_patient_operation
 CREATE TABLE role
 (
   id serial PRIMARY KEY NOT NULL,--id
-  name varchar(50) UNIQUE NOT NULL,--名称
+  name varchar(50) NOT NULL,--名称
   clinic_id integer NOT NULL references clinic(id),--诊所编码
   status boolean NOT NULL DEFAULT true,--是否启用
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
-  deleted_time timestamp with time zone
+  deleted_time timestamp with time zone,
+  UNIQUE(name,clinic_id)
 );
 
 
@@ -1010,7 +1011,7 @@ CREATE TABLE drug_inventory_record_item
   id serial PRIMARY KEY NOT NULL,--id
   drug_inventory_record_id integer NOT NULL references drug_inventory_record(id),--药品盘点记录id
   drug_stock_id INTEGER NOT NULL references drug_stock(id),--药品库存id
-  actual_amount INTEGER NOT NULL CHECK(actual_amount > 0) DEFAULT 0,--药品实际数量
+  actual_amount INTEGER NOT NULL CHECK(actual_amount >= 0) DEFAULT 0,--药品实际数量
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
@@ -1470,7 +1471,7 @@ CREATE TABLE material_inventory_record_item
   id serial PRIMARY KEY NOT NULL,--id
   material_inventory_record_id integer NOT NULL references material_inventory_record(id),--耗材盘点记录id
   material_stock_id INTEGER NOT NULL references drug_stock(id),--耗材库存id
-  actual_amount INTEGER NOT NULL CHECK(actual_amount > 0) DEFAULT 0,--耗材实际数量
+  actual_amount INTEGER NOT NULL CHECK(actual_amount >= 0) DEFAULT 0,--耗材实际数量
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone

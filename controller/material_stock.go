@@ -1425,13 +1425,14 @@ func MaterialInventoryList(ctx iris.Context) {
 //MaterialInventoryRecordDetail 耗材盘点记录详情
 func MaterialInventoryRecordDetail(ctx iris.Context) {
 	materialInventoryRecordID := ctx.PostValue("material_inventory_record_id")
+	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 	status := ctx.PostValue("status")
 	amount := ctx.PostValue("amount")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
-	if materialInventoryRecordID == "" {
+	if materialInventoryRecordID == "" || clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -1453,6 +1454,14 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 		return
 	}
 
+	var storehouseID string
+	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
+	if errs != nil {
+		fmt.Println("errs ===", errs)
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
+		return
+	}
+
 	sql := `select ir.id as material_inventory_record_id,ir.inventory_date,ir.order_number,ir.created_time,ir.updated_time,ir.verify_status,
 		ir.verify_operation_id,vp.name as verify_operation_name,ir.inventory_operation_id,p.name as inventory_operation_name 
 		from material_inventory_record ir
@@ -1465,6 +1474,7 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 
 	var queryOption = map[string]interface{}{
 		"material_inventory_record_id": ToNullInt64(materialInventoryRecordID),
+		"storehouse_id":                ToNullInt64(storehouseID),
 		"status":                       ToNullString(status),
 		"keyword":                      ToNullString(keyword),
 		"offset":                       ToNullInt64(offset),
@@ -1477,11 +1487,13 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 	where ms.id>0`
 
 	selectSQL := `select ms.id as material_stock_id,cm.name as material_name,cm.specification,cm.unit_name,
-	cm.manu_factory_name,ms.supplier_name,ms.serial,ms.eff_date,ms.stock_amount,iri.actual_amount,cm.status
+	cm.manu_factory_name,ms.supplier_name,ms.serial,ms.buy_price,ms.eff_date,ms.stock_amount,iri.actual_amount,cm.status
 	from material_stock ms
 	left join material_inventory_record_item iri on iri.material_stock_id= ms.id and iri.material_inventory_record_id=:material_inventory_record_id
 	left join clinic_material cm on cm.id = ms.clinic_material_id
 	where ms.id>0`
+
+	selectTotalSQL := `select material_stock_id,actual_amount from material_inventory_record_item where material_inventory_record_id=:material_inventory_record_id`
 
 	if status != "" {
 		countSQL += " and cm.status = :status"
@@ -1515,6 +1527,15 @@ func MaterialInventoryRecordDetail(ctx iris.Context) {
 	}
 	item := FormatSQLRowsToMapArray(rows)
 	result["items"] = item
+
+	trows, err := model.DB.NamedQuery(selectTotalSQL, queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	totalItem := FormatSQLRowsToMapArray(trows)
+	pageInfo["total_item"] = totalItem
 
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
@@ -1772,7 +1793,7 @@ func MaterialStockInventoryList(ctx iris.Context) {
 		left join clinic_material cm on ms.clinic_material_id = cm.id
 		where ms.storehouse_id=:storehouse_id`
 	selectSQL := `select 
-		cm.name,
+		cm.name as material_name,
 		cm.status,
 		cm.specification,
 		cm.unit_name,

@@ -329,7 +329,11 @@ func RecptionPatientList(ctx iris.Context) {
 	}
 	statusStart := 40
 	statusEnd := 90
+
+	sort := "DESC"
+
 	if queryType == "0" {
+		sort = "ASC"
 		statusStart = 20
 		statusEnd = 30
 	}
@@ -415,7 +419,7 @@ func RecptionPatientList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.NamedQuery(querySQL+" order by ctp.id DESC offset :offset limit :limit", queryMap)
+	rows, err1 := model.DB.NamedQuery(querySQL+" order by ctp.updated_time "+sort+" offset :offset limit :limit", queryMap)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
@@ -1136,6 +1140,15 @@ func QuickReception(ctx iris.Context) {
 	err = tx.QueryRow(insertSQL, departmentID, personnelID, clinicPatientID, visitType).Scan(&clinicTriagePatientID)
 	if err != nil {
 		fmt.Println("clinic_triage_patient ======", err)
+		tx.Rollback()
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+
+	_, err = tx.Exec("INSERT INTO clinic_triage_patient_operation(clinic_triage_patient_id, type, times, personnel_id) VALUES ($1, $2, $3, $4)", clinicTriagePatientID, 10, 1, personnelID)
+
+	if err != nil {
+		fmt.Println("clinic_triage_patient_operation ======", err)
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return

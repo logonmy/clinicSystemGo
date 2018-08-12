@@ -1432,13 +1432,14 @@ func DrugInventoryList(ctx iris.Context) {
 //DrugInventoryRecordDetail 药房盘点记录详情
 func DrugInventoryRecordDetail(ctx iris.Context) {
 	drugInventoryRecordID := ctx.PostValue("drug_inventory_record_id")
+	clinicID := ctx.PostValue("clinic_id")
 	keyword := ctx.PostValue("keyword")
 	status := ctx.PostValue("status")
 	amount := ctx.PostValue("amount")
 	offset := ctx.PostValue("offset")
 	limit := ctx.PostValue("limit")
 
-	if drugInventoryRecordID == "" {
+	if drugInventoryRecordID == "" || clinicID == "" {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
@@ -1460,6 +1461,14 @@ func DrugInventoryRecordDetail(ctx iris.Context) {
 		return
 	}
 
+	var storehouseID string
+	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
+	if errs != nil {
+		fmt.Println("errs ===", errs)
+		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
+		return
+	}
+
 	sql := `select ir.id as drug_inventory_record_id,ir.inventory_date,ir.order_number,ir.created_time,ir.updated_time,ir.verify_status,
 		ir.verify_operation_id,vp.name as verify_operation_name,ir.inventory_operation_id,p.name as inventory_operation_name 
 		from drug_inventory_record ir
@@ -1472,6 +1481,7 @@ func DrugInventoryRecordDetail(ctx iris.Context) {
 
 	var queryOption = map[string]interface{}{
 		"drug_inventory_record_id": ToNullInt64(drugInventoryRecordID),
+		"storehouse_id":            ToNullInt64(storehouseID),
 		"status":                   ToNullString(status),
 		"keyword":                  ToNullString(keyword),
 		"offset":                   ToNullInt64(offset),
@@ -1481,14 +1491,16 @@ func DrugInventoryRecordDetail(ctx iris.Context) {
 	countSQL := `select count(*) as total from drug_stock ds
 	left join drug_inventory_record_item iri on iri.drug_stock_id= ds.id and iri.drug_inventory_record_id=:drug_inventory_record_id
 	left join clinic_drug cd on cd.id = ds.clinic_drug_id
-	where ds.id>0`
+	where ds.storehouse_id=:storehouse_id`
 
-	selectSQL := `select ds.id as drug_stock_id,cd.name as drug_name,cd.specification,cd.packing_unit_name,
+	selectSQL := `select ds.id as drug_stock_id,cd.name,cd.specification,cd.packing_unit_name,ds.buy_price,
 	cd.manu_factory_name,ds.supplier_name,ds.serial,ds.eff_date,ds.stock_amount,iri.actual_amount,cd.status
 	from drug_stock ds
 	left join drug_inventory_record_item iri on iri.drug_stock_id= ds.id and iri.drug_inventory_record_id=:drug_inventory_record_id
 	left join clinic_drug cd on cd.id = ds.clinic_drug_id
-	where ds.id>0`
+	where ds.storehouse_id=:storehouse_id`
+
+	selectTotalSQL := `select drug_stock_id,actual_amount from drug_inventory_record_item where drug_inventory_record_id=:drug_inventory_record_id`
 
 	if status != "" {
 		countSQL += " and cd.status = :status"
@@ -1521,7 +1533,17 @@ func DrugInventoryRecordDetail(ctx iris.Context) {
 		return
 	}
 	item := FormatSQLRowsToMapArray(rows)
+
+	trows, err := model.DB.NamedQuery(selectTotalSQL, queryOption)
+	if err != nil {
+		fmt.Println("err ====", err)
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
+		return
+	}
+	totalItem := FormatSQLRowsToMapArray(trows)
+
 	result["items"] = item
+	pageInfo["total_item"] = totalItem
 
 	ctx.JSON(iris.Map{"code": "200", "data": result, "page_info": pageInfo})
 }
