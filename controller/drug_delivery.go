@@ -338,7 +338,7 @@ func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64, mzPaidOrder
 
 	cost := buyPrice * stockAmount
 
-	_, err := tx.Exec("update drug_stock set 0 where id = $1", rowMap["id"])
+	_, err := tx.Exec("update drug_stock set stock_amount = 0 where id = $1", rowMap["id"])
 	if err != nil {
 		tx.Rollback()
 		return err
