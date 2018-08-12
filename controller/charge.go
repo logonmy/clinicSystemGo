@@ -438,7 +438,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 		chaerr := charge(outTradeNo, outTradeNo)
 		if chaerr != nil {
 			fmt.Println(chaerr)
-			ctx.JSON(iris.Map{"code": "-1", "msg": "缴费通知失败"})
+			ctx.JSON(iris.Map{"code": "-1", "msg": chaerr.Error()})
 			return
 		}
 		ctx.JSON(iris.Map{"code": "200", "msg": "直接缴费成功"})
@@ -503,6 +503,8 @@ func ChargePaymentQuery(ctx iris.Context) {
 		if tradeStatus == "SUCCESS" {
 			err := charge(outTradeNo, data["transaction_id"].(string))
 			if err != nil {
+				ress := HcRefund(outTradeNo, data["total_fee"].(string), outTradeNo, "", "")
+				fmt.Println("退费结果", ress)
 				fmt.Println("缴费通知失败", err.Error())
 			}
 		}
