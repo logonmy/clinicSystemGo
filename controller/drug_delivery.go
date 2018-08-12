@@ -305,18 +305,20 @@ func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64, mzPaidOrder
 	stockAmount := rowMap["stock_amount"].(int64)
 	buyPrice := rowMap["buy_price"].(int64)
 
-	insertAmount := stockAmount
-
 	if stockAmount >= amount {
-
-		// 修改详情的插入数量
-		insertAmount = amount
 
 		cost := buyPrice * amount
 		_, err := tx.Exec("update drug_stock set stock_amount = $1 where id = $2", stockAmount-amount, rowMap["id"])
 		if err != nil {
 			tx.Rollback()
 			return err
+		}
+
+		// 插入发药详情
+		_, et := tx.Exec("INSERT INTO drug_delivery_detail (mz_paid_orders_id,drug_stock_id,amount) VALUES($1,$2,$3)", mzPaidOrderID, rowMap["id"], amount)
+		if et != nil {
+			tx.Rollback()
+			return et
 		}
 
 		_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzPaidOrderID)
@@ -343,7 +345,7 @@ func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64, mzPaidOrder
 	}
 
 	// 插入发药详情
-	_, et := tx.Exec("INSERT INTO drug_delivery_detail (mz_paid_orders_id,drug_stock_id,amount) VALUES($1,$2,$3)", mzPaidOrderID, rowMap["id"], insertAmount)
+	_, et := tx.Exec("INSERT INTO drug_delivery_detail (mz_paid_orders_id,drug_stock_id,amount) VALUES($1,$2,$3)", mzPaidOrderID, rowMap["id"], stockAmount)
 	if et != nil {
 		tx.Rollback()
 		return et
