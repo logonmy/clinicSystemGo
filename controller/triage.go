@@ -329,7 +329,11 @@ func RecptionPatientList(ctx iris.Context) {
 	}
 	statusStart := 40
 	statusEnd := 90
+
+	sort := "DESC"
+
 	if queryType == "0" {
+		sort = "ASC"
 		statusStart = 20
 		statusEnd = 30
 	}
@@ -415,7 +419,7 @@ func RecptionPatientList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.NamedQuery(querySQL+" order by ctp.id DESC offset :offset limit :limit", queryMap)
+	rows, err1 := model.DB.NamedQuery(querySQL+" order by ctp.updated_time "+sort+" offset :offset limit :limit", queryMap)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
