@@ -102,7 +102,7 @@ func MedicalRecordCreate(ctx iris.Context) {
 	if !mok {
 		insertpSQL := `insert into personal_medical_record 
 		(patient_id,personal_medical_history,allergic_history, allergic_reaction, family_medical_history,immunizations) 
-		values ($1, $2, $3, $4)`
+		values ($1, $2, $3, $4, $5, $6)`
 
 		_, err := tx.Exec(insertpSQL,
 			patientID,

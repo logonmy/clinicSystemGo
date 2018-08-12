@@ -826,8 +826,8 @@ func OutPatietnEfficiencyStatistics(ctx iris.Context) {
 			receptionFinishedCount++
 		}
 
-		if finishTime != nil && payTime != nil {
-			payFinishTime := payTime.(time.Time).Sub(finishTime.(time.Time)).Minutes()
+		if triageTime != nil && payTime != nil {
+			payFinishTime := payTime.(time.Time).Sub(triageTime.(time.Time)).Minutes()
 			payFinishedTime += payFinishTime
 			payFinishedCount++
 		}

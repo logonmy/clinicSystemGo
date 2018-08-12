@@ -71,7 +71,7 @@ func PrescriptionWesternPatientCreate(ctx iris.Context) {
 		return
 	}
 
-	_, errdlp := tx.Exec("delete from prescription_western_patient where clinic_triage_patient_id = $1 and order_sn in (select order_sn from mz_unpaid_orders where clinic_triage_patient_id = $1 and charge_project_type_id=1)", clinicTriagePatientID)
+	_, errdlp := tx.Exec("delete from prescription_western_patient where clinic_triage_patient_id = $1 and ( fetch_address != 0 or order_sn in (select order_sn from mz_unpaid_orders where clinic_triage_patient_id = $1 and charge_project_type_id=1))", clinicTriagePatientID)
 	if errdlp != nil {
 		fmt.Println("errdlp ===", errdlp)
 		tx.Rollback()
@@ -339,7 +339,7 @@ func PrescriptionChinesePatientCreate(ctx iris.Context) {
 	}
 	if prescriptionChinesePatientID != "" {
 		fmt.Println(" delete data ======")
-		_, errdm := tx.Exec("delete from mz_unpaid_orders where charge_project_type_id=2 and order_sn = (select order_sn from prescription_chinese_patient where id = $1)", prescriptionChinesePatientID)
+		_, errdm := tx.Exec("delete from mz_unpaid_orders where charge_project_type_id=2 and ( fetch_address != 0 or order_sn = (select order_sn from prescription_chinese_patient where id = $1))", prescriptionChinesePatientID)
 		if errdm != nil {
 			fmt.Println("errdm ===", errdm)
 			tx.Rollback()

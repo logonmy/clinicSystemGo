@@ -220,7 +220,8 @@ func ProfitReport(ctx iris.Context) {
 	sum(material_cost) as total_material_cost,
 	sum(retail_cost) as total_retail_cost,
 	sum(other_cost) as total_other_cost
-from charge_detail`
+	from charge_detail
+	where created_time between :start_date and :end_date`
 
 	if clinicID != "" {
 		querySQL = `select 
