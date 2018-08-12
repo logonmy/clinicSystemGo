@@ -64,9 +64,19 @@ func DrugInstockStatistics(ctx iris.Context) {
 	countSQL := `select count(*) as total from drug_instock_record_item diri
 	left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
 	left join clinic_drug cd on cd.id = diri.clinic_drug_id where dir.storehouse_id=:storehouse_id`
+
 	selectSQL := `select dir.instock_date,dir.order_number,dir.instock_way_name,dir.supplier_name,
 	p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
 	diri.instock_amount,cd.packing_unit_name,cd.ret_price,diri.buy_price,diri.serial,diri.eff_date
+	from drug_instock_record_item diri
+	left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
+	left join clinic_drug cd on cd.id = diri.clinic_drug_id
+	left join personnel p on p.id = dir.instock_operation_id
+	where dir.storehouse_id=:storehouse_id`
+
+	totalSQL := `select 
+	sum(diri.instock_amount) as total_instock_amount,
+	sum(diri.instock_amount * diri.buy_price) as total_buy_price
 	from drug_instock_record_item diri
 	left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
 	left join clinic_drug cd on cd.id = diri.clinic_drug_id
@@ -81,31 +91,37 @@ func DrugInstockStatistics(ctx iris.Context) {
 
 		countSQL += " and dir.instock_date between :start_date and :end_date"
 		selectSQL += " and dir.instock_date between :start_date and :end_date"
+		totalSQL += " and dir.instock_date between :start_date and :end_date"
 	}
 
 	if instockWayName != "" {
 		countSQL += " and dir.instock_way_name =:instock_way_name"
 		selectSQL += " and dir.instock_way_name =:instock_way_name"
+		totalSQL += " and dir.instock_way_name =:instock_way_name"
 	}
 
 	if supplierName != "" {
 		countSQL += " and dir.supplier_name =:supplier_name"
 		selectSQL += " and dir.supplier_name =:supplier_name"
+		totalSQL += " and dir.supplier_name =:supplier_name"
 	}
 
 	if drugType != "" {
 		countSQL += " and cd.type =:drug_type"
 		selectSQL += " and cd.type =:drug_type"
+		totalSQL += " and cd.type =:drug_type"
 	}
 
 	if drugName != "" {
 		countSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
 		selectSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
+		totalSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
 	}
 
 	if serial != "" {
 		countSQL += " and diri.serial =:serial"
 		selectSQL += " and diri.serial =:serial"
+		totalSQL += " and diri.serial =:serial"
 	}
 
 	var queryOption = map[string]interface{}{
@@ -134,6 +150,12 @@ func DrugInstockStatistics(ctx iris.Context) {
 	var results []map[string]interface{}
 	rows, _ := model.DB.NamedQuery(selectSQL+" order by dir.instock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
+
+	countRows, _ := model.DB.NamedQuery(totalSQL, queryOption)
+	countResults := FormatSQLRowsToMapArray(countRows)
+
+	pageInfo["total_instock_amount"] = countResults[0]["total_instock_amount"]
+	pageInfo["total_buy_price"] = countResults[0]["total_buy_price"]
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -197,10 +219,22 @@ func DrugOutstockStatistics(ctx iris.Context) {
 	left join clinic_drug cd on cd.id = ds.clinic_drug_id 
 	left join personnel doc on doc.id = dir.personnel_id
 	where dir.storehouse_id=:storehouse_id`
+
 	selectSQL := `select dir.outstock_date,dir.order_number,dir.outstock_way_name,ds.supplier_name,
 	p.name as outstock_operation_name,doc.name as personnel_name,cd.barcode,cd.name as drug_name,
 	cd.specification,cd.manu_factory_name,diri.outstock_amount,cd.packing_unit_name,cd.ret_price,
 	ds.buy_price,ds.serial,ds.eff_date
+	from  drug_outstock_record_item diri
+	left join drug_outstock_record dir on dir.id = diri.drug_outstock_record_id
+	left join drug_stock ds on ds.id = diri.drug_stock_id
+	left join clinic_drug cd on cd.id = ds.clinic_drug_id
+	left join personnel p on p.id = dir.outstock_operation_id
+	left join personnel doc on doc.id = dir.personnel_id
+	where dir.storehouse_id=:storehouse_id`
+
+	totalSQL := `select 
+	sum(diri.outstock_amount) as total_outstock_amount,
+	sum(diri.outstock_amount * ds.buy_price) as total_buy_price
 	from  drug_outstock_record_item diri
 	left join drug_outstock_record dir on dir.id = diri.drug_outstock_record_id
 	left join drug_stock ds on ds.id = diri.drug_stock_id
@@ -217,36 +251,43 @@ func DrugOutstockStatistics(ctx iris.Context) {
 
 		countSQL += " and dir.outstock_date between :start_date and :end_date"
 		selectSQL += " and dir.outstock_date between :start_date and :end_date"
+		totalSQL += " and dir.outstock_date between :start_date and :end_date"
 	}
 
 	if outstockWayName != "" {
 		countSQL += " and dir.outstock_way_name =:outstock_way_name"
 		selectSQL += " and dir.outstock_way_name =:outstock_way_name"
+		totalSQL += " and dir.outstock_way_name =:outstock_way_name"
 	}
 
 	if supplierName != "" {
 		countSQL += " and ds.supplier_name =:supplier_name"
 		selectSQL += " and ds.supplier_name =:supplier_name"
+		totalSQL += " and ds.supplier_name =:supplier_name"
 	}
 
 	if drugType != "" {
 		countSQL += " and cd.type =:drug_type"
 		selectSQL += " and cd.type =:drug_type"
+		totalSQL += " and cd.type =:drug_type"
 	}
 
 	if drugName != "" {
 		countSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
 		selectSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
+		totalSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
 	}
 
 	if serial != "" {
 		countSQL += " and ds.serial =:serial"
 		selectSQL += " and ds.serial =:serial"
+		totalSQL += " and ds.serial =:serial"
 	}
 
 	if personnelName != "" {
 		countSQL += " and doc.name ~*:personnel_name"
 		selectSQL += " and doc.name ~*:personnel_name"
+		totalSQL += " and doc.name ~*:personnel_name"
 	}
 
 	var queryOption = map[string]interface{}{
@@ -276,6 +317,12 @@ func DrugOutstockStatistics(ctx iris.Context) {
 	var results []map[string]interface{}
 	rows, _ := model.DB.NamedQuery(selectSQL+" order by dir.outstock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
+
+	totalRows, _ := model.DB.NamedQuery(totalSQL, queryOption)
+	totalResults := FormatSQLRowsToMapArray(totalRows)
+
+	pageInfo["total_outstock_amount"] = totalResults[0]["total_outstock_amount"]
+	pageInfo["total_buy_price"] = totalResults[0]["total_buy_price"]
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -346,6 +393,7 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 	ds.serial,
 	ds.eff_date,
 	ds.buy_price,
+	ds.stock_amount,
 	sum(in_stock.instock_amount) as total_instock_amount,
 	sum(out_stock.outstock_amount) as total_outstock_amount
 	from drug_stock ds
@@ -368,18 +416,7 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 	UNION all
 	(select amount as outstock_amount,created_time as verify_time,drug_stock_id from drug_retail
 	where amount<0)) as out_stock on out_stock.drug_stock_id = ds.id and out_stock.verify_time BETWEEN :start_date and :end_date
-	where ds.storehouse_id=:storehouse_id
-	group by 
-	ds.id,
-	cd.name,
-	cd.barcode,
-	cd.specification,
-	cd.manu_factory_name,
-	ds.supplier_name,
-	cd.packing_unit_name,
-	ds.serial,
-	ds.eff_date,
-	ds.buy_price`
+	where ds.storehouse_id=:storehouse_id`
 
 	if supplierName != "" {
 		// countSQL += " and ds.supplier_name =:supplier_name"
@@ -422,7 +459,18 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 	// pageInfo := FormatSQLRowsToMapArray(total)[0]
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, _ := model.DB.NamedQuery(selectSQL+` group by 
+	ds.id,
+	cd.name,
+	cd.barcode,
+	cd.specification,
+	cd.manu_factory_name,
+	ds.supplier_name,
+	cd.packing_unit_name,
+	ds.serial,
+	ds.eff_date,
+	ds.buy_price
+	offset :offset limit :limit`, queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	pageInfo := map[string]interface{}{
@@ -488,9 +536,19 @@ func MaterialInstockStatistics(ctx iris.Context) {
 	countSQL := `select count(*) as total from material_instock_record_item miri
 	left join material_instock_record mir on mir.id = miri.material_instock_record_id
 	left join clinic_material cm on cm.id = miri.clinic_material_id where mir.storehouse_id=:storehouse_id`
+
 	selectSQL := `select mir.instock_date,mir.order_number,mir.instock_way_name,mir.supplier_name,
 	p.name as instock_operation_name,cm.idc_code,cm.name as material_name,cm.specification,cm.manu_factory_name,
 	miri.instock_amount,cm.unit_name,cm.ret_price,miri.buy_price,miri.serial,miri.eff_date
+	from material_instock_record_item miri
+	left join material_instock_record mir on mir.id = miri.material_instock_record_id
+	left join clinic_material cm on cm.id = miri.clinic_material_id
+	left join personnel p on p.id = mir.instock_operation_id
+	where mir.storehouse_id=:storehouse_id`
+
+	totalSQL := `select 
+	sum(miri.instock_amount) as total_instock_amount,
+	sum(miri.instock_amount * miri.buy_price) as total_buy_price
 	from material_instock_record_item miri
 	left join material_instock_record mir on mir.id = miri.material_instock_record_id
 	left join clinic_material cm on cm.id = miri.clinic_material_id
@@ -505,26 +563,31 @@ func MaterialInstockStatistics(ctx iris.Context) {
 
 		countSQL += " and mir.instock_date between :start_date and :end_date"
 		selectSQL += " and mir.instock_date between :start_date and :end_date"
+		totalSQL += " and mir.instock_date between :start_date and :end_date"
 	}
 
 	if instockWayName != "" {
 		countSQL += " and mir.instock_way_name =:instock_way_name"
 		selectSQL += " and mir.instock_way_name =:instock_way_name"
+		totalSQL += " and mir.instock_way_name =:instock_way_name"
 	}
 
 	if supplierName != "" {
 		countSQL += " and mir.supplier_name =:supplier_name"
 		selectSQL += " and mir.supplier_name =:supplier_name"
+		totalSQL += " and mir.supplier_name =:supplier_name"
 	}
 
 	if materialName != "" {
 		countSQL += " and (cm.name ~*:material_name or cm.py_code ~*:material_name)"
 		selectSQL += " and (cm.name ~*:material_name or cm.py_code ~*:material_name)"
+		totalSQL += " and (cm.name ~*:material_name or cm.py_code ~*:material_name)"
 	}
 
 	if serial != "" {
 		countSQL += " and miri.serial =:serial"
 		selectSQL += " and miri.serial =:serial"
+		totalSQL += " and miri.serial =:serial"
 	}
 
 	var queryOption = map[string]interface{}{
@@ -552,6 +615,12 @@ func MaterialInstockStatistics(ctx iris.Context) {
 	var results []map[string]interface{}
 	rows, _ := model.DB.NamedQuery(selectSQL+" order by mir.instock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
+
+	totalRows, _ := model.DB.NamedQuery(totalSQL, queryOption)
+	totalResults := FormatSQLRowsToMapArray(totalRows)
+
+	pageInfo["total_instock_amount"] = totalResults[0]["total_instock_amount"]
+	pageInfo["total_buy_price"] = totalResults[0]["total_buy_price"]
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -625,6 +694,16 @@ func MaterialOutstockStatistics(ctx iris.Context) {
 	left join personnel p on p.id = mir.outstock_operation_id
 	left join personnel doc on doc.id = mir.personnel_id
 	where mir.storehouse_id=:storehouse_id`
+	totalSQL := `select 
+	sum(miri.outstock_amount) as total_outstock_amount,
+	sum(miri.outstock_amount * ms.buy_price) as total_buy_price
+	from  material_outstock_record_item miri
+	left join material_outstock_record mir on mir.id = miri.material_outstock_record_id
+	left join material_stock ms on ms.id = miri.material_stock_id
+	left join clinic_material cm on cm.id = ms.clinic_material_id
+	left join personnel p on p.id = mir.outstock_operation_id
+	left join personnel doc on doc.id = mir.personnel_id
+	where mir.storehouse_id=:storehouse_id`
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
@@ -634,31 +713,37 @@ func MaterialOutstockStatistics(ctx iris.Context) {
 
 		countSQL += " and mir.outstock_date between :start_date and :end_date"
 		selectSQL += " and mir.outstock_date between :start_date and :end_date"
+		totalSQL += " and mir.outstock_date between :start_date and :end_date"
 	}
 
 	if outstockWayName != "" {
 		countSQL += " and mir.outstock_way_name =:outstock_way_name"
 		selectSQL += " and mir.outstock_way_name =:outstock_way_name"
+		totalSQL += " and mir.outstock_way_name =:outstock_way_name"
 	}
 
 	if supplierName != "" {
 		countSQL += " and ms.supplier_name =:supplier_name"
 		selectSQL += " and ms.supplier_name =:supplier_name"
+		totalSQL += " and ms.supplier_name =:supplier_name"
 	}
 
 	if materialName != "" {
 		countSQL += " and (cm.name ~*:material_name or cm.py_code ~*:material_name)"
 		selectSQL += " and (cm.name ~*:material_name or cm.py_code ~*:material_name)"
+		totalSQL += " and (cm.name ~*:material_name or cm.py_code ~*:material_name)"
 	}
 
 	if serial != "" {
 		countSQL += " and ms.serial =:serial"
 		selectSQL += " and ms.serial =:serial"
+		totalSQL += " and ms.serial =:serial"
 	}
 
 	if personnelName != "" {
 		countSQL += " and doc.name ~*:personnel_name"
 		selectSQL += " and doc.name ~*:personnel_name"
+		totalSQL += " and doc.name ~*:personnel_name"
 	}
 
 	var queryOption = map[string]interface{}{
@@ -687,6 +772,12 @@ func MaterialOutstockStatistics(ctx iris.Context) {
 	var results []map[string]interface{}
 	rows, _ := model.DB.NamedQuery(selectSQL+" order by mir.outstock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
+
+	totalRows, _ := model.DB.NamedQuery(totalSQL, queryOption)
+	totalResults := FormatSQLRowsToMapArray(totalRows)
+
+	pageInfo["total_outstock_amount"] = totalResults[0]["total_outstock_amount"]
+	pageInfo["total_buy_price"] = totalResults[0]["total_buy_price"]
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
 }
@@ -757,6 +848,7 @@ func MaterialInvoicingStatistics(ctx iris.Context) {
 	ms.serial,
 	ms.eff_date,
 	ms.buy_price,
+	ms.stock_amount,
 	sum(in_stock.instock_amount) as total_instock_amount,
 	sum(out_stock.outstock_amount) as total_outstock_amount
 	from material_stock ms
@@ -771,19 +863,7 @@ func MaterialInvoicingStatistics(ctx iris.Context) {
 	from material_outstock_record_item dori 
 	left join material_outstock_record dor on dor.id = dori.material_outstock_record_id
 	where dor.verify_status='02') as out_stock on out_stock.material_stock_id = ms.id and out_stock.verify_time BETWEEN :start_date and :end_date
-	where ms.storehouse_id=:storehouse_id
-	group by 
-	ms.id,
-	cm.name,
-	cm.py_code,
-	cm.idc_code,
-	cm.unit_name,
-	cm.specification,
-	cm.manu_factory_name,
-	ms.supplier_name,
-	ms.serial,
-	ms.eff_date,
-	ms.buy_price`
+	where ms.storehouse_id=:storehouse_id`
 
 	if supplierName != "" {
 		// countSQL += " and ms.supplier_name =:supplier_name"
@@ -820,7 +900,18 @@ func MaterialInvoicingStatistics(ctx iris.Context) {
 	// pageInfo := FormatSQLRowsToMapArray(total)[0]
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, _ := model.DB.NamedQuery(selectSQL+` group by 
+	ms.id,
+	cm.name,
+	cm.py_code,
+	cm.idc_code,
+	cm.unit_name,
+	cm.specification,
+	cm.manu_factory_name,
+	ms.supplier_name,
+	ms.serial,
+	ms.eff_date,
+	ms.buy_price offset :offset limit :limit`, queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	pageInfo := map[string]interface{}{
