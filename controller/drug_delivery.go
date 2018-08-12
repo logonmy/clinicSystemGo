@@ -305,7 +305,13 @@ func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64, mzPaidOrder
 	stockAmount := rowMap["stock_amount"].(int64)
 	buyPrice := rowMap["buy_price"].(int64)
 
+	insertAmount := stockAmount
+
 	if stockAmount >= amount {
+
+		// 修改详情的插入数量
+		insertAmount = amount
+
 		cost := buyPrice * amount
 		_, err := tx.Exec("update drug_stock set stock_amount = $1 where id = $2", stockAmount-amount, rowMap["id"])
 		if err != nil {
@@ -334,6 +340,13 @@ func updateDrugStock2(tx *sqlx.Tx, clinicDrugID int64, amount int64, mzPaidOrder
 	if err != nil {
 		tx.Rollback()
 		return err
+	}
+
+	// 插入发药详情
+	_, et := tx.Exec("INSERT INTO drug_delivery_detail (mz_paid_orders_id,drug_stock_id,amount) VALUES($1,$2,$3)", mzPaidOrderID, rowMap["id"], insertAmount)
+	if et != nil {
+		tx.Rollback()
+		return et
 	}
 
 	_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzPaidOrderID)
@@ -400,10 +413,11 @@ func DrugDeliveryRecordRefund(ctx iris.Context) {
 			return
 		}
 
-		row := tx.QueryRowx(`select * from mz_paid_orders where id = $1`, orderID)
-		rowMap := FormatSQLRowToMap(row)
+		// row := tx.QueryRowx(`select * from mz_paid_orders where id = $1`, orderID)
+		// rowMap := FormatSQLRowToMap(row)
 
-		_, err2 := tx.Exec(`UPDATE drug_stock set stock_amount = stock_amount + $1 where id in (select id from drug_stock where clinic_drug_id = $2 order by eff_date DESC limit 1)`, rowMap["amount"], rowMap["charge_project_id"])
+		err2 := refundDrugStock(tx, orderID)
+		// _, err2 := tx.Exec(`UPDATE drug_stock set stock_amount = stock_amount + $1 where id in (select id from drug_stock where clinic_drug_id = $2 order by eff_date DESC limit 1)`, rowMap["amount"], rowMap["charge_project_id"])
 		if err2 != nil {
 			tx.Rollback()
 			ctx.JSON(iris.Map{"code": "-6", "msg": err2.Error()})
@@ -419,6 +433,22 @@ func DrugDeliveryRecordRefund(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": "操作成功"})
 
+}
+
+func refundDrugStock(tx *sqlx.Tx, orderID interface{}) error {
+	rows, _ := tx.Queryx(`select * from drug_delivery_detail where mz_paid_orders_id = $1`, orderID)
+	result := FormatSQLRowsToMapArray(rows)
+	for _, item := range result {
+		_, e1 := tx.Exec(`UPDATE drug_stock set stock_amount = stock_amount + $1 where id = $2`, item["amount"], item["drug_stock_id"])
+		if e1 != nil {
+			return e1
+		}
+		_, e2 := tx.Exec(`INSERT INTO drug_delivery_detail (mz_paid_orders_id,drug_stock_id,amount) VALUES($1,$2,$3)`, orderID, item["drug_stock_id"], item["amount"].(int64)*-1)
+		if e2 != nil {
+			return e2
+		}
+	}
+	return nil
 }
 
 // DrugDeliveryRecordList 查询发药记录
