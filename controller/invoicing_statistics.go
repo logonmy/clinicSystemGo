@@ -541,12 +541,9 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 	ds.eff_date,
 	ds.buy_price,
 	ds.stock_amount,
-	sum(in_stock.instock_amount) as total_instock_amount,
-	sum(out_stock.outstock_amount) as total_outstock_amount
-	from drug_stock ds
-	left join clinic_drug cd on cd.id = ds.clinic_drug_id
-	
-	left join (
+	(select sum(in_stock.instock_amount) as total_instock_amount
+	from 
+	(
 		select diri.instock_amount,dir.verify_time,diri.serial,diri.eff_date,dir.supplier_name
 		from drug_instock_record_item diri 
 		left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
@@ -561,9 +558,12 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 		from drug_delivery_detail ddd
 		left join drug_stock ds on ds.id = ddd.drug_stock_id
 		where ddd.amount<0
-		) as in_stock on in_stock.verify_time BETWEEN :start_date and :end_date and in_stock.serial = ds.serial and in_stock.eff_date = ds.eff_date and in_stock.supplier_name = ds.supplier_name
-		
-		left join (
+		) as in_stock where in_stock.verify_time BETWEEN :start_date and :end_date
+		and in_stock.serial = ds.serial and in_stock.eff_date = ds.eff_date 
+		and in_stock.supplier_name = ds.supplier_name),
+    (select sum(out_stock.outstock_amount) as total_outstock_amount 
+    from
+    (
 		select dori.outstock_amount,dor.verify_time,dori.drug_stock_id
 		from drug_outstock_record_item dori 
 		left join drug_outstock_record dor on dor.id = dori.drug_outstock_record_id
@@ -574,7 +574,9 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 		UNION all
 		select amount as outstock_amount,created_time as verify_time,drug_stock_id from drug_delivery_detail
 		where amount>0
-		) as out_stock on out_stock.drug_stock_id = ds.id and out_stock.verify_time BETWEEN :start_date and :end_date
+		) as out_stock where out_stock.drug_stock_id = ds.id and out_stock.verify_time BETWEEN :start_date and :end_date)
+	from drug_stock ds
+	left join clinic_drug cd on cd.id = ds.clinic_drug_id
 	where ds.storehouse_id=:storehouse_id`
 
 	if supplierName != "" {
@@ -1105,12 +1107,9 @@ func MaterialInvoicingStatistics(ctx iris.Context) {
 	ms.eff_date,
 	ms.buy_price,
 	ms.stock_amount,
-	sum(in_stock.instock_amount) as total_instock_amount,
-	sum(out_stock.outstock_amount) as total_outstock_amount
-	from material_stock ms
-	left join clinic_material cm on cm.id = ms.clinic_material_id
-	
-	left join (
+	(select sum(in_stock.instock_amount) as total_instock_amount
+	FROM
+	(
 	select miri.instock_amount,mir.verify_time,miri.serial,miri.eff_date,mir.supplier_name
 	from material_instock_record_item miri 
 	left join material_instock_record mir on mir.id = miri.material_instock_record_id
@@ -1120,9 +1119,12 @@ func MaterialInvoicingStatistics(ctx iris.Context) {
 	from material_delivery_detail ddd
 	left join material_stock ds on ds.id = ddd.material_stock_id
 	where ddd.amount<0
-	) as in_stock on in_stock.verify_time BETWEEN '2018-07-01' and '2018-08-13' and in_stock.serial = ms.serial and in_stock.eff_date = ms.eff_date and in_stock.supplier_name = ms.supplier_name
-	
-	left join (
+	) as in_stock where in_stock.verify_time BETWEEN :start_date and :end_date
+	and in_stock.serial = ms.serial and in_stock.eff_date = ms.eff_date 
+	and in_stock.supplier_name = ms.supplier_name),
+	(select sum(out_stock.outstock_amount) as total_outstock_amount
+	from
+	(
 	select dori.outstock_amount,dor.verify_time,dori.material_stock_id
 	from material_outstock_record_item dori 
 	left join material_outstock_record dor on dor.id = dori.material_outstock_record_id
@@ -1130,7 +1132,9 @@ func MaterialInvoicingStatistics(ctx iris.Context) {
 	UNION all
 	select amount as outstock_amount,created_time as verify_time,material_stock_id from material_delivery_detail
 	where amount>0
-	) as out_stock on out_stock.material_stock_id = ms.id and out_stock.verify_time BETWEEN '2018-07-01' and '2018-08-13' 
+	) as out_stock where out_stock.verify_time BETWEEN :start_date and :end_date and out_stock.material_stock_id = ms.id)
+	from material_stock ms
+	left join clinic_material cm on cm.id = ms.clinic_material_id
 	where ms.storehouse_id=1`
 
 	if supplierName != "" {
