@@ -627,6 +627,14 @@ func ChargePaymentRefund(ctx iris.Context) {
 			diagnosisTreatmentCost += cost * -1
 		}
 
+		rerr := refundMaterialStock(tx, id, operarton)
+
+		if rerr != nil {
+			tx.Rollback()
+			ctx.JSON(iris.Map{"code": "-1", "msg": rerr.Error()})
+			return
+		}
+
 	}
 
 	totalFefundFee := refundFee * -1
@@ -715,6 +723,23 @@ func ChargePaymentRefund(ctx iris.Context) {
 
 	ctx.JSON(iris.Map{"code": "200", "msg": ""})
 
+}
+
+//退费时处理材料退回库存
+func refundMaterialStock(tx *sqlx.Tx, orderID interface{}, operationID string) error {
+	rows, _ := tx.Queryx(`select * from material_delivery_detail where mz_paid_orders_id = $1`, orderID)
+	result := FormatSQLRowsToMapArray(rows)
+	for _, item := range result {
+		_, e1 := tx.Exec(`UPDATE material_stock set stock_amount = stock_amount + $1 where id = $2`, item["amount"], item["material_stock_id"])
+		if e1 != nil {
+			return e1
+		}
+		_, e2 := tx.Exec(`INSERT INTO material_delivery_detail (mz_paid_orders_id,material_stock_id,amount,operation_id) VALUES($1,$2,$3,$4)`, orderID, item["material_stock_id"], item["amount"].(int64)*-1, operationID)
+		if e2 != nil {
+			return e2
+		}
+	}
+	return nil
 }
 
 // ChargePaidList 根据预约编码查询已缴费缴费列表
@@ -965,7 +990,7 @@ func charge(outTradeNo string, tradeNo string) error {
 	materials := FormatSQLRowsToMapArray(materialrows)
 
 	for _, material := range materials {
-		erru := updateMaterialStock(tx, material["charge_project_id"].(int64), material["amount"].(int64), material["id"])
+		erru := updateMaterialStock(tx, material["charge_project_id"].(int64), material["amount"].(int64), material["id"], operationID)
 
 		if erru != nil {
 			tx.Rollback()
@@ -1013,7 +1038,7 @@ func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) (strin
 }
 
 //updateMaterialStock
-func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUnpaidOrdersID interface{}) error {
+func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUnpaidOrdersID interface{}, operationID interface{}) error {
 	if amount < 0 {
 		return errors.New("库存数量有误")
 	}
@@ -1055,6 +1080,13 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 			return err
 		}
 
+		// 插入发材料详情
+		_, et := tx.Exec("INSERT INTO material_delivery_detail (mz_paid_orders_id,material_stock_id,amount,operation_id) VALUES($1,$2,$3,$4)", mzUnpaidOrdersID, rowMap["id"], amount, operationID)
+		if et != nil {
+			tx.Rollback()
+			return et
+		}
+
 		_, errm := tx.Exec("update mz_paid_orders set cost = cost + $1 where id = $2", cost, mzUnpaidOrdersID)
 		if errm != nil {
 			tx.Rollback()
@@ -1078,6 +1110,13 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 		return errm
 	}
 
+	// 插入发材料详情
+	_, et := tx.Exec("INSERT INTO material_delivery_detail (mz_paid_orders_id,material_stock_id,amount,operation_id) VALUES($1,$2,$3,$4)", mzUnpaidOrdersID, rowMap["id"], stockAmount, operationID)
+	if et != nil {
+		tx.Rollback()
+		return et
+	}
+
 	_, err := tx.Exec("update material_stock set 0 where id = $1", rowMap["id"])
 	if err != nil {
 		tx.Rollback()
@@ -1090,7 +1129,7 @@ func updateMaterialStock(tx *sqlx.Tx, clinicMaterialID int64, amount int64, mzUn
 		return errc
 	}
 
-	return updateMaterialStock(tx, clinicMaterialID, amount-stockAmount, mzUnpaidOrdersID)
+	return updateMaterialStock(tx, clinicMaterialID, amount-stockAmount, mzUnpaidOrdersID, operationID)
 }
 
 // BusinessTransaction 获取交易流水

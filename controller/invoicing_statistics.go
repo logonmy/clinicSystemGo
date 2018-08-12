@@ -53,35 +53,105 @@ func DrugInstockStatistics(ctx iris.Context) {
 		return
 	}
 
-	var storehouseID string
-	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
-	if errs != nil {
-		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
-		return
-	}
+	countSQL := `select count(*) as total
+		from (
+			select to_char(dir.verify_time,'yyyy-mm-dd') as instock_date,dir.order_number,dir.instock_way_name,dir.supplier_name,
+			p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+			diri.instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,diri.buy_price,diri.serial,diri.eff_date,p.clinic_id
+			from drug_instock_record_item diri
+			left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
+			left join clinic_drug cd on cd.id = diri.clinic_drug_id
+			left join personnel p on p.id = dir.instock_operation_id
+			where dir.verify_status='02'
+			UNION all
+			select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_trade_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
+			p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+			dr.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+			from drug_retail dr
+			left join drug_stock ds on ds.id = dr.drug_stock_id
+			left join clinic_drug cd on cd.id = ds.clinic_drug_id
+			left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
+			left join personnel p on p.id = drpr.operation_id
+			where dr.amount>0
+			UNION all
+			select to_char(ddd.created_time,'yyyy-mm-dd') as instock_date,
+			'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊退药' as instock_way_name,ds.supplier_name,
+			p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+			ddd.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+			from drug_delivery_detail ddd
+			left join drug_stock ds on ddd.drug_stock_id = ds.id
+			left join clinic_drug cd on cd.id = ds.clinic_drug_id
+			left join personnel p on p.id = ddd.operation_id
+			where ddd.amount<0) as a
+		where a.clinic_id=:clinic_id`
 
-	countSQL := `select count(*) as total from drug_instock_record_item diri
-	left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
-	left join clinic_drug cd on cd.id = diri.clinic_drug_id where dir.storehouse_id=:storehouse_id`
-
-	selectSQL := `select dir.instock_date,dir.order_number,dir.instock_way_name,dir.supplier_name,
-	p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
-	diri.instock_amount,cd.packing_unit_name,cd.ret_price,diri.buy_price,diri.serial,diri.eff_date
-	from drug_instock_record_item diri
-	left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
-	left join clinic_drug cd on cd.id = diri.clinic_drug_id
-	left join personnel p on p.id = dir.instock_operation_id
-	where dir.storehouse_id=:storehouse_id`
+	selectSQL := `select instock_date,order_number,instock_way_name,supplier_name,
+	instock_operation_name,barcode,drug_name,specification,manu_factory_name,
+	instock_amount,packing_unit_name,ret_price,buy_price,serial,eff_date
+	from (
+		select to_char(dir.verify_time,'yyyy-mm-dd') as instock_date,dir.order_number,dir.instock_way_name,dir.supplier_name,
+		p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+		diri.instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,diri.buy_price,diri.serial,diri.eff_date,p.clinic_id
+		from drug_instock_record_item diri
+		left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
+		left join clinic_drug cd on cd.id = diri.clinic_drug_id
+		left join personnel p on p.id = dir.instock_operation_id
+		where dir.verify_status='02'
+    UNION all
+    select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_trade_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
+    p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+    dr.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+    from drug_retail dr
+    left join drug_stock ds on ds.id = dr.drug_stock_id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
+		left join personnel p on p.id = drpr.operation_id
+		where dr.amount>0
+		UNION all
+    select to_char(ddd.created_time,'yyyy-mm-dd') as instock_date,
+    'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊退药' as instock_way_name,ds.supplier_name,
+    p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+    ddd.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+    from drug_delivery_detail ddd
+    left join drug_stock ds on ddd.drug_stock_id = ds.id
+    left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join personnel p on p.id = ddd.operation_id
+		where ddd.amount<0) as a
+  where a.clinic_id=:clinic_id`
 
 	totalSQL := `select 
-	sum(diri.instock_amount) as total_instock_amount,
-	sum(diri.instock_amount * diri.buy_price) as total_buy_price
-	from drug_instock_record_item diri
-	left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
-	left join clinic_drug cd on cd.id = diri.clinic_drug_id
-	left join personnel p on p.id = dir.instock_operation_id
-	where dir.storehouse_id=:storehouse_id`
+	sum(instock_amount) as total_instock_amount,
+	sum(instock_amount * buy_price) as total_buy_price
+	from (
+		select to_char(dir.verify_time,'yyyy-mm-dd') as instock_date,dir.order_number,dir.instock_way_name,dir.supplier_name,
+		p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+		diri.instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,diri.buy_price,diri.serial,diri.eff_date,p.clinic_id
+		from drug_instock_record_item diri
+		left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
+		left join clinic_drug cd on cd.id = diri.clinic_drug_id
+		left join personnel p on p.id = dir.instock_operation_id
+		where dir.verify_status='02'
+    UNION all
+    select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_trade_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
+    p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+    dr.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+    from drug_retail dr
+    left join drug_stock ds on ds.id = dr.drug_stock_id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
+		left join personnel p on p.id = drpr.operation_id
+		where dr.amount>0
+		UNION all
+    select to_char(ddd.created_time,'yyyy-mm-dd') as instock_date,
+    'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊退药' as instock_way_name,ds.supplier_name,
+    p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+    ddd.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+    from drug_delivery_detail ddd
+    left join drug_stock ds on ddd.drug_stock_id = ds.id
+    left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join personnel p on p.id = ddd.operation_id
+		where ddd.amount<0) as a
+  where a.clinic_id=:clinic_id`
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
@@ -89,43 +159,43 @@ func DrugInstockStatistics(ctx iris.Context) {
 			return
 		}
 
-		countSQL += " and dir.instock_date between :start_date and :end_date"
-		selectSQL += " and dir.instock_date between :start_date and :end_date"
-		totalSQL += " and dir.instock_date between :start_date and :end_date"
+		countSQL += " and a.instock_date between :start_date and :end_date"
+		selectSQL += " and a.instock_date between :start_date and :end_date"
+		totalSQL += " and a.instock_date between :start_date and :end_date"
 	}
 
 	if instockWayName != "" {
-		countSQL += " and dir.instock_way_name =:instock_way_name"
-		selectSQL += " and dir.instock_way_name =:instock_way_name"
-		totalSQL += " and dir.instock_way_name =:instock_way_name"
+		countSQL += " and a.instock_way_name =:instock_way_name"
+		selectSQL += " and a.instock_way_name =:instock_way_name"
+		totalSQL += " and a.instock_way_name =:instock_way_name"
 	}
 
 	if supplierName != "" {
-		countSQL += " and dir.supplier_name =:supplier_name"
-		selectSQL += " and dir.supplier_name =:supplier_name"
-		totalSQL += " and dir.supplier_name =:supplier_name"
+		countSQL += " and a.supplier_name =:supplier_name"
+		selectSQL += " and a.supplier_name =:supplier_name"
+		totalSQL += " and a.supplier_name =:supplier_name"
 	}
 
 	if drugType != "" {
-		countSQL += " and cd.type =:drug_type"
-		selectSQL += " and cd.type =:drug_type"
-		totalSQL += " and cd.type =:drug_type"
+		countSQL += " and a.type =:drug_type"
+		selectSQL += " and a.type =:drug_type"
+		totalSQL += " and a.type =:drug_type"
 	}
 
 	if drugName != "" {
-		countSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
-		selectSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
-		totalSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
+		countSQL += " and (a.name ~*:drug_name or a.barcode ~*:drug_name)"
+		selectSQL += " and (a.name ~*:drug_name or a.barcode ~*:drug_name)"
+		totalSQL += " and (a.name ~*:drug_name or a.barcode ~*:drug_name)"
 	}
 
 	if serial != "" {
-		countSQL += " and diri.serial =:serial"
-		selectSQL += " and diri.serial =:serial"
-		totalSQL += " and diri.serial =:serial"
+		countSQL += " and a.serial =:serial"
+		selectSQL += " and a.serial =:serial"
+		totalSQL += " and a.serial =:serial"
 	}
 
 	var queryOption = map[string]interface{}{
-		"storehouse_id":    ToNullInt64(storehouseID),
+		"clinic_id":        ToNullInt64(clinicID),
 		"instock_way_name": ToNullString(instockWayName),
 		"supplier_name":    ToNullString(supplierName),
 		"drug_name":        ToNullString(drugName),
@@ -139,7 +209,7 @@ func DrugInstockStatistics(ctx iris.Context) {
 
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -148,7 +218,7 @@ func DrugInstockStatistics(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.NamedQuery(selectSQL+" order by dir.instock_date desc offset :offset limit :limit", queryOption)
+	rows, _ := model.DB.NamedQuery(selectSQL+" order by a.instock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	countRows, _ := model.DB.NamedQuery(totalSQL, queryOption)
@@ -205,43 +275,116 @@ func DrugOutstockStatistics(ctx iris.Context) {
 		return
 	}
 
-	var storehouseID string
-	errs := model.DB.QueryRow("select id from storehouse where clinic_id=$1 limit 1", clinicID).Scan(&storehouseID)
-	if errs != nil {
-		fmt.Println("errs ===", errs)
-		ctx.JSON(iris.Map{"code": "-1", "msg": errs.Error()})
-		return
-	}
+	countSQL := `select count(*) as total
+	from (
+		select to_char(dir.verify_time,'yyyy-mm-dd') as outstock_date,dir.order_number,dir.outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,doc.name as personnel_name,cd.barcode,cd.name as drug_name,
+		cd.specification,cd.manu_factory_name,diri.outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,
+		ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from  drug_outstock_record_item diri
+		left join drug_outstock_record dir on dir.id = diri.drug_outstock_record_id
+		left join drug_stock ds on ds.id = diri.drug_stock_id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join personnel p on p.id = dir.outstock_operation_id
+		left join personnel doc on doc.id = dir.personnel_id
+		where dir.verify_status='02'
+		UNION all
+		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_refund_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+		dr.amount as outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from drug_retail dr
+		left join drug_stock ds on ds.id = dr.drug_stock_id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
+		left join personnel p on p.id = drpr.operation_id
+		where dr.amount<0
+		UNION all
+		select to_char(ddd.created_time,'yyyy-mm-dd') as outstock_date,
+		'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊发药' as outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+		ddd.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from drug_delivery_detail ddd
+		left join drug_stock ds on ddd.drug_stock_id = ds.id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join personnel p on p.id = ddd.operation_id
+		where ddd.amount>0) as a
+	where a.clinic_id=:clinic_id`
 
-	countSQL := `select count(*) as total from drug_outstock_record_item diri
-	left join drug_outstock_record dir on dir.id = diri.drug_outstock_record_id
-	left join drug_stock ds on ds.id = diri.drug_stock_id
-	left join clinic_drug cd on cd.id = ds.clinic_drug_id 
-	left join personnel doc on doc.id = dir.personnel_id
-	where dir.storehouse_id=:storehouse_id`
-
-	selectSQL := `select dir.outstock_date,dir.order_number,dir.outstock_way_name,ds.supplier_name,
-	p.name as outstock_operation_name,doc.name as personnel_name,cd.barcode,cd.name as drug_name,
-	cd.specification,cd.manu_factory_name,diri.outstock_amount,cd.packing_unit_name,cd.ret_price,
-	ds.buy_price,ds.serial,ds.eff_date
-	from  drug_outstock_record_item diri
-	left join drug_outstock_record dir on dir.id = diri.drug_outstock_record_id
-	left join drug_stock ds on ds.id = diri.drug_stock_id
-	left join clinic_drug cd on cd.id = ds.clinic_drug_id
-	left join personnel p on p.id = dir.outstock_operation_id
-	left join personnel doc on doc.id = dir.personnel_id
-	where dir.storehouse_id=:storehouse_id`
+	selectSQL := `select 	
+	outstock_date,order_number,outstock_way_name,supplier_name,
+	outstock_operation_name,personnel_name,barcode,drug_name,
+	specification,manu_factory_name,outstock_amount,packing_unit_name,ret_price,
+	buy_price,serial,eff_date
+	from (
+		select to_char(dir.verify_time,'yyyy-mm-dd') as outstock_date,dir.order_number,dir.outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,doc.name as personnel_name,cd.barcode,cd.name as drug_name,
+		cd.specification,cd.manu_factory_name,diri.outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,
+		ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from  drug_outstock_record_item diri
+		left join drug_outstock_record dir on dir.id = diri.drug_outstock_record_id
+		left join drug_stock ds on ds.id = diri.drug_stock_id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join personnel p on p.id = dir.outstock_operation_id
+		left join personnel doc on doc.id = dir.personnel_id
+		where dir.verify_status='02'
+		UNION all
+		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_refund_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+		dr.amount as outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from drug_retail dr
+		left join drug_stock ds on ds.id = dr.drug_stock_id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
+		left join personnel p on p.id = drpr.operation_id
+		where dr.amount<0
+		UNION all
+		select to_char(ddd.created_time,'yyyy-mm-dd') as outstock_date,
+		'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊发药' as outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+		ddd.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from drug_delivery_detail ddd
+		left join drug_stock ds on ddd.drug_stock_id = ds.id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join personnel p on p.id = ddd.operation_id
+		where ddd.amount>0) as a
+	where a.clinic_id=:clinic_id`
 
 	totalSQL := `select 
-	sum(diri.outstock_amount) as total_outstock_amount,
-	sum(diri.outstock_amount * ds.buy_price) as total_buy_price
-	from  drug_outstock_record_item diri
-	left join drug_outstock_record dir on dir.id = diri.drug_outstock_record_id
-	left join drug_stock ds on ds.id = diri.drug_stock_id
-	left join clinic_drug cd on cd.id = ds.clinic_drug_id
-	left join personnel p on p.id = dir.outstock_operation_id
-	left join personnel doc on doc.id = dir.personnel_id
-	where dir.storehouse_id=:storehouse_id`
+	sum(outstock_amount) as total_outstock_amount,
+	sum(outstock_amount * buy_price) as total_buy_price
+	from (
+		select to_char(dir.verify_time,'yyyy-mm-dd') as outstock_date,dir.order_number,dir.outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,doc.name as personnel_name,cd.barcode,cd.name as drug_name,
+		cd.specification,cd.manu_factory_name,diri.outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,
+		ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from  drug_outstock_record_item diri
+		left join drug_outstock_record dir on dir.id = diri.drug_outstock_record_id
+		left join drug_stock ds on ds.id = diri.drug_stock_id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join personnel p on p.id = dir.outstock_operation_id
+		left join personnel doc on doc.id = dir.personnel_id
+		where dir.verify_status='02'
+		UNION all
+		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_refund_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+		dr.amount as outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from drug_retail dr
+		left join drug_stock ds on ds.id = dr.drug_stock_id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
+		left join personnel p on p.id = drpr.operation_id
+		where dr.amount<0
+		UNION all
+		select to_char(ddd.created_time,'yyyy-mm-dd') as outstock_date,
+		'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊发药' as outstock_way_name,ds.supplier_name,
+		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
+		ddd.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
+		from drug_delivery_detail ddd
+		left join drug_stock ds on ddd.drug_stock_id = ds.id
+		left join clinic_drug cd on cd.id = ds.clinic_drug_id
+		left join personnel p on p.id = ddd.operation_id
+		where ddd.amount>0) as a
+	where a.clinic_id=:clinic_id`
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
@@ -249,64 +392,64 @@ func DrugOutstockStatistics(ctx iris.Context) {
 			return
 		}
 
-		countSQL += " and dir.outstock_date between :start_date and :end_date"
-		selectSQL += " and dir.outstock_date between :start_date and :end_date"
-		totalSQL += " and dir.outstock_date between :start_date and :end_date"
+		countSQL += " and a.outstock_date between :start_date and :end_date"
+		selectSQL += " and a.outstock_date between :start_date and :end_date"
+		totalSQL += " and a.outstock_date between :start_date and :end_date"
 	}
 
 	if outstockWayName != "" {
-		countSQL += " and dir.outstock_way_name =:outstock_way_name"
-		selectSQL += " and dir.outstock_way_name =:outstock_way_name"
-		totalSQL += " and dir.outstock_way_name =:outstock_way_name"
+		countSQL += " and a.outstock_way_name =:outstock_way_name"
+		selectSQL += " and a.outstock_way_name =:outstock_way_name"
+		totalSQL += " and a.outstock_way_name =:outstock_way_name"
 	}
 
 	if supplierName != "" {
-		countSQL += " and ds.supplier_name =:supplier_name"
-		selectSQL += " and ds.supplier_name =:supplier_name"
-		totalSQL += " and ds.supplier_name =:supplier_name"
+		countSQL += " and a.supplier_name =:supplier_name"
+		selectSQL += " and a.supplier_name =:supplier_name"
+		totalSQL += " and a.supplier_name =:supplier_name"
 	}
 
 	if drugType != "" {
-		countSQL += " and cd.type =:drug_type"
-		selectSQL += " and cd.type =:drug_type"
-		totalSQL += " and cd.type =:drug_type"
+		countSQL += " and a.type =:drug_type"
+		selectSQL += " and a.type =:drug_type"
+		totalSQL += " and a.type =:drug_type"
 	}
 
 	if drugName != "" {
-		countSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
-		selectSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
-		totalSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
+		countSQL += " and (a.name ~*:drug_name or cd.barcode ~*:drug_name)"
+		selectSQL += " and (a.name ~*:drug_name or cd.barcode ~*:drug_name)"
+		totalSQL += " and (a.name ~*:drug_name or cd.barcode ~*:drug_name)"
 	}
 
 	if serial != "" {
-		countSQL += " and ds.serial =:serial"
-		selectSQL += " and ds.serial =:serial"
-		totalSQL += " and ds.serial =:serial"
+		countSQL += " and a.serial =:serial"
+		selectSQL += " and a.serial =:serial"
+		totalSQL += " and a.serial =:serial"
 	}
 
 	if personnelName != "" {
-		countSQL += " and doc.name ~*:personnel_name"
-		selectSQL += " and doc.name ~*:personnel_name"
-		totalSQL += " and doc.name ~*:personnel_name"
+		countSQL += " and a.name ~*:personnel_name"
+		selectSQL += " and a.name ~*:personnel_name"
+		totalSQL += " and a.name ~*:personnel_name"
 	}
 
 	var queryOption = map[string]interface{}{
-		"storehouse_id":    ToNullInt64(storehouseID),
-		"instock_way_name": ToNullString(outstockWayName),
-		"supplier_name":    ToNullString(supplierName),
-		"drug_name":        ToNullString(drugName),
-		"drug_type":        ToNullString(drugType),
-		"serial":           ToNullString(serial),
-		"personnel_name":   ToNullString(personnelName),
-		"start_date":       ToNullString(startDate),
-		"end_date":         ToNullString(endDate),
-		"offset":           ToNullInt64(offset),
-		"limit":            ToNullInt64(limit),
+		"clinic_id":         ToNullInt64(clinicID),
+		"outstock_way_name": ToNullString(outstockWayName),
+		"supplier_name":     ToNullString(supplierName),
+		"drug_name":         ToNullString(drugName),
+		"drug_type":         ToNullString(drugType),
+		"serial":            ToNullString(serial),
+		"personnel_name":    ToNullString(personnelName),
+		"start_date":        ToNullString(startDate),
+		"end_date":          ToNullString(endDate),
+		"offset":            ToNullInt64(offset),
+		"limit":             ToNullInt64(limit),
 	}
 
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -315,7 +458,7 @@ func DrugOutstockStatistics(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.NamedQuery(selectSQL+" order by dir.outstock_date desc offset :offset limit :limit", queryOption)
+	rows, _ := model.DB.NamedQuery(selectSQL+" order by a.outstock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	totalRows, _ := model.DB.NamedQuery(totalSQL, queryOption)
@@ -399,42 +542,50 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 	from drug_stock ds
 	left join clinic_drug cd on cd.id = ds.clinic_drug_id
 	
-	left join ((select diri.instock_amount,dir.verify_time,diri.serial,diri.eff_date,dir.supplier_name
-	from drug_instock_record_item diri 
-	left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
-	where dir.verify_status='02')
-	UNION all
-	(select dr.amount as instock_amount,dr.created_time as verify_time,ds.serial,ds.eff_date,ds.supplier_name 
-	from drug_retail dr
-	left join drug_stock ds on ds.id = dr.drug_stock_id
-	where dr.amount>0)) as in_stock on in_stock.verify_time BETWEEN :start_date and :end_date and in_stock.serial = ds.serial and in_stock.eff_date = ds.eff_date and in_stock.supplier_name = ds.supplier_name
-	
-	left join ((select dori.outstock_amount,dor.verify_time,dori.drug_stock_id
-	from drug_outstock_record_item dori 
-	left join drug_outstock_record dor on dor.id = dori.drug_outstock_record_id
-	where dor.verify_status='02')
-	UNION all
-	(select amount as outstock_amount,created_time as verify_time,drug_stock_id from drug_retail
-	where amount<0)) as out_stock on out_stock.drug_stock_id = ds.id and out_stock.verify_time BETWEEN :start_date and :end_date
+	left join (
+		select diri.instock_amount,dir.verify_time,diri.serial,diri.eff_date,dir.supplier_name
+		from drug_instock_record_item diri 
+		left join drug_instock_record dir on dir.id = diri.drug_instock_record_id
+		where dir.verify_status='02'
+		UNION all
+		select dr.amount as instock_amount,dr.created_time as verify_time,ds.serial,ds.eff_date,ds.supplier_name 
+		from drug_retail dr
+		left join drug_stock ds on ds.id = dr.drug_stock_id
+		where dr.amount>0
+		UNION all
+		select ddd.amount as instock_amount,ddd.created_time as verify_time,ds.serial,ds.eff_date,ds.supplier_name 
+		from drug_delivery_detail ddd
+		left join drug_stock ds on ds.id = ddd.drug_stock_id
+		where ddd.amount<0
+		) as in_stock on in_stock.verify_time BETWEEN :start_date and :end_date and in_stock.serial = ds.serial and in_stock.eff_date = ds.eff_date and in_stock.supplier_name = ds.supplier_name
+		
+		left join (
+		select dori.outstock_amount,dor.verify_time,dori.drug_stock_id
+		from drug_outstock_record_item dori 
+		left join drug_outstock_record dor on dor.id = dori.drug_outstock_record_id
+		where dor.verify_status='02'
+		UNION all
+		select amount as outstock_amount,created_time as verify_time,drug_stock_id from drug_retail
+		where amount<0
+		UNION all
+		select amount as outstock_amount,created_time as verify_time,drug_stock_id from drug_delivery_detail
+		where amount>0
+		) as out_stock on out_stock.drug_stock_id = ds.id and out_stock.verify_time BETWEEN :start_date and :end_date
 	where ds.storehouse_id=:storehouse_id`
 
 	if supplierName != "" {
-		// countSQL += " and ds.supplier_name =:supplier_name"
 		selectSQL += " and ds.supplier_name =:supplier_name"
 	}
 
 	if drugType != "" {
-		// countSQL += " and cd.type =:drug_type"
 		selectSQL += " and cd.type =:drug_type"
 	}
 
 	if drugName != "" {
-		// countSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
 		selectSQL += " and (cd.name ~*:drug_name or cd.barcode ~*:drug_name)"
 	}
 
 	if serial != "" {
-		// countSQL += " and ds.serial =:serial"
 		selectSQL += " and ds.serial =:serial"
 	}
 
@@ -450,15 +601,21 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 		"limit":         ToNullInt64(limit),
 	}
 
-	// total, err := model.DB.NamedQuery(countSQL, queryOption)
-	// if err != nil {
-	// 	ctx.JSON(iris.Map{"code": "-1", "msg": err})
-	// 	return
-	// }
-
-	// pageInfo := FormatSQLRowsToMapArray(total)[0]
-
 	var results []map[string]interface{}
+
+	totalRows, _ := model.DB.NamedQuery(selectSQL+` group by 
+	ds.id,
+	cd.name,
+	cd.barcode,
+	cd.specification,
+	cd.manu_factory_name,
+	ds.supplier_name,
+	cd.packing_unit_name,
+	ds.serial,
+	ds.eff_date,
+	ds.buy_price`, queryOption)
+	totalResults := FormatSQLRowsToMapArray(totalRows)
+
 	rows, _ := model.DB.NamedQuery(selectSQL+` group by 
 	ds.id,
 	cd.name,
@@ -474,7 +631,7 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 	results = FormatSQLRowsToMapArray(rows)
 
 	pageInfo := map[string]interface{}{
-		"total":  len(results),
+		"total":  len(totalResults),
 		"offset": offset,
 		"limit":  limit,
 	}
@@ -604,7 +761,7 @@ func MaterialInstockStatistics(ctx iris.Context) {
 
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 
@@ -761,7 +918,7 @@ func MaterialOutstockStatistics(ctx iris.Context) {
 
 	total, err := model.DB.NamedQuery(countSQL, queryOption)
 	if err != nil {
-		ctx.JSON(iris.Map{"code": "-1", "msg": err})
+		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
 		return
 	}
 

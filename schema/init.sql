@@ -1449,6 +1449,19 @@ CREATE TABLE material_outstock_record_item
   deleted_time timestamp with time zone
 );
 
+--门诊发材料/退材料记录详情
+CREATE TABLE material_delivery_detail
+(
+  id serial PRIMARY KEY NOT NULL,--id
+  mz_paid_orders_id INTEGER NOT NULL references mz_paid_orders(id),--门诊缴费单id
+  material_stock_id INTEGER NOT NULL references material_stock(id), --库存
+  amount INTEGER NOT NULL, --数量
+  operation_id integer REFERENCES personnel(id),--操作人编码
+  created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
+  deleted_time timestamp with time zone
+);
+
 --耗材盘点记录
 CREATE TABLE material_inventory_record
 (
@@ -1851,7 +1864,7 @@ CREATE TABLE drug_delivery_record --发药记录
   deleted_time timestamp with time zone
 );
 
-CREATE TABLE drug_delivery_detail --发药记录详情
+CREATE TABLE drug_delivery_detail --门诊发药/退药记录详情
 (
   id serial PRIMARY KEY NOT NULL,--id
   mz_paid_orders_id INTEGER NOT NULL references mz_paid_orders(id),--门诊缴费单id
