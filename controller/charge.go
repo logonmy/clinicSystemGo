@@ -647,7 +647,7 @@ func ChargePaymentRefund(ctx iris.Context) {
 
 	outRefundNo := GetTradeNo("R2")
 
-	refundNo, refundErr := refundNotice(outTradeNo, outRefundNo, refundFee)
+	refundNo, refundErr := refundNotice(outTradeNo, outRefundNo, refundFee, tx)
 	if refundErr != nil {
 		tx.Rollback()
 		ctx.JSON(iris.Map{"code": "-1", "msg": refundErr.Error()})
@@ -659,15 +659,15 @@ func ChargePaymentRefund(ctx iris.Context) {
 	($1,$2,$3,$4,$5,$6,$7) RETURNING id`, paidRecord["id"], outRefundNo, refundNo, 2, strings.Join(results, ","), refundFee*-1, operarton).Scan(&refundID)
 	if er != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": er.Error()})
+		ctx.JSON(iris.Map{"code": "-2", "msg": er.Error()})
 		return
 	}
 
-	_, eerr := tx.Exec(`update mz_paid_orders set mz_refund_record_id = $1 where refund_status = true and id in ($2)`, refundID, strings.Join(results, ","))
+	_, eerr := tx.Exec(`update mz_paid_orders set mz_refund_record_id = $1 where refund_status = true and id in (`+strings.Join(results, ",")+`)`, refundID)
 
 	if eerr != nil {
 		tx.Rollback()
-		ctx.JSON(iris.Map{"code": "-1", "msg": eerr.Error()})
+		ctx.JSON(iris.Map{"code": "-3", "msg": eerr.Error()})
 		return
 	}
 
@@ -980,7 +980,7 @@ func charge(outTradeNo string, tradeNo string) error {
 	return nil
 }
 
-func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) (string, error) {
+func refundNotice(outTradeNo string, outRefundNo string, refundFee int64, tx *sqlx.Tx) (string, error) {
 	payment := model.DB.QueryRowx("select * from mz_paid_record where out_trade_no = $1", outTradeNo)
 	pay := FormatSQLRowToMap(payment)
 	_, ok := pay["id"]
@@ -1008,7 +1008,7 @@ func refundNotice(outTradeNo string, outRefundNo string, refundFee int64) (strin
 		return "", errors.New("不支持的退费方式")
 	}
 
-	_, err := model.DB.Exec("update mz_paid_record set refund_money = $1+refund_money where id = $2", refundFee*-1, pay["id"])
+	_, err := tx.Exec("update mz_paid_record set refund_money = $1+refund_money where id = $2", refundFee*-1, pay["id"])
 	return refundNo, err
 }
 
