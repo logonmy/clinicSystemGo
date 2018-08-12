@@ -1857,6 +1857,7 @@ CREATE TABLE drug_delivery_detail --发药记录详情
   mz_paid_orders_id INTEGER NOT NULL references mz_paid_orders(id),--门诊缴费单id
   drug_stock_id INTEGER NOT NULL references drug_stock(id), --库存
   amount INTEGER NOT NULL, --数量
+  operation_id integer REFERENCES personnel(id),--操作人编码
   created_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   updated_time timestamp with time zone NOT NULL DEFAULT LOCALTIMESTAMP,
   deleted_time timestamp with time zone
