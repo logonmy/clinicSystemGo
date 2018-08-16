@@ -619,7 +619,7 @@ func PrescriptionWesternPatientGet(ctx iris.Context) {
 		case when mpo.id is not null then true else false end as paid_status
 		from prescription_western_patient pwp 
 				left join clinic_drug cd on pwp.clinic_drug_id = cd.id 
-				left join drug_stock ds on ds.clinic_drug_id = cd.id
+				left join drug_stock ds on ds.clinic_drug_id = cd.id and ds.eff_date > CURRENT_DATE
 				left join mz_paid_orders mpo on mpo.clinic_triage_patient_id = pwp.clinic_triage_patient_id and pwp.order_sn=mpo.order_sn and pwp.soft_sn=mpo.soft_sn
 				where pwp.clinic_triage_patient_id = $1
 				group by pwp.id,pwp.clinic_triage_patient_id,pwp.clinic_drug_id,pwp.order_sn,pwp.soft_sn,pwp.once_dose,
@@ -661,7 +661,7 @@ func PrescriptionChinesePatientGet(ctx iris.Context) {
 			case when mpo.id is not null then true else false end as paid_status
 			from prescription_chinese_item pci 
 			left join clinic_drug cd on pci.clinic_drug_id = cd.id 
-			left join drug_stock ds on ds.clinic_drug_id = cd.id
+			left join drug_stock ds on ds.clinic_drug_id = cd.id and ds.eff_date > CURRENT_DATE
 			left join mz_paid_orders mpo on pci.order_sn=mpo.order_sn and pci.soft_sn=mpo.soft_sn
 			where pci.prescription_chinese_patient_id = $1
 			group by pci.id,pci.prescription_chinese_patient_id,pci.clinic_drug_id,

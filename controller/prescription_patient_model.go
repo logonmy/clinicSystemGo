@@ -182,7 +182,7 @@ func PrescriptionWesternPatientModelList(ctx iris.Context) {
 	from prescription_western_patient_model pwpm
 	left join prescription_western_patient_model_item pwpmi on pwpmi.prescription_western_patient_model_id = pwpm.id
 	left join clinic_drug cd on pwpmi.clinic_drug_id = cd.id 
-	left join drug_stock ds on ds.clinic_drug_id = cd.id
+	left join drug_stock ds on ds.clinic_drug_id = cd.id and ds.eff_date > CURRENT_DATE
   left join personnel p on pwpm.operation_id = p.id
 	where pwpm.model_name ~$1 and pwpm.deleted_time is null
 	group by pwpm.id,pwpm.is_common,pwpm.created_time,pwpm.updated_time,p.name,pwpm.model_name,pwpmi.clinic_drug_id,cd.type,
@@ -669,7 +669,7 @@ func PrescriptionChinesePatientModelList(ctx iris.Context) {
 	from prescription_chinese_patient_model pcpm
 	left join prescription_chinese_patient_model_item pcpmi on pcpmi.prescription_chinese_patient_model_id = pcpm.id
 	left join clinic_drug cd on pcpmi.clinic_drug_id = cd.id 
-	left join drug_stock ds on ds.clinic_drug_id = cd.id
+	left join drug_stock ds on ds.clinic_drug_id = cd.id and ds.eff_date > CURRENT_DATE
 	left join personnel p on pcpm.operation_id = p.id
 	where pcpm.model_name ~$1 and pcpm.deleted_time is null
 	group by pcpm.id,pcpm.is_common,pcpm.created_time,pcpm.updated_time,p.name,pcpm.model_name,pcpm.route_administration_name,
