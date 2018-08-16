@@ -293,7 +293,7 @@ func ClinicDrugList(ctx iris.Context) {
 		cd.clinic_id,
 		sum(ds.stock_amount) as stock_amount
 		from clinic_drug cd
-		left join drug_stock ds on ds.clinic_drug_id = cd.id
+		left join drug_stock ds on ds.clinic_drug_id = cd.id and ds.eff_date > CURRENT_DATE
 		where cd.clinic_id = :clinic_id`
 
 	if drugType != "" {
