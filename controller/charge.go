@@ -483,7 +483,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 			return
 		}
 	} else {
-		ctx.JSON(iris.Map{"code": "200", "msg": "不支持的缴费方式"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "不支持的缴费方式"})
 		return
 	}
 }
@@ -844,6 +844,12 @@ func charge(outTradeNo string, tradeNo string) error {
 	if !ok {
 		return errors.New("未找到指定的待缴费单")
 	}
+
+	if pay["status"].(string) != "WATTING_FOR_PAY" {
+		fmt.Println("已缴费成功，不再处理")
+		return nil
+	}
+
 	tx, txErr := model.DB.Beginx()
 	if txErr != nil {
 		return txErr
@@ -1560,7 +1566,7 @@ func ManagermentOrder(ctx iris.Context) {
 		limit = "10"
 	}
 	if orderType == "" {
-		limit = "10"
+		orderType = "10"
 	}
 
 	if clinicID == "" || startDate == "" || endDate == "" {

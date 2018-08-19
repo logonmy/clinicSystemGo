@@ -2611,9 +2611,17 @@ func PatientCountByAge(ctx iris.Context) {
 	ctx.JSON(iris.Map{"code": "200", "data": results})
 }
 
-// PatientCountByChannel 患者统计 按性别
+// PatientCountByChannel 患者统计 按渠道
 func PatientCountByChannel(ctx iris.Context) {
-	querySQL := `select patient_channel_name, count(patient_channel_name) as total from (select case when pc.name is null then '未知' else pc.name end as patient_channel_name from patient p left join patient_channel pc on pc.id = p.patient_channel_id) aaa group by aaa.patient_channel_name;`
+	querySQL := `select 
+	patient_channel_name, count(patient_channel_name) as total 
+	from (
+		select 
+		case when pc.name is null then '未知' 
+		else pc.name end as patient_channel_name 
+		from patient p 
+		left join patient_channel pc on pc.id = p.patient_channel_id
+		) aaa group by aaa.patient_channel_name;`
 	rows, err := model.DB.Queryx(querySQL)
 
 	if err != nil {
