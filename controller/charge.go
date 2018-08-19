@@ -1566,7 +1566,7 @@ func ManagermentOrder(ctx iris.Context) {
 		limit = "10"
 	}
 	if orderType == "" {
-		limit = "10"
+		orderType = "10"
 	}
 
 	if clinicID == "" || startDate == "" || endDate == "" {
