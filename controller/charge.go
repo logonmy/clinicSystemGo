@@ -483,7 +483,7 @@ func ChargePaymentCreate(ctx iris.Context) {
 			return
 		}
 	} else {
-		ctx.JSON(iris.Map{"code": "200", "msg": "不支持的缴费方式"})
+		ctx.JSON(iris.Map{"code": "-1", "msg": "不支持的缴费方式"})
 		return
 	}
 }
@@ -844,6 +844,11 @@ func charge(outTradeNo string, tradeNo string) error {
 	if !ok {
 		return errors.New("未找到指定的待缴费单")
 	}
+
+	if pay["status"].(string) != "WATTING_FOR_PAY" {
+		return nil
+	}
+
 	tx, txErr := model.DB.Beginx()
 	if txErr != nil {
 		return txErr
