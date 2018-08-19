@@ -846,6 +846,7 @@ func charge(outTradeNo string, tradeNo string) error {
 	}
 
 	if pay["status"].(string) != "WATTING_FOR_PAY" {
+		fmt.Println("已缴费成功，不再处理")
 		return nil
 	}
 
