@@ -100,10 +100,10 @@ func main() {
 	// 	visitType.Post("/list", controller.VisitTypeList)
 	// }
 
-	doctorVisitScheduleMode := app.Party("/doctorVisitScheduleMode", crs).AllowMethods(iris.MethodOptions)
-	{
-		doctorVisitScheduleMode.Post("/create", controller.DoctorVisitScheduleModeAdd)
-	}
+	// doctorVisitScheduleMode := app.Party("/doctorVisitScheduleMode", crs).AllowMethods(iris.MethodOptions)
+	// {
+	// 	doctorVisitScheduleMode.Post("/create", controller.DoctorVisitScheduleModeAdd)
+	// }
 
 	doctorVisitSchedule := app.Party("/doctorVisitSchedule", crs).AllowMethods(iris.MethodOptions)
 	{
