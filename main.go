@@ -156,7 +156,6 @@ func main() {
 		patient.Post("/PatientVisionList", controller.PatientVisionList)
 		patient.Post("/PatientBloodSugarList", controller.PatientBloodSugarList)
 		patient.Post("/PatientOxygenSaturationList", controller.PatientOxygenSaturationList)
-		patient.Post("/PatientBloodSugarListByDate", controller.PatientBloodSugarListByDate)
 		patient.Post("/PatientCountBySex", controller.PatientCountBySex)
 		patient.Post("/PatientCountByAge", controller.PatientCountByAge)
 		patient.Post("/PatientCountByChannel", controller.PatientCountByChannel)

@@ -96,7 +96,7 @@ func PatientList(ctx iris.Context) {
 	if limit == "" {
 		limit = "10"
 	}
-	countSQL := `select count(p.cert_no) as total
+	countSQL := `select count(*) as total
 	from patient p 
 	left join clinic_patient cp on p.id = cp.patient_id 
 	left join clinic c on c.id = cp.clinic_id
@@ -174,7 +174,7 @@ func PatientGetByID(ctx iris.Context) {
 func PatientGetByCertNo(ctx iris.Context) {
 	certNo := ctx.PostValue("cert_no")
 	if certNo != "" {
-		row := model.DB.QueryRowx(`select * from patient 
+		row := model.DB.QueryRowx(`select * from patient where
 			cert_no = $1;`, certNo)
 		if row == nil {
 			ctx.JSON(iris.Map{"code": "-1", "msg": "查询结果不存在"})
