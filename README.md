@@ -6772,6 +6772,4430 @@
 | data. status | bolean | ✅ |  是否启用 | |
 --
 
+8 门诊缴费状态
+--------
+
+</br>
+<h3>8.1 门诊待缴费的分诊记录
+
+```
+请求地址：/charge/traigePatient/unpay
+```
+**请求包示例**
+
+```
+{
+	keyword:‘’
+	clinic_id: 1
+	offset: 1
+	limit: 10
+	start_date:'2018-01-10'
+	end_date:'2018-02-10'
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ |  诊所id | |
+| keyword | String | ❌ |  搜索关键字 | |
+| offset |number | ❌ |  分页（跳过个数） | 0|
+| limit | number | ❌ |  分页（每页个数） | 6|
+| start_date | String | ✅ |  开始时间 | |
+| end_date | String | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+    “data”:[
+     {
+      "birthday": "19810327",
+      "cert_no": null,
+      "charge_total_fee": 5200,
+      "clinic_patient_id": 9,
+      "clinic_triage_patient_id": 15,
+      "department_name": "眼科",
+      "doctor_name": "华佗",
+      "patient_id": 13,
+      "patient_name": "林俊杰",
+      "phone": "18800000001",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-05-31T21:10:34.157788+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-05-31T22:28:09.862734+08:00",
+      "visit_date": "2018-05-31T00:00:00Z"
+    }]
+    "page_info":{
+       limit: 6
+       offset: 0
+       total:  10
+    }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ |  生日 | |
+| cert_no | String | ✅ |  证件号| |
+| charge\_total_fee |number | ✅ | 待缴费金额 | |
+| clinic\_patient_id | number | ✅ | 诊所病人id  | |
+| clinic\_triage\_patient_id | number | ✅ |  分诊记录id| |
+| department_name | String | ✅ |  科室名称 | |
+| doctor_name | String | ✅ |  医生名称 | |
+| patient_id | String | ✅ |  病人id | |
+| patient_name | String | ✅ |  病人名称 | |
+| phone | String | ✅ |  手机号 | |
+| register_personnel_name | String | ✅ |  操作员名称 | |
+| register_time | String | ✅ |  挂号时间 | |
+| register_type | String | ✅ |  挂号类型（1预约，2线下分诊 3快速接诊） | |
+| sex | String | ✅ |  病人性别 | |
+| status | String | ✅ |  挂号记录状态 10:登记，20：分诊(换诊)，30：接诊，40：已就诊， 100：取消 | |
+| updated_time | String | ✅ |  挂号记录更新状态 | |
+| visit_date | String | ✅ |  就诊日期 | |
+--
+
+</br>
+<h3>8.2 门诊待缴费订单
+
+```
+请求地址：/charge/unPay/list
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id:1
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊记录id | |
+| offset |number | ❌ |  分页 （跳过条数） | 0|
+| limit | number | ❌ |  分页 （每页条数）| 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "amount": 1,
+      "department_name": null,
+      "discount": 0,
+      "doctor_name": "超级管理员",
+      "fee": 1200,
+      "mz_unpaid_orders_id": 48,
+      "name": "感冒灵片",
+      "price": 1200,
+      "total": 1200
+    }
+  ],
+  "page_info": {
+    "charge_total": 5200,
+    "charge_total_fee": 5200,
+    "discount_total": 0,
+    "limit": "10",
+    "offset": "0",
+    "total": 3,
+    "totalIds": "46,47,48"
+  },
+  "type_total": [
+    {
+      "charge_project_type_id": 1,
+      "type_charge_total": 5200
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| amount | number | ✅ |  数量| |
+| department_name | String | ✅ |  科室名称| |
+| discount |number | ✅ |  折扣金额（单位：分）| |
+| doctor_name | String | ✅ |  医生名称| |
+| fee | number | ✅ |  缴费金额| |
+| mz\_unpaid\_orders_id | String | ✅ |  待缴费id| |
+| name | String | ✅ |  费用项名称| |
+| price | number | ✅ |  单价| |
+| total | number | ✅ |  总价格| |
+| type\_total.charge\_project\_type_id | number | ✅ |  类型id| |
+| type\_total.type\_charge_total | number | ✅ | 类型费用 | |
+| page\_info.charge_total | number | ✅ |  总金额| |
+| page\_info.charge\_total_fee | number | ✅ |  折扣后待缴费的金额| |
+| page\_info.discount_total | number | ✅ |  折扣金额| |
+| page\_info.totalIds | number | ✅ |  所有待缴费的id| |
+|page\_info.total | number | ✅ |  所有条数| |
+| page\_info.limit | number | ✅ |  跳过条数| |
+| page\_info.offset | number | ✅ | 每页条数 | |
+--
+
+
+</br>
+<h3>8.3 创建门诊支付订单
+
+```
+请求地址：/charge/payment/create
+```
+**请求包示例**
+
+```
+{
+	discount_money:1
+	derate_money:1
+	medical_money:1
+	voucher_money:1
+	bonus_points_money:1
+	balance_money:1
+	auth_code:112122121.....
+	clinic_triage_patient_id:1
+	orders_ids:2,23,23,43,534
+	operation_id:1
+	pay_method_code:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| discount_money | number | ❌ | 折扣金额 | 0|
+| derate_money | number | ❌ | 减免金额 | 0|
+| medical_money | number | ❌ |  医保金额 | 0|
+| voucher_money | number | ❌ |  抵金券金额 | 0|
+| bonus\_points_money | number | ❌ | 积分金额 |0|
+| balance_money | number | ✅ | 应交金额| |
+| auth_code | String | ❌ |  授权码（微信和支付宝支付时，比传）| |
+| clinic\_triage\_patient_id | number | ✅ |  分诊记录id | |
+| orders_ids | String |  ✅ | 门诊未交费id组（以,隔开） | |
+| operation_id | number | ✅ | 操作者id | |
+| pay\_method_code | String | ✅ |   | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": "注册成功"
+    "data": "12132"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 缴费成功， 300 待用户支付（微信和支付宝支付）| |
+| msg | String | ✅ |  返回信息 | |
+| data | String | ❌ |  系统交易号 | |
+--
+
+</br>
+<h3>8.4 获取门诊支付订单状态
+
+```
+请求地址：/charge/payment/query
+```
+**请求包示例**
+
+```
+{
+	out_trade_no:1212232.....
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| out\_trade_no | String | ✅ |  系统交易号 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功. 其他缴费失败| |
+| msg | String | ✅ |  返回信息 | |
+--
+
+</br>
+<h3>8.5 门诊退费
+
+```
+请求地址：/charge/payment/refund
+```
+**请求包示例**
+
+```
+{
+	out_trade_no:1212232.....
+	refundIds: 1,2,3,4
+	operation_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| out\_trade_no | String | ✅ |  系统交易号 | |
+| refundIds | String | ✅ |  门诊已缴费订单id（已,隔开） | |
+| operation_id | String | ✅ |  操作员id | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功. 其他失败| |
+| msg | String | ✅ |  返回信息 | |
+--
+
+</br>
+<h3>8.6 门诊已缴费的分诊记录
+
+```
+请求地址：/charge/traigePatient/paid
+```
+**请求包示例**
+
+```
+{
+	keyword:‘’
+	clinic_id: 1
+	offset: 1
+	limit: 10
+	start_date:'2018-01-10'
+	end_date:'2018-02-10'
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ |  诊所id | |
+| keyword | String | ❌ |  搜索关键字 | |
+| offset |number | ❌ |  分页（跳过个数） | 0|
+| limit | number | ❌ |  分页（每页个数） | 6|
+| start_date | String | ✅ |  开始时间 | |
+| end_date | String | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+    “data”:[
+     {
+      "birthday": "19810327",
+      "cert_no": null,
+      "charge_total_fee": 5200,
+      "clinic_patient_id": 9,
+      "clinic_triage_patient_id": 15,
+      "department_name": "眼科",
+      "mz_paid_record_id": 114,
+      "doctor_name": "华佗",
+      "patient_id": 13,
+      "patient_name": "林俊杰",
+      "phone": "18800000001",
+      "refund_money": -1,
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-05-31T21:10:34.157788+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-05-31T22:28:09.862734+08:00",
+      "visit_date": "2018-05-31T00:00:00Z"
+    }]
+    "page_info":{
+       limit: 6
+       offset: 0
+       total:  10
+    }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ |  生日 | |
+| mz\_paid\_record_id | String | ✅ |  门诊缴费记录id  | |
+| refund_money | number | ✅ |  已退费金额 | |
+| cert_no | String | ✅ |  证件号| |
+| charge\_total_fee |number | ✅ | 待缴费金额 | |
+| clinic\_patient_id | number | ✅ | 诊所病人id  | |
+| clinic\_triage\_patient_id | number | ✅ |  分诊记录id| |
+| department_name | String | ✅ |  科室名称 | |
+| doctor_name | String | ✅ |  医生名称 | |
+| patient_id | String | ✅ |  病人id | |
+| patient_name | String | ✅ |  病人名称 | |
+| phone | String | ✅ |  手机号 | |
+| register\_personnel_name | String | ✅ |  操作员名称 | |
+| register_time | String | ✅ |  挂号时间 | |
+| register_type | String | ✅ |  挂号类型（1预约，2线下分诊 3快速接诊） | |
+| sex | String | ✅ |  病人性别 | |
+| status | String | ✅ |  挂号记录状态 10:登记，20：分诊(换诊)，30：接诊，40：已就诊， 100：取消 | |
+| updated_time | String | ✅ |  挂号记录更新状态 | |
+| visit_date | String | ✅ |  就诊日期 | |
+--
+
+</br>
+<h3>8.7 门诊已缴费订单
+
+```
+请求地址：/charge/paid/list
+```
+**请求包示例**
+
+```
+{
+	mz_paid_record_id:1
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊记录id | |
+| offset |number | ❌ |  分页 （跳过条数） | 0|
+| limit | number | ❌ |  分页 （每页条数）| 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "amount": 1,
+      "department_name": null,
+      "discount": 0,
+      "doctor_name": "超级管理员",
+      "fee": 1200,
+      "mz_unpaid_orders_id": 48,
+      "name": "感冒灵片",
+      "price": 1200,
+      "total": 1200
+    }
+  ],
+  "page_info": {
+    "balance_money": 1,
+    "bonus_points_money": 0,
+    "charge_total": 1,
+    "charge_total_fee": 1,
+    "clinic_triage_patient_id": 134,
+    "created_time": "2018-08-13T01:10:00.64325+08:00",
+    "deleted_time": null,
+    "derate_money": 0,
+    "discount_money": 0,
+    "discount_total": 0,
+    "id": 114,
+    "limit": "10",
+    "medical_money": 0,
+    "offset": "0",
+    "operation_id": 1,
+    "orders_ids": "",
+    "out_trade_no": "T2201808130110006428",
+    "pay_method_code": "4",
+    "refund_money": -1,
+    "status": "TRADE_SUCCESS",
+    "total": 1,
+    "total_money": 1,
+    "trade_no": "T2201808130110006428",
+    "updated_time": "2018-08-13T01:10:00.745739+08:00",
+    "voucher_money": 0
+  },
+  "type_total": [
+    {
+      "charge_project_type_id": 1,
+      "type_charge_total": 5200
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| amount | number | ✅ |  数量| |
+| department_name | String | ✅ |  科室名称| |
+| discount |number | ✅ |  折扣金额（单位：分）| |
+| doctor_name | String | ✅ |  医生名称| |
+| fee | number | ✅ |  缴费金额| |
+| mz\_unpaid\_orders_id | String | ✅ |  待缴费id| |
+| name | String | ✅ |  费用项名称| |
+| price | number | ✅ |  单价| |
+| total | number | ✅ |  总价格| |
+| type\_total.charge\_project\_type_id | number | ✅ |  类型id| |
+| type\_total.type\_charge_total | number | ✅ | 类型费用 | |
+| page\_info.charge_total | number | ✅ |  总金额| |
+| page\_info.charge\_total_fee | number | ✅ |  折扣后待缴费的金额| |
+| page\_info.discount_total | number | ✅ |  折扣金额| |
+| page\_info.bonus\_points_money | number | ✅ |  积分金额| |
+| page\_info.medical_money | number | ✅ |  医保金额| |
+| page\_info.derate_money | number | ✅ |  减免金额| |
+| page\_info.medical_money | number | ✅ |  医保金额| |
+| page\_info.voucher_money | number | ✅ |  抵金券金额| |
+| page\_info.totalIds | number | ✅ |  所有待缴费的id| |
+| page\_info.status | number | ✅ |  缴费状态| |
+| page\_info.trade_no | number | ✅ |  第三方交易号| |
+| page\_info.total | number | ✅ |  所有条数| |
+| page\_info.limit | number | ✅ |  跳过条数| |
+| page\_info.offset | number | ✅ | 每页条数 | |
+--
+
+</br>
+<h3>8.8 门诊已退费的分诊记录
+
+```
+请求地址：/charge/traigePatient/refund
+```
+**请求包示例**
+
+```
+{
+	keyword:‘’
+	clinic_id: 1
+	offset: 1
+	limit: 10
+	start_date:'2018-01-10'
+	end_date:'2018-02-10'
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ |  诊所id | |
+| keyword | String | ❌ |  搜索关键字 | |
+| offset |number | ❌ |  分页（跳过个数） | 0|
+| limit | number | ❌ |  分页（每页个数） | 6|
+| start_date | String | ✅ |  开始时间 | |
+| end_date | String | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+    “data”:[
+    {
+      "birthday": "19920706",
+      "created_time": "2018-08-13T01:13:34.634212+08:00",
+      "department_name": "牙科",
+      "doctor_name": "胡一天",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "refund_money": -1,
+      "refund_people": "超级管理员",
+      "sex": 1
+    }]
+    "page_info":{
+       limit: 6
+       offset: 0
+       total:  10
+    }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ |  生日 | |
+| department_name | String | ✅ |  科室名称 | |
+| doctor_name | String | ✅ |  医生名称 | |
+| patient_id | String | ✅ |  病人id | |
+| patient_name | String | ✅ |  病人名称 | |
+| refund_money |number | ✅ |  退费金额 | |
+| refund_people | String | ✅ |  退费人员 | |
+| sex | String | ✅ |  病人性别 | |
+| created_time | String | ✅ |  挂号记录退费时间 | |
+--
+
+</br>
+<h3>8.9 获取交易流水日报表
+
+```
+请求地址：/charge/business/transaction
+```
+**请求包示例**
+
+```
+{
+	oprationName:‘’
+	patientName: ''
+	offset: 1
+	limit: 10
+	start_date:'2018-01-10'
+	end_date:'2018-02-10'
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| oprationName | String | ❌ |  操作员 | |
+| patientName | String | ❌ |  患者名称 | |
+| offset |number | ❌ |  分页（跳过个数） | 0|
+| limit | number | ❌ |  分页（每页个数） | 6|
+| start_date | String | ✅ |  开始时间 | |
+| end_date | String | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "alipay": 0,
+      "balance_money": 1,
+      "bank": 0,
+      "bonus_points_money": 0,
+      "cash": 1,
+      "clinic_patient_id": null,
+      "created_time": "2018-07-26T18:37:30.330244+08:00",
+      "deleted_time": null,
+      "department_id": null,
+      "departmentname": null,
+      "derate_money": 0,
+      "diagnosis_treatment_cost": 0,
+      "diagnosis_treatment_fee": 0,
+      "discount_money": 0,
+      "doctor_id": null,
+      "doctorname": null,
+      "examination_cost": 0,
+      "examination_fee": 0,
+      "id": 9,
+      "in_out": "in",
+      "labortory_cost": 0,
+      "labortory_fee": 0,
+      "material_cost": 0,
+      "material_fee": 0,
+      "medical_money": 0,
+      "on_credit_money": 0,
+      "operation": "超级管理员",
+      "operation_id": 1,
+      "other_cost": 0,
+      "other_fee": 0,
+      "out_refund_no": null,
+      "out_trade_no": "T1201807261837307928",
+      "patient_id": null,
+      "patientname": null,
+      "pay_record_id": 8,
+      "pid": null,
+      "record_type": 2,
+      "retail_cost": 0,
+      "retail_fee": 1,
+      "total_money": 1,
+      "traditional_medical_cost": 0,
+      "traditional_medical_fee": 0,
+      "treatment_cost": 0,
+      "treatment_fee": 0,
+      "updated_time": "2018-07-26T18:37:30.330244+08:00",
+      "voucher_money": 0,
+      "wechat": 0,
+      "western_medicine_cost": 0,
+      "western_medicine_fee": 0
+    }
+  ],
+  "page_info": {
+    "alipay": 0,
+    "balance_money": 39084858,
+    "bank": 0,
+    "bonus_points_money": 0,
+    "cash": 39084856,
+    "derate_money": 0,
+    "diagnosis_treatment_fee": 20500,
+    "discount_money": 0,
+    "examination_fee": 627000,
+    "labortory_fee": 464500,
+    "limit": "1",
+    "material_fee": 9024103,
+    "medical_money": 0,
+    "offset": "0",
+    "on_credit_money": 0,
+    "other_fee": 12003,
+    "retail_fee": 0,
+    "total": 52,
+    "total_money": 39084858,
+    "traditional_medical_fee": 28400000,
+    "treatment_fee": 124000,
+    "voucher_money": 0,
+    "wechat": 2,
+    "western_medicine_fee": 412752
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| alipay |number | ✅ |  支付宝金额 | |
+| balance_money | number | ✅ |  支付金额 | |
+| bank | number | ✅ |  银行卡金额 | |
+| cash | number | ✅ |  现金 | |
+| wechat | number | ✅ |  微信金额 | |
+| bonus\_points_money | number | ✅ |  积分金额 | |
+|  derate_money | number | ✅ |  减免金额 | |
+|  discount_money | number | ✅ |  折扣金额| |
+|  medical_money | number | ✅ |  医保金额| |
+|  other_fee | number | ✅ |  其他费用金额 | |
+|  voucher_money | number | ✅ |  抵金券金额 | |
+|  medical_money | number | ✅ |  医保金额| |
+| clinic\_patient_id | number | ✅ |  诊所病人id | |
+| departmentname | number | ✅ |  科室名称 | |
+| operation | number | ✅ |  操作者 | |
+| in_out | number | ✅ |  类型（进，出） | |
+| diagnosis\_treatment_cost | number | ✅ | 诊疗金额_成本 | |
+| diagnosis\_treatment_fee | number | ✅ |  诊疗金额 | |
+| examination_fee | number | ✅ |  检查费 | |
+| examination_cost | number | ✅ |  检查费_成本 | |
+| labortory_fee | number | ✅ |  检验费 | |
+| labortory_cost | number | ✅ |  检验费_成本 | |
+| material_fee | number | ✅ |  材料费 | |
+| material_cost | number | ✅ |  材料费_成本 | |
+| other_fee | number | ✅ |  其他费 | |
+| other_cost | number | ✅ |  其他费用_成本 | |
+| retail_fee | number | ✅ |  零售费用 | |
+| retail_cost | number | ✅ |  零售_成本 | |
+| traditional\_medical_fee | number | ✅ |  中药费用 | |
+| traditional\_medical_cost | number | ✅ |  中药费用_成本| |
+| treatment_fee | number | ✅ |  治疗费 | |
+| treatment_cost | number | ✅ | 治疗费_成本 | |
+| western\_medicine_fee | number | ✅ |  西药费 | |
+| western\_medicine_cost | number | ✅ |  西药费_成本 | |
+| page\_info.alipay | number | ✅ |  支付宝（合计） | |
+| page\_info.wechat | number | ✅ |  微信（合计） | |
+| page\_info.cash | number | ✅ |  现金（合计） | |
+| page\_info.bank | number | ✅ |  银行卡（合计） | |
+--
+
+</br>
+<h3>8.10 获取分析类报表
+
+```
+请求地址：/charge/business/transaction/analysis
+```
+**请求包示例**
+
+```
+{
+	offset: 1
+	limit: 10
+	start_date:'2018-01-10'
+	end_date:'2018-02-10'
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| offset |number | ❌ |  分页（跳过个数） | 0|
+| limit | number | ❌ |  分页（每页个数） | 10|
+| start_date | String | ✅ |  开始时间 | |
+| end_date | String | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "alipay": 0,
+      "balance_money": 4165600,
+      "bank": 0,
+      "bonus_points_money": 0,
+      "cash": 4165600,
+      "created_time": "2018-07-26",
+      "derate_money": 0,
+      "diagnosis_treatment_fee": 1500,
+      "discount_money": 0,
+      "examination_fee": 72000,
+      "labortory_fee": 57000,
+      "material_fee": 1000100,
+      "medical_money": 0,
+      "on_credit_money": 0,
+      "other_fee": 2000,
+      "retail_fee": 0,
+      "total_money": 4165600,
+      "traditional_medical_fee": 2950000,
+      "treatment_fee": 27000,
+      "voucher_money": 0,
+      "wechat": 0,
+      "western_medicine_fee": 56000
+    }
+  ],
+  "page_info": {
+    "alipay": 0,
+    "balance_money": 39084858,
+    "bank": 0,
+    "bonus_points_money": 0,
+    "cash": 39084856,
+    "derate_money": 0,
+    "diagnosis_treatment_fee": 20500,
+    "discount_money": 0,
+    "examination_fee": 627000,
+    "labortory_fee": 464500,
+    "limit": "1",
+    "material_fee": 9024103,
+    "medical_money": 0,
+    "offset": "0",
+    "on_credit_money": 0,
+    "other_fee": 12003,
+    "retail_fee": 0,
+    "total": 52,
+    "total_money": 39084858,
+    "traditional_medical_fee": 28400000,
+    "treatment_fee": 124000,
+    "voucher_money": 0,
+    "wechat": 2,
+    "western_medicine_fee": 412752
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| alipay |number | ✅ |  支付宝金额 | |
+| balance_money | number | ✅ |  支付金额 | |
+| bank | number | ✅ |  银行卡金额 | |
+| cash | number | ✅ |  现金 | |
+| wechat | number | ✅ |  微信金额 | |
+| bonus\_points_money | number | ✅ |  积分金额 | |
+|  derate_money | number | ✅ |  减免金额 | |
+|  discount_money | number | ✅ |  折扣金额| |
+|  medical_money | number | ✅ |  医保金额| |
+|  other_fee | number | ✅ |  其他费用金额 | |
+|  voucher_money | number | ✅ |  抵金券金额 | |
+|  medical_money | number | ✅ |  医保金额| |
+| operation | number | ✅ |  操作者 | |
+| diagnosis\_treatment_fee | number | ✅ |  诊疗金额 | |
+| examination_fee | number | ✅ |  检查费 | |
+| labortory_fee | number | ✅ |  检验费 | |
+| material_fee | number | ✅ |  材料费 | |
+| other_fee | number | ✅ |  其他费 | |
+| retail_fee | number | ✅ |  零售费用 | |
+| traditional\_medical_fee | number | ✅ |  中药费用 | |
+| treatment_fee | number | ✅ |  治疗费 | |
+| western\_medicine_fee | number | ✅ |  西药费 | |
+| page\_info.alipay | number | ✅ |  支付宝（合计） | |
+| page\_info.wechat | number | ✅ |  微信（合计） | |
+| page\_info.cash | number | ✅ |  现金（合计） | |
+| page\_info.bank | number | ✅ |  银行卡（合计） | |
+--
+
+</br>
+<h3>8.11 获取交易流水月报表
+
+```
+请求地址：/charge/business/transaction/month
+```
+**请求包示例**
+
+```
+{
+	offset: 1
+	limit: 10
+	start_date:'2018-01-10'
+	end_date:'2018-02-10'
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| offset |number | ❌ |  分页（跳过个数） | 0|
+| limit | number | ❌ |  分页（每页个数） | 10|
+| start_date | String | ✅ |  开始时间 | |
+| end_date | String | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "alipay": 0,
+      "balance_money": 1,
+      "bank": 0,
+      "bonus_points_money": 0,
+      "cash": 1,
+      "clinic_patient_id": null,
+      "created_time": "2018-07-26T18:37:30.330244+08:00",
+      "deleted_time": null,
+      "department_id": null,
+      "departmentname": null,
+      "derate_money": 0,
+      "diagnosis_treatment_cost": 0,
+      "diagnosis_treatment_fee": 0,
+      "discount_money": 0,
+      "doctor_id": null,
+      "doctorname": null,
+      "examination_cost": 0,
+      "examination_fee": 0,
+      "id": 9,
+      "in_out": "in",
+      "labortory_cost": 0,
+      "labortory_fee": 0,
+      "material_cost": 0,
+      "material_fee": 0,
+      "medical_money": 0,
+      "on_credit_money": 0,
+      "operation": "超级管理员",
+      "operation_id": 1,
+      "other_cost": 0,
+      "other_fee": 0,
+      "out_refund_no": null,
+      "out_trade_no": "T1201807261837307928",
+      "patient_id": null,
+      "patientname": null,
+      "pay_record_id": 8,
+      "pid": null,
+      "record_type": 2,
+      "retail_cost": 0,
+      "retail_fee": 1,
+      "total_money": 1,
+      "traditional_medical_cost": 0,
+      "traditional_medical_fee": 0,
+      "treatment_cost": 0,
+      "treatment_fee": 0,
+      "updated_time": "2018-07-26T18:37:30.330244+08:00",
+      "voucher_money": 0,
+      "wechat": 0,
+      "western_medicine_cost": 0,
+      "western_medicine_fee": 0
+    }
+  ],
+  "page_info": {
+    "alipay": 0,
+    "balance_money": 39084858,
+    "bank": 0,
+    "bonus_points_money": 0,
+    "cash": 39084856,
+    "derate_money": 0,
+    "diagnosis_treatment_fee": 20500,
+    "discount_money": 0,
+    "examination_fee": 627000,
+    "labortory_fee": 464500,
+    "limit": "1",
+    "material_fee": 9024103,
+    "medical_money": 0,
+    "offset": "0",
+    "on_credit_money": 0,
+    "other_fee": 12003,
+    "retail_fee": 0,
+    "total": 52,
+    "total_money": 39084858,
+    "traditional_medical_fee": 28400000,
+    "treatment_fee": 124000,
+    "voucher_money": 0,
+    "wechat": 2,
+    "western_medicine_fee": 412752
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| alipay |number | ✅ |  支付宝金额 | |
+| balance_money | number | ✅ |  支付金额 | |
+| bank | number | ✅ |  银行卡金额 | |
+| cash | number | ✅ |  现金 | |
+| wechat | number | ✅ |  微信金额 | |
+| bonus\_points_money | number | ✅ |  积分金额 | |
+|  derate_money | number | ✅ |  减免金额 | |
+|  discount_money | number | ✅ |  折扣金额| |
+|  medical_money | number | ✅ |  医保金额| |
+|  other_fee | number | ✅ |  其他费用金额 | |
+|  voucher_money | number | ✅ |  抵金券金额 | |
+|  medical_money | number | ✅ |  医保金额| |
+| clinic\_patient_id | number | ✅ |  诊所病人id | |
+| departmentname | number | ✅ |  科室名称 | |
+| operation | number | ✅ |  操作者 | |
+| in_out | number | ✅ |  类型（进，出） | |
+| diagnosis\_treatment_cost | number | ✅ | 诊疗金额_成本 | |
+| diagnosis\_treatment_fee | number | ✅ |  诊疗金额 | |
+| examination_fee | number | ✅ |  检查费 | |
+| examination_cost | number | ✅ |  检查费_成本 | |
+| labortory_fee | number | ✅ |  检验费 | |
+| labortory_cost | number | ✅ |  检验费_成本 | |
+| material_fee | number | ✅ |  材料费 | |
+| material_cost | number | ✅ |  材料费_成本 | |
+| other_fee | number | ✅ |  其他费 | |
+| other_cost | number | ✅ |  其他费用_成本 | |
+| retail_fee | number | ✅ |  零售费用 | |
+| retail_cost | number | ✅ |  零售_成本 | |
+| traditional\_medical_fee | number | ✅ |  中药费用 | |
+| traditional\_medical_cost | number | ✅ |  中药费用_成本| |
+| treatment_fee | number | ✅ |  治疗费 | |
+| treatment_cost | number | ✅ | 治疗费_成本 | |
+| western\_medicine_fee | number | ✅ |  西药费 | |
+| western\_medicine_cost | number | ✅ |  西药费_成本 | |
+| page\_info.alipay | number | ✅ |  支付宝（合计） | |
+| page\_info.wechat | number | ✅ |  微信（合计） | |
+| page\_info.cash | number | ✅ |  现金（合计） | |
+| page\_info.bank | number | ✅ |  银行卡（合计） | |
+--
+
+
+</br>
+<h3>8.12 获取交易详情
+
+```
+请求地址：/charge/business/transaction/detail
+```
+**请求包示例**
+
+```
+{
+	offset: 1
+	limit: 10
+	start_date:'2018-01-10'
+	end_date:'2018-02-10'
+	patientName: ''
+	phone: ''
+	porjectName: ''
+	in_out: ''
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| offset |number | ❌ |  分页（跳过个数） | 0|
+| limit | number | ❌ |  分页（每页个数） | 10|
+| start_date | String | ✅ |  开始时间 | |
+| end_date | String | ✅ |  结束时间 | |
+| patientName |number | ❌ |  患者名称 | |
+| phone | number | ❌ |  患者手机号 | |
+| porjectName | number | ❌ |  项目名称 | |
+| in_out | number | ❌ |  进出 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "amount": null,
+      "birthday": null,
+      "charge_project_type": null,
+      "created_time": "2018-07-26T18:37:30.330244+08:00",
+      "deptname": null,
+      "doctorname": null,
+      "drug_mount": 1,
+      "drug_name": "维生素AD胶丸",
+      "drug_price": 1,
+      "drug_total": 1,
+      "drug_unit": "瓶",
+      "fee": null,
+      "name": null,
+      "operarion": "超级管理员",
+      "out_trade_no": "T1201807261837307928",
+      "patientname": null,
+      "phone": null,
+      "price": null,
+      "record_type": 2,
+      "sex": null,
+      "total": null,
+      "unit": null,
+      "visit_date": null
+    }
+  ],
+  "page_info": {
+    "banance_fee": 39084858,
+    "limit": "1",
+    "offset": "0",
+    "total": 167,
+    "total_fee": 39084858
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| amount |number | ✅ |  数量| |
+| birthday |number | ✅ |  生日| |
+| charge_project_type |number | ✅ |  收费类型| |
+| deptname |number | ✅ |  科室名称| |
+| doctorname |number | ✅ |  医生名称| |
+| drug_mount |number | ✅ |  药品数量| |
+| drug_name |number | ✅ |  药品名称| |
+| drug_price |number | ✅ | 药品单价| |
+| drug_total |number | ✅ |  药品总价钱| |
+| fee |number | ✅ |  金额| |
+| name |number | ✅ |  名称| |
+| operarion |number | ✅ |  操作员| |
+| out_trade_no |number | ✅ |  系统交易号| |
+| patientname |number | ✅ |  患者名称| |
+| phone |number | ✅ |  手机号| |
+| price |number | ✅ |  单价| |
+| record_type |number | ✅ |  记录类型（1-门诊费用，2-药品零售）| |
+| sex |number | ✅ |  性别| |
+| total |number | ✅ |  金额| |
+| unit |number | ✅ |  单位| |
+| visit_date |number | ✅ |  就诊日期| |
+| page\_info.banance_fee |number | ✅ |  合计（实收金额）| |
+| page\_info.total_fee |number | ✅ |  合计（应收金额| |
+--
+
+</br>
+<h3>8.13 获取交易订单信息
+
+```
+请求地址：/charge/managerment/order
+```
+**请求包示例**
+
+```
+{
+	offset: 1
+	limit: 10
+	start_date:'2018-01-10'
+	end_date:'2018-02-10'
+	clinic_id: ''
+	keyword: ''
+	orderType: ''
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| offset |number | ❌ |  分页（跳过个数） | 0|
+| limit | number | ❌ |  分页（每页个数） | 10|
+| start_date | String | ✅ |  开始时间 | |
+| end_date | String | ✅ |  结束时间 | |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | number | ❌ |  关键词 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "balance_money": -1,
+      "created_time": "2018-08-13T01:13:34.634212+08:00",
+      "number": "R2201808130113349443",
+      "operation": "超级管理员",
+      "order_status": "SUCCESS",
+      "order_type": "门诊退费",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "pay_method_code": "cash"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 141
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| balance_money |number | ✅ |  支付金额| |
+| created_time |number | ✅ |  创建时间| |
+| number |number | ✅ |  订单号| |
+| operation |number | ✅ |  操作员| |
+| order_status |number | ✅ |  订单状态| |
+| order_type |number | ✅ |  订单类型| |
+| patient_id |number | ✅ |  就诊人id| |
+| patient_name |number | ✅ |  就诊人姓名| |
+| pay_method_code |number | ✅ |  支付方式| |
+
+--
+
+9 挂账模块
+--------
+
+</br>
+<h3>9.1 有挂账的分诊记录
+
+```
+请求地址：/onCredit/traigePatient/list
+```
+**请求包示例**
+
+```
+{
+	keyword:‘’
+	clinic_id: 1
+	start_date: ’2018-01-01‘
+	end_date: '2018-01-01'
+	offset: 0
+	limit:1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ✅ |  搜索关键词 | |
+| clinic_id | String | ✅ |  诊所id | |
+| start_date | String | ✅ |  开始日期 | |
+| end_date | String | ✅ |  结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "charge_total_fee": 100,
+      "clinic_triage_patient_id": 1,
+      "clinic_patient_id":1,
+      "operation": "超级管理员",
+      "updated_time": "2018-08-13T01:13:34.634212+08:00",
+      "visit_date": '2018-01-01'
+      "patient_name": '张三'
+      ”doctor_name“: '李四'
+      ”department_name“ : '骨科'
+      ”patient_id“: 1
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 141
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| charge\_total_fee |number | ✅ |  费用| |
+| clinic\_triage\_patient_id |number | ✅ |  分诊id| |
+| clinic\_patient_id |number | ✅ |  诊所病人id| |
+| operation |number | ✅ |  操作员| |
+| updated_time |number | ✅ |  更新时间| |
+| visit_date |number | ✅ |  就诊日期| |
+| patient_name |number | ✅ |  患者姓名| |
+| doctor_name |number | ✅ |  医生姓名| |
+| department_name |number | ✅ |  科室姓名| |
+| patient_id |number | ✅ |  病人id| |
+
+
+10 预约模块
+--------
+
+</br>
+<h3>10.1 预约挂号
+
+```
+请求地址：/appointment/create
+```
+**请求包示例**
+
+```
+{
+	paient_id:‘’
+	cert_no: 1
+	name: 1
+	birthday: 10
+	sex:1
+	phone: 12881212
+	province: ''
+	city: ''
+	district: ''
+	address: ''
+	profession: ''
+	remark: ''
+	patient_channel_id: 1
+	clinic_id: 1
+	doctor_visit_schedule_id: 1
+	visit_type: 1
+	personnel_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| name | String | ✅ |  姓名 | |
+| birthday | String | ✅ |  生日 | |
+| sex | String | ✅ |  性别 | |
+| phone | String | ✅ |  手机号 | |
+| patientChannelID | String | ✅ |  患者途径 | |
+| clinicID | String | ✅ |  诊所id | |
+| personnelID | String | ✅ |  操作员id | |
+| paient_id | String | ❌ |  病人id | |
+| cert_no | String | ❌ |  证件号 | |
+| province | String | ❌ |  省 | |
+| city | String | ❌ |  市 | |
+| district | String | ❌ |  区 | 
+| address | String | ❌ |  地址 | 
+| profession | String | ❌ |  职业 | 
+| remark | String | ❌ |  备注 | 
+| doctor_visit_schedule_id | String | ❌ |  排班id | 
+| visit_type | String | ❌ |  就诊类型 | 
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+|code | String | ✅ |  200 成功 | |
+|msg | String | ✅ |  消息| |
+--
+
+11 药品模块
+--------
+</br>
+<h3>11.1 添加药品
+
+```
+请求地址：/clinic_drug/ClinicDrugCreate
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	drug_class_id: 1
+	name: 1
+	specification: 1
+	manu_factory_name: 1
+	dose_form_name: 1
+	print_name: 1
+	license_no: 1
+	type: 1
+	py_code: 1
+	barcode: 1
+	status: true
+	dosage: 1
+	dosage_unit_name: 1
+	preparation_count: 1
+	preparation_count_unit_name: 1
+	packing_unit_name: 1
+	ret_price: 1
+	buy_price: 1
+	mini_dose: 1
+	is_discount: true
+	is_bulk_sales: 1
+	bulk_sales_price: 1
+	fetch_address: 1
+	once_dose: 1
+	once_dose_unit_name: 1
+	route_administration_name: 1
+	frequency_name: 1
+	illustration: 1
+	day_warning: 1
+	stock_warning: 1
+	english_name: 1
+	sy_code: 1
+	country_flag: 1
+	self_flag: 1
+	drug_flag: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ |  诊所id| |
+| drug\_class_id | String | ✅ |  药品类型编码| |
+| name | String | ✅ |  药品名称| |
+| specification | String |❌ | 规格| |
+| manu\_factory_name | String |❌ | 生产厂商| |
+| dose\_form_name | String | ❌| 剂型| |
+| print_name | String | ❌ |  打印名称| |
+| license_no | String | ❌ |  国药准字| |
+| type | String | ✅ |  0-西药 1-中药| |
+| py_code | String | ❌ |  拼音码| |
+| barcode | String | ❌ |  条形码| |
+| status | boolean | ❌ |  启用状态| |
+| dosage |number | ❌ |  剂量| |
+| dosage\_unit_name | String | ❌ |  剂量单位| |
+| preparation_count | number | ❌ |  制剂数量/包装量| |
+| preparation\_count\_unit_name | String | ❌ |  制剂数量单位| |
+| packing\_unit_name | String | ❌ |  包装单位| |
+| ret_price | String | ✅ |  零售价| |
+| buy_price | String | ❌ |  成本价| |
+| mini_dose | String | ❌ |  最小剂量 | |
+| is_discount | boolean | ❌ |  允许打折| false|
+| is\_bulk_sales | boolean | ✅ |  是否允许拆零销售| false |
+| bulk\_sales_price |number | ❌ |  拆零售价/最小剂量售价| |
+| fetch_address | number | ✅ | 取药地点 0 本诊所，1外购 2， 代购| |
+| once_dose | number | ❌ | 常用剂量| |
+| once\_dose\_unit_name | number | ❌ | 常用剂量单位| |
+| route\_administration_name | number | ❌ | 用药途径| |
+| frequency_name | number | ❌ | 用药频率 | |
+| illustration | number | ❌ | 说明 | |
+| day_warning | number | ❌ | 效期预警天数 | |
+| stock_warning | number | ❌ | 库存预警数 | |
+| english_name | string | ❌ | 英文名称 | |
+| sy_code | number | ❌ | 上药编码 | |
+| country_flag | boolean | ❌ | 进口标识 | false |
+| self_flag | boolean | ❌ | 自费标识 | false |
+| drug_flag | boolean | ❌ | 毒麻标志 | false |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+  ”data“ : {
+     clinic_drug_id: 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+| clinic_drug_id |number | ✅ |  药品id| |
+
+--
+
+</br>
+<h3>11.2 更新药品
+
+```
+请求地址：/clinic_drug/ClinicDrugUpdate
+```
+
+**请求包示例**
+
+```
+{
+   clinic_drug_id : 1
+	drug_class_id: 1
+	name: 1
+	specification: 1
+	manu_factory_name: 1
+	dose_form_name: 1
+	print_name: 1
+	license_no: 1
+	type: 1
+	py_code: 1
+	barcode: 1
+	status: true
+	dosage: 1
+	dosage_unit_name: 1
+	preparation_count: 1
+	preparation_count_unit_name: 1
+	packing_unit_name: 1
+	ret_price: 1
+	buy_price: 1
+	mini_dose: 1
+	is_discount: true
+	is_bulk_sales: 1
+	bulk_sales_price: 1
+	fetch_address: 1
+	once_dose: 1
+	once_dose_unit_name: 1
+	route_administration_name: 1
+	frequency_name: 1
+	illustration: 1
+	day_warning: 1
+	stock_warning: 1
+	english_name: 1
+	sy_code: 1
+	country_flag: 1
+	self_flag: 1
+	drug_flag: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_drug_id | String | ✅ |  药品id| |
+| drug\_class_id | String | ❌ |  药品类型编码| |
+| name | String | ❌ |  药品名称| |
+| specification | String |❌ | 规格| |
+| manu\_factory_name | String |❌ | 生产厂商| |
+| dose\_form_name | String | ❌| 剂型| |
+| print_name | String | ❌ |  打印名称| |
+| license_no | String | ❌ |  国药准字| |
+| type | String | ❌ |  0-西药 1-中药| |
+| py_code | String | ❌ |  拼音码| |
+| barcode | String | ❌ |  条形码| |
+| status | boolean | ❌ |  启用状态| |
+| dosage |number | ❌ |  剂量| |
+| dosage\_unit_name | String | ❌ |  剂量单位| |
+| preparation_count | number | ❌ |  制剂数量/包装量| |
+| preparation\_count\_unit_name | String | ❌ |  制剂数量单位| |
+| packing\_unit_name | String | ❌ |  包装单位| |
+| ret_price | String | ❌ |  零售价| |
+| buy_price | String | ❌ |  成本价| |
+| mini_dose | String | ❌ |  最小剂量 | |
+| is_discount | boolean | ❌ |  允许打折| false|
+| is\_bulk_sales | boolean | ❌ |  是否允许拆零销售| false |
+| bulk\_sales_price |number | ❌ |  拆零售价/最小剂量售价| |
+| fetch_address | number | ❌ | 取药地点 0 本诊所，1外购 2， 代购| |
+| once_dose | number | ❌ | 常用剂量| |
+| once\_dose\_unit_name | number | ❌ | 常用剂量单位| |
+| route\_administration_name | number | ❌ | 用药途径| |
+| frequency_name | number | ❌ | 用药频率 | |
+| illustration | number | ❌ | 说明 | |
+| day_warning | number | ❌ | 效期预警天数 | |
+| stock_warning | number | ❌ | 库存预警数 | |
+| english_name | string | ❌ | 英文名称 | |
+| sy_code | number | ❌ | 上药编码 | |
+| country_flag | boolean | ❌ | 进口标识 | false |
+| self_flag | boolean | ❌ | 自费标识 | false |
+| drug_flag | boolean | ❌ | 毒麻标志 | false |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+  ”data“ : {
+     clinic_drug_id: 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+| clinic\_drug_id |number | ✅ |  药品id| |
+
+
+</br>
+<h3>11.3 启用或停止药品
+
+```
+请求地址：/clinic_drug/ClinicDrugOnOff
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   clinic_drug_id: 1
+   status: true
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| clinic\_drug_id |number | ✅ |  药品id| |
+| status |boolean | ✅ |  开启状态| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.4 药品列表
+
+```
+请求地址：/clinic_drug/ClinicDrugList
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   type: 1
+   drug_class_id: true
+   keyword: '关键字'
+   status: true
+   offset: 0
+   limit: 10
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| type | number | ❌ |  类型| |
+| drug_class_id |number | ❌ | 药品类型id| |
+| keyword | string | ❌ |  关键字| |
+| status | boolean | ❌ |  状态| |
+| offset |number | ❌ | 跳过数 | 0|
+| limit |number | ❌ | 每页数| 10 |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "buy_price": 50000,
+      "clinic_drug_id": 12,
+      "clinic_id": 1,
+      "drug_name": "当归",
+      "fetch_address": 0,
+      "frequency_name": "1次/日 (2pm)",
+      "illustration": "收入高达符号化",
+      "is_discount": true,
+      "manu_factory_name": "北京通县振兴饮片厂",
+      "once_dose": null,
+      "once_dose_unit_name": null,
+      "packing_unit_name": "g",
+      "py_code": "DGV",
+      "ret_price": 10000,
+      "route_administration_name": "口服                  ",
+      "specification": "/kg",
+      "status": true,
+      "stock_amount": 9968,
+      "type": 1
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 47
+  }
+}
+```
+
+**应答包参数说明**
+
+同 11.1
+
+
+
+</br>
+<h3>11.5 查询药品库存信息
+
+```
+请求地址：/clinic_drug/ClinicDrugStock
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   keyword: '关键字'
+   status: true
+   offset: 0
+   limit: 10
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| keyword | string | ❌ |  关键字| |
+| status | boolean | ❌ |  状态| |
+| offset |number | ❌ | 跳过数 | 0|
+| limit |number | ❌ | 每页数| 10 |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "buy_price": 50000,
+      "clinic_drug_id": 12,
+      "clinic_id": 1,
+      "drug_name": "当归",
+      "fetch_address": 0,
+      "frequency_name": "1次/日 (2pm)",
+      "illustration": "收入高达符号化",
+      "is_discount": true,
+      "manu_factory_name": "北京通县振兴饮片厂",
+      "once_dose": null,
+      "once_dose_unit_name": null,
+      "packing_unit_name": "g",
+      "py_code": "DGV",
+      "ret_price": 10000,
+      "route_administration_name": "口服                  ",
+      "specification": "/kg",
+      "status": true,
+      "stock_amount": 9968,
+      "type": 1
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 47
+  }
+}
+```
+
+**应答包参数说明**（同11.1）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| stock_amount |number | ✅ |  库存数量| |
+
+</br>
+<h3>11.6 药品详情 
+
+```
+请求地址：/clinic_drug/ClinicDrugDetail
+```
+**请求包示例**
+
+```
+{
+   clinic_drug_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_drug_id |number | ✅ |  药品id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "barcode": "735636513513",
+    "bulk_sales_price": null,
+    "buy_price": 50000,
+    "clinic_id": 1,
+    "country_flag": null,
+    "created_time": "2018-05-27T17:55:21.813179+08:00",
+    "day_warning": 10,
+    "deleted_time": null,
+    "discount_price": 0,
+    "dosage": 1,
+    "dosage_unit_name": "g",
+    "dose_form_name": "根茎类",
+    "drug_class_id": null,
+    "drug_flag": null,
+    "english_name": null,
+    "fetch_address": 0,
+    "frequency_name": "1次/日 (2pm)",
+    "id": 12,
+    "illustration": "收入高达符号化",
+    "is_bulk_sales": false,
+    "is_discount": true,
+    "license_no": "京卫药生证字20010132号        ",
+    "manu_factory_name": "北京通县振兴饮片厂",
+    "mini_dose": null,
+    "name": "当归",
+    "once_dose": null,
+    "once_dose_unit_name": null,
+    "packing_unit_name": "g",
+    "preparation_count": null,
+    "preparation_count_unit_name": null,
+    "print_name": null,
+    "py_code": "DGV",
+    "ret_price": 10000,
+    "route_administration_name": "口服                  ",
+    "self_flag": null,
+    "specification": "/kg",
+    "status": true,
+    "stock_warning": 50,
+    "sy_code": null,
+    "type": 1,
+    "updated_time": "2018-05-27T17:55:21.813179+08:00"
+  }
+}
+```
+
+**应答包参数说明**
+
+同 11.1
+
+</br>
+<h3>11.7 批量设置药品
+
+
+```
+请求地址：/clinic_drug/ClinicDrugBatchSetting
+```
+**请求包示例**
+
+```
+{
+   day_warning: 1
+   is_discount: false
+   items : [
+    {
+       clinic_drug_id: 1
+    }
+   ]
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_drug_id |number | ✅ |  药品id| |
+| day_warning |number | ✅ |  预警天数| |
+| is_discount | boolean | ✅ |  允许折扣 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+</br>
+<h3>11.8 药品入库
+
+```
+请求地址：/clinic_drug/instock
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   instock_operation_id: 1
+   instock_way_name: 'dsaf'
+   supplier_name: '1232'
+   remark: ''
+   instock_date: '2018-01-12'
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| instock_operation_id |number | ✅ |  入库操作员| |
+| instock_way_name |number | ✅ |  入库方式| |
+| supplier_name |number | ✅ |  供应商| |
+| instock_date |number | ✅ |  入库日期| |
+| remark |number | ✅ |  备注| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+</br>
+<h3>11.9 入库记录列表
+
+```
+请求地址：/clinic_drug/instockRecord
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   start_date: '2018-01-01'
+   end_date: '2019-01-01'
+   order_number: 111
+   offset: 0
+   limit: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| start_date |number | ✅ |  开始日期| |
+| end_date |number | ✅ |  结束日期| |
+| order_number |number | ❌ |  盘点单号| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "drug_instock_record_id": 66,
+      "instock_date": "2018-08-12T00:00:00Z",
+      "instock_operation_name": "超级管理员",
+      "instock_way_name": "采购入库",
+      "order_number": "DRKD-1534084199",
+      "supplier_name": "云南白药药厂",
+      "verify_operation_name": "超级管理员",
+      "verify_status": "02"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 31
+  }
+}
+```
+
+**应答包参数说明**（同11.8）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| verify_status | boolean | ✅ | 审核状态 01 未审核 02 已审核  | |
+
+</br>
+<h3>11.10 入库记录详情
+
+```
+请求地址：/clinic_drug/instockRecordDetail
+```
+**请求包示例**
+
+```
+{
+   drug_instock_record_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_instock\_record_id |number | ✅ |  入库记录id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "created_time": "2018-08-12T22:29:59.104192+08:00",
+    "drug_instock_record_id": 66,
+    "instock_date": "2018-08-12T00:00:00Z",
+    "instock_operation_id": 1,
+    "instock_operation_name": "超级管理员",
+    "instock_way_name": "采购入库",
+    "items": [
+      {
+        "buy_price": 50000,
+        "clinic_drug_id": 12,
+        "drug_name": "当归",
+        "eff_date": "2018-08-12T00:00:00Z",
+        "instock_amount": 10000,
+        "manu_factory_name": "北京通县振兴饮片厂",
+        "packing_unit_name": "g",
+        "ret_price": 10000,
+        "serial": "12323"
+      }
+    ],
+    "order_number": "DRKD-1534084199",
+    "remark": null,
+    "supplier_name": "云南白药药厂",
+    "updated_time": "2018-08-12T22:30:16.97446+08:00",
+    "verify_operation_id": 1,
+    "verify_operation_name": "超级管理员",
+    "verify_status": "02"
+  }
+}
+```
+
+**应答包参数说明** （同11.1和11.8）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+</br>
+<h3>11.11 入库记录修改
+
+```
+请求地址：/clinic_drug/instockUpdate
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   drug_instock_record_id: 1
+   instock_operation_id: 1
+   instock_way_name: 1
+   supplier_name: 1
+   remark: 1
+   instock_date: ‘2018-03-12’
+   items: [
+   {
+      clinic_drug_id: 1
+      instock_amount: 1
+      buy_price: 1
+      serial: 1
+      eff_date: '2018-03-12'
+   }
+   ]
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| instock\_way_name |number | ✅ |  入库方式| |
+| supplier_name |number | ✅ |  供应商| |
+| instock_date |number | ✅ |  入库日期| |
+| clinic_drug_id |number | ✅ |  药品id| |
+| instock_amount |number | ✅ |  入库数量| |
+| buy_price |number | ✅ |  成本价| |
+| serial |number | ✅ |  入库批号| |
+| eff_date |number | ✅ |  有效日期| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+</br>
+<h3>11.12 入库审核
+
+```
+请求地址：/clinic_drug/instockCheck
+```
+**请求包示例**
+
+```
+{
+   drug_instock_record_id: 1
+   verify_operation_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_instock\_record_id |number | ✅ |  入库记录id| |
+| verify\_operation_id |number | ✅ |  审核人员id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+</br>
+<h3>11.13 删除入库记录
+
+```
+请求地址：/clinic_drug/instockDelete
+```
+**请求包示例**
+
+```
+{
+   drug_instock_record_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_instock\_record_id |number | ✅ |  入库记录id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+</br>
+<h3>11.14 出库
+
+```
+请求地址：/clinic_drug/outstock
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   outstock_operation_id: 1
+   outstock_way_name: 1
+   department_id: 1
+   personnel_id: 1
+   remark: ''
+   outstock_date: '2018-01-01'
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| outstock\_operation_id |number | ✅ |  出库操作者| |
+| outstock\_way_name |number | ✅ |  出库方式| |
+| department_id |number | ✅ |  科室id| |
+| personnel_id |number | ✅ |  医生id| |
+| outstock_date |number | ✅ |  出库日期| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+</br>
+<h3>11.15 出库记录
+
+```
+请求地址：/clinic_drug/outstockRecord
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   start_date: '2018-01-01'
+   end_date: '2019-01-01'
+   order_number: 111
+   offset: 0
+   limit: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| start_date |number | ✅ |  开始日期| |
+| end_date |number | ✅ |  结束日期| |
+| order_number |number | ❌ |  盘点单号| |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "department_name": "眼科",
+      "drug_outstock_record_id": 11,
+      "order_number": "DCKD-1533830113",
+      "outstock_date": "2018-08-09T00:00:00Z",
+      "outstock_operation_name": "超级管理员",
+      "outstock_way_name": "科室领用",
+      "personnel_name": "扁鹊",
+      "verify_operation_name": null,
+      "verify_status": "01"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 5
+  }
+}
+```
+
+**应答包参数说明** （同11.14）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.16 出库记录详情
+
+```
+请求地址：/clinic_drug/outstockRecordDetail
+```
+**请求包示例**
+
+```
+{
+   drug_outstock_record_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_outstock\_record_id |number | ✅ |  出库记录idid| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "created_time": "2018-08-09T23:55:13.752401+08:00",
+    "department_id": 2,
+    "department_name": "眼科",
+    "drug_outstock_record_id": 11,
+    "items": [
+      {
+        "buy_price": 600,
+        "drug_name": "巴米尔(阿司匹林泡腾片)",
+        "drug_stock_id": 26,
+        "eff_date": "2018-08-01T00:00:00Z",
+        "manu_factory_name": "北京华丰制药公司",
+        "outstock_amount": 1,
+        "packing_unit_name": "盒",
+        "ret_price": 1000,
+        "serial": "201808011002",
+        "stock_amount": 100,
+        "supplier_name": "广州白云药厂"
+      }
+    ],
+    "order_number": "DCKD-1533830113",
+    "outstock_date": "2018-08-09T00:00:00Z",
+    "outstock_operation_id": 1,
+    "outstock_operation_name": "超级管理员",
+    "outstock_way_name": "科室领用",
+    "personnel_id": 2,
+    "personnel_name": "扁鹊",
+    "remark": null,
+    "updated_time": "2018-08-09T23:55:13.752401+08:00",
+    "verify_operation_id": null,
+    "verify_operation_name": null,
+    "verify_status": "01"
+  }
+}
+```
+
+**应答包参数说明** （同11.1 和 11.14）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.17 更新出库
+
+```
+请求地址：/clinic_drug/outstockUpdate
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   drug_outstock_record_id: 1
+   outstock_operation_id: 1
+   outstock_way_name: 1
+   department_id: 1
+   personnel_id: 1
+   remark: ''
+   outstock_date: '2018-01-01'
+   items: [
+   {
+      drug_stock_id: 1
+      outstock_amount: 1
+   }
+   ]
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| drug\_outstock\_record_id |number | ✅ |  处理记录id| |
+| outstock\_operation_id |number | ✅ |  出库操作员id| |
+| department_id |number | ✅ |  科室id| |
+| personnel_id |number | ✅ |  医生id| |
+| outstock_date |number | ✅ |  出库日期| |
+| drug_stock_id |number | ✅ |  库存id | |
+| outstock_amount |number | ✅ |  出库数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.18 出库审核
+
+```
+请求地址：/clinic_drug/outstockCheck
+```
+**请求包示例**
+
+```
+{
+   drug_outstock_record_id: 1
+   verify_operation_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_outstock\_record_id |number | ✅ |  出库记录id| |
+| verify\_operation_id |number | ✅ |  审核人员id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.19 删除出库记录
+
+```
+请求地址：/clinic_drug/outstockDelete
+```
+**请求包示例**
+
+```
+{
+   drug_outstock_record_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_outstock\_record_id |number | ✅ |  出库记录id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.20 库存列表
+
+```
+请求地址：/clinic_drug/DrugStockList
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1
+   keyword: 1
+   supplier_name: 1
+   amount: 1
+   date_warning: 1
+   offset: 1
+   limit: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| keyword |number | ❌ |  关键字搜索| |
+| supplier_name |number | ❌ |  供应商| |
+| amount |number | ❌ | 库存数量 | |
+| date_warning |number | ❌ | 预警天数  | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "buy_price": 5000,
+      "day_warning": 10,
+      "drug_stock_id": 20,
+      "eff_date": "2018-08-01T00:00:00Z",
+      "manu_factory_name": "北京鹤延龄饮片厂",
+      "name": "川贝母",
+      "packing_unit_name": "g",
+      "ret_price": 1000,
+      "serial": "20180801004",
+      "specification": "H01019/kg",
+      "stock_amount": -90,
+      "stock_warning": null,
+      "supplier_name": "广州白云药厂"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 40
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| buy_price |number | ✅ |  成本价| |
+| day_warning |number | ✅ |  预警天数| |
+| drug\_stock_id |number | ✅ |  库存id| |
+| eff_date | string | ✅ |  有效期| |
+| manu\_factory_name |string | ✅ |  生产厂商| |
+| name | string | ✅ |  药品名称| |
+| packing\_unit_name | string | ✅ | 包装单位| |
+| ret_price | string | ✅ | 零售价| |
+| specification | string | ✅ | 规格| |
+| stock_amount | string | ✅ | 库存| |
+| stock_warning | string | ✅ | 库存预警| |
+| supplier_name | string | ✅ | 供应商| |
+
+
+</br>
+<h3>11.21 创建西药处方模板
+
+```
+请求地址：/clinic_drug/PrescriptionWesternPatientModelCreate
+```
+**请求包示例**
+
+```
+{
+   model_name: ‘’
+   is_common: ture
+   operation_id: 1
+   item: [
+     {
+         clinic_drug_id : 1
+         once_dose: 1
+         once_dose_unit_name: ''
+         route_administration_name: ''
+         frequency_name: ''
+         amount: 1
+         illustration: ''
+         fetch_address: ''
+         eff_day: '2018-01-01'
+     }
+   ]
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| model_name |number | ✅ |  模板名称| |
+| is_common | boolean | ✅ | 是否通用| |
+| operation_id |number | ✅ |  操作员| |
+| clinic_drug_id |number | ✅ |  药品id| |
+| once_dose |number | ✅ |  常用剂量| |
+| once_dose_unit_name |string | ✅ |  剂量单位| |
+| route_administration_name | string | ✅ |  用药途径| |
+| frequency_name | string | ✅ |  用药频率| |
+| amount | string | ✅ |  数量| |
+| illustration | string | ✅ | 说明 | |
+| fetch_address | string | ✅ | 取药地点 0 本诊所 1 外购 | |
+| eff_day | string | ✅ |  有效天数| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.22 西药处方模板列表
+
+```
+请求地址：/clinic_drug/PrescriptionWesternPatientModelList
+```
+**请求包示例**
+
+```
+{
+   keyword: ’‘
+   is_common: false
+   operation_id: 1
+   offset: 0
+   limit 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword |number | ❌ |  关键字| |
+| is_common | boolean | ❌ |  是否通用| |
+| operation_id | boolean | ❌ |  操作员id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "model_name": "新入库",
+      "prescription_patient_model_id": 16,
+      "operation_name": "胡一天",
+      "is_common": true,
+      "route_administration_name": null,
+      "eff_day": null,
+      "amount": null,
+      "frequency_name": null,
+      "fetch_address": null,
+      "medicine_illustration": null,
+      "created_time": "2018-08-01T14:18:26.605669+08:00",
+      "updated_time": "2018-08-01T14:18:26.605669+08:00",
+      "items": [
+        {
+          "clinic_drug_id": 13,
+          "type": 0,
+          "drug_name": "维生素AD胶丸",
+          "specification": "100粒/瓶",
+          "stock_amount": 101,
+          "once_dose": 1,
+          "once_dose_unit_name": "粒",
+          "route_administration_name": "口服                  ",
+          "frequency_name": "3次/日 (8-12-4)",
+          "eff_day": 5,
+          "amount": 5,
+          "packing_unit_name": "瓶",
+          "fetch_address": 0,
+          "illustration": "新入库",
+          "special_illustration": null
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 5
+  }
+}
+```
+
+**应答包参数说明** （同11.21和 11.1）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.23 查询个人西药处方模板
+
+```
+请求地址：/clinic_drug/PrescriptionWesternPersonalPatientModelList
+```
+**请求包示例**
+
+```
+{
+   keyword: ’‘
+   is_common: false
+   operation_id: 1
+   offset: 0
+   limit 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword |number | ❌ |  关键字| |
+| is_common | boolean | ❌ |  是否通用| |
+| operation_id | boolean | ✅ |  操作员id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "model_name": "新入库",
+      "prescription_patient_model_id": 16,
+      "operation_name": "胡一天",
+      "is_common": true,
+      "route_administration_name": null,
+      "eff_day": null,
+      "amount": null,
+      "frequency_name": null,
+      "fetch_address": null,
+      "medicine_illustration": null,
+      "created_time": "2018-08-01T14:18:26.605669+08:00",
+      "updated_time": "2018-08-01T14:18:26.605669+08:00",
+      "items": [
+        {
+          "clinic_drug_id": 13,
+          "type": 0,
+          "drug_name": "维生素AD胶丸",
+          "specification": "100粒/瓶",
+          "stock_amount": 101,
+          "once_dose": 1,
+          "once_dose_unit_name": "粒",
+          "route_administration_name": "口服                  ",
+          "frequency_name": "3次/日 (8-12-4)",
+          "eff_day": 5,
+          "amount": 5,
+          "packing_unit_name": "瓶",
+          "fetch_address": 0,
+          "illustration": "新入库",
+          "special_illustration": null
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 5
+  }
+}
+```
+
+**应答包参数说明** （同上）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.24 西药处方模板详情
+
+```
+请求地址：/clinic_drug/PrescriptionWesternPatientModelDetail
+```
+**请求包示例**
+
+```
+{
+   prescription_patient_model_id: 16
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| prescription\_patient\_model_id |number | ✅ |  处方模板id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "is_common": true,
+    "items": [
+      {
+        "amount": 5,
+        "clinic_drug_id": 58,
+        "created_time": "2018-08-01T14:18:26.605669+08:00",
+        "deleted_time": null,
+        "drug_name": "叶酸片",
+        "eff_day": 5,
+        "fetch_address": 0,
+        "frequency_name": "1次/日 (8am)",
+        "id": 12,
+        "illustration": "新入库",
+        "once_dose": 1,
+        "once_dose_unit_name": "片",
+        "prescription_western_patient_model_id": 16,
+        "route_administration_name": "口服                  ",
+        "updated_time": "2018-08-01T14:18:26.605669+08:00"
+      }
+    ],
+    "model_name": "新入库",
+    "prescription_patient_model_id": 16,
+    "status": true
+  }
+}
+```
+
+**应答包参数说明** （同上）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.25 修改西药处方模板
+
+```
+请求地址：/clinic_drug/PrescriptionWesternPatientModelUpdate
+```
+**请求包示例**
+
+```
+{
+   prescription_patient_model_id: 1
+   model_name: ''
+   is_common: false
+   operation_id: 1
+   items: [
+   {
+       clinic_drug_id: 1
+       once_dose: 1
+       once_dose_unit_name: 1
+       route_administration_name: 1
+       frequency_name: 1
+       amount: 1
+       illustration: 1
+       fetch_address: 1
+       eff_day: 1
+   }
+   ]
+}
+```
+
+**请求包参数说明** (同11.21)
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.26 删除西药处方模板
+
+```
+请求地址：/clinic_drug/PrescriptionWesternPatientModelDelete
+```
+**请求包示例**
+
+```
+{
+   prescription_patient_model_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| prescription\_patient\_model_id |number | ✅ |  西药处方模板id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.27 创建中药处方模板
+
+```
+请求地址：/clinic_drug/PrescriptionChinesePatientModelCreate
+```
+**请求包示例**
+
+```
+{
+   model_name: ''
+   is_common: true
+   route_administration_name: '用药途径'
+   frequency_name: '用药频率'
+   amount: 1
+   fetch_address: '取药地点'
+   eff_day: '有效期’
+   medicine_illustration: '服药说明'
+   operation_id: 1
+   items: [{
+       clinic_drug_id: 1
+       once_dose: 1
+       once_dose_unit_name: ''
+       special_illustration: ''
+   }]
+   
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| model_name |number | ✅ |  mo| |
+| is_common |boolean | ✅ |  是否通用| |
+| route\_administration_name |boolean | ✅ |  用药途径| |
+| frequency_name |boolean | ✅ |  用药频率| |
+| amount |bumber | ✅ |  数量| |
+| fetch_address |string | ✅ |  取药地点| |
+| eff_day | string | ✅ |  有效期| |
+| medicine_illustration | string | ✅ | 说明| ||
+| operation_id | string | ✅ | 操作员id| |
+| clinic\_drug_id | string | ✅ |  诊所药品id| |
+| once_dose | string | ✅ |  常用剂量| |
+| once\_dose\_unit_name | string | ✅ |  剂量单位| |
+| special_illustration | string | ✅ |  说明| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.28 中药处方模板列表
+
+```
+请求地址：/clinic_drug/PrescriptionChinesePatientModelList
+```
+**请求包示例**
+
+```
+{
+   keyword: 1
+   is_common: 1
+   operation_id 1
+   offset： 1
+   limit: 10
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword |number | ✅ |  关键词| |
+| is_common |boolean | ✅ |  是否通用| |
+| operation_id |boolean | ✅ | 操作员id| |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "model_name": "新入库",
+      "prescription_patient_model_id": 6,
+      "operation_name": "胡一天",
+      "is_common": true,
+      "route_administration_name": "水煎服",
+      "eff_day": 5,
+      "amount": 5,
+      "frequency_name": null,
+      "fetch_address": 0,
+      "medicine_illustration": "",
+      "created_time": "2018-08-01T14:19:41.760702+08:00",
+      "updated_time": "2018-08-01T14:19:41.760702+08:00",
+      "items": [
+        {
+          "clinic_drug_id": 12,
+          "type": 1,
+          "drug_name": "当归",
+          "specification": null,
+          "stock_amount": 9968,
+          "once_dose": 10,
+          "once_dose_unit_name": "g",
+          "route_administration_name": null,
+          "frequency_name": null,
+          "eff_day": null,
+          "amount": 5,
+          "packing_unit_name": null,
+          "fetch_address": null,
+          "illustration": null,
+          "special_illustration": null
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 5
+  }
+}
+```
+
+**应答包参数说明** (同 11.1 和 11.27)
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.29 个人中药处方模板
+
+```
+请求地址：/clinic_drug/PrescriptionChinesePersonalPatientModelList
+```
+**请求包示例**
+
+```
+{
+   keyword: 1
+   is_common: 1
+   operation_id 1
+   offset： 1
+   limit: 10
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword |number | ✅ |  关键词| |
+| is_common |boolean | ✅ |  是否通用| |
+| operation_id |boolean | ✅ | 操作员id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "model_name": "新入库",
+      "prescription_patient_model_id": 6,
+      "operation_name": "胡一天",
+      "is_common": true,
+      "route_administration_name": "水煎服",
+      "eff_day": 5,
+      "amount": 5,
+      "frequency_name": null,
+      "fetch_address": 0,
+      "medicine_illustration": "",
+      "created_time": "2018-08-01T14:19:41.760702+08:00",
+      "updated_time": "2018-08-01T14:19:41.760702+08:00",
+      "items": [
+        {
+          "clinic_drug_id": 12,
+          "type": 1,
+          "drug_name": "当归",
+          "specification": null,
+          "stock_amount": 9968,
+          "once_dose": 10,
+          "once_dose_unit_name": "g",
+          "route_administration_name": null,
+          "frequency_name": null,
+          "eff_day": null,
+          "amount": 5,
+          "packing_unit_name": null,
+          "fetch_address": null,
+          "illustration": null,
+          "special_illustration": null
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 5
+  }
+}
+```
+
+**应答包参数说明** （同上）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.30 中药处方模板详情
+
+```
+请求地址：/clinic_drug/PrescriptionChinesePatientModelDetail
+```
+**请求包示例**
+
+```
+{
+   prescription_patient_model_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| prescription\_patient\_model_id |number | ✅ |  模板id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "amount": 5,
+    "eff_day": 5,
+    "fetch_address": 0,
+    "frequency_name": "1次/日 (8am)",
+    "is_common": true,
+    "items": [
+      {
+        "amount": 5,
+        "clinic_drug_id": 12,
+        "created_time": "2018-08-01T14:19:41.760702+08:00",
+        "deleted_time": null,
+        "drug_name": "当归",
+        "id": 22,
+        "once_dose": 10,
+        "once_dose_unit_name": "g",
+        "prescription_chinese_patient_model_id": 6,
+        "special_illustration": null,
+        "updated_time": "2018-08-01T14:19:41.760702+08:00"
+      }
+    ],
+    "medicine_illustration": "",
+    "model_name": "新入库",
+    "prescription_patient_model_id": 6,
+    "route_administration_name": "水煎服",
+    "status": true
+  }
+}
+```
+
+**应答包参数说明** (同上)
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.31 更新中药处方模板
+
+```
+请求地址：/clinic_drug/PrescriptionChinesePatientModelUpdate
+```
+**请求包示例**
+
+```
+{
+   prescription_patient_model_id: 1
+   model_name: ''
+   is_common: true
+   route_administration_name: '用药途径'
+   frequency_name: '用药频率'
+   amount: 1
+   fetch_address: '取药地点'
+   eff_day: '有效期’
+   medicine_illustration: '服药说明'
+   operation_id: 1
+   items: [{
+       clinic_drug_id: 1
+       once_dose: 1
+       once_dose_unit_name: ''
+       special_illustration: ''
+   }]
+   
+}
+```
+
+**请求包参数说明** (同 11.27)
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.32 删除中药模板
+
+```
+请求地址：/clinic_drug/PrescriptionChinesePatientModelDelete
+```
+**请求包示例**
+
+```
+{
+   prescription_patient_model_id: 1   
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| prescription\_patient\_model_id |number | ✅ |  处方模板id| |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.33 新增药房盘点
+
+```
+请求地址：/clinic_drug/DrugInventoryCreate
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1   
+   inventory_operation_id: 1
+   items: [{
+       drug_stock_id: 1
+       actual_amount: 1
+   }]
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| inventory_operation_id |number | ✅ |  判断id| |
+| drug_stock_id |number | ✅ |  库存id| |
+| actual_amount |number | ✅ |  实际数量| |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.34 药房盘点记录表
+
+```
+请求地址：/clinic_drug/DrugInventoryList
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1 
+   start_date: "2018-01-10"
+   end_date: '2018-01-30'
+   offset: 0
+   limit: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| start_date |string | ✅ |  开始日期| |
+| end_date | string | ✅ |  结束日期| |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "drug_inventory_record_id": 5,
+      "inventory_date": "2018-08-09T00:00:00Z",
+      "inventory_operation_name": "超级管理员",
+      "order_number": "DPD-1533823257",
+      "verify_operation_name": null,
+      "verify_status": "01"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 2
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_inventory\_record_id |number | ✅ |  盘点id| |
+| inventory_date |number | ✅ |  盘点日期| |
+| inventory\_operation_name |number | ✅ |  盘点人员| |
+| order_number |number | ✅ | 盘点单号| |
+| verify\_operation_name |number | ✅ |  确认人员| |
+| verify_status |number | ✅ |  确认状态| |
+
+
+</br>
+<h3>11.35 药房盘点记录详情
+
+```
+请求地址：/clinic_drug/DrugInventoryRecordDetail
+```
+**请求包示例**
+
+```
+{
+   drug_inventory_record_id: 1   
+   clinic_id: 1
+   keyword: ''
+   status: false
+   amount: 1
+   offset: 0
+   limit: 10
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_inventory\_record_id |number | ✅ |  入库记录id| |
+| clinic_id |number | ✅ |  入库记录id| |
+| keyword | string | ✅ |  关键词| |
+| status |boolean | ✅ |  确认状态| |
+| amount |boolean | ✅ |  数量| |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "created_time": "2018-08-09T22:00:57.177251+08:00",
+    "drug_inventory_record_id": 5,
+    "inventory_date": "2018-08-09T00:00:00Z",
+    "inventory_operation_id": 1,
+    "inventory_operation_name": "超级管理员",
+    "items": [
+      {
+        "actual_amount": 55,
+        "buy_price": 5000,
+        "drug_stock_id": 20,
+        "eff_date": "2018-08-01T00:00:00Z",
+        "manu_factory_name": "北京鹤延龄饮片厂",
+        "name": "川贝母",
+        "packing_unit_name": "g",
+        "serial": "20180801004",
+        "specification": "H01019/kg",
+        "status": true,
+        "stock_amount": -90,
+        "supplier_name": "广州白云药厂"
+      }
+    ],
+    "order_number": "DPD-1533823257",
+    "updated_time": "2018-08-09T22:00:57.177251+08:00",
+    "verify_operation_id": null,
+    "verify_operation_name": null,
+    "verify_status": "01"
+  },
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 40,
+    "total_item": [
+      {
+        "actual_amount": 1133,
+        "drug_stock_id": 9
+      }
+    ]
+  }
+}
+```
+
+**应答包参数说明** （同11.34和 11.1）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| page_info.actual_amount |number | ✅ |  合计（库存剩余数量）| |
+| page_info. drug_stock_id |number | ✅ |  合计（库存id）| |
+
+
+</br>
+<h3>11.36 修改药房盘点
+
+```
+请求地址：/clinic_drug/DrugInventoryUpdate
+```
+**请求包示例**
+
+```
+{
+   drug_inventory_record_id: 1 
+   clinic_id: 1
+   inventory_operation_id: 1
+   items: [{
+       drug_stock_id: 1
+       actual_amount: 1
+   }] 
+}
+```
+
+**请求包参数说明** （同 11.33）
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.37 药房盘点审核
+
+```
+请求地址：/clinic_drug/DrugInventoryCheck
+```
+**请求包示例**
+
+```
+{
+   drug_inventory_record_id: 1   
+   verify_operation_id: 1
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_inventory\_record_id |number | ✅ |  药品盘点id| |
+| verify\_operation_id |number | ✅ |  盘点确认id| |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.38 删除盘点记录
+
+```
+请求地址：/clinic_drug/DrugInventoryRecordDelete
+```
+**请求包示例**
+
+```
+{
+   drug_inventory_record_id: 1   
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_inventory\_record_id |number | ✅ |  药品盘点id| |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  ”msg“: "成功"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+</br>
+<h3>11.39 库存盘点列表
+
+```
+请求地址：/clinic_drug/DrugStockInventoryList
+```
+**请求包示例**
+
+```
+{
+   clinic_id: 1  
+   keyword: ''
+   status: false
+   amount: 1
+   offset: 10
+   limit: 10
+}
+```
+
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id| |
+| keyword |number | ✅ |  关键词| |
+| status |number | ✅ |  审核状态| |
+| amount |number | ✅ |  数量| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "buy_price": 5000,
+      "day_warning": 10,
+      "drug_stock_id": 20,
+      "eff_date": "2018-08-01T00:00:00Z",
+      "manu_factory_name": "北京鹤延龄饮片厂",
+      "name": "川贝母",
+      "packing_unit_name": "g",
+      "ret_price": 1000,
+      "serial": "20180801004",
+      "specification": "H01019/kg",
+      "status": true,
+      "stock_amount": -90,
+      "stock_warning": null,
+      "supplier_name": "广州白云药厂"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 40
+  }
+}
+```
+
+**应答包参数说明** （同11.1）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code |number | ✅ |  200时 成功| |
+
+
+
+12 角色模块
+--------
+
+
+</br>
+<h3>12.1 创建角色
+
+```
+请求地址：/role/create
+```
+**请求包示例**
+
+```
+{
+	name:‘’
+	clinic_id: 1
+	items:[{
+	  clinic_function_menu_id: 1
+	}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| name | String | ✅ |  角色名称 | |
+| clinic_id | String | ✅ |  诊所id | |
+| items.clinic\_function\_menu_id | String | ✅ | 功能id |  |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+    “data”: 1
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+|code | String | ✅ |  200 成功 | |
+|msg | String | ✅ |  消息| |
+| data | String | ✅ |  角色id| |
+--
+
+
+</br>
+<h3>12.2 更新角色
+
+```
+请求地址：/role/update
+```
+**请求包示例**
+
+```
+{
+	name:‘’
+	role_id: 1
+	items:[{
+	  clinic_function_menu_id: 1
+	}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| name | String | ✅ |  角色名称 | |
+| role_id | String | ✅ |  角色id | |
+| items.clinic\_function\_menu_id | String | ✅ | 功能id |  |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+    “data”: 1
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+|code | String | ✅ |  200 成功 | |
+|msg | String | ✅ |  消息| |
+| data | String | ✅ |  角色id| |
+--
+
+</br>
+<h3>12.3 更新角色
+
+```
+请求地址：/role/update
+```
+**请求包示例**
+
+```
+{
+	role_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| role_id | String | ✅ |  角色id | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+|code | String | ✅ |  200 成功 | |
+|msg | String | ✅ |  消息| |
+--
+
+</br>
+<h3>12.4 列表
+
+```
+请求地址：/role/listByClinicID
+```
+**请求包示例**
+
+```
+{
+	clinic_id: 1
+	keyword: ''
+	offset: 1
+	limit: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ❌ |  诊所id | |
+| keyword | String | ❌ |  关键字 | |
+| offset | String | ❌ |  跳过数 | 0 |
+| limit | String | ❌ |  每页数 | 10 |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-08-01T13:49:03.304447+08:00",
+      "function_menu_name": "就诊流程,药品零售,门诊发药",
+      "name": "发药",
+      "role_id": 47,
+      "status": true
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 12
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| function\_menu\_name | String | ✅ |  功能名称 | |
+| status | String | ✅ |  启用状态| |
+| name | String | ✅ |  角色名称| |
+| role_id | String | ✅ |  角色id| |
+| created_time | String | ✅ |  创建时间| |
+--
+
+
+</br>
+<h3>12.5 角色详情
+
+```
+请求地址：/role/roleDetail
+```
+**请求包示例**
+
+```
+{
+	role_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| role_id | String | ✅ |  诊所id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "name": "发药",
+      "role_id": 47,
+      "status": true,
+      "funtionMenus": [
+        {
+        "ascription": "01",
+        "clinic_function_menu_id": 1,
+        "function_menu_id": 1,
+        "icon": null,
+        "level": 0,
+        "menu_name": "就诊流程",
+        "menu_url": "/treatment",
+        "parent_function_menu_id": null,
+        "status": true,
+        "weight": 0
+        }
+      ],
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 12
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| status | String | ✅ |  启用状态| |
+| name | String | ✅ |  角色名称| |
+| role_id | String | ✅ |  角色id| |
+| funtionMenus.ascription | String | ✅ |  01 诊所 02 平台| |
+| funtionMenus.clinic\_function\_menu_id | String | ✅ | 诊所功能id| |
+| funtionMenus.function\_menu_id | String | ✅ | 功能id| |
+| funtionMenus.icon | String | ✅ | 图标| |
+| funtionMenus.level | String | ✅ | 等级| |
+| funtionMenus.menu_name | String | ✅ | 功能名称| |
+| funtionMenus.menu_url | String | ✅ | 功能地址| |
+| funtionMenus.parent\_function\_menu_id | String | ✅ | 父级id| |
+| funtionMenus.weight | String | ✅ | 权重| |
+| funtionMenus.status | String | ✅ | 启用状态| |
+--
+
+
+</br>
+<h3>12.6 获取角色未开通的菜单项
+
+```
+请求地址：/role/RoleFunctionUnset
+```
+**请求包示例**
+
+```
+{
+	role_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| role_id | String | ❌ |  角色id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "function_menu_id": 4,,
+      "menu_name": "设置管理",
+      "level": 0
+      "status": true,
+      "funtionMenus": [
+        {
+        "ascription": "01",
+        "clinic_function_menu_id": 1,
+        "function_menu_id": 1,
+        "icon": null,
+        "level": 0,
+        "menu_name": "就诊流程",
+        "menu_url": "/treatment",
+        "parent_function_menu_id": null,
+        "status": true,
+        "weight": 0
+        }
+      ],
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 12
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| status | String | ✅ |  启用状态| |
+| name | String | ✅ |  角色名称| |
+| role_id | String | ✅ |  角色id| |
+| funtionMenus.ascription | String | ✅ |  01 诊所 02 平台| |
+| funtionMenus.clinic\_function\_menu_id | String | ✅ | 诊所功能id| |
+| funtionMenus.function\_menu_id | String | ✅ | 功能id| |
+| funtionMenus.icon | String | ✅ | 图标| |
+| funtionMenus.level | String | ✅ | 等级| |
+| funtionMenus.menu_name | String | ✅ | 功能名称| |
+| funtionMenus.menu_url | String | ✅ | 功能地址| |
+| funtionMenus.parent\_function\_menu_id | String | ✅ | 父级id| |
+| funtionMenus.weight | String | ✅ | 权重| |
+| funtionMenus.status | String | ✅ | 启用状态| |
+--
+
+
+</br>
+<h3>12.7 获取角色未开通的菜单项
+
+```
+请求地址：/role/roleDetail
+```
+**请求包示例**
+
+```
+{
+	role_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| role_id | String | ✅ |  角色id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "function_menu_id": 4,
+      "menu_name": "设置管理",
+      "level": 0,
+      "ascription": "01",
+      "status": true,
+      "weight": 3,
+      "menu_url": "/setting",
+      "list": [
+        {
+           "function_menu_id": 26,
+          "parent_function_menu_id": 4,
+          "menu_name": "模板设置",
+          "level": 1,
+          "ascription": "01",
+          "icon": "/static/icons/template.svg",
+          "status": true,
+          "weight": 1,
+          "menu_url": "/setting/template",
+          list: [ 
+           {
+              "function_menu_id": 41,
+              "parent_function_menu_id": 26,
+              "clinic_function_menu_id": 40,
+              "menu_name": "检验模板",
+              "level": 2,
+              "ascription": "01",
+              "status": true,
+              "weight": 1,
+              "menu_url": "/setting/template/inspectionTemplate"
+           }
+          ]
+        }
+      ],
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 12
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| status | String | ✅ |  启用状态| |
+| name | String | ✅ |  角色名称| |
+| role_id | String | ✅ |  角色id| |
+| funtionMenus.ascription | String | ✅ |  01 诊所 02 平台| |
+| clinic\_function\_menu_id | String | ✅ | 诊所功能id| |
+| function\_menu_id | String | ✅ | 功能id| |
+| icon | String | ✅ | 图标| |
+| level | String | ✅ | 等级| |
+| menu_name | String | ✅ | 功能名称| |
+| menu_url | String | ✅ | 功能地址| |
+| parent\_function\_menu_id | String | ✅ | 父级id| |
+| weight | String | ✅ | 权重| |
+--
+
+
+</br>
+<h3>12.8 在角色下分配用户
+
+```
+请求地址：/role/RoleAllocation
+```
+**请求包示例**
+
+```
+{
+	role_id: 1
+	items: [
+	 {
+	    personnel_id : 1
+	 }
+	]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| role_id | String | ✅ |  角色id | |
+| personnel_id | String | ✅ |  人id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": 
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  200 成功| |
+| msg | String | ✅ | 消息| |
+--
+
+
+</br>
+<h3>12.9 角色分配的用户列表
+
+```
+请求地址：/role/PersonnelsByRole
+```
+**请求包示例**
+
+```
+{
+	role_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| role_id | String | ✅ |  角色id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "department_name": "牙科",
+      "personnel_id": 33,
+      "personnel_name": "王思聪"
+    }
+  ],
+  "msg": "ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| department_name | String | ✅ | 诊所名称| |
+| personnel_id | String | ✅ | 人id| |
+| personnel_name | String | ✅ | 姓名| |
+--
+
+
+13 业务权限模块
+--------
+
+</br>
+<h3>13.1 添加功能菜单栏
+
+```
+请求地址：/business/menubar/create
+```
+
+**请求包示例**
+
+```
+{
+	url: 1
+	level: 1
+	icon: 1
+	name: 1
+	weight: 1
+   ascription: 1
+   parent_function_menu_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| url | String | ✅ |  地址 | |
+| level | String | ✅ |  等级 | |
+| icon | String | ✅ |  图标 | |
+| name | String | ✅ |  名称 | |
+| weight | String | ✅ |  权重 | |
+| ascription | String | ✅ |  类型 | |
+| parent\_function\_menu_id | String | ✅ |  父级id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": "ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 时成功| |
+--
+
+</br>
+<h3>13.2 添加功能菜单栏
+
+```
+请求地址：/business/menubar/list
+```
+
+**请求包示例**
+
+```
+{
+	ascription: 01
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| ascription | String | ✅ |  类型 | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": "ok"
+  “data”: [    {
+      "ascription": "01",
+      "function_menu_id": 38,
+      "icon": null,
+      "level": 2,
+      "menu_name": "其他费用",
+      "menu_url": "/setting/chargeItemSetting/otherFee",
+      "parent_function_menu_id": 25,
+      "status": true,
+      "weight": 7
+    }]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| ascription | String | ✅ |  01 诊所 02 平台| |
+| function\_menu_id | String | ✅ | 功能id| |
+| icon | String | ✅ | 图标| |
+| level | String | ✅ | 等级| |
+| menu_name | String | ✅ | 功能名称| |
+| menu_url | String | ✅ | 功能地址| |
+| weight | String | ✅ | 权重| |
+--
+
+</br>
+<h3>13.3 获取诊所未开通的菜单项
+
+```
+请求地址：/business/menubar/list/clinicUnset
+```
+
+**请求包示例**
+
+```
+{
+	clinic_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ |  诊所id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": "ok"
+  “data”: [    {
+      "ascription": "01",
+      "function_menu_id": 38,
+      "icon": null,
+      "level": 2,
+      "menu_name": "其他费用",
+      "menu_url": "/setting/chargeItemSetting/otherFee",
+      "parent_function_menu_id": 25,
+      "status": true,
+      "weight": 7
+    }]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| ascription | String | ✅ |  01 诊所 02 平台| |
+| function\_menu_id | String | ✅ | 功能id| |
+| icon | String | ✅ | 图标| |
+| level | String | ✅ | 等级| |
+| menu_name | String | ✅ | 功能名称| |
+| menu_url | String | ✅ | 功能地址| |
+| weight | String | ✅ | 权重| |
+--
+
+</br>
+<h3>13.4 诊所分配业务
+
+```
+请求地址：/business/clinic/assign
+```
+
+**请求包示例**
+
+```
+{
+	clinic_id: 1
+	items: [
+	  {function_menu_id: 1}
+	]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ |  诊所id | |
+| function_menu_id | String | ✅ |  功能id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": "ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+|code | String | ✅ |  200 成功| |
+--
+
+</br>
+<h3>13.5 诊所分配业务
+
+```
+请求地址：/business/clinic/menubar
+```
+
+**请求包示例**
+
+```
+{
+	clinic_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ |  诊所id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": "ok"
+  data: [
+    {
+      "ascription": "01",
+      "clinic_function_menu_id": 46,
+      "function_menu_id": 1,
+      "icon": null,
+      "level": 0,
+      "menu_name": "就诊流程",
+      "menu_url": "/treatment",
+      "parent_function_menu_id": null,
+      "status": true,
+      "weight": 0
+    }
+  
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| ascription | String | ✅ |  01 诊所 02 平台| |
+| function\_menu_id | String | ✅ | 功能id| |
+| icon | String | ✅ | 图标| |
+| level | String | ✅ | 等级| |
+| menu_name | String | ✅ | 功能名称| |
+| menu_url | String | ✅ | 功能地址| |
+| weight | String | ✅ | 权重| |
+--
+
+
+
 14 管理用户模块
 --------
 
