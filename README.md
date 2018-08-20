@@ -14205,3 +14205,1556 @@
 | 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
 | :-: | :-: | :-:  | :--: | :--: |
 | code | String | ✅ | 200 成功| |
+--
+
+22 基础字典表模块
+--------
+
+</br>
+<h3>22.1 查询单位列表
+
+```
+请求地址：/dictionaries/ExaminationReportModelList
+```
+**请求包示例**
+
+```
+{
+	keyword:盒
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "change_flag": 0,
+      "code": "08",
+      "created_time": "2018-05-27T00:08:45.40778+08:00",
+      "d_code": "XH",
+      "deleted_flag": 0,
+      "deleted_time": null,
+      "id": 1,
+      "name": "小盒",
+      "py_code": "XH",
+      "updated_time": "2018-05-27T00:08:45.40778+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 3
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | 单位id | |
+| data.name | String | ✅ | 单位名称 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.change_flag | Int | ❌ | 修改标志 | |
+| data.code | String | ✅ |  编码| |
+| data.d_code| String | ✅ |  简码| |
+| data.deleted_flag| Int | ❌ |  删除标志| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.2 药品剂型列表
+
+```
+请求地址：/dictionaries/ExaminationReportModelList
+```
+**请求包示例**
+
+```
+{
+	keyword:凝
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "code": "GEL",
+      "created_time": "2018-05-27T00:08:54.588596+08:00",
+      "d_code": "15",
+      "deleted_flag": 0,
+      "deleted_time": null,
+      "id": 1,
+      "name": "凝胶剂",
+      "py_code": "NJJ",
+      "updated_time": "2018-05-27T00:08:54.588596+08:00"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | 单位id | |
+| data.name | String | ✅ | 剂型名称 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.code | String | ✅ |  编码| |
+| data.d_code| String | ✅ |  简码| |
+| data.deleted_flag| Int | ❌ |  删除标志| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.3 药物类型列表
+
+```
+请求地址：/dictionaries/DrugClassList
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所id | |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "count": 33,
+      "id": 2,
+      "name": "未分类"
+    },
+    {
+      "count": 1,
+      "id": 3,
+      "name": "抗感染类药物"
+    },
+    {
+      "count": 1,
+      "id": 4,
+      "name": "呼吸系统用药"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 33
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 类型名称 | |
+| data.count | Int | ✅ | 该分类下的总药品数 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.4 药物种类列表
+
+```
+请求地址：/dictionaries/DrugTypeList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "code": "GEL",
+      "created_time": "2018-05-27T00:08:54.588596+08:00",
+      "d_code": "15",
+      "deleted_flag": 0,
+      "deleted_time": null,
+      "id": 1,
+      "name": "123",
+      "py_code": "123",
+      "updated_time": "2018-05-27T00:08:54.588596+08:00"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.code | String | ✅ |  编码| |
+| data.d_code| String | ✅ |  简码| |
+| data.deleted_flag| Int | ❌ |  删除标志| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.5 药品别名列表
+
+```
+请求地址：/dictionaries/DrugPrintList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "code": "GEL",
+      "created_time": "2018-05-27T00:08:54.588596+08:00",
+      "d_code": "15",
+      "deleted_flag": 0,
+      "deleted_time": null,
+      "id": 1,
+      "name": "123",
+      "py_code": "123",
+      "print_name":"12323",
+      "name_type":,
+      "updated_time": "2018-05-27T00:08:54.588596+08:00"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 药品名称 | |
+| data.print_name | String | ❌ | 药品别名 | |
+| data.name_type | String | ✅ | 类型 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.code | String | ✅ |  编码| |
+| data.d_code| String | ✅ |  简码| |
+| data.deleted_flag| Int | ❌ |  删除标志| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.6 检查部位列表
+
+```
+请求地址：/dictionaries/ExaminationOrganList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-05-28T23:49:04.014708+08:00",
+      "deleted_time": null,
+      "id": 25,
+      "name": "肝",
+      "updated_time": "2018-05-28T23:49:04.014708+08:00"
+    },
+    {
+      "created_time": "2018-05-28T23:49:04.014708+08:00",
+      "deleted_time": null,
+      "id": 26,
+      "name": "胆",
+      "updated_time": "2018-05-28T23:49:04.014708+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 22
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 部位名称 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.7 使用频率列表
+
+```
+请求地址：/dictionaries/FrequencyList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "code": "QD12      ",
+      "created_time": "2018-05-27T00:08:36.533288+08:00",
+      "days": 1,
+      "define_code": "QD12    ",
+      "delete_flag": 0,
+      "deleted_time": null,
+      "doctor_flag": null,
+      "id": 1,
+      "in_out_flag": 2,
+      "input_frequency": "QD",
+      "medical_bill_code": 1,
+      "name": "1次/日 (12am)",
+      "print_code": "Qd12",
+      "py_code": "QD12    ",
+      "times": 1,
+      "update_flag": 0,
+      "updated_time": "2018-05-27T00:08:36.533288+08:00",
+      "week_day_flag": 0,
+      "weight": 33
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 62
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 频率名称 | |
+| data.define_code | String | ❌ | 自定义码 | |
+| data.print_code | String | ❌| 打印名称 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.code | String | ✅ |  编码| |
+| data.input_frequency| String | ❌ |  护士录入频率| |
+| data.week_day_flag| Int | ❌ |  周日标志| |
+| data.update_flag| Int | ❌ |  允许修改标志| |
+| data.deleted_flag| Int | ❌ |  删除标志| |
+| data.weight| Int | ❌ |  排序码/权重| |
+| data.in_out_flag| Int | ❌ |  门诊住院标记| |
+| data.medical_bill_code| Int | ❌ |  医保账单码| |
+| data.doctor_flag| Int | ❌ |  医生标记| |
+| data.times| Int | ❌ |  次数| |
+| data.days| Int | ❌ |  天数| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.8 用药途径列表
+
+```
+请求地址：/dictionaries/RouteAdministrationList
+```
+**请求包示例**
+
+```
+{
+	keyword:下
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "code": "011",
+      "created_time": "2018-05-27T00:09:09.514456+08:00",
+      "d_code": "HHIT",
+      "deleted_flag": 0,
+      "deleted_time": null,
+      "id": 9,
+      "input_type": "8",
+      "is_print": 1,
+      "name": "皮下注射",
+      "print_name": "皮下注射",
+      "py_code": "PXZS",
+      "type_code": "8",
+      "updated_time": "2018-05-27T00:09:09.514456+08:00",
+      "weight": 11
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 34
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.print_name | String | ❌ | 药品别名 | |
+| data.input_type | String | ✅ | 护士录入类别| |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.code | String | ✅ |  编码| |
+| data.d_code| String | ✅ |  简码| |
+| data.is_print | Int | ❌ |  是否打印| |
+| data.print_name | String | ❌ |  打印名称| |
+| data.type_code | String | ❌ |  分类编码| |
+| data.weight | Int | ❌ |  排序码/权重| |
+| data.deleted_flag| Int | ❌ |  删除标志| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.9 标本种类列表
+
+```
+请求地址：/dictionaries/LaboratorySampleList
+```
+**请求包示例**
+
+```
+{
+	keyword:清
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "code": "A007  ",
+      "created_time": "2018-05-27T00:09:18.218938+08:00",
+      "deleted_time": null,
+      "id": 1,
+      "name": "血清",
+      "py_code": "XQ",
+      "status": true,
+      "updated_time": "2018-05-27T00:09:18.218938+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 12
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.code | String | ✅ |  编码| |
+| data.status| Boolean | ✅ |  是否启用| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.10 试管颜色列表
+
+```
+请求地址：/dictionaries/CuvetteColorList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-05-27T00:07:13.652046+08:00",
+      "deleted_time": null,
+      "id": 1,
+      "name": "红",
+      "status": true,
+      "updated_time": "2018-05-27T00:07:13.652046+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 8
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.status| Boolean | ✅ |  是否启用| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.11 生产厂商列表
+
+```
+请求地址：/dictionaries/ManuFactoryList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "abbr_name": "北京首儿药厂",
+      "address": null,
+      "code": "101",
+      "comment": null,
+      "created_time": "2018-05-27T00:11:39.527606+08:00",
+      "d_code": "BJSEYC",
+      "deleted_flag": 0,
+      "deleted_time": null,
+      "id": 1,
+      "name": "北京首儿药厂",
+      "product_range": null,
+      "py_code": "BJSEYC",
+      "tel": null,
+      "updated_time": "2018-05-27T00:11:39.527606+08:00",
+      "zip_code": null
+    },
+	...
+  ],
+  "page_info": {
+    "total": 5292,
+    "limit": "10",
+    "offset": "0"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.code | String | ✅ | 编码 | |
+| data.d_code | String | ❌ | 简码 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.abbr_name | String | ❌ |  | |
+| data.address | String | ❌ | 地址 | |
+| data.comment | String | ❌ |  | |
+| data.product_range | String | ❌ |  | |
+| data.tel | String | ❌ | 电话 | |
+| data.zip_code | String | ❌ |  | |
+| data.deleted_flag | Int | ❌ | 删除标志 | |
+| data.status| Boolean | ✅ |  是否启用| |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.12 基础检验医嘱项目列表
+
+```
+请求地址：/dictionaries/Laboratorys
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinical_significance": null,
+      "created_time": "2018-05-27T00:09:35.009827+08:00",
+      "cuvette_color_name": null,
+      "deleted_time": null,
+      "en_name": null,
+      "id": 1,
+      "idc_code": null,
+      "laboratory_sample": "尿液",
+      "laboratory_sample_dosage": "",
+      "name": "尿常规+尿流式沉渣检查",
+      "py_code": "NCGNLSCZ",
+      "remark": null,
+      "time_report": null,
+      "unit_name": null,
+      "updated_time": "2018-05-27T00:09:35.009827+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "total": 1464,
+    "limit": "10",
+    "offset": "0"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.en_name | String | ❌ | 英文名称 | |
+| data.idc_code | String | ❌ | 国际编码 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.clinical_significance | 临床意义 | ❌ |  | |
+| data.cuvette_color_name | String | ❌ | 试管颜色 | |
+| data.laboratory_sample | String | ❌ | 检验物 | |
+| data.laboratory_sample_dosage | String | ❌ | 检验物计量 | |
+| data.remark | String | ❌ | 备注 | |
+| data.time_report | String | ❌ | 报告所需时间 | |
+| data.unit_name | Int | ❌ | 单位名称 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.13 基础检查医嘱项目列表
+
+```
+请求地址：/dictionaries/Examinations
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-05-27T00:14:07.58363+08:00",
+      "deleted_time": null,
+      "en_name": null,
+      "id": 1,
+      "idc_code": null,
+      "name": "腕舟骨位(左)",
+      "organ": null,
+      "py_code": "WZGWZ",
+      "remark": null,
+      "unit_name": null,
+      "updated_time": "2018-05-27T00:14:07.58363+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "total": 1547,
+    "limit": "10",
+    "offset": "0"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.en_name | String | ❌ | 英文名称 | |
+| data.idc_code | String | ❌ | 国际编码 | |
+| data.py_code | String | ✅ | 拼音简码 | |
+| data.organ | String | ❌ | 检查部位 | |
+| data.remark | String | ❌ | 备注 | |
+| data.unit_name | Int | ❌ | 单位名称 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.14 基础检验项目列表
+
+```
+请求地址：/dictionaries/LaboratoryItems
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_laboratory_item_id": 1,
+      "name": "谷丙转氨酶 ",
+      "en_name": "ALT ",
+      "unit_name": "U/L ",
+      "status": null,
+      "is_special": false,
+      "data_type": 2,
+      "instrument_code": null,
+      "is_delivery": null,
+      "result_inspection": null,
+      "default_result": null,
+      "clinical_significance": null,
+      "references": [
+        {
+          "reference_sex": "通用",
+          "reference_max": "40.00",
+          "reference_min": "5.00",
+          "reference_value": null,
+          "isPregnancy": null,
+          "stomach_status": null
+        }
+      ]
+    },
+	...
+  ],
+  "page_info": {
+    "count": 150,
+    "limit": "10",
+    "offset": "0"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.clinic_laboratory_item_id | Int | ✅ | 检验项目id | |
+| data.name | String | ✅ | 名称 | |
+| data.en_name | String | ❌ | 英文名称 | |
+| data.unit_name | Int | ❌ | 单位名称 | |
+| data.status | Boolean | ❌ | 是否启用 | |
+| data.is_special | Boolean | ✅ | 参考值是否特殊 | |
+| data.data_type | Int | ✅ | 数据类型 1 定性 2 定量 | |
+| data.instrument_code | String | ❌ | 仪器编码 | |
+| data.is_delivery | Boolean | ❌ | 是否允许外送 | |
+| data.result_inspection | String | ❌ | 检验结果 | |
+| data.default_result | String | ❌ | 默认结果 | |
+| data.clinical_significance | String | ❌ |临床意义 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.15 基础药品列表
+
+```
+请求地址：/dictionaries/LaboratoryItems
+```
+**请求包示例**
+
+```
+{
+	type:0
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| type | Int | ✅ |  类型 0-西药 1-中药 | |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "barcode": null,
+      "code": "800656",
+      "concentration": null,
+      "country_flag": 0,
+      "created_time": "2018-05-27T00:22:52.977059+08:00",
+      "d_code": null,
+      "dcode": "EGQITI",
+      "default_remark": null,
+      "deleted_time": null,
+      "divide_flag": 1,
+      "dosage": 1,
+      "dosage_unit_name": "支",
+      "dose_form_name": "注射剂",
+      "drug_class_id": null,
+      "drug_flag": 0,
+      "english_name": null,
+      "extend_code": null,
+      "frequency_name": "一次",
+      "id": 1,
+      "infusion_flag": 2,
+      "license_no": "国药准字H32022088",
+      "low_dosage_flag": 0,
+      "manu_factory_name": "常州千红生化制药股份有限公司",
+      "mz_bill_item": null,
+      "mz_charge_group": null,
+      "name": "肝素钠注射液",
+      "national_standard": "0065601",
+      "once_dose": 12500,
+      "once_dose_unit_name": "单位",
+      "packing_unit_name": "盒",
+      "preparation_count": null,
+      "preparation_count_unit_name": null,
+      "print_name": null,
+      "py_code": "GSNZSY",
+      "route_administration_name": "皮下注射",
+      "self_flag": 0,
+      "separate_flag": 0,
+      "serial": "02",
+      "spe_comment": null,
+      "specification": "12500单位 2mlx1支/盒",
+      "suprice_flag": 0,
+      "sy_code": null,
+      "type": 0,
+      "updated_time": "2018-05-27T00:22:52.977059+08:00",
+      "vol_unit_name": "ml",
+      "volum": 2,
+      "weight": 12500,
+      "weight_unit_name": "单位",
+      "zy_bill_item": null,
+      "zy_charge_group": null
+    },
+	...
+  ],
+  "page_info": {
+    "count": 150,
+    "limit": "10",
+    "offset": "0"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | 药品id | |
+| data.type | Int | ✅ | 类型 0-西药 1-中药 | |
+| data.code | String | ❌ | 编码 | |
+| data.name | String | ✅ | 名称 | |
+| data.py_code | String | ❌ | 拼音码 | |
+| data.barcode | String | ❌ | 条形码 | |
+| data.d_code | String | ❌ | 简码 | |
+| data.print_name | String | ❌ | 打印名称 | |
+| data.specification | String | ❌ | 规格 | |
+| data.spe_comment | String | ❌ | 规格备注 | |
+| data.manu_factory_name | String | ❌ |生产厂商 | |
+| data.drug_class_id | Int | ❌ |药品类型id | |
+| data.dose_form_name | String | ❌ |药品剂型 | |
+| data.license_no | String | ❌ |国药准字、文号 | |
+| data.once_dose | Int | ❌ |常用剂量| |
+| data.once_dose_unit_name | String | ❌ |用量单位 常用剂量单位 | |
+| data.dosage | Int | ❌ |剂量 | |
+| data.dosage_unit_name | String | ❌ |剂量单位 | |
+| data.preparation_count | Int | ❌ |制剂数量/包装量 | |
+| data.preparation_count_unit_name| String | ❌ |制剂数量单位 | |
+| data.packing_unit_name | String | ❌ |药品包装单位 | |
+| data.route_administration_name| String | ❌ |用药途径/默认用法 | |
+| data.frequency_name | String | ❌ |用药频率/默认频次| |
+| data.default_remark| String | ❌ |默认用量用法说明 | |
+| data.weight | Int | ❌ |重量 | |
+| data.weight_unit_name | String | ❌ |重量单位 | |
+| data.volum | Int | ❌ |体积 | |
+| data.vol_unit_name | String | ❌ |体积单位 | |
+| data.serial | String | ❌ |包装序号 | |
+| data.national_standard | String | ❌ |国标分类 | |
+| data.concentration | String | ❌ |浓度 | |
+| data.dcode | String | ❌ |自定义码 | |
+| data.infusion_flag | Int | ❌ |大输液标志,9为并开药 | |
+| data.country_flag | Int | ❌ |进口标志 | |
+| data.divide_flag| Int | ❌ |分装标志 | |
+| data.low_dosage_flag | Int | ❌ |大规格小剂量标志| |
+| data.self_flag | Int | ❌ |自费标识 | |
+| data.separate_flag | Int | ❌ |单列标志 | |
+| data.suprice_flag | Int | ❌ |贵重标志 | |
+| data.drug_flag | Int | ❌ |毒麻标志 | |
+| data.english_name | String | ❌ |英文名称 | |
+| data.sy_code | String | ❌ |上药编码| |
+| data.zy_bill_item | String | ❌ |住院帐单码 | |
+| data.mz_bill_item | String | ❌ |门诊帐单码 | |
+| data.zy_charge_group | String | ❌ |住院用药品分组| |
+| data.mz_charge_group | String | ❌ |门诊用药品分组 | |
+| data.extend_code | String | ❌ |药品与外界衔接码 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.16 供应商列表
+
+```
+请求地址：/dictionaries/SupplierList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-05-27T00:07:13.652046+08:00",
+      "deleted_time": null,
+      "id": 1,
+      "name": "广州白云药厂",
+      "updated_time": "2018-05-27T00:07:13.652046+08:00"
+    },
+    {
+      "created_time": "2018-05-27T00:07:13.652046+08:00",
+      "deleted_time": null,
+      "id": 2,
+      "name": "云南白药药厂",
+      "updated_time": "2018-05-27T00:07:13.652046+08:00"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 2
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.17 入库方式
+
+```
+请求地址：/dictionaries/InstockWayList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-05-27T00:07:13.652046+08:00",
+      "deleted_time": null,
+      "id": 1,
+      "name": "采购入库",
+      "updated_time": "2018-05-27T00:07:13.652046+08:00"
+    },
+    {
+      "created_time": "2018-05-27T00:07:13.652046+08:00",
+      "deleted_time": null,
+      "id": 2,
+      "name": "公益捐赠",
+      "updated_time": "2018-05-27T00:07:13.652046+08:00"
+    },
+    {
+      "created_time": "2018-08-12T22:54:14.528675+08:00",
+      "deleted_time": null,
+      "id": 3,
+      "name": "门诊退药",
+      "updated_time": "2018-08-12T22:54:14.528675+08:00"
+    },
+    {
+      "created_time": "2018-08-12T22:54:14.528675+08:00",
+      "deleted_time": null,
+      "id": 4,
+      "name": "零售退药",
+      "updated_time": "2018-08-12T22:54:14.528675+08:00"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 4
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.18 出库方式
+
+```
+请求地址：/dictionaries/OutstockWayList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-05-27T00:07:13.652046+08:00",
+      "deleted_time": null,
+      "id": 1,
+      "name": "科室领用",
+      "updated_time": "2018-05-27T00:07:13.652046+08:00"
+    },
+    {
+      "created_time": "2018-05-27T00:07:13.652046+08:00",
+      "deleted_time": null,
+      "id": 2,
+      "name": "退货出库",
+      "updated_time": "2018-05-27T00:07:13.652046+08:00"
+    },
+    {
+      "created_time": "2018-05-27T00:07:13.652046+08:00",
+      "deleted_time": null,
+      "id": 3,
+      "name": "报损出库",
+      "updated_time": "2018-05-27T00:07:13.652046+08:00"
+    },
+    {
+      "created_time": "2018-08-12T23:15:39.526287+08:00",
+      "deleted_time": null,
+      "id": 4,
+      "name": "门诊发药",
+      "updated_time": "2018-08-12T23:15:39.526287+08:00"
+    },
+    {
+      "created_time": "2018-08-12T23:15:39.526287+08:00",
+      "deleted_time": null,
+      "id": 5,
+      "name": "零售发药",
+      "updated_time": "2018-08-12T23:15:39.526287+08:00"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 5
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>22.19 诊断字典
+
+```
+请求地址：/dictionaries/DiagnosisList
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| offset | int | ❌ |  开始条数 | 0|
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-05-31T22:18:18.87819+08:00",
+      "deleted_time": null,
+      "icd_code": null,
+      "id": 586,
+      "name": "鼻部囊肿",
+      "py_code": "BBNZ",
+      "updated_time": "2018-05-31T22:18:18.87819+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 35917
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.id | Int | ✅ | id | |
+| data.name | String | ✅ | 名称 | |
+| data.icd_code | String | ❌ | 国际编码 | |
+| data.py_code | String | ❌ | 拼音简码 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
