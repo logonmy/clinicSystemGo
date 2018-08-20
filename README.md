@@ -12362,3 +12362,849 @@
 | data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
 | data.page_info.total | Int | ✅ |  分页使用、总数量| |
 --
+
+17 检查缴费项目模块
+--------
+
+</br>
+<h3>17.1 创建检查缴费项目
+
+```
+请求地址：/examination/create
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	name:动态心电图(Holter)
+	en_name:
+	py_code:DTXDTHOL
+	idc_code:
+	unit_name:项
+	organ:
+	remark:备注
+	price:110.00
+	cost:
+	status:true
+	is_discount:false
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所id| |
+| name | String | ✅ | 检查项目名称 | |
+| py_code | String | ❌  |  拼音简码 | |
+| idc_code | String | ❌  |  国际名称 | |
+| en_name | String | ❌  |  英文名称 | |
+| unit_name | String | ❌  |  单位 | 项|
+| organ | String | ❌  |  检查部位 | |
+| remark | String | ❌  | 备注 | |
+| price | Int | ✅ |  零售价 | |
+| cost | Int | ❌ |  成本价 | |
+| status | Boolean | ❌  |  是否启用 | |
+| is_discount | Boolean | ❌  |  是否折扣 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>17.2 修改检查缴费项目
+
+```
+请求地址：/examination/update
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	name:动态心电图(Holter)
+	en_name:
+	py_code:DTXDTHOL
+	idc_code:
+	unit_name:项
+	organ:
+	remark:备注
+	price:110.00
+	cost:
+	status:true
+	is_discount:false
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_examination_id | Int | ✅ |  诊所检查项目id| |
+| name | String | ✅ | 检查项目名称 | |
+| py_code | String | ❌  |  拼音简码 | |
+| idc_code | String | ❌  |  国际名称 | |
+| en_name | String | ❌  |  英文名称 | |
+| unit_name | String | ❌  |  单位 | 项|
+| organ | String | ❌  |  检查部位 | |
+| remark | String | ❌  | 备注 | |
+| price | Int | ✅ |  零售价 | |
+| cost | Int | ❌ |  成本价 | |
+| status | Boolean | ❌  |  是否启用 | |
+| is_discount | Boolean | ❌  |  是否折扣 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>17.3 启用和停用检查项目
+
+```
+请求地址：/examination/onOff
+```
+**请求包示例**
+
+```
+{
+	status:true
+	clinic_id:1
+	clinic_examination_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| status | Boolean | ✅ |  是否启用 | |
+| clinic_id | Int | ✅ |  诊所id| |
+| clinic_examination_id | Int | ✅ |  诊所检查项目id| |
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>17.4 诊疗项目列表
+
+```
+请求地址：/examination/list
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1,
+	keyword:,
+	status:,
+	offset: 0,
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字| |
+| clinic_id | int | ✅ |  诊所id | |
+| status | Boolean | ❌ |  是否启用 | |
+| offset | int | ❌ |  开始条数 | 0 |
+| limit | int | ❌ |  条数 | 10|
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_examination_id": 6,
+      "cost": null,
+      "en_name": null,
+      "idc_code": null,
+      "is_discount": false,
+      "name": "动态心电图(Holter)",
+      "organ": null,
+      "price": 11000,
+      "py_code": "DTXDTHOL",
+      "remark": null,
+      "status": true,
+      "unit_name": "项"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 18
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.clinic_examination_id | int | ✅ |  检查项目id | |
+| data.cost | Int | ❌ | 成本价 | |
+| data.en_name | String | ❌ |  英文名称| |
+| data.idc_code | String | ❌ |  国际编码| |
+| data.py_code | String | ❌ |  拼音简码| |
+| data.unit_name | String | ❌ |  单位|项 |
+| data.organ | String | ❌ | 检查部位||
+| data.remark | String | ❌ |  备注| |
+| data.is_discount | Boolean | ✅ |  是否折扣 | |
+| data.name | String | ✅ |  检查名称 | |
+| data.price | int | ✅ |  零售价 | |
+| data.status | bolean | ✅ |  是否启用 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+
+--
+
+</br>
+<h3>17.5 检查项目详情
+
+```
+请求地址：/examination/detail
+```
+**请求包示例**
+
+```
+{
+	clinic_examination_id:2
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_diagnosis_treatment_id | Int | ✅ |  诊疗id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "clinic_examination_id": 6,
+    "cost": null,
+    "en_name": null,
+    "idc_code": null,
+    "is_discount": false,
+    "name": "动态心电图(Holter)",
+    "organ": null,
+    "price": 11000,
+    "py_code": "DTXDTHOL",
+    "remark": null,
+    "status": true,
+    "unit_name": "项"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+| data.clinic_examination_id | int | ✅ |  检查项目id | |
+| data.cost | Int | ❌ | 成本价 | |
+| data.en_name | String | ❌ |  英文名称| |
+| data.idc_code | String | ❌ |  国际编码| |
+| data.py_code | String | ❌ |  拼音简码| |
+| data.unit_name | String | ❌ |  单位|项 |
+| data.organ | String | ❌ | 检查部位||
+| data.remark | String | ❌ |  备注| |
+| data.is_discount | Boolean | ✅ |  是否折扣 | |
+| data.name | String | ✅ |  检查名称 | |
+| data.price | int | ✅ |  零售价 | |
+| data.status | bolean | ✅ |  是否启用 | |
+--
+
+</br>
+<h3>17.6 创建检查医嘱模板
+
+```
+请求地址：/examination/ExaminationPatientModelCreate
+```
+**请求包示例**
+
+```
+{
+	model_name:胸全检
+	is_common:true
+	operation_id:1
+	items:[
+	{"clinic_examination_id":"1","times":"1","organ":"","illustration":"二丫头如何"},
+	{"clinic_examination_id":"2","times":"1","organ":"","illustration":"地方还是风格还是"}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| model_name | String | ✅ | 模板名称| |
+| is_common | Boolean | ✅ | 是否通用 | |
+| operation_id | Int |  ✅  |  操作人id | |
+| items | Array | ✅ |  检查项 | |
+| items.clinic_examination_id | String | ✅  |  个人病史 | |
+| items. times | String | ✅  |  次数 | |
+| items. organ | String | ❌  |  检查部位 | |
+| items. illustration | String | ❌  |  说明 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>17.7 查询检查模板列表
+
+```
+请求地址：/examination/ExaminationPatientModelList
+```
+**请求包示例**
+
+```
+{
+	keyword:全
+	is_common:
+	operation_id:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| is_common | Boolean | ❌ |  是否通用 | |
+| operation_id | int | ❌ |  创建人员id | |
+| offset | int | ❌ |  开始条数 | |
+| limit | int | ❌ |  条数 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "model_name": "胸全检",
+      "examination_patient_model_id": 2,
+      "operation_name": "超级管理员",
+      "is_common": true,
+      "created_time": "2018-05-27T22:07:08.877222+08:00",
+      "items": [
+        {
+          "examination_name": "胸部正位",
+          "organ": null,
+          "times": 1,
+          "clinic_examination_id": 1,
+          "illustration": "二丫头如何"
+        },
+        {
+          "examination_name": "胸部正位+侧位",
+          "organ": null,
+          "times": 1,
+          "clinic_examination_id": 2,
+          "illustration": "地方还是风格还是"
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.model_name | String | ✅ | 模板名称 | |
+| data.examination_patient_model_id | Int | ✅ |  检查模板id| |
+| data.operation_name| String | ✅ |  操作人员名称| |
+| data.is_common | Boolean | ✅ | 是否通用 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.items | Array | ✅ |  检查项 | |
+| data.items.clinic_examination_id | Int | ✅  |  检查项id | |
+| data.items.examination_name | String | ✅  |  检查项名称 | |
+| data.items.times | Int | ✅  |  次数 | |
+| data.items.organ | String | ❌  |  检查部位 | |
+| data.items.illustration | String | ❌  |  说明 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>17.8 查询检查医嘱模板详情
+
+```
+请求地址：/examination/ExaminationPatientModelDetail
+```
+**请求包示例**
+
+```
+{
+	examination_patient_model_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| examination_patient_model_id | Int | ✅ |  检查模板id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "examination_patient_model_id": 2,
+    "is_common": true,
+    "items": [
+      {
+        "clinic_examination_id": 1,
+        "illustration": "二丫头如何",
+        "name": "胸部正位",
+        "organ": null,
+        "times": 1
+      },
+      {
+        "clinic_examination_id": 2,
+        "illustration": "地方还是风格还是",
+        "name": "胸部正位+侧位",
+        "organ": null,
+        "times": 1
+      }
+    ],
+    "model_name": "胸全检",
+    "status": true
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Object | ✅ |   | |
+| data.model_name | String | ✅ | 主诉 | |
+| data.examination_patient_model_id | Int | ✅ |  检查模板id| |
+| data.is_common | Boolean | ✅ | 是否通用 | |
+| data.status | Boolean | ✅ | 是否启用 | |
+| data.items | Array | ✅ |  检查项 | |
+| data.items.clinic_examination_id | Int | ✅  |  检查项id | |
+| data.items.name | String | ✅  |  检查项名称 | |
+| data.items.times | Int | ✅  |  次数 | |
+| data.items.organ | String | ❌  |  检查部位 | |
+| data.items.illustration | String | ❌  |  说明 | |
+--
+
+</br>
+<h3>17.9 修改检查医嘱模板
+
+```
+请求地址：/examination/ExaminationPatientModelUpdate
+```
+**请求包示例**
+
+```
+{
+	examination_patient_model_id:2
+	model_name:胸全检
+	is_common:true
+	operation_id:1
+	items:[
+	{"clinic_examination_id":"1","times":"1","organ":"","illustration":"二丫头如何"},
+	{"clinic_examination_id":"2","times":"1","organ":"","illustration":"地方还是风格还是"}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| examination_patient_model_id | Int | ✅ | 模板id| |
+| model_name | String | ✅ | 模板名称| |
+| is_common | Boolean | ✅ | 是否通用 | |
+| operation_id | String |  ✅  |  操作人id | |
+| items | Array | ✅ |  检查项 | |
+| items.clinic_examination_id | String | ✅  |  个人病史 | |
+| items. times | String | ✅  |  次数 | |
+| items. organ | String | ❌  |  检查部位 | |
+| items. illustration | String | ❌  |  说明 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>17.10 删除检查医嘱模板
+
+```
+请求地址：/examination/ExaminationPatientModelDelete
+```
+**请求包示例**
+
+```
+{
+	examination_patient_model_id:2
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| medical_record_model_id | Int | ✅ | 模板id| |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>17.11 创建检查报告医嘱模板
+
+```
+请求地址：/examination/ExaminationReportModelCreate
+```
+**请求包示例**
+
+```
+{
+	model_name:检查报告模板
+	result_examination:检查报告模板描述
+	conclusion_examination:检查报告模板结论
+	operation_id:17
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| model_name | String | ✅ | 模板名称| |
+| result_examination | String | ❌ | 检查结果/描述 | |
+| conclusion_examination | String |  ❌  |  检查结论 | |
+| operation_id | Int | ✅ |  操作员id | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>17.12 查询检查报告医嘱模板
+
+```
+请求地址：/examination/ExaminationReportModelList
+```
+**请求包示例**
+
+```
+{
+	keyword:模板
+	operation_id:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| operation_id | int | ❌ |  创建人员id | |
+| offset | int | ❌ |  开始条数 | |
+| limit | int | ❌ |  条数 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "conclusion_examination": "胸部平扫并与2011-8-17本院片比较，左肺上叶斑片样密度增高影范围缩小;其它征象无明显改变。",
+      "created_time": "2018-08-01T10:25:50.41798+08:00",
+      "deleted_time": null,
+      "id": 3,
+      "model_name": "8月1日的报告测试模板",
+      "operation_id": 1,
+      "operation_name": "超级管理员",
+      "result_examination": "左肺上叶肺炎消散期改变",
+      "status": true,
+      "updated_time": "2018-08-01T10:25:50.41798+08:00"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.model_name | String | ✅ | 模板名称 | |
+| data.id | Int | ✅ |  检查报告模板id| |
+| data.operation_id| Int | ✅ |  操作人员id| |
+| data.operation_name| String | ✅ |  操作人员名称| |
+| data.conclusion_examination | String | ✅ | 检查结论 | |
+| data.result_examination | String | ✅ | 检查结果/描述 | |
+| data.status | Boolean | ✅ | 是否启用 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>17.13 查询检查报告医嘱模板详情
+
+```
+请求地址：/examination/ExaminationReportModelDetail
+```
+**请求包示例**
+
+```
+{
+	examination_report_model_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| examination_report_model_id | Int | ✅ |  检查模板id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "conclusion_examination": "检查报告模板结论修改",
+    "created_time": "2018-07-30T22:16:14.546186+08:00",
+    "deleted_time": "2018-07-30T22:20:56.813356+08:00",
+    "id": 1,
+    "model_name": "检查报告模板名称修改",
+    "operation_id": 17,
+    "result_examination": "检查报告模板描述修改修改",
+    "status": true,
+    "updated_time": "2018-07-30T22:20:25.951168+08:00"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Object | ✅ |   | |
+| data.model_name | String | ✅ | 模板名称 | |
+| data.id | Int | ✅ |  检查报告模板id| |
+| data.operation_id| Int | ✅ |  操作人员id| |
+| data.conclusion_examination | String | ✅ | 检查结论 | |
+| data.result_examination | String | ✅ | 检查结果/描述 | |
+| data.status | Boolean | ✅ | 是否启用 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.updated_time | time | ✅ | 更新时间 | |
+| data.deleted_time | time | ❌ | 删除时间 | |
+--
+
+</br>
+<h3>17.14 修改检查报告医嘱模板
+
+```
+请求地址：/examination/ExaminationReportModelUpdate
+```
+**请求包示例**
+
+```
+{
+	examination_report_model_id:2
+	model_name:检查报告模板
+	result_examination:检查报告模板描述
+	conclusion_examination:检查报告模板结论
+	operation_id:17
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| examination_report_model_id | Int | ✅ | 模板id| |
+| model_name | String | ✅ | 模板名称| |
+| result_examination | String | ❌ | 检查结果/描述 | |
+| conclusion_examination | String |  ❌  |  检查结论 | |
+| operation_id | Int | ✅ |  操作员id | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>17.15 删除检查报告医嘱模板
+
+```
+请求地址：/examination/ExaminationReportModelDelete
+```
+**请求包示例**
+
+```
+{
+	examination_report_model_id:2
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| examination_report_model_id | Int | ✅ | 模板id| |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
