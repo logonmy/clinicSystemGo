@@ -624,11 +624,11 @@ func LaboratoryItems(ctx iris.Context) {
 	}
 
 	countSQL := `select count(id) from laboratory_item where id > 0 and name ~$1`
-	selectSQL := `select li.id as laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,li.instrument_code,
+	selectSQL := `select li.id as clinic_laboratory_item_id,li.name,li.en_name,li.unit_name,li.is_special,li.instrument_code,
 	li.data_type,lir.reference_sex,lir.stomach_status,lir.is_pregnancy,lir.reference_max,lir.reference_min
 	from laboratory_item li
 	left join laboratory_item_reference lir on lir.laboratory_item_id = li.id
-	where id > 0 and name ~$1`
+	where li.id > 0 and name ~$1`
 
 	total := model.DB.QueryRowx(countSQL, keyword)
 	if err != nil {

@@ -768,7 +768,7 @@ CREATE TABLE drug
   preparation_count integer,--制剂数量/包装量
   preparation_count_unit_name varchar(10),--制剂数量单位
   packing_unit_name varchar(10),--药品包装单位
-  route_administration_name varchar(50),--用药途径id/默认用法
+  route_administration_name varchar(50),--用药途径/默认用法
   frequency_name varchar(20),--用药频率/默认频次
   default_remark varchar(20),--默认用量用法说明
   weight integer,--重量
