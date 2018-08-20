@@ -369,7 +369,7 @@ func main() {
 		examination.Post("/detail", controller.ExaminationDetail)
 		examination.Post("/ExaminationPatientModelCreate", controller.ExaminationPatientModelCreate)
 		examination.Post("/ExaminationPatientModelList", controller.ExaminationPatientModelList)
-		examination.Post("/ExaminationPersonalPatientModelList", controller.ExaminationPersonalPatientModelList)
+		// examination.Post("/ExaminationPersonalPatientModelList", controller.ExaminationPersonalPatientModelList)
 		examination.Post("/ExaminationPatientModelDetail", controller.ExaminationPatientModelDetail)
 		examination.Post("/ExaminationPatientModelUpdate", controller.ExaminationPatientModelUpdate)
 		examination.Post("/ExaminationPatientModelDelete", controller.ExaminationPatientModelDelete)

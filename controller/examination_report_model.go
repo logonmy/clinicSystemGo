@@ -112,7 +112,7 @@ func ExaminationReportModelList(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	rows, err1 := model.DB.NamedQuery(selectSQL+" ORDER BY created_time DESC offset :offset limit :limit", queryOption)
+	rows, err1 := model.DB.NamedQuery(selectSQL+" ORDER BY erm.created_time DESC offset :offset limit :limit", queryOption)
 	if err1 != nil {
 		ctx.JSON(iris.Map{"code": "-1", "msg": err1.Error()})
 		return
