@@ -7712,7 +7712,7 @@
 
 | 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
 | :-: | :-: | :-:  | :--: | :--: |
-| medical_record_model_id | Int | ✅ | 模板名称| |
+| medical_record_model_id | Int | ✅ | 模板id| |
 
 **应答包示例**
 
