@@ -389,7 +389,7 @@ func main() {
 		treatment.Post("/detail", controller.TreatmentDetail)
 		treatment.Post("/TreatmentPatientModelCreate", controller.TreatmentPatientModelCreate)
 		treatment.Post("/TreatmentPatientModelList", controller.TreatmentPatientModelList)
-		treatment.Post("/TreatmentPersonalPatientModelList", controller.TreatmentPersonalPatientModelList)
+		// treatment.Post("/TreatmentPersonalPatientModelList", controller.TreatmentPersonalPatientModelList)
 		treatment.Post("/TreatmentPatientModelDetail", controller.TreatmentPatientModelDetail)
 		treatment.Post("/TreatmentPatientModelUpdate", controller.TreatmentPatientModelUpdate)
 		treatment.Post("/TreatmentPatientModelDelete", controller.TreatmentPatientModelDelete)
