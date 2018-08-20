@@ -13208,3 +13208,1000 @@
 | code | String | ✅ |  返回码， 200 成功| |
 | data | Object | ❌ |  返回信息 | |
 --
+
+21 检验模块
+--------
+
+</br>
+<h3>21.1 检验医嘱创建
+
+```
+请求地址：/laboratory/create
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	name: ''
+	en_name: ''
+	py_code: ''
+	idc_code: ''
+	unit_name: ''
+	time_report: ''
+	clinical_significance: ''
+	remark: ''
+	laboratory_sample: ''
+	cuvette_color_name: ''
+	merge_flag: ''
+	cost: 1
+	price 1
+	status : true
+	is_discount: flase
+	is_delivery: false
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| name | String | ✅ |  医嘱名称 | |
+| en_name | String | ❌ |  英文名称 | |
+| py_code | String | ❌ |  拼音编码 | |
+| idc_code | String | ❌ |  国家准字 | |
+| unit_name | String | ❌ |  单位 | |
+| time_report | String | ❌ |  报告所需时间 | |
+| clinical_significance | String | ❌ |  临床意义 | |
+| remark | String | ❌ |  备注 | |
+| laboratory_sample | String | ❌ |  检验物 | |
+| cuvette\_color_name | String | ❌ |  试管颜色 | |
+| merge_flag |number | ❌ |  合并标识 | |
+| cost | String | ❌ |  成本 | |
+| price | String | ✅ |  单价 | |
+| status | boolean | ✅ |  启用状态 | true |
+| is_discount |boolean | ✅ |  是否允许折扣 | false |
+| is_delivery | boolean | ✅ |  否允许外送| false |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+
+</br>
+<h3>21.2 检验医嘱列表
+
+```
+请求地址：/laboratory/list
+```
+**请求包示例**
+
+```
+{
+	keyword:‘’
+	clinic_id： 1
+	status： true
+	offset: 0
+	limit : 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ |  诊所id | |
+| keyword | String | ❌ |  关键字 | |
+| status | String | ❌ |  启用状态 | |
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_laboratory_id": 4,
+      "discount_price": 0,
+      "is_discount": false,
+      "laboratory_name": "性激素六项",
+      "price": 26000,
+      "py_code": "xjslx",
+      "remark": null,
+      "status": true,
+      "unit_name": "项"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 10
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory_id | String | ✅ | 检验id | |
+| discount_price | String | ✅ | 折扣金额| |
+| is_discount | String | ✅ | 是否折扣 | |
+| laboratory_name | String | ✅ | 检验名称 | |
+| price | String | ✅ | 单价 | |
+| py_code | String | ✅ | 拼音编码 | |
+| remark | String | ✅ | 备注 | |
+| status | String | ✅ | 启用状态 | |
+| unit_name | String | ✅ | 单位 | |
+
+</br>
+<h3>21.3 检验医嘱详情
+
+```
+请求地址：/laboratory/detail
+```
+**请求包示例**
+
+```
+{
+	clinic_laboratory_id:4
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory_id | String | ✅ |  检验医嘱id | |
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "clinic_laboratory_id": 4,
+    "clinical_significance": null,
+    "cost": 10000,
+    "cuvette_color_name": "红",
+    "discount_price": 0,
+    "en_name": null,
+    "idc_code": null,
+    "is_delivery": false,
+    "is_discount": false,
+    "laboratory_sample": "血清",
+    "merge_flag": null,
+    "name": "性激素六项",
+    "price": 26000,
+    "py_code": "xjslx",
+    "remark": null,
+    "status": true,
+    "time_report": null,
+    "unit_name": "项"
+  }
+}
+```
+
+**应答包参数说明** (同 12.1)
+
+
+</br>
+<h3>21.4 检验医嘱更新
+
+```
+请求地址：/laboratory/update
+```
+**请求包示例**
+
+```
+{
+
+	clinic_laboratory_id:1
+	name: ''
+	en_name: ''
+	py_code: ''
+	idc_code: ''
+	unit_name: ''
+	time_report: ''
+	clinical_significance: ''
+	remark: ''
+	laboratory_sample: ''
+	cuvette_color_name: ''
+	merge_flag: ''
+	cost: 1
+	price 1
+	status : true
+	is_discount: flase
+	is_delivery: false
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory_id |number | ✅ |  检验id | |
+| name | String | ✅ |  医嘱名称 | |
+| en_name | String | ❌ |  英文名称 | |
+| py_code | String | ❌ |  拼音编码 | |
+| idc_code | String | ❌ |  国家准字 | |
+| unit_name | String | ❌ |  单位 | |
+| time_report | String | ❌ |  报告所需时间 | |
+| clinical_significance | String | ❌ |  临床意义 | |
+| remark | String | ❌ |  备注 | |
+| laboratory_sample | String | ❌ |  检验物 | |
+| cuvette\_color_name | String | ❌ |  试管颜色 | |
+| merge_flag |number | ❌ |  合并标识 | |
+| cost | String | ❌ |  成本 | |
+| price | String | ✅ |  单价 | |
+| status | boolean | ✅ |  启用状态 | true |
+| is_discount |boolean | ✅ |  是否允许折扣 | false |
+| is_delivery | boolean | ✅ |  否允许外送| false |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+    data: 1
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+| data | String | ✅ | 检验医嘱id | |
+
+</br>
+<h3>21.5 检验医嘱启用
+
+```
+请求地址：/laboratory/onOff
+```
+**请求包示例**
+
+```
+{
+
+	clinic_laboratory_id:1
+	status: true
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory_id |number | ✅ |  检验id | |
+| status | boolean | ✅ |  启用状态 | |
+
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+    “data”: 1
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+| data | String | ✅ | 检验医嘱id | |
+
+</br>
+<h3>21.6 关联检验项目
+
+```
+请求地址：/laboratory/association
+```
+**请求包示例**
+
+```
+{
+
+	clinic_laboratory_id:1
+	item:[{
+	    clinic_laboratory_item_id： 1
+	    name: ''
+	    default_result: 1
+	}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory_id |number | ✅ |  检验医嘱id | |
+| clinic\_laboratory\_item_id | boolean | ✅ |  检验项目id | |
+| name |string | ✅ |   检验名称| |
+| default_result |string | ✅ |   默认结果| |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+
+
+</br>
+<h3>21.7 检验医嘱关联项目列表
+
+```
+请求地址：/laboratory/associationList
+```
+**请求包示例**
+
+```
+{
+
+	clinic_laboratory_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory_id |number | ✅ |  检验医嘱id | |
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_laboratory_item_id": 2,
+      "name": "血小板",
+      "en_name": "xuexiaoban",
+      "unit_name": "/L",
+      "status": true,
+      "is_special": false,
+      "data_type": 2,
+      "instrument_code": null,
+      "is_delivery": null,
+      "result_inspection": null,
+      "default_result": "100",
+      "clinical_significance": null,
+      "references": [
+        {
+          "reference_sex": "通用",
+          "reference_max": "20",
+          "reference_min": "10",
+          "reference_value": null,
+          "isPregnancy": false,
+          "stomach_status": "false"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory\_item_id | String | ✅ | 检验子项id | |
+| name | String | ✅ | 检验名称 | |
+| en_name | String | ✅ | 英文名称 | |
+| unit_name | String | ✅ | 单位 | |
+| status | String | ✅ | 启用状态 | |
+| is_special |boolean | ✅ | 参考值是否特殊| |
+| data_type | String | ✅ | 数据类型 1 定性 2 定量 | |
+| instrument_code | String | ✅ | 仪器编码 | |
+| is_delivery | String | ✅ | 是否允许外送 | |
+| result_inspection | String | ✅ | 检验结果 | |
+| default_result | String | ✅ | 默认结果 | |
+| clinical_significance | String | ✅ | 临床意义 | |
+| reference_sex | String | ✅ | 参考值性别 男、女、通用 | |
+| reference_max | String | ✅ | 参考最大值 | |
+| reference_min | String | ✅ | 参考最小值 | |
+| reference_value | String | ✅ | 定性参考值 | |
+| isPregnancy |boolean | ✅ | 是否妊娠期 | |
+| stomach_status |boolean | ✅ | 是否空腹 | |
+
+
+</br>
+<h3>21.8 检验项目创建
+
+```
+请求地址：/laboratory/item/create
+```
+**请求包示例**
+
+```
+{
+
+	clinic_id:1
+	name: ''
+	en_name: ''
+	instrument_code: 1
+	unit_name: 'w'
+	clinical_significance: 1
+	data_type: 1
+	is_special: 12
+	reference_max: 11
+	reference_min: 12
+	status: true
+	is_delivery: 1
+	items ; [{
+	   reference_sex: 1
+	   age_max: '10'
+	   age_min: '20'
+	   reference_max: 12
+	   reference_min: 11
+	   stomach_status: false
+	   is_pregnancy: 1
+	}]
+}
+```
+**请求包参数说明** (同上)
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": ''
+  "data" : 1
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 检验项目id | |
+
+
+</br>
+<h3>21.9 检验项目创建
+
+```
+请求地址：/laboratory/item/detail
+```
+**请求包示例**
+
+```
+{
+
+	clinic_laboratory_item_id: 2
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory\_item_id | String | ✅ | 检验项目id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "clinic_laboratory_item_id": 2,
+    "name": "血小板",
+    "en_name": "xuexiaoban",
+    "unit_name": "/L",
+    "status": true,
+    "is_special": false,
+    "data_type": 2,
+    "instrument_code": null,
+    "is_delivery": false,
+    "result_inspection": null,
+    "default_result": null,
+    "clinical_significance": "符合规范化是否更换",
+    "references": [
+      {
+        "reference_sex": "通用",
+        "reference_max": "20",
+        "reference_min": "10",
+        "reference_value": null,
+        "isPregnancy": false,
+        "stomach_status": "false"
+      }
+    ]
+  }
+}
+```
+
+**应答包参数说明** （同21.7）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 检验项目id | |
+
+
+</br>
+<h3>21.10 检验项目更新
+
+```
+请求地址：/laboratory/item/update
+```
+**请求包示例**
+
+```
+{
+
+	clinic_laboratory_item_id:1
+	name: ''
+	en_name: ''
+	instrument_code: 1
+	unit_name: 'w'
+	clinical_significance: 1
+	data_type: 1
+	is_special: 12
+	reference_max: 11
+	reference_min: 12
+	status: true
+	is_delivery: 1
+	items ; [{
+	   reference_sex: 1
+	   age_max: '10'
+	   age_min: '20'
+	   reference_max: 12
+	   reference_min: 11
+	   stomach_status: false
+	   is_pregnancy: 1
+	}]
+}
+```
+**请求包参数说明** (同21.8)
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": ''
+  "data" : 1
+}
+```
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 检验项目id | |
+
+
+</br>
+<h3>21.11 检验项目启用
+
+```
+请求地址：/laboratory/item/onOff
+```
+**请求包示例**
+
+```
+{
+
+	clinic_id:1
+	clinic_laboratory_item_id： 1
+	status: false
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ | 诊所id | |
+| clinic\_laboratory\_item_id | String | ✅ | 诊所id | |
+| status | String | ✅ | 开启状态 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": ''
+}
+```
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功| |
+
+
+</br>
+<h3>21.12 检验项目列表
+
+```
+请求地址：/laboratory/item/list
+```
+**请求包示例**
+
+```
+{
+
+	clinic_id:1
+	name： ''
+	status: false
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | String | ✅ | 诊所id | |
+| name | String | ❌ | 项目名称 | |
+| status | String | ❌ | 开启状态 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_laboratory_item_id": 5,
+      "name": "白细胞计数",
+      "en_name": "WBC",
+      "unit_name": "个/L",
+      "status": true,
+      "is_special": true,
+      "data_type": 2,
+      "instrument_code": null,
+      "is_delivery": false,
+      "result_inspection": null,
+      "default_result": null,
+      "clinical_significance": null,
+      "references": [
+        {
+          "reference_sex": "通用",
+          "reference_max": "15",
+          "reference_min": "10",
+          "reference_value": null,
+          "isPregnancy": null,
+          "stomach_status": null
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 4
+  }
+}
+```
+**应答包参数说明** （同 21.8）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功| |
+
+
+</br>
+<h3>21.13 创建检验医嘱模板
+
+```
+请求地址：/laboratory/LaboratoryPatientModelCreate
+```
+**请求包示例**
+
+```
+{
+
+	model_name:1
+	is_common： true
+	operation_id: 1
+	items : [{
+	   clinic_laboratory_id: 1
+	   times: 1
+	   illustration : ''
+	}]
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| model_name | String | ✅ | 模板名称 | |
+| is_common | boolean | ❌ | 是否通用 | |
+| operation_id | String | ✅ | 操作员id | |
+| clinic\_laboratory_id | String | ✅ | 检验医嘱id | |
+| times | String | ✅ | 数量 | |
+| illustration | String | ✅ | 描述 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": “操作成功”
+}
+```
+**应答包参数说明** （同 21.8）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功| |
+
+
+</br>
+<h3>21.14 检验医嘱模板列表
+
+```
+请求地址：/laboratory/LaboratoryPatientModelList
+```
+**请求包示例**
+
+```
+{
+
+	keyword:1
+	is_common： true
+	operation_id: 1
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| is_common | boolean | ❌ | 是否通用 | |
+| operation_id | String | ✅ | 操作员id | |
+| keyword | String | ✅ | 搜索关键词 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "model_name": "检验模板第一个",
+      "laboratory_patient_model_id": 2,
+      "operation_name": "华佗",
+      "is_common": true,
+      "created_time": "2018-05-29T16:03:47.095669+08:00",
+      "items": [
+        {
+          "laboratory_name": "血常规",
+          "times": 2,
+          "clinic_laboratory_id": 1,
+          "illustration": "说明222"
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 2
+  }
+}
+```
+**应答包参数说明** （同 21.13）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功| |
+
+
+</br>
+<h3>21.15 个人检验医嘱模板
+
+```
+请求地址：/laboratory/LaboratoryPersonalPatientModelList
+```
+**请求包示例**
+
+```
+{
+
+	keyword:1
+	is_common： true
+	operation_id: 1
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| is_common | boolean | ❌ | 是否通用 | |
+| operation_id | String | ✅ | 操作员id | |
+| keyword | String | ✅ | 搜索关键词 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "model_name": "检验模板第一个",
+      "laboratory_patient_model_id": 2,
+      "operation_name": "华佗",
+      "is_common": true,
+      "created_time": "2018-05-29T16:03:47.095669+08:00",
+      "items": [
+        {
+          "laboratory_name": "血常规",
+          "times": 2,
+          "clinic_laboratory_id": 1,
+          "illustration": "说明222"
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 2
+  }
+}
+```
+**应答包参数说明** （同 21.13）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功| |
+
+
+</br>
+<h3>21.16 检验医嘱模板详情
+
+```
+请求地址：/laboratory/LaboratoryPatientModelDetail
+```
+**请求包示例**
+
+```
+{
+
+	laboratory_patient_model_id:1
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| laboratory\_patient\_model_id | String | ✅ | 检验模板id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "is_common": true,
+    "items": [
+      {
+        "clinic_laboratory_id": 2,
+        "illustration": "啥的噶",
+        "name": "尿常规",
+        "times": 1
+      },
+      {
+        "clinic_laboratory_id": 1,
+        "illustration": "啊地方噶哒哈",
+        "name": "血常规",
+        "times": 1
+      }
+    ],
+    "laboratory_patient_model_id": 1,
+    "model_name": "血尿检",
+    "status": true
+  }
+}
+```
+**应答包参数说明** （同 21.13）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| is_common | String | ✅ | 是否通用| |
+| laboratory\_patient\_model_id | String | ✅ | 模板id| |
+| model_name | String | ✅ | 模板名称| |
+| status | String | ✅ | 启用状态| |
+| clinic\_laboratory_id | String | ✅ | 检验医嘱id| |
+| illustration | String | ✅ | 说明| |
+| name | String | ✅ | 医嘱名称| |
+| times | String | ✅ | 次数 | |
+
+</br>
+<h3>21.17 修改检验医嘱模板
+
+```
+请求地址：/laboratory/LaboratoryPatientModelUpdate
+```
+**请求包示例**
+
+```
+{
+	laboratory_patient_model_id:1
+	model_name: ''
+	is_common: false
+	operation_id: 1
+	items: [{
+	   clinic_laboratory_id: 1
+	   times: 1
+	   illustration: '描述'
+	}]
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| laboratory\_patient\_model_id | String | ✅ | 检验模板id | |
+| model_name | String | ✅ | 模板名称 | |
+| is_common |boolean | ✅ | 是否通用 | |
+| operation_id |boolean | ✅ | 创建人id | |
+| clinic\_laboratory_id |boolean | ✅ | 检验医嘱id | |
+| times | number | ✅ | 数量 | |
+| illustration | number | ✅ | 描述 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": ’ok‘
+}
+```
+**应答包参数说明** （同 21.13）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功| |
+
+</br>
+<h3>21.18 删除检验医嘱模板
+
+```
+请求地址：/laboratory/LaboratoryPatientModelDelete
+```
+**请求包示例**
+
+```
+{
+	laboratory_patient_model_id:1
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| laboratory\_patient\_model_id | String | ✅ | 检验模板id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "msg": ’ok‘
+}
+```
+**应答包参数说明** （同 21.13）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功| |
