@@ -274,7 +274,7 @@ func MedicalRecordFindByTriageID(ctx iris.Context) {
 		ctx.JSON(iris.Map{"code": "-1", "msg": "缺少参数"})
 		return
 	}
-	row := model.DB.QueryRowx("select id as clinic_triage_patient_id,*  from medical_record where clinic_triage_patient_id=$1", clinicTriagePatientID)
+	row := model.DB.QueryRowx("select *  from medical_record where clinic_triage_patient_id=$1", clinicTriagePatientID)
 	medicalRecord := FormatSQLRowToMap(row)
 	ctx.JSON(iris.Map{"code": "200", "data": medicalRecord})
 	return

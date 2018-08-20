@@ -606,7 +606,7 @@
 | data.id | String | ✅ |  诊所编码| |
 | data.is_clinic_admin | String | ✅ |  是否超级管理员| |
 | data.name | String | ✅ |  登录人员名称| |
-| data,username | String | ✅ |  登录账号| |
+| data.username | String | ✅ |  登录账号| |
 | login_times | Int | ✅ |  登录次数 | |
 | msg | String | ✅ |  返回码， 200 成功| |
 --
@@ -6506,4 +6506,264 @@
 | code | String | ✅ |  返回码， 200 成功| |
 | msg | String | ❌ |  返回信息 | |
 
+--
+
+7 诊疗模块
+--------
+
+</br>
+<h3>7.1 创建诊疗缴费项目
+
+```
+请求地址：/diagnosisTreatment/create
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	name:紫外线治疗
+	en_name:
+	price:100
+	cost:20
+	status:true
+	is_discount:false
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所id| |
+| name | String | ✅ | 诊疗名称 | |
+| en_name | String | ❌  |  英文名称 | |
+| price | Int | ✅ |  零售价 | |
+| cost | Int | ❌ |  成本价 | |
+| status | Boolean | ❌  |  是否启用 | |
+| is_discount | Boolean | ❌  |  是否折扣 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+
+--
+
+</br>
+<h3>7.2 更新诊疗缴费项目
+
+```
+请求地址：/diagnosisTreatment/update
+```
+**请求包示例**
+
+```
+{
+	clinic_diagnosis_treatment_id:1
+	name:紫外线治疗
+	en_name:
+	price:100
+	cost:20
+	status:true
+	is_discount:false
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_diagnosis_treatment_id | Int | ✅ |  诊疗id| |
+| name | String | ✅ | 诊疗名称 | |
+| en_name | String | ❌  |  英文名称 | |
+| price | Int | ✅ |  零售价 | |
+| cost | Int | ❌ |  成本价 | |
+| status | Boolean | ❌  |  是否启用 | |
+| is_discount | Boolean | ❌  |  是否折扣 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+
+--
+
+</br>
+<h3>7.3 启用和停用诊疗项目
+
+```
+请求地址：/diagnosisTreatment/onOff
+```
+**请求包示例**
+
+```
+{
+	status:true
+	clinic_id:8
+	clinic_diagnosis_treatment_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| status | Boolean | ✅ |  是否启用 | |
+| clinic_id | Int | ✅ |  诊所id| |
+| clinic_diagnosis_treatment_id | Int | ✅ |  诊疗id| |
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>7.4 诊疗项目列表
+
+```
+请求地址：/diagnosisTreatment/list
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1,
+	keyword:,
+	status:,
+	offset: 0,
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字| |
+| clinic_id | int | ✅ |  诊所id | |
+| status | Boolean | ❌ |  是否启用 | |
+| offset | int | ❌ |  开始条数 | |
+| limit | int | ❌ |  条数 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_diagnosis_treatment_id": 2,
+      "cost": 1200,
+      "en_name": null,
+      "is_discount": false,
+      "name": "主治医生诊疗费",
+      "price": 10000,
+      "status": true
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 5
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.clinic_diagnosis_treatment_id | int | ✅ |  诊疗id | |
+| data.cost | Int | ❌ | 成本价 | |
+| data.en_name | String | ❌ |  英文名称| |
+| data.is_discount | Boolean | ✅ |  是否折扣 | |
+| data.name | String | ✅ |  诊疗名称 | |
+| data.price | int | ✅ |  零售价 | |
+| data. status | bolean | ✅ |  是否启用 | |
+
+--
+
+</br>
+<h3>7.5 诊疗项目详情
+
+```
+请求地址：/diagnosisTreatment/detail
+```
+**请求包示例**
+
+```
+{
+	clinic_diagnosis_treatment_id:2
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_diagnosis_treatment_id | Int | ✅ |  诊疗id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "clinic_diagnosis_treatment_id": 1,
+    "cost": null,
+    "en_name": null,
+    "is_discount": true,
+    "name": "诊疗费",
+    "price": 1500,
+    "status": true
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+| data.clinic_diagnosis_treatment_id | int | ✅ |  诊疗id | |
+| data.cost | Int | ❌ | 成本价 | |
+| data.en_name | String | ❌ |  英文名称| |
+| data.is_discount | Boolean | ✅ |  是否折扣 | |
+| data.name | String | ✅ |  诊疗名称 | |
+| data.price | int | ✅ |  零售价 | |
+| data. status | bolean | ✅ |  是否启用 | |
 --
