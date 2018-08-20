@@ -134,7 +134,7 @@ func OnCreditTraigePatient(ctx iris.Context) {
 	left join patient p on p.id = cp.patient_id 
 	left join clinic_triage_patient_operation register on ctp.id = register.clinic_triage_patient_id and register.type = 10
 	left join personnel triage_personnel on triage_personnel.id = register.personnel_id 
-	left join (select clinic_triage_patient_id,sum(on_credit_money) - sum(already_pay_money) as charge_total_fee from on_credit_record group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
+	left join (select clinic_triage_patient_id,sum(on_credit_money) as charge_total_fee from on_credit_record group by(clinic_triage_patient_id)) up on up.clinic_triage_patient_id = ctp.id 
 	where up.charge_total_fee > 0 AND cp.clinic_id=$1 AND ctp.updated_time BETWEEN $2 and $3 AND (p.name ~$4 OR p.cert_no ~$4 OR p.phone ~$4) `
 
 	countsql := `select count(*) as total` + sql
@@ -197,14 +197,14 @@ func OnCreditList(ctx iris.Context) {
 		return
 	}
 
-	total := model.DB.QueryRowx(`select count(id) as total,sum(on_credit_money) as on_credit_money_total,sum(already_pay_money) as already_pay_money_total from on_credit_record where clinic_triage_patient_id=$1`, clinicTriagePatientid)
+	total := model.DB.QueryRowx(`select count(id) as total,sum(on_credit_money) as on_credit_money_total from on_credit_record where clinic_triage_patient_id=$1`, clinicTriagePatientid)
 	pageInfo := FormatSQLRowToMap(total)
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
 	rowSQL := `select 
 	ocr.id as on_credit_record_id,
-	ocr.on_credit_money,ocr.already_pay_money,ocr.created_time,
+	ocr.on_credit_money,ocr.created_time,
 	ctp.visit_date,
 	p.name as doctor_name,
 	c.name as clinic_name,
