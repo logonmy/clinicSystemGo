@@ -6714,6 +6714,10 @@
 | data.name | String | ✅ |  诊疗名称 | |
 | data.price | int | ✅ |  零售价 | |
 | data. status | bolean | ✅ |  是否启用 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
 
 --
 
@@ -6766,4 +6770,1171 @@
 | data.name | String | ✅ |  诊疗名称 | |
 | data.price | int | ✅ |  零售价 | |
 | data. status | bolean | ✅ |  是否启用 | |
+--
+
+14 管理用户模块
+--------
+
+</br>
+<h3>14.1 诊所用户登录
+
+```
+请求地址：/admin/login
+```
+**请求包示例**
+
+```
+{
+	username:pt_admin
+	password:123456
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| username | String | ✅ |  超级管理员账号 | |
+| password | String | ✅ |  密码 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "id": 1,
+    "is_clinic_admin": true,
+    "name": "平台管理员",
+    "phone": "13211112222",
+    "title": "平台经理",
+    "username": "pt_admin"
+  },
+  "login_times": 19,
+  "msg": "ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+| data.id | String | ✅ |  管理人员id| |
+| data.is_clinic_admin | String | ✅ |  是否超级管理员| |
+| data.name | String | ✅ |  登录人员名称| |
+| data.username | String | ✅ |  登录账号| |
+| login_times | Int | ✅ |  登录次数 | |
+| msg | String | ✅ |  返回码， 200 成功| |
+--
+
+</br>
+<h3>14.2 平台账号添加
+
+```
+请求地址：/admin/create
+```
+**请求包示例**
+
+```
+{
+	name:平台管理员
+	title:平台经理
+	phone:13211112222
+	username:pt_amdin
+	password:123456
+	items:[{"function_menu_id":"1"},{"function_menu_id":"2"}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| name | String | ✅ | 姓名 | |
+| title | String | ✅ |  职务 | |
+| phone | String | ✅ |  平台账号预留手机号码 | |
+| username | String | ✅ |  超级管理员账号 | |
+| password | String | ✅ |  密码 | |
+| items | Array | ❌ |  预留手机号码 | |
+| items.function_menu_id | String | ✅ |  菜单功能项id | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": 1
+    "msg":"ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Int | ✅ |  返回管理用户id | |
+| msg | String | ✅ |  返回信息 | |
+
+--
+
+</br>
+<h3>14.3 获取诊所列表
+
+```
+请求地址：/admin/list
+```
+**请求包示例**
+
+```
+{
+	keyword:龙
+	start_date:
+	end_date:
+	status:
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  诊所编码/诊所名称| |
+| start_date | String | ❌ | 创建开始日期| |
+| end_date | String | ❌ |  创建结束日期 | |
+| status | Boolean | ❌ | 是否启用 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "admin_id": 2,
+      "created_time": "2018-08-04T17:23:19.638049+08:00",
+      "name": "深圳龙华店",
+      "phone": "15210121021",
+      "status": true,
+      "title": "店长",
+      "username": "lh001"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.admin_id | Int | ✅ |  管理员id| |
+| data.items.created_time | Date | ✅ |  创建时间| |
+| data.items.name | String | ✅ |  管理员名称| |
+| data.items.phone | String | ✅ |  预留手机号码| |
+| data.items.status | Boolean | ✅ |  是否启用| |
+| data.items.title | String | ✅ |  管理员职称| |
+| data.items.username | String | ✅ |  管理员账号| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>14.4 平台账号修改
+
+```
+请求地址：/admin/update
+```
+**请求包示例**
+
+```
+{
+	admin_id:1
+	name:平台管理员
+	title:平台经理
+	phone:13211112222
+	username:pt_amdin
+	password:123456
+	items:[{"function_menu_id":"1"},{"function_menu_id":"2"}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| admin_id | Int | ✅ | 管理员id | |
+| name | String | ✅ | 姓名 | |
+| title | String | ✅ |  职务 | |
+| phone | String | ✅ |  平台账号预留手机号码 | |
+| username | String | ✅ |  超级管理员账号 | |
+| password | String | ✅ |  密码 | |
+| items | Array | ❌ |  预留手机号码 | |
+| items.function_menu_id | String | ✅ |  菜单功能项id | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": 1
+    "msg":"ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Int | ✅ |  返回管理用户id | |
+| msg | String | ✅ |  返回信息 | |
+
+--
+
+</br>
+<h3>14.5 获取平台账号信息
+
+```
+请求地址：/admin/getByID
+```
+**请求包示例**
+
+```
+{
+	admin_id:2
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| admin_id | Int | ✅ |  管理员id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "admin_id": 1,
+    "created_time": "2018-08-04T16:26:13.950835+08:00",
+    "funtionMenus": [
+      {
+        "ascription": "02",
+        "function_menu_id": 5,
+        "icon": null,
+        "level": 0,
+        "menu_name": "平台管理",
+        "menu_url": "/platform",
+        "parent_function_menu_id": null,
+        "status": true,
+        "weight": 4
+      },
+		...
+    ],
+    "name": "平台管理员",
+    "phone": "13211112222",
+    "status": true,
+    "title": "平台经理",
+    "username": "pt_admin"
+  },
+  "msg": "ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+| data.admin_id | Int | ✅ |  管理员id| |
+| data.created_time | Date | ✅ |  创建时间| |
+| data.name | String | ✅ |  管理员名称| |
+| data.phone | String | ✅ |  预留手机号码| |
+| data.status | Boolean | ✅ |  是否启用| |
+| data.title | String | ✅ |  管理员职称| |
+| data.username | String | ✅ |  管理员账号| |
+| data.funtionMenus | Array | ❌ |  管理员账号菜单项| |
+| data.funtionMenus.ascription | String | ✅ | 菜单所属类型 01 诊所 02 平台| |
+| data.funtionMenus.function_menu_id | Int | ✅ | 菜单项id| |
+| data.funtionMenus.icon | String | ❌ | 菜单图标| |
+| data.funtionMenus.level | Int | ✅ | 菜单项等级| |
+| data.funtionMenus.menu_name | String | ✅ | 菜单名称| |
+| data.funtionMenus.menu_url | String | ✅ | 菜单路由| |
+| data.funtionMenus.parent_function_menu_id | Int | ❌ | 父级菜单id| |
+| data.funtionMenus.status | Boolean | ✅ | 菜单是否启用| |
+| data.funtionMenus.weight | Int | ✅ | 菜单权重| |
+--
+
+</br>
+<h3>14.6 启用和停用管理员账号
+
+```
+请求地址：/admin/onOff
+```
+**请求包示例**
+
+```
+{
+	status:true
+	admin_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| status | Boolean | ✅ |  是否启用 | |
+| admin_id | Int | ✅ |  管理员id| |
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>14.7 获取平台未开通的菜单项
+
+```
+请求地址：/admin/menubarUnset
+```
+**请求包示例**
+
+```
+{
+	admin_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| admin_id | Int | ✅ |  管理员id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "ascription": "02",
+      "function_menu_id": 49,
+      "icon": "/static/icons/business.svg",
+      "level": 1,
+      "menu_name": "运营分析",
+      "menu_url": "/platform/operation/totalAmount",
+      "parent_function_menu_id": 5,
+      "status": true,
+      "weight": 3
+    }
+  ],
+  "msg": "ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+| data.ascription | String | ✅ | 菜单所属类型 01 诊所 02 平台| |
+| data.function_menu_id | Int | ✅ | 菜单项id| |
+| data.icon | String | ❌ | 菜单图标| |
+| data.level | Int | ✅ | 菜单项等级| |
+| data.menu_name | String | ✅ | 菜单名称| |
+| data.menu_url | String | ✅ | 菜单路由| |
+| data.parent_function_menu_id | Int | ❌ | 父级菜单id| |
+| data.status | Boolean | ✅ | 菜单是否启用| |
+| data.weight | Int | ✅ | 菜单权重| |
+| msg | String | ✅ | 文本信息| |
+--
+
+</br>
+<h3>14.8 获取平台开通菜单项
+
+```
+请求地址：/admin/menubarList
+```
+**请求包示例**
+
+```
+{
+	admin_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| admin_id | Int | ✅ |  管理员id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "ascription": "02",
+      "function_menu_id": 5,
+      "icon": null,
+      "level": 0,
+      "menu_name": "平台管理",
+      "menu_url": "/platform",
+      "parent_function_menu_id": null,
+      "status": true,
+      "weight": 4
+    },
+    {
+      "ascription": "02",
+      "function_menu_id": 29,
+      "icon": "/static/icons/clinic.svg",
+      "level": 1,
+      "menu_name": "诊所管理",
+      "menu_url": "/platform/clinique/add",
+      "parent_function_menu_id": 5,
+      "status": true,
+      "weight": 0
+    },
+	...
+  ],
+  "msg": "ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+| data.ascription | String | ✅ | 菜单所属类型 01 诊所 02 平台| |
+| data.function_menu_id | Int | ✅ | 菜单项id| |
+| data.icon | String | ❌ | 菜单图标| |
+| data.level | Int | ✅ | 菜单项等级| |
+| data.menu_name | String | ✅ | 菜单名称| |
+| data.menu_url | String | ✅ | 菜单路由| |
+| data.parent_function_menu_id | Int | ❌ | 父级菜单id| |
+| data.status | Boolean | ✅ | 菜单是否启用| |
+| data.weight | Int | ✅ | 菜单权重| |
+| msg | String | ✅ | 文本信息| |
+--
+
+15 诊断模块
+--------
+
+</br>
+<h3>15.1 创建诊断
+
+```
+请求地址：/diagnosis/create
+```
+**请求包示例**
+
+```
+{
+	py_code:BBNZ
+	name:鼻部囊肿
+	icd_code:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| py_code | String | ✅ |  拼音编码| |
+| name | String | ✅ | 诊断名称 | |
+| icd_code | String | ❌  |  国际编码 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Int | ✅ |  诊断id | |
+
+--
+
+16 病历模块
+--------
+
+</br>
+<h3>16.1 创建主病历
+
+```
+请求地址：/medicalRecord/upsert
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id:2
+	chief_complaint:主病历内容
+	operation_id:6
+	morbidity_date:2018-07-21
+	personal_medical_history:个人病史
+	history_of_present_illness:现病史
+	history_of_past_illness:既往史
+	family_medical_history:家族史
+	allergic_history:过敏史
+	allergic_reaction:过敏反应
+	immunizations:疫苗接种史
+	body_examination:体格检查
+	diagnosis:诊断
+	cure_suggestion:治疗建议
+	remark:备注
+	files:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_triage_patient_id | Int | ✅ |  就诊id| |
+| chief_complaint | String | ✅ | 主诉 | |
+| operation_id | String |  ✅  |  操作人id | |
+| morbidity_date | String | ❌  |  国际编码 | |
+| personal_medical_history | String | ❌  |  个人病史 | |
+| history_of_present_illness | String | ❌  | 现病史 | |
+| history_of_past_illness | String | ❌  |  既往史 | |
+| family_medical_history | String | ❌  |  家族史 | |
+| allergic_history | String | ❌  | 过敏史 | |
+| allergic_reaction | String | ❌  |  过敏反应 | |
+| immunizations | String | ❌  |  疫苗接种史 | |
+| body_examination | String | ❌  |  体格检查 | |
+| diagnosis | String | ❌  |  诊断 | |
+| cure_suggestion | String | ❌  |  治疗建议 | |
+| remark | String | ❌  |  备注| |
+| files | String | ❌  |  上传的文件 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+
+--
+
+</br>
+<h3>16.2 续写病历
+
+```
+请求地址：/medicalRecord/renew
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id:2
+	chief_complaint:续写病历内容
+	operation_id:6
+	files:上传的文件
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_triage_patient_id | Int | ✅ |  就诊id| |
+| chief_complaint | String | ✅ | 续写病历内容 | |
+| operation_id | String |  ✅  |  操作人id | |
+| files | String | ❌  |  上传的文件 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+
+--
+
+</br>
+<h3>16.3 续写病历修改
+
+```
+请求地址：/medicalRecord/MedicalRecordRenewUpdate
+```
+**请求包示例**
+
+```
+{
+	medical_record_id:1
+	clinic_triage_patient_id:2
+	chief_complaint:续写病历内容
+	operation_id:6
+	files:上传的文件
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| medical_record_id | Int | ✅ |  病历id| |
+| chief_complaint | String | ✅ | 续写病历内容 | |
+| operation_id | String |  ✅  |  操作人id | |
+| files | String | ❌  |  上传的文件 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+
+--
+
+</br>
+<h3>16.4 续写病历删除
+
+```
+请求地址：/medicalRecord/MedicalRecordRenewDelete
+```
+**请求包示例**
+
+```
+{
+	medical_record_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| medical_record_id | Int | ✅ |  病历id| |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>16.5 通过就诊id查找病历
+
+```
+请求地址：/medicalRecord/findByTriageId
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id:2
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_triage_patient_id | Int | ✅ |  就诊id| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "allergic_history": "胜多负少的范德萨范德萨发",
+    "allergic_reaction": "胜多负少的个",
+    "body_examination": "发的共同体",
+    "chief_complaint": "主病历内容",
+    "clinic_triage_patient_id": 2,
+    "created_time": "2018-05-31T22:07:42.220501+08:00",
+    "cure_suggestion": "共同体热辅导班",
+    "deleted_time": null,
+    "diagnosis": "耳热是从v",
+    "family_medical_history": "是否水电费",
+    "files": "",
+    "history_of_past_illness": "水电费水电费水电费",
+    "history_of_present_illness": "辅导费第三方支付",
+    "id": 3,
+    "immunizations": "覆盖掉刚刚有个",
+    "is_default": true,
+    "morbidity_date": "2018-07-21",
+    "operation_id": 6,
+    "personal_medical_history": null,
+    "remark": "地方也个人",
+    "updated_time": "2018-07-25T23:25:59.98118+08:00"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+| data.clinic_triage_patient_id | Int | ✅ |  就诊id| |
+| data.id | Int | ✅ |  病历id| |
+| data.chief_complaint | String | ✅ | 主诉 | |
+| data.operation_id | String |  ✅  |  操作人id | |
+| data.morbidity_date | String | ❌  |  国际编码 | |
+| data.personal_medical_history | String | ❌  |  个人病史 | |
+| data.history_of_present_illness | String | ❌  | 现病史 | |
+| data.history_of_past_illness | String | ❌  |  既往史 | |
+| data.family_medical_history | String | ❌  |  家族史 | |
+| data.allergic_history | String | ❌  | 过敏史 | |
+| data.allergic_reaction | String | ❌  |  过敏反应 | |
+| data.immunizations | String | ❌  |  疫苗接种史 | |
+| data.body_examination | String | ❌  |  体格检查 | |
+| data.diagnosis | String | ❌  |  诊断 | |
+| data.cure_suggestion | String | ❌  |  治疗建议 | |
+| data.remark | String | ❌  |  备注| |
+| data.files | String | ❌  |  上传的文件 | |
+| data.is_default | Boolean | ✅  |  是否是主病历 | |
+| data.updated_time | time | ✅ | 修改时间 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.deleted_time | time |  ❌ | 删除时间 | |
+--
+
+</br>
+<h3>16.6 创建病历模板
+
+```
+请求地址：/medicalRecord/model/create
+```
+**请求包示例**
+
+```
+{
+	model_name:模板名称
+	is_common:true
+	chief_complaint:主病历内容
+	operation_id:6
+	morbidity_date:2018-07-21
+	personal_medical_history:个人病史
+	history_of_present_illness:现病史
+	history_of_past_illness:既往史
+	family_medical_history:家族史
+	allergic_history:过敏史
+	allergic_reaction:过敏反应
+	immunizations:疫苗接种史
+	body_examination:体格检查
+	diagnosis:诊断
+	cure_suggestion:治疗建议
+	remark:备注
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| model_name | String | ✅ | 模板名称| |
+| is_common | Boolean | ✅ | 是否通用 | |
+| chief_complaint | String | ❌ | 主诉 | |
+| operation_id | String |  ✅  |  操作人id | |
+| morbidity_date | String | ❌  |  国际编码 | |
+| personal_medical_history | String | ❌  |  个人病史 | |
+| history_of_present_illness | String | ❌  | 现病史 | |
+| history_of_past_illness | String | ❌  |  既往史 | |
+| family_medical_history | String | ❌  |  家族史 | |
+| allergic_history | String | ❌  | 过敏史 | |
+| allergic_reaction | String | ❌  |  过敏反应 | |
+| immunizations | String | ❌  |  疫苗接种史 | |
+| body_examination | String | ❌  |  体格检查 | |
+| diagnosis | String | ❌  |  诊断 | |
+| cure_suggestion | String | ❌  |  治疗建议 | |
+| remark | String | ❌  |  备注| |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>16.7 修改病历模板
+
+```
+请求地址：/medicalRecord/model/update
+```
+**请求包示例**
+
+```
+{
+	medical_record_model_id:1
+	model_name:模板名称
+	is_common:true
+	chief_complaint:主病历内容
+	operation_id:6
+	morbidity_date:2018-07-21
+	personal_medical_history:个人病史
+	history_of_present_illness:现病史
+	history_of_past_illness:既往史
+	family_medical_history:家族史
+	allergic_history:过敏史
+	allergic_reaction:过敏反应
+	immunizations:疫苗接种史
+	body_examination:体格检查
+	diagnosis:诊断
+	cure_suggestion:治疗建议
+	remark:备注
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| medical_record_model_id | Int | ✅ | 模板名称| |
+| model_name | String | ✅ | 模板名称| |
+| is_common | Boolean | ✅ | 是否通用 | |
+| chief_complaint | String | ❌ | 主诉 | |
+| operation_id | String |  ✅  |  操作人id | |
+| morbidity_date | String | ❌  |  国际编码 | |
+| personal_medical_history | String | ❌  |  个人病史 | |
+| history_of_present_illness | String | ❌  | 现病史 | |
+| history_of_past_illness | String | ❌  |  既往史 | |
+| family_medical_history | String | ❌  |  家族史 | |
+| allergic_history | String | ❌  | 过敏史 | |
+| allergic_reaction | String | ❌  |  过敏反应 | |
+| immunizations | String | ❌  |  疫苗接种史 | |
+| body_examination | String | ❌  |  体格检查 | |
+| diagnosis | String | ❌  |  诊断 | |
+| cure_suggestion | String | ❌  |  治疗建议 | |
+| remark | String | ❌  |  备注| |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>16.8 删除病历模板
+
+```
+请求地址：/medicalRecord/model/delete
+```
+**请求包示例**
+
+```
+{
+	medical_record_model_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| medical_record_model_id | Int | ✅ | 模板名称| |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "data": null
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+--
+
+</br>
+<h3>16.9 获取患者病历列表
+
+```
+请求地址：/medicalRecord/listByPid
+```
+**请求包示例**
+
+```
+{
+	patient_id:2
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| patient_id | int | ✅ |  患者id | |
+| offset | int | ❌ |  开始条数 | |
+| limit | int | ❌ |  条数 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "allergic_history": "",
+      "allergic_reaction": "",
+      "body_examination": "",
+      "chief_complaint": "发热",
+      "clinic_name": "龙华诊所",
+      "clinic_patient_id": 1,
+      "clinic_triage_patient_id": 1,
+      "created_time": "2018-06-05T23:08:54.206015+08:00",
+      "cure_suggestion": "",
+      "deleted_time": null,
+      "department_name": "骨科",
+      "diagnosis": "",
+      "doctor_name": "扁鹊",
+      "family_medical_history": "",
+      "files": "[{\"docName\":\"微信图片_20180425210127.jpg\",\"url\":\"/uploads/微信图片_20180425210127.jpg\"}]",
+      "history_of_past_illness": "aaaa",
+      "history_of_present_illness": "现病",
+      "id": 9,
+      "immunizations": "",
+      "is_default": true,
+      "morbidity_date": "",
+      "operation_id": 1,
+      "personal_medical_history": null,
+      "registion_time": "2018-05-28T00:26:29.012104+08:00",
+      "remark": "",
+      "updated_time": "2018-06-07T23:03:27.579995+08:00",
+      "visit_type": 1
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.clinic_triage_patient_id | Int | ✅ |  就诊id| |
+| data.id | Int | ✅ |  病历id| |
+| data.chief_complaint | String | ✅ | 主诉 | |
+| data.clinic_name | String | ✅  |  诊所名称 | |
+| data.clinic_patient_id | Int | ✅  |  患者诊所id | |
+| data.department_name | String | ✅  |  科室名称 | |
+| data.doctor_name | String | ✅  |  医生名称 | |
+| data.operation_id | String |  ✅  |  操作人id | |
+| data.morbidity_date | String | ❌  |  国际编码 | |
+| data.personal_medical_history | String | ❌  |  个人病史 | |
+| data.history_of_present_illness | String | ❌  | 现病史 | |
+| data.history_of_past_illness | String | ❌  |  既往史 | |
+| data.family_medical_history | String | ❌  |  家族史 | |
+| data.allergic_history | String | ❌  | 过敏史 | |
+| data.allergic_reaction | String | ❌  |  过敏反应 | |
+| data.immunizations | String | ❌  |  疫苗接种史 | |
+| data.body_examination | String | ❌  |  体格检查 | |
+| data.diagnosis | String | ❌  |  诊断 | |
+| data.cure_suggestion | String | ❌  |  治疗建议 | |
+| data.remark | String | ❌  |  备注| |
+| data.files | String | ❌  |  上传的文件 | |
+| data.is_default | Boolean | ✅  |  是否是主病历 | |
+| data.visit_type | Int | ✅  |  出诊类型 1: 首诊， 2复诊，3：术后复诊 | |
+| data.registion_time | time | ✅ | 等级时间 | |
+| data.updated_time | time | ✅ | 修改时间 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.deleted_time | time |  ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+
+--
+
+</br>
+<h3>16.10 查询模板列表
+
+```
+请求地址：/medicalRecord/model/list
+```
+**请求包示例**
+
+```
+{
+	keyword:模板
+	is_common:
+	operation_id:
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| is_common | Boolean | ❌ |  是否通用 | |
+| operation_id | int | ❌ |  创建人员id | |
+| offset | int | ❌ |  开始条数 | |
+| limit | int | ❌ |  条数 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "allergic_history": "鸡蛋、西红柿、海鲜、money",
+      "allergic_reaction": "皮肤瘙痒、红肿",
+      "body_examination": "体温36.5℃脉搏100次/分呼吸18次/分血压190/90mmHg发育正常",
+      "chief_complaint": "出生并长于原籍，居住及生活环境良好。无酗酒、吸烟、吸毒等不良嗜好。否认到过传染病、地方病流行地区。",
+      "created_time": "2018-08-01T10:01:31.853529+08:00",
+      "cure_suggestion": "建议最好带宝宝到医院检查，根据病情，确定治疗方案，同时给宝宝暂停母乳，多喝水，并注意观察黄疸值变化。",
+      "deleted_time": null,
+      "diagnosis": "扁桃体和腺样体肥大",
+      "family_medical_history": "家中无遗传病病史。",
+      "history_of_past_illness": "糖尿病 高血压 青光眼 颜值癌",
+      "history_of_present_illness": "糖尿病 高血压 青光眼 颜值癌",
+      "id": 12,
+      "immunizations": "天花",
+      "is_common": true,
+      "model_name": "8月1日模板",
+      "operation_id": 20,
+      "operation_name": "胡一天",
+      "personal_medical_history": "生长于香港。文盲。否认外地长期居住史。无疫区、疫水接触史。否认工业毒物、粉尘及放射性物质接触史。否认牧区、矿山、高氟区、低碘区居住史。平日生活规律，否认吸毒史。否认吸烟嗜好。否认饮酒嗜好。否认冶游史。第N+1次\n",
+      "remark": "第N +1次就诊",
+      "updated_time": "2018-08-01T10:01:31.853529+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 7
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.clinic_triage_patient_id | Int | ✅ |  就诊id| |
+| data.id | Int | ✅ |  病历id| |
+| data.chief_complaint | String | ✅ | 主诉 | |
+| data.operation_id | Int |  ✅  |  操作人id | |
+| data.operation_name | String |  ✅  |  操作人名称 | |
+| data.morbidity_date | String | ❌  |  国际编码 | |
+| data.personal_medical_history | String | ❌  |  个人病史 | |
+| data.history_of_present_illness | String | ❌  | 现病史 | |
+| data.history_of_past_illness | String | ❌  |  既往史 | |
+| data.family_medical_history | String | ❌  |  家族史 | |
+| data.allergic_history | String | ❌  | 过敏史 | |
+| data.allergic_reaction | String | ❌  |  过敏反应 | |
+| data.immunizations | String | ❌  |  疫苗接种史 | |
+| data.body_examination | String | ❌  |  体格检查 | |
+| data.diagnosis | String | ❌  |  诊断 | |
+| data.cure_suggestion | String | ❌  |  治疗建议 | |
+| data.remark | String | ❌  |  备注| |
+| data.files | String | ❌  |  上传的文件 | |
+| data.is_default | Boolean | ✅  |  是否是主病历 | |
+| data.updated_time | time | ✅ | 修改时间 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.deleted_time | time |  ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
 --
