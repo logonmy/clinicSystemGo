@@ -555,6 +555,7 @@ func main() {
 		treatmentTriage.Post("/TreatmentTriagePatientRecordList", controller.TreatmentTriagePatientRecordList)
 	}
 
+	//支付测试接口
 	hcPay := app.Party("/hcPay", crs).AllowMethods(iris.MethodOptions)
 	{
 		hcPay.Post("/CreateHcOrder", controller.CreateHcOrderWeb)
