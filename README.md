@@ -18027,11 +18027,11 @@
 | data.page_info.total | Int | ✅ |  分页使用、总数量| |
 --
 
-30 医用报表模块
+31 医用报表模块
 --------
 
 </br>
-<h3>30.1 门诊日志
+<h3>31.1 门诊日志
 
 ```
 请求地址：/medicalReport/outPatient/record
@@ -18132,7 +18132,7 @@
 --
 
 </br>
-<h3>30.2 接诊类型统计
+<h3>31.2 接诊类型统计
 
 ```
 请求地址：/medicalReport/outPatient/type
@@ -18206,7 +18206,7 @@
 --
 
 </br>
-<h3>30.3 科室统计
+<h3>31.3 科室统计
 
 ```
 请求地址：/medicalReport/outPatient/department
@@ -18258,7 +18258,7 @@
 --
 
 </br>
-<h3>30.4 医生接诊统计
+<h3>31.4 医生接诊统计
 
 ```
 请求地址：/medicalReport/ReceiveTreatment
@@ -18341,7 +18341,7 @@
 --
 
 </br>
-<h3>30.5 检查统计
+<h3>31.5 检查统计
 
 ```
 请求地址：/medicalReport/ExaminationStatistics
@@ -18424,7 +18424,7 @@
 --
 
 </br>
-<h3>30.6 检验统计
+<h3>31.6 检验统计
 
 ```
 请求地址：/medicalReport/LaboratoryStatistics
@@ -18507,7 +18507,7 @@
 --
 
 </br>
-<h3>30.7 治疗统计
+<h3>31.7 治疗统计
 
 ```
 请求地址：/medicalReport/TreatmentStatistics
@@ -18590,7 +18590,7 @@
 --
 
 </br>
-<h3>30.8 登记统计
+<h3>31.8 登记统计
 
 ```
 请求地址：/medicalReport/RegisterStatistics
@@ -18642,7 +18642,7 @@
 --
 
 </br>
-<h3>30.9 门诊效率统计
+<h3>31.9 门诊效率统计
 
 ```
 请求地址：/medicalReport/OutPatietnEfficiencyStatistics
@@ -18732,11 +18732,11 @@
 | data.page_info.average_triage_finished_time | Float | ✅ | 平均分诊用时(分钟)| |
 --
 
-31 进销存统计模块
+32 进销存统计模块
 --------
 
 </br>
-<h3>31.1 药品入库统计
+<h3>32.1 药品入库统计
 
 ```
 请求地址：/invoicingStatistics/DrugInstockStatistics
@@ -18837,7 +18837,7 @@
 --
 
 </br>
-<h3>31.2 药品出库统计
+<h3>32.2 药品出库统计
 
 ```
 请求地址：/invoicingStatistics/DrugOutstockStatistics
@@ -18942,7 +18942,7 @@
 --
 
 </br>
-<h3>31.3 药品进存销统计
+<h3>32.3 药品进存销统计
 
 ```
 请求地址：/invoicingStatistics/DrugInvoicingStatistics
@@ -19033,7 +19033,7 @@
 --
 
 </br>
-<h3>31.4 耗材入库统计
+<h3>32.4 耗材入库统计
 
 ```
 请求地址：/invoicingStatistics/MaterialInstockStatistics
@@ -19131,7 +19131,7 @@
 --
 
 </br>
-<h3>31.5 耗材出库统计
+<h3>32.5 耗材出库统计
 
 ```
 请求地址：/invoicingStatistics/MaterialOutstockStatistics
@@ -19233,7 +19233,7 @@
 --
 
 </br>
-<h3>31.6 耗材进存销统计
+<h3>32.6 耗材进存销统计
 
 ```
 请求地址：/invoicingStatistics/DrugInvoicingStatistics
