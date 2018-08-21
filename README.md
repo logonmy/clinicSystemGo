@@ -20376,6 +20376,423 @@
 | 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
 | :-: | :-: | :-:  | :--: | :--: |
 | data | String | ✅ | 200 成功 | |
+--
+
+28 零售模块
+--------
+
+</br>
+<h3>28.1 创建药品零售订单
+
+```
+请求地址：/drugRetail/createOrder
+```
+**请求包示例**
+
+```
+items:[
+	{"clinic_drug_id":"1","amount":"3","total_fee":"15"},
+	{"clinic_drug_id":"2","amount":"2","total_fee":"8"}
+]
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| items | Array | ✅ |  零售药品信息| |
+| items.clinic_drug_id | String | ✅ |  诊所药品id | |
+| items.amount | String | ✅ |  数量 | |
+| items.total_fee | String | ✅ |  总价 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg":"ok",
+    "data": "O1201808052049528177"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String | ❌ |  返回信息 | |
+| data | String | ❌ |  订单号 | |
+--
+
+</br>
+<h3>28.2 创建支付订单
+
+```
+请求地址：/drugRetail/CreateDrugRetailPaymentOrder
+```
+**请求包示例**
+
+```
+{
+	record_sn:O1201808052301195376
+	pay_method:cash
+	auth_code:
+	total_money:4
+	discount_money:0
+	medical_money:0
+	balance_money:4
+	operation_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| record_sn | String | ✅ |  订单号| |
+| pay_method | String | ✅ |  支付方式， wechat - 微信，alipay-支付宝 ,bank - 银行, cash- 现金 | |
+| auth_code | String | ❌ |  支付方式为 wechat、alipay 时不能为空 | |
+| total_money | Int | ✅ |  交易总金额金额| |
+| discount_money | Int | ✅ |  折扣金额 | |
+| medical_money | Int | ✅ |  医保金额 | |
+| balance_money | Int | ✅ |  实收金额 | |
+| operation_id | Int | ✅ |  操作员id | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg":"ok",
+    "data": 1
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String | ❌ |  返回信息 | |
+| data | Int | ❌ |  code 200时为1 | |
+--
+
+</br>
+<h3>28.3 诊疗项目详情
+
+```
+请求地址：/drugRetail/payment/status
+```
+**请求包示例**
+
+```
+{
+	out_trade_no:T1201808021200256713
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| out_trade_no | String | ✅ |  交易号,一次交易的编码| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "biz_channel": "99",
+    "biz_type": "default",
+    "discount_fee": 0,
+    "merchant_id": "2017081008129270",
+    "nonce_str": "7dn4jypj9htblo8oli06",
+    "openid": "2088702374593053",
+    "out_trade_no": "T1201808021200256713",
+    "pay_mode": "alipay_f2f",
+    "pay_order_id": 1808026010800000000,
+    "payed_time": "20180802120027",
+    "real_total_fee": 2,
+    "result_code": "0",
+    "result_msg": "查询成功",
+    "return_code": "0",
+    "return_msg": "OK",
+    "sign": "57807DE69445E0E1A6B1FC311E7B5155",
+    "sign_type": "MD5",
+    "total_fee": 2,
+    "trade_status": "SUCCESS",
+    "transaction_id": "2018080221001004050534884599"
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ❌ |  返回信息 | |
+| data.biz_channel | String | ✅ |  渠道 | |
+| data.biz_type | String | ✅ | 类型 | |
+| data.discount_fee | String | ✅|  优惠金额| |
+| data.merchant_id | String | ✅ |  支付机构商户号 | |
+| data.nonce_str | String | ✅ |  随机字符串 | |
+| data.openid | String | ✅ |  用户唯一标识 微信为 openid,支付宝为 buyer_id | |
+| data.out_trade_no | String | ✅ |  商户订单号 | |
+| data.pay_mode | String | ✅ |  支付方式 | |
+| data.pay_order_id | String | ✅ |   | |
+| data.payed_time | String | ✅ |  支付时间 | |
+| data.real_total_fee | String | ✅ |  实际支付金额 | |
+| data.result_code | String | ✅ |  业务状态码 业务状态 0-成功其他失败，订单的最终状态 以 trade_status 为准 | |
+| data.result_msg | String | ✅ |  业务状态描述 | |
+| data.return_code | String | ✅ |  交易结果代码 0:成功其他:失败为 0 时仅表示通讯成功标志 | |
+| data.return_msg | String | ✅ |  错诨消息 | |
+| data.sign | String | ✅ |  签名 | |
+| data.sign_type | String | ✅ |  签名类型 | |
+| data.total_fee | String | ✅ |  订单金额 | |
+| data.trade_status | String | ✅ |  订单状态 SUCCESS-成功 REFUND-转入退款 USERPAYING-用户支付中 NOTPAY-未支付 CLOSE-已关闭 | |
+| data.transaction_id | String | ✅ |  支付机构支付流水号 | |
+
+--
+
+</br>
+<h3>28.5 获取药品零售表
+
+```
+请求地址：/drugRetail/list
+```
+**请求包示例**
+
+```
+{
+	refundStatus:2
+	start_date:2018-07-01
+	end_date:2018-08-01
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| refundStatus | Int | ✅ |  收费、退费标志 1 收费 2 退费 | |
+| start_date | Date | ✅ |  开始时间 | |
+| end_date | Date | ✅ | 结束时间 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "balance_money": 8000,
+      "name": "超级管理员",
+      "out_trade_no": "T1201807271716197099",
+      "pay_method": "cash",
+      "pay_time": "2018-07-27T17:16:19.715943+08:00",
+      "refund_money": -8000
+    },
+    {
+      "balance_money": 1,
+      "name": "超级管理员",
+      "out_trade_no": "T1201807261837307928",
+      "pay_method": "cash",
+      "pay_time": "2018-07-26T18:37:30.330244+08:00",
+      "refund_money": -1
+    }
+  ],
+  "page_info": {
+    "limit": "6",
+    "offset": "0",
+    "total": 2
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.balance_money | Int | ✅ | 金额| |
+| data.items.name | String | ✅ |  收费人员 | |
+| data.items.out_trade_no | String | ✅ |  交易单号 | |
+| data.items.pay_method | String | ✅ |  支付方式 wechat - 微信，alipay-支付宝 ,bank - 银行, cash- 现金| |
+| data.items.pay_time | time | ✅ |  支付时间| |
+| data.items.refund_money | Int | ❌ |  退款金额| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>28.6 获取药品详情
+
+```
+请求地址：/drugRetail/detail
+```
+**请求包示例**
+
+```
+{
+	out_trade_no:T1201807271716197099
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| out_trade_no | String | ✅ |  订单号| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "amount": 1,
+      "eff_date": "2018-10-01T00:00:00Z",
+      "name": "当归",
+      "packing_unit_name": "g",
+      "record_id": 14,
+      "ret_price": 10000,
+      "serial": "1",
+      "specification": "/kg"
+    },
+    {
+      "amount": -1,
+      "eff_date": "2018-10-01T00:00:00Z",
+      "name": "当归",
+      "packing_unit_name": "g",
+      "record_id": 15,
+      "ret_price": 10000,
+      "serial": "1",
+      "specification": "/kg"
+    }
+  ],
+  "msg": "ok",
+  "payrecordMap": {
+    "auth_code": null,
+    "balance_money": 8000,
+    "created_time": "2018-07-27T17:16:19.624367+08:00",
+    "discount_money": 1000,
+    "id": 13,
+    "medical_money": 1000,
+    "operation_id": 1,
+    "out_trade_no": "T1201807271716197099",
+    "pay_method": "cash",
+    "pay_time": "2018-07-27T17:16:19.715943+08:00",
+    "record_sn": "O1201807271716087018",
+    "status": 2,
+    "total_money": 10000,
+    "trade_no": ""
+  },
+  "refundMap": [
+    {
+      "created_time": "2018-07-27T17:17:46.977639+08:00",
+      "id": 6,
+      "operation_id": 1,
+      "out_refund_no": "R1201807271717478953",
+      "out_trade_no": "T1201807271716197099",
+      "refund_money": -8000,
+      "refund_no": "",
+      "refund_time": "2018-07-27T17:17:46.977639+08:00",
+      "status": 2
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ✅ |  零售详细信息 | |
+| data.amount | int | ✅ |  数量 | |
+| data.eff_date | Date | ✅ | 有效期 | |
+| data.name | String | ✅ |  药品名称| |
+| data.packing_unit_name | String | ✅ |  药品单位 | |
+| data.record_id | int | ✅ |  零售记录id | |
+| data.ret_price | int | ✅ |  零售价 | |
+| data.serial | String | ✅ |  药品批号 | |
+| data.specification | String | ✅ |  规格| |
+| payrecordMap | Object | ✅ |  缴费交易信息 | |
+| payrecordMap.auth_code | String | ✅ |  认证码 | |
+| payrecordMap.balance_money | Int | ✅ |实缴金额 | |
+| payrecordMap.created_time| time | ✅ |  创建时间| |
+| payrecordMap.discount_money | Int | ✅ |  折扣金额 | |
+| payrecordMap.id | Int | ✅ | 零售缴费记录id | |
+| payrecordMap.medical_money | int | ✅ | 医保金额 | |
+| payrecordMap.operation_id | int | ✅ |  收费员id | |
+| payrecordMap.out_trade_no | String | ✅ |  系统交易号| |
+| payrecordMap.pay_method | String | ✅ |  支付方式 | |
+| payrecordMap.pay_time | time | ✅ |  支付时间 | |
+| payrecordMap.record_sn | String | ✅ | 订单号 | |
+| payrecordMap.status | boolean | ✅ |  订单状态, -1--待确认，1-待支付， 2--已支付， 3-支付失败| |
+| payrecordMap.total_money | int | ✅ |  总金额 | |
+| payrecordMap.trade_no | String | ❌ |  第三方交易号| |
+| refundMap | Object | ✅ |  退费交易信息 | |
+| refundMap.created_time | time | ✅ |  创建时间 | |
+| refundMap.id| Int | ✅ | 退费记录id | |
+| refundMap.operation_id| Int | ✅ |  退费人员id| |
+| refundMap.out_refund_no | String | ✅ |  系统退费交易号 | |
+| refundMap.out_trade_no | String | ✅ |  交易号，一次交易的编码 | |
+| refundMap.refund_money | int | ✅ |  交易总金额金额 | |
+| refundMap.refund_no | String | ✅ |  第三方退费交易号 | |
+| refundMap.refund_time | time | ❌ | 退费时间| |
+| refundMap.status | boolean | ✅ |  订单状态, -1--待确认， 2--退费成功， 3-退费失败 | |
+--
+
+</br>
+<h3>28.7 退费
+
+```
+请求地址：/drugRetail/refund
+```
+**请求包示例**
+
+```
+{
+	out_trade_no:T1201807271716197099
+	items:[
+		{"retail_id":"1","amount":"2"},
+		{"retail_id":"1","amount":"2"}
+	]
+	operation_id:1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| out_trade_no | String | ✅ |  系统订单号| |
+| items | Array | ✅ |  零售药品信息| |
+| items.retail_id | String | ✅ |  零售记录id | |
+| items.amount | String | ✅ |  数量 | |
+| operation_id | Int | ✅ |  退费人员id | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg":"ok"
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String | ❌ |  返回信息 | |
+--
 
 
 29 财务分析、运营分析模块
