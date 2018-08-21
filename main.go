@@ -512,7 +512,7 @@ func main() {
 		drugDelivery.Post("/record/detail", controller.DrugDeliveryRecordDetail)
 		drugDelivery.Post("/record/refund/list", controller.DrugDeliveryRecordRefundList)
 		drugDelivery.Post("/record/refund/detail", controller.DrugDeliveryRecordRefundDetail)
-		drugDelivery.Post("/DrugDeliveryStockList", controller.DrugDeliveryStockList)
+		// drugDelivery.Post("/DrugDeliveryStockList", controller.DrugDeliveryStockList)
 	}
 
 	examinationTriage := app.Party("/examinationTriage", crs).AllowMethods(iris.MethodOptions)
