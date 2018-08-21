@@ -586,10 +586,12 @@ func main() {
 		financilAnalysis.Post("/ChargeMonthReportByPayWay", controller.ChargeMonthReportByPayWay)
 		financilAnalysis.Post("/ProfitReport", controller.ProfitReport)
 	}
+
 	totalAmount := app.Party("/platform", crs).AllowMethods(iris.MethodOptions)
 	{
 		totalAmount.Post("/totalAmount", controller.PlatformTotalAmount)
 	}
+
 	medicalReport := app.Party("/medicalReport", crs).AllowMethods(iris.MethodOptions)
 	{
 		// 门诊日志

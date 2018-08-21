@@ -18026,3 +18026,1299 @@
 | data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
 | data.page_info.total | Int | ✅ |  分页使用、总数量| |
 --
+
+30 医用报表模块
+--------
+
+</br>
+<h3>30.1 门诊日志
+
+```
+请求地址：/medicalReport/outPatient/record
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	patient_name:
+	phone:
+	doctor_id:
+	operation_id:
+	start_date:2018-05-01
+	end_date:2018-08-13
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| patient_name | String | ❌ | 患者姓名| |
+| phone | String | ❌ | 手机号码| |
+| doctor_id | Int | ❌ | 接诊医生id| |
+| operation_id | Int | ❌ | 登记人员id| |
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "address": "芍药居北里",
+      "birthday": "19920706",
+      "city": "北京市",
+      "dept_name": "骨科",
+      "diagnosis": "耳热是从v",
+      "district": "东城区",
+      "doctor_name": "扁鹊",
+      "morbidity_date": "2018-07-21",
+      "opreation_name": "超级管理员",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "18701676735",
+      "profession": "22233",
+      "province": "北京市",
+      "sex": 1,
+      "visit_date": "2018-05-28T00:00:00Z",
+      "visit_type": 1
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "person_amount": 25,
+    "total": 82
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.address | String | ❌ |  地址| |
+| data.items.birthday | String | ✅ | 生日| |
+| data.items.city | String | ❌ |  市| |
+| data.items.dept_name| String | ✅ |  接诊科室名称| |
+| data.items.diagnosis | String | ✅ |  诊断| |
+| data.items.district | String | ❌ |  区、县| |
+| data.items.doctor_name | String | ✅ |  接诊医生名称| |
+| data.items.morbidity_date | String | ✅ | 发病日期| |
+| data.items.opreation_name | String | ✅ |  登记人员| |
+| data.items.patient_id | Int | ✅ |  患者id| |
+| data.items.patient_name | String | ✅ |  患者名称| |
+| data.items.phone | String | ✅ |手机号| |
+| data.items.profession | String | ❌ |  患者职业| |
+| data.items.province | String | ❌ |  省| |
+| data.items.sex | Int | ✅ |  性别 0 女 1 男| |
+| data.items.visit_date | Date | ✅ |  就诊日期| |
+| data.items.visit_type | Int | ✅ | 出诊类型 1: 首诊， 2复诊，3：术后复诊| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.person_amount | Int | ✅ |  总接诊人数| |
+--
+
+</br>
+<h3>30.2 接诊类型统计
+
+```
+请求地址：/medicalReport/outPatient/type
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	start_date:2018-05-01
+	end_date:2018-08-13
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| 
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-05-28",
+      "type1": 2,
+      "type2": 0,
+      "type3": 0
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 34
+  },
+  "total": {
+    "type1": 42,
+    "type2": 37,
+    "type3": 0
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.created_time | Date | ✅ |  接诊日期| |
+| data.items.type1 | Int | ✅ |  首诊类型人数| |
+| data.items.type2 | Int | ✅ |  复诊类型人数| |
+| data.items.type3 | Int | ✅ |  术后复诊人数| |
+| data.total | Object |  ✅ |  合计数量 | |
+| data.total.type1 | Int | ✅ |  总首诊类型人数| |
+| data.total.type2 | Int | ✅ |  总复诊类型人数| |
+| data.total.type3 | Int | ✅ |  总术后复诊人数| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>30.3 科室统计
+
+```
+请求地址：/medicalReport/outPatient/department
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	start_date:2018-05-01
+	end_date:2018-08-13
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| 
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "balance_money": null,
+      "date": "2018-05-28",
+      "department_id": 1,
+      "total": 3
+    },
+	...
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.balance_money | FLOAT | ✅ |  接诊金额| |
+| data.items.date | Date | ✅ |  接诊日期| |
+| data.items.department_id | Int | ✅ |  接诊科室id| |
+| data.items.total | Int | ✅ | 接诊人次| |
+--
+
+</br>
+<h3>30.4 医生接诊统计
+
+```
+请求地址：/medicalReport/ReceiveTreatment
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	department_id:1
+	start_date:2018-05-01
+	end_date:2018-08-13
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| department_id | Int | ❌ | 科室id| |
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "department_name": "骨科",
+      "diagnosis_treatment_fee": 47500,
+      "east_pre_fee": 2045000,
+      "exam_pre_fee": 242000,
+      "labora_pre_fee": 2082500,
+      "material_fee": 1206000,
+      "other_fee": 50000,
+      "personnel_name": "扁鹊",
+      "tatol_count": 92,
+      "total_fee": 5812171,
+      "treatement_fee": 105000,
+      "west_pre_fee": 34171
+    },
+    {
+      "department_name": "骨科",
+      "diagnosis_treatment_fee": 3000,
+      "east_pre_fee": 5400000,
+      "exam_pre_fee": 3000,
+      "labora_pre_fee": 32500,
+      "material_fee": 2000,
+      "other_fee": 0,
+      "personnel_name": "黄飞鸿",
+      "tatol_count": 28,
+      "total_fee": 5468040,
+      "treatement_fee": 20000,
+      "west_pre_fee": 7540
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.department_name | String |✅ |  科室名称| |
+| data.items.diagnosis_treatment_fee | Float | ✅ | 诊断费用| |
+| data.items.east_pre_fee | Float | ✅ |  中药费用| |
+| data.items.exam_pre_fee| Float | ✅ |  检查费用| |
+| data.items.labora_pre_fee | Float | ✅ |  检验费用| |
+| data.items.material_fee | Float | ✅ |  材料费用| |
+| data.items.other_fee | Float | ✅ |  其它费用| |
+| data.items.personnel_name | String | ✅ | 接诊医生| |
+| data.items.tatol_count | Int | ✅ |  总人数| |
+| data.items.total_fee | Int | ✅ |  总金额| |
+| data.items.treatement_fee | Float | ✅ |  治疗费用| |
+| data.items.west_pre_fee | Float | ✅ |西药费用| |
+--
+
+</br>
+<h3>30.5 检查统计
+
+```
+请求地址：/medicalReport/ExaminationStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	start_date:2018-06-01
+	end_date:2018-08-07
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "20000603",
+      "clinic_examination_name": "盆腔彩色多普勒超声",
+      "created_time": "2018-06-27T23:55:50.468246+08:00",
+      "id": 20,
+      "name": "倾世容颜",
+      "personnel_name": "超级管理员",
+      "phone": "15387556262",
+      "price": 3000,
+      "sex": 0,
+      "times": 1,
+      "updated_time": "2018-07-26T09:55:31.136587+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "patient_count": 5,
+    "tiems_total": 18,
+    "total": 18
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.birthday | String |  ✅ |  生日| |
+| data.items.clinic_examination_name | String | ✅ | 检查名称| |
+| data.items.created_time | time | ✅ |  创建时间| |
+| data.items.id| Int | ✅ |  患者id| |
+| data.items.name | String | ✅ |  患者名称| |
+| data.items.personnel_name | String | ✅ |  检查医生| |
+| data.items.phone | String | ✅ |  患者手机号| |
+| data.items.price | String | ✅ | 单价| |
+| data.items.sex | Int | ✅ |  性别 0 女 1 男| |
+| data.items.times | Int | ✅ |  检查次数| |
+| data.items.updated_time | time | ✅ |  更新时间| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.patient_count | Int | ✅ |  总患者数| |
+| data.page_info.tiems_total | Int | ✅ |  总次数| |
+--
+
+</br>
+<h3>30.6 检验统计
+
+```
+请求地址：/medicalReport/LaboratoryStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	start_date:2018-06-02
+	end_date:2018-08-10
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "20000603",
+      "clinic_laboratory_name": "血常规",
+      "created_time": "2018-06-27T23:55:14.935973+08:00",
+      "id": 20,
+      "name": "倾世容颜",
+      "personnel_name": "超级管理员",
+      "phone": "15387556262",
+      "price": 40000,
+      "sex": 0,
+      "times": 1,
+      "updated_time": "2018-06-28T00:04:21.484701+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "patient_count": 5,
+    "tiems_total": 18,
+    "total": 18
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.birthday | String |  ✅ |  生日| |
+| data.items.clinic_laboratory_name | String | ✅ | 检验名称| |
+| data.items.created_time | time | ✅ |  创建时间| |
+| data.items.id| Int | ✅ |  患者id| |
+| data.items.name | String | ✅ |  患者名称| |
+| data.items.personnel_name | String | ✅ |  检查医生| |
+| data.items.phone | String | ✅ |  患者手机号| |
+| data.items.price | String | ✅ | 单价| |
+| data.items.sex | Int | ✅ |  性别 0 女 1 男| |
+| data.items.times | Int | ✅ |  检查次数| |
+| data.items.updated_time | time | ✅ |  更新时间| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.patient_count | Int | ✅ |  总患者数| |
+| data.page_info.tiems_total | Int | ✅ |  总次数| |
+--
+
+</br>
+<h3>30.7 治疗统计
+
+```
+请求地址：/medicalReport/TreatmentStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	start_date:2018-06-02
+	end_date:2018-08-10
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "20000603",
+      "clinic_treatment_name": "针灸",
+      "created_time": "2018-06-27T23:54:43.93167+08:00",
+      "id": 20,
+      "name": "倾世容颜",
+      "personnel_name": "超级管理员",
+      "phone": "15387556262",
+      "price": 9000,
+      "sex": 0,
+      "times": 3,
+      "updated_time": "2018-06-29T01:03:54.733934+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "patient_count": 5,
+    "tiems_total": 18,
+    "total": 18
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.birthday | String |  ✅ |  生日| |
+| data.items.clinic_treatment_name | String | ✅ | 治疗名称| |
+| data.items.created_time | time | ✅ |  创建时间| |
+| data.items.id| Int | ✅ |  患者id| |
+| data.items.name | String | ✅ |  患者名称| |
+| data.items.personnel_name | String | ✅ |  检查医生| |
+| data.items.phone | String | ✅ |  患者手机号| |
+| data.items.price | String | ✅ | 单价| |
+| data.items.sex | Int | ✅ |  性别 0 女 1 男| |
+| data.items.times | Int | ✅ |  检查次数| |
+| data.items.updated_time | time | ✅ |  更新时间| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.patient_count | Int | ✅ |  总患者数| |
+| data.page_info.tiems_total | Int | ✅ |  总次数| |
+--
+
+</br>
+<h3>30.8 登记统计
+
+```
+请求地址：/medicalReport/RegisterStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	start_date:2018-05-01
+	end_date:2018-08-13
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "appointment_count": 0,
+      "register_count": 1,
+      "total_count": 1,
+      "visit_date": "2018-06-02"
+    },
+    ...
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.appointment_count | Int | ✅ |  预约就诊人数| |
+| data.items.register_count | Int | ✅ |  登记总数| |
+| data.items.total_count | Int | ✅ |  合计| |
+| data.items.visit_date| Date | ✅ |接诊时间| |
+--
+
+</br>
+<h3>30.9 门诊效率统计
+
+```
+请求地址：/medicalReport/OutPatietnEfficiencyStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	department_id:
+	start_date:2018-08-01
+	end_date:2018-08-05
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所id| |
+| department_id | Int | ✅ |  科室id| |
+| start_date | String | ❌ | 就诊开始日期| |
+| end_date | String | ❌ |  就诊结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_triage_patient_id": 122,
+      "department_id": 6,
+      "department_name": "牙科",
+      "finish_time": "2018-08-01T10:13:03.995112+08:00",
+      "patient_id": 29,
+      "patient_name": "赵丽颖",
+      "pay_time": "2018-08-01T10:22:36.615245+08:00",
+      "reception_time": "2018-08-01T09:59:47.010945+08:00",
+      "register_time": "2018-08-01T09:35:43.217418+08:00",
+      "status": 40,
+      "triage_time": "2018-08-01T09:48:05.457607+08:00",
+      "visit_date": "2018-08-01T00:00:00Z"
+    },
+	...
+  ],
+  "page_info": {
+    "average_pay_finished_time": 121.6,
+    "average_reception_finished_time": 6561.9,
+    "average_receptioned_time": 34.2,
+    "average_triage_finished_time": 11.7,
+    "limit": "10",
+    "offset": "0",
+    "total": 5
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.clinic_triage_patient_id | Int |  ✅ |  就诊id| |
+| data.items.department_id | String | ✅ | 科室id| |
+| data.items.department_name | time | ✅ |  科室名称| |
+| data.items.finish_time| time | ✅ |  接诊结束时间| |
+| data.items.patient_id | Int | ✅ |  患者id| |
+| data.items.patient_name | String | ✅ |  患者名称| |
+| data.items.pay_time | time | ✅ |  收费完成时间| |
+| data.items.reception_time | time | ✅ | 接诊开始时间| |
+| data.items.register_time | time | ✅ |  登记完成时间| |
+| data.items.status | Int | ✅ | 操作类型 10:登记，20：分诊(换诊)，30：接诊，40：已就诊， 100：取消| |
+| data.items.triage_time | time | ✅ |  分诊完成时间| |
+| data.items.visit_date | Date | ✅ |  接诊日期| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.average_pay_finished_time | Float | ✅ | 平均收费用时(分钟)| |
+| data.page_info.average_reception_finished_time | Float | ✅ | 平均接诊用时(分钟)| |
+| data.page_info.average_receptioned_time | Float | ✅ | 平均安排接诊用时(分钟)| |
+| data.page_info.average_triage_finished_time | Float | ✅ | 平均分诊用时(分钟)| |
+--
+
+31 进销存统计模块
+--------
+
+</br>
+<h3>31.1 药品入库统计
+
+```
+请求地址：/invoicingStatistics/DrugInstockStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	instock_way_name:零售退药
+	supplier_name:
+	drug_type:
+	drug_name:
+	serial:
+	start_date:2018-08-01
+	end_date:2018-08-12
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| instock_way_name | String | ❌ | 入库方式| |
+| supplier_name | String | ❌ | 供应商| |
+| drug_type | Int | ❌ | 药品类型 0-西药 1-中药| |
+| drug_name | String | ❌ | 药品名称、条形码| |
+| serial | String | ❌ | 入库批号| |
+| start_date | String | ❌ | 入库开始日期| |
+| end_date | String | ❌ |  入库结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "barcode": null,
+      "buy_price": 1,
+      "drug_name": "测试药品",
+      "eff_date": "2018-12-29T00:00:00Z",
+      "instock_amount": 2,
+      "instock_date": "2018-08-06",
+      "instock_operation_name": "超级管理员",
+      "instock_way_name": "零售退药",
+      "manu_factory_name": "测试生产厂商",
+      "order_number": "T1201808062117012284",
+      "packing_unit_name": "盒",
+      "ret_price": 1,
+      "serial": "2018080201",
+      "specification": "10粒/每盒",
+      "supplier_name": "广州白云药厂"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 8,
+    "total_buy_price": 12109,
+    "total_instock_amount": 23
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.barcode | String | ❌ |  药品条形码| |
+| data.items.buy_price | FLOAT | ❌ | 成本价| |
+| data.items.drug_name | String | ✅ |  药品名称| |
+| data.items.eff_date | Date | ✅ |  有效期| |
+| data.items.instock_amount | Int | ✅ |  入库数量| |
+| data.items.instock_date | Date | ✅ |  入库日期| |
+| data.items.instock_operation_name | String | ✅ |  入库操作员名称| |
+| data.items.instock_way_name | String | ✅ |  入库方式| |
+| data.items.manu_factory_name | String | ✅ |  生成产商| |
+| data.items.order_number | String | ✅ |  入库单号| |
+| data.items.packing_unit_name | String | ✅ |  药品包装单位| |
+| data.items.ret_price | FLOAT | ✅ |  零售价| |
+| data.items.serial | String | ✅ |  批号| |
+| data.items.specification | String | ✅ |  规格| |
+| data.items.supplier_name | String | ✅ |  供应商| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.total_buy_price | FLOAT | ✅ |  总成本价| |
+| data.page_info.total_instock_amount | Int | ✅ |  总入库数量| |
+--
+
+</br>
+<h3>31.2 药品出库统计
+
+```
+请求地址：/invoicingStatistics/DrugOutstockStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	outstock_way_name:报损出库
+	supplier_name:
+	drug_type:
+	drug_name:
+	serial:
+	personnel_name:
+	start_date:2018-08-01
+	end_date:2018-08-08
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| outstock_way_name | String | ❌ | 出库方式| |
+| supplier_name | String | ❌ | 供应商| |
+| drug_type | Int | ❌ | 药品类型 0-西药 1-中药| |
+| drug_name | String | ❌ | 药品名称、条形码| |
+| serial | String | ❌ | 入库批号| |
+| personnel_name | String | ❌ | 领用人员| |
+| start_date | String | ❌ | 出库开始日期| |
+| end_date | String | ❌ |  出库结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "barcode": "73451412136373134",
+      "buy_price": 50,
+      "drug_name": "川贝母",
+      "eff_date": "2018-08-01T00:00:00Z",
+      "manu_factory_name": "北京鹤延龄饮片厂",
+      "order_number": "DCKD-1533107589",
+      "outstock_amount": 100,
+      "outstock_date": "2018-08-01",
+      "outstock_operation_name": "超级管理员",
+      "outstock_way_name": "报损出库",
+      "packing_unit_name": "g",
+      "personnel_name": "查康",
+      "ret_price": 1000,
+      "serial": "20180801002",
+      "specification": "H01019/kg",
+      "supplier_name": "云南白药药厂"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 23,
+    "total_buy_price": 203830995,
+    "total_outstock_amount": 14976
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.barcode | String | ❌ |  药品条形码| |
+| data.items.buy_price | FLOAT | ❌ | 成本价| |
+| data.items.drug_name | String | ✅ |  药品名称| |
+| data.items.eff_date | Date | ✅ |  有效期| |
+| data.items.outstock_amount | Int | ✅ |  出库数量| |
+| data.items.outstock_date | Date | ✅ |  出库日期| |
+| data.items.outstock_operation_name | String | ✅ |  出库操作员名称| |
+| data.items.outstock_way_name | String | ✅ |  出库方式| |
+| data.items.manu_factory_name | String | ✅ |  生成产商| |
+| data.items.order_number | String | ✅ |  出库单号| |
+| data.items.packing_unit_name | String | ✅ |  药品包装单位| |
+| data.items.personnel_name | String | ✅ |  领用人员| |
+| data.items.ret_price | FLOAT | ✅ |  零售价| |
+| data.items.serial | String | ✅ |  批号| |
+| data.items.specification | String | ✅ |  规格| |
+| data.items.supplier_name | String | ✅ |  供应商| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.total_buy_price | FLOAT | ✅ |  总成本价| |
+| data.page_info.total_outstock_amount | Int | ✅ |  总出库数量| |
+--
+
+</br>
+<h3>31.3 药品进存销统计
+
+```
+请求地址：/invoicingStatistics/DrugInvoicingStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	supplier_name:广州白云药厂
+	drug_type:
+	drug_name:
+	serial:
+	start_date:2018-05-01
+	end_date:2018-08-08
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| supplier_name | String | ❌ | 供应商| |
+| drug_type | Int | ❌ | 药品类型 0-西药 1-中药| |
+| drug_name | String | ❌ | 药品名称、条形码| |
+| serial | String | ❌ | 入库批号| |
+| start_date | String | ❌ | 统计开始日期| |
+| end_date | String | ❌ |  统计结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "barcode": null,
+      "buy_price": 1,
+      "eff_date": "2018-12-29T00:00:00Z",
+      "id": 35,
+      "manu_factory_name": "测试生产厂商",
+      "name": "测试药品",
+      "packing_unit_name": "盒",
+      "serial": "2018080201",
+      "specification": "10粒/每盒",
+      "stock_amount": 98,
+      "supplier_name": "广州白云药厂",
+      "total_instock_amount": 104,
+      "total_outstock_amount": -2
+    },
+    ...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 29
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.barcode | String | ❌ |  药品条形码| |
+| data.items.buy_price | FLOAT | ❌ | 成本价| |
+| data.items.eff_date | Date | ✅ |  有效期| |
+| data.items.id | Int | ✅ |  药品库存id| |
+| data.items.manu_factory_name | String | ✅ |  生成产商| |
+| data.items.name | String | ✅ |  药品名称| |
+| data.items.packing_unit_name | String | ✅ |  药品包装单位| |
+| data.items.serial | String | ✅ |  批号| |
+| data.items.specification | String | ✅ |  规格| |
+| data.items.stock_amount | Int | ✅ |  库存数量| |
+| data.items.supplier_name | String | ✅ |  供应商| |
+| data.items.total_instock_amount | Int | ✅ |  入库数量| |
+| data.items.total_outstock_amount | Int | ✅ |  出库数量| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>31.4 耗材入库统计
+
+```
+请求地址：/invoicingStatistics/MaterialInstockStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	instock_way_name:
+	supplier_name:
+	material_name:
+	serial:
+	start_date:2018-08-01
+	end_date:2018-08-13
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| instock_way_name | String | ❌ | 入库方式| |
+| supplier_name | String | ❌ | 供应商| |
+| material_name | String | ❌ | 耗材名称| |
+| serial | String | ❌ | 入库批号| |
+| start_date | String | ❌ | 入库开始日期| |
+| end_date | String | ❌ |  入库结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "buy_price": 100,
+      "eff_date": "2019-12-31T00:00:00Z",
+      "idc_code": "4545415",
+      "instock_amount": -1,
+      "instock_date": "2018-08-13",
+      "instock_operation_name": "超级管理员",
+      "instock_way_name": "门诊退费",
+      "manu_factory_name": "生产厂家1",
+      "material_name": "假牙",
+      "order_number": "MZ20180813011334",
+      "ret_price": 1,
+      "serial": "PH4165415212",
+      "specification": "20g/颗",
+      "supplier_name": "广州白云药厂",
+      "unit_name": "粒"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 2,
+    "total_buy_price": 9900,
+    "total_instock_amount": 99
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.buy_price | FLOAT | ❌ | 成本价| |
+| data.items.eff_date | Date | ✅ |  有效期| |
+| data.items.instock_amount | Int | ✅ |  入库数量| |
+| data.items.instock_date | Date | ✅ |  入库日期| |
+| data.items.instock_operation_name | String | ✅ |  入库操作员名称| |
+| data.items.instock_way_name | String | ✅ |  入库方式| |
+| data.items.manu_factory_name | String | ✅ |  生成产商| |
+| data.items.material_name | String | ✅ |  耗材名称| |
+| data.items.order_number | String | ✅ |  入库单号| |
+| data.items.ret_price | FLOAT | ✅ |  零售价| |
+| data.items.serial | String | ✅ |  批号| |
+| data.items.specification | String | ✅ |  规格| |
+| data.items.supplier_name | String | ✅ |  供应商| |
+| data.items.unit_name | String | ✅ |  耗材单位| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.total_buy_price | FLOAT | ✅ |  总成本价| |
+| data.page_info.total_instock_amount | Int | ✅ |  总入库数量| |
+--
+
+</br>
+<h3>31.5 耗材出库统计
+
+```
+请求地址：/invoicingStatistics/MaterialOutstockStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	outstock_way_name:
+	supplier_name:
+	material_name:
+	serial:
+	personnel_name:
+	start_date:2018-08-01
+	end_date:2018-08-08
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| outstock_way_name | String | ❌ | 出库方式| |
+| supplier_name | String | ❌ | 供应商| |
+| material_name | String | ❌ | 耗材名称| |
+| serial | String | ❌ | 入库批号| |
+| personnel_name | String | ❌ | 领用人员| |
+| start_date | String | ❌ | 出库开始日期| |
+| end_date | String | ❌ |  出库结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "buy_price": 100,
+      "eff_date": "2019-12-31T00:00:00Z",
+      "idc_code": "4545415",
+      "manu_factory_name": "生产厂家1",
+      "material_name": "假牙",
+      "order_number": "MZ20180813011000",
+      "outstock_amount": 1,
+      "outstock_date": "2018-08-13",
+      "outstock_operation_name": "超级管理员",
+      "outstock_way_name": "门诊收费",
+      "personnel_name": "查康",
+      "ret_price": 1,
+      "serial": "PH4165415212",
+      "specification": "20g/颗",
+      "supplier_name": "广州白云药厂",
+      "unit_name": "粒"
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 1,
+    "total_buy_price": 100,
+    "total_outstock_amount": 1
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.buy_price | FLOAT | ❌ | 成本价| |
+| data.items.eff_date | Date | ✅ |  有效期| |
+| data.items.idc_code | String | ❌ |  国际编码| |
+| data.items.material_name | String | ✅ |  耗材名称| |
+| data.items.outstock_amount | Int | ✅ |  出库数量| |
+| data.items.outstock_date | Date | ✅ |  出库日期| |
+| data.items.outstock_operation_name | String | ✅ |  出库操作员名称| |
+| data.items.outstock_way_name | String | ✅ |  出库方式| |
+| data.items.manu_factory_name | String | ✅ |  生成产商| |
+| data.items.order_number | String | ✅ |  出库单号| |
+| data.items.personnel_name | String | ✅ |  领用人员| |
+| data.items.ret_price | FLOAT | ✅ |  零售价| |
+| data.items.serial | String | ✅ |  批号| |
+| data.items.specification | String | ✅ |  规格| |
+| data.items.supplier_name | String | ✅ |  供应商| |
+| data.items.unit_name | String | ✅ |  耗材单位| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+| data.page_info.total_buy_price | FLOAT | ✅ |  总成本价| |
+| data.page_info.total_outstock_amount | Int | ✅ |  总出库数量| |
+--
+
+</br>
+<h3>31.6 耗材进存销统计
+
+```
+请求地址：/invoicingStatistics/DrugInvoicingStatistics
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	supplier_name:广州白云药厂
+	material_name:
+	serial:
+	start_date:2018-05-01
+	end_date:2018-08-08
+	offset:0
+	limit:10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ✅ |  诊所编码id| |
+| supplier_name | String | ❌ | 供应商| |
+| material_name | String | ❌ | 耗材名称| |
+| serial | String | ❌ | 入库批号| |
+| start_date | String | ❌ | 统计开始日期| |
+| end_date | String | ❌ |  统计结束日期 | |
+| offset | String | ❌ | 分页查询使用、跳过的数量 | |
+| limit | String | ❌ | 分页查询使用、每页数量 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "buy_price": 100,
+      "eff_date": "2018-07-19T00:00:00Z",
+      "id": 6,
+      "idc_code": "4545415",
+      "manu_factory_name": "生产厂家1",
+      "name": "假牙",
+      "py_code": "jiaya",
+      "serial": "ph20180719",
+      "specification": "20g/颗",
+      "stock_amount": 50,
+      "supplier_name": "广州白云药厂",
+      "total_instock_amount": 50,
+      "total_outstock_amount": null,
+      "unit_name": "粒"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 9
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.buy_price | FLOAT | ❌ | 成本价| |
+| data.items.eff_date | Date | ✅ |  有效期| |
+| data.items.id | Int | ✅ |  耗材库存id| |
+| data.items.idc_code | String | ❌ |  国际编码| |
+| data.items.manu_factory_name | String | ✅ |  生成产商| |
+| data.items.name | String | ✅ |  耗材名称| |
+| data.items.py_code | String | ✅ |  拼音编码| |
+| data.items.serial | String | ✅ |  批号| |
+| data.items.specification | String | ✅ |  规格| |
+| data.items.stock_amount | Int | ✅ |  库存数量| |
+| data.items.supplier_name | String | ✅ |  供应商| |
+| data.items.unit_name | String | ✅ |  耗材单位| |
+| data.items.total_instock_amount | Int | ✅ |  入库数量| |
+| data.items.total_outstock_amount | Int | ✅ |  出库数量| |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
