@@ -356,7 +356,7 @@ func LaboratoryTriageRecordDetail(ctx iris.Context) {
 	pageInfo["offset"] = offset
 	pageInfo["limit"] = limit
 
-	querysql := `select cls.clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,cls.default_result,
+	querysql := `select lpri.clinic_laboratory_item_id,cli.name,cli.en_name,cli.unit_name,cli.is_special,lpri.result_inspection,
 	cli.data_type,clir.reference_sex,clir.stomach_status,clir.is_pregnancy,clir.reference_max,clir.reference_min,cli.status
 	` + SQL + " offset $2 limit $3"
 
