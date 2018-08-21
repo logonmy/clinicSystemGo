@@ -18027,6 +18027,2357 @@
 | data.page_info.total | Int | ✅ |  分页使用、总数量| |
 --
 
+23 主诉模板
+--------
+
+</br>
+<h3>23.1 检验医嘱创建
+
+```
+请求地址：/chiefComplaint/list
+```
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "name": "发热"
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| name | String | ✅ | 主诉名称 | |
+
+
+24 门诊发药
+--------
+
+
+</br>
+<h3>24.1 获取待发药的分诊记录
+
+```
+请求地址：/drugDelivery/traige/waiting/list
+```
+**请求包示例**
+
+```
+{
+	keyword: ""
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2019-01-01'
+	offset: 0
+	limit: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword |number | ❌ |  关键字 | |
+| start_date |number | ✅ |  开始日期 | |
+| end_date |number | ✅ |  结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 2,
+      "department_name": "骨科",
+      "doctor_name": "扁鹊",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "18701676735",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-05-28T17:02:21.728863+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "total_count": 9,
+      "updated_time": "2018-05-31T22:07:56.798037+08:00",
+      "visit_date": "2018-05-28T00:00:00Z"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 22
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 患者分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| doctor_name | String | ✅ | 医生名称 | |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者姓名 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 挂号操作员 | |
+| register_time | String | ✅ | 挂号时间 | |
+| register_type | String | ✅ | 1预约，2线下分诊 3快速接诊 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 10:登记，20：分诊(换诊)，30：接诊，40：已就诊 | |
+| total_count | String | ✅ | 总的细目数 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 就诊日期 | |
+
+</br>
+<h3>24.2 获取已发药的分诊记录
+
+```
+请求地址：/drugDelivery/traige/issued/list
+```
+**请求包示例**
+
+```
+{
+	keyword: ""
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2019-01-01'
+	offset: 0
+	limit: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword |number | ❌ |  关键字 | |
+| start_date |number | ✅ |  开始日期 | |
+| end_date |number | ✅ |  结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 2,
+      "department_name": "骨科",
+      "doctor_name": "扁鹊",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "18701676735",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-05-28T17:02:21.728863+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "total_count": 9,
+      "updated_time": "2018-05-31T22:07:56.798037+08:00",
+      "visit_date": "2018-05-28T00:00:00Z"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 22
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 患者分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| doctor_name | String | ✅ | 医生名称 | |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者姓名 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 挂号操作员 | |
+| register_time | String | ✅ | 挂号时间 | |
+| register_type | String | ✅ | 1预约，2线下分诊 3快速接诊 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 10:登记，20：分诊(换诊)，30：接诊，40：已就诊 | |
+| total_count | String | ✅ | 总的细目数 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 就诊日期 | |
+
+
+</br>
+<h3>24.3 获取已退药的分诊记录
+
+```
+请求地址：/drugDelivery/traige/refund/list
+```
+**请求包示例**
+
+```
+{
+	keyword: ""
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2019-01-01'
+	offset: 0
+	limit: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword |number | ❌ |  关键字 | |
+| start_date |number | ✅ |  开始日期 | |
+| end_date |number | ✅ |  结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 2,
+      "department_name": "骨科",
+      "doctor_name": "扁鹊",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "18701676735",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-05-28T17:02:21.728863+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "total_count": 9,
+      "updated_time": "2018-05-31T22:07:56.798037+08:00",
+      "visit_date": "2018-05-28T00:00:00Z"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 22
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 患者分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| doctor_name | String | ✅ | 医生名称 | |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者姓名 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 挂号操作员 | |
+| register_time | String | ✅ | 挂号时间 | |
+| register_type | String | ✅ | 1预约，2线下分诊 3快速接诊 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 10:登记，20：分诊(换诊)，30：接诊，40：已就诊 | |
+| total_count | String | ✅ | 总的细目数 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 就诊日期 | |
+
+
+</br>
+<h3>24.4 获取发药药品详情列表
+
+```
+请求地址：/drugDelivery/list
+```
+**请求包示例**
+
+```
+{
+	order_status:10
+	clinic_triage_patient_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| order_status |number | ✅ |  包括 待发药 - 10，已发药 - 30，已退药 - 40 | |
+| clinic\_triage\_patient_id |number | ✅ |  分诊记录id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "amount": 20,
+      "charge_project_type_id": 2,
+      "dose_form_name": "动物类",
+      "id": 6,
+      "manu_factory_name": "北京同仁堂饮片厂",
+      "name": "穿山甲",
+      "order_sn": "20180528222",
+      "order_status": "10",
+      "prescription_amount": 20,
+      "remark": null,
+      "specification": "/kg",
+      "stock_amount": null
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| amount | String | ✅ | 数量 | |
+| charge\_project\_type_id | String | ✅ | 项目类型id | |
+| dose\_form_name | String | ✅ | 药品剂型 | |
+| name | String | ✅ | 项目名称 | |
+| manu\_factory_name | String | ✅ | 生成厂商 | |
+| order_sn | String | ✅ | 单号 | |
+| order_status | String | ✅ | 发药状态 （10=待发药 30-已发药 40=已退药） | |
+| prescription_amount | String | ✅ | 处方数量 | |
+| specification | String | ✅ | 规格 | |
+| stock_amount | String | ✅ | 库存 | |
+
+</br>
+<h3>24.5 创建发药记录
+
+```
+请求地址：/drugDelivery/record/create
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id:1
+	operation_id: 1
+	items:[{
+	    mz_paid_orders_id: 1
+	    remark: ''
+	
+	}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊id | |
+| operation_id |number | ✅ |  操作员id | |
+| mz\_paid\_orders_id |number | ✅ |  门诊已缴费id | |
+| remark | string | ✅ |  备注 | |
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+
+</br>
+<h3>24.6 退药
+
+```
+请求地址：/drugDelivery/record/refund
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id:1
+	operation_id: 1
+	items:[{
+	    mz_paid_orders_id: 1
+	}]
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊id | |
+| operation_id |number | ✅ |  操作员id | |
+| mz\_paid\_orders_id |number | ✅ |  门诊已缴费id | |
+
+
+**应答包示例**
+
+```
+{
+    "code": "200",
+    "msg": ""
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+
+</br>
+<h3>24.7 查询发药记录
+
+```
+请求地址：/drugDelivery/record/list
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id:1
+	offset: 0
+	limit : 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊记录id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-06-04T00:06:19.505112+08:00",
+      "doctor_name": "黄飞鸿",
+      "drug_delivery_record_id": 17,
+      "opration_name": "超级管理员",
+      "project_name": "茶苯海明片",
+      "visit_date": "2018-06-03T00:00:00Z"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 2
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| created_time | String | ✅ | 创建时间 | |
+| doctor_name | String | ✅ | 医生名称 | |
+| drug\_delivery\_record_id | String | ✅ | 发药记录id | |
+| opration_name | String | ✅ | 操作员 | |
+| project_name | String | ✅ | 项目名称 | |
+| visit_date | String | ✅ | 就诊日期 | |
+
+</br>
+<h3>24.8 查询发药记录详情
+
+```
+请求地址：/drugDelivery/record/detail
+```
+**请求包示例**
+
+```
+{
+	drug_delivery_record_id:1
+   offset: 0
+	limit : 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| drug\_delivery\_record_id |number | ✅ |  发药记录id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "amount": 1,
+      "charge_project_type_id": 1,
+      "manu_factory_name": "浙江东日药业有限公司",
+      "name": "茶苯海明片",
+      "order_status": "40",
+      "remark": "",
+      "specification": "25mg*1片"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 2
+  }
+}
+```
+
+**应答包参数说明** （同 24.4）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+</br>
+<h3>24.9 查询退药记录
+
+```
+请求地址：/drugDelivery/record/refund/list
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id:1
+	offset: 0
+	limit : 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊记录id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "created_time": "2018-06-06T01:49:09.70884+08:00",
+      "doctor_name": "黄飞鸿",
+      "drug_delivery_refund_record_id": 3,
+      "opration_name": "超级管理员",
+      "project_name": "甘草稍",
+      "visit_date": "2018-06-03T00:00:00Z"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明** (通 24.7)
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+</br>
+<h3>24.10 查询发药记录详情
+
+```
+请求地址：/drugDelivery/record/refund/detail
+```
+**请求包示例**
+
+```
+{
+	drug_delivery_refund_record_id:1
+	offset: 0
+	limit: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "amount": 1,
+      "charge_project_type_id": 1,
+      "manu_factory_name": "浙江东日药业有限公司",
+      "name": "茶苯海明片",
+      "order_status": "40",
+      "specification": "25mg*1片"
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 7
+  }
+}
+```
+
+**应答包参数说明** (同24.4)
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ | 200 成功 | |
+</br>
+
+25 检查模块
+--------
+
+</br>
+<h3>25.1 获取检查列表
+
+```
+请求地址：/examinationTriage/ExaminationTriageList
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	order_status: 0
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊记录id | |
+| order_status |number | ✅ |  状态 （10-待检查 20-检查中 30-已检查） | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_examination_id": 3,
+      "clinic_examination_name": "盆腔彩色多普勒超声",
+      "clinic_triage_patient_id": 30,
+      "conclusion_examination": null,
+      "examination_patient_id": 9,
+      "examination_patient_record_id": null,
+      "organ": null,
+      "picture_examination": null,
+      "report_doctor_name": null,
+      "report_time": null,
+      "result_examination": null
+    }
+  ]
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_examination_id | String | ✅ | 检查项目id | |
+| clinic\_examination_name | String | ✅ | 检查项目名称 | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊记录id | |
+| conclusion_examination | String | ✅ | 检查结论 | |
+| examination\_patient_id | String | ✅ | 检查记录id | |
+| examination\_patient\_record_id | String | ✅ | 检查报告id | |
+| organ | String | ✅ | 脏器 | |
+| picture_examination | String | ✅ | 检查图片 | |
+| report\_doctor_name | String | ✅ | 报告医生 | |
+| report_time | String | ✅ | 报告时间 | |
+| result_examination | String | ✅ | 检查结果 | |
+
+</br>
+<h3>25.2 获取待检查的分诊记录
+
+```
+请求地址：/examinationTriage/ExaminationTriageWaiting
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 80,
+      "department_name": "牙科",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-12T20:34:17.270198+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "187011735",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-07-19T21:00:26.796976+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:51:49.416355+08:00",
+      "visit_date": "2018-07-19T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 8
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检查数量 | |
+| checking\_total_count | String | ✅ | 检查中的数量 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间| |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者名称 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 登记操作员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 挂号记录状态 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 接诊日期 | |
+| waiting\_total_count | String | ✅ | 待检查数量 | |
+
+</br>
+<h3>25.3 获取已检查的分诊记录
+
+```
+请求地址：/examinationTriage/ExaminationTriageChecked
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 80,
+      "department_name": "牙科",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-12T20:34:17.270198+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "187011735",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-07-19T21:00:26.796976+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:51:49.416355+08:00",
+      "visit_date": "2018-07-19T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 8
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检查数量 | |
+| checking\_total_count | String | ✅ | 检查中的数量 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间| |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者名称 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 登记操作员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 挂号记录状态 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 接诊日期 | |
+| waiting\_total_count | String | ✅ | 待检查数量 | |
+
+
+</br>
+<h3>25.4 获取检查中的分诊记录
+
+```
+请求地址：/examinationTriage/ExaminationTriageChecking
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 80,
+      "department_name": "牙科",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-12T20:34:17.270198+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "187011735",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-07-19T21:00:26.796976+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:51:49.416355+08:00",
+      "visit_date": "2018-07-19T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 8
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检查数量 | |
+| checking\_total_count | String | ✅ | 检查中的数量 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间| |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者名称 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 登记操作员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 挂号记录状态 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 接诊日期 | |
+| waiting\_total_count | String | ✅ | 待检查数量 | |
+
+</br>
+<h3>25.5 创建检查记录
+
+```
+请求地址：/examinationTriage/ExaminationTriageRecordCreate
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	examination_patient_id: 1
+	operation_id: 1
+	picture_examination: ‘’
+	result_examination: ‘’
+	conclusion_examination: ‘’
+}
+```
+**请求包参数说明** （同 25.1）
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": “”
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+</br>
+<h3>25.6 查询检查记录
+
+```
+请求地址：/examinationTriage/ExaminationTriageRecordList
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+}
+```
+**请求包参数说明** （同 25.1）
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_examination_name": "胸部正位",
+      "conclusion_examination": "检查结论更不错哟",
+      "created_time": "2018-06-05T21:38:37.98011+08:00",
+      "doctor_name": "华佗",
+      "examination_patient_record_id": 1,
+      "opration_name": "华佗",
+      "picture_examination": "检查图片地址",
+      "result_examination": "检查结果很不错哦",
+      "visit_date": "2018-06-03T00:00:00Z"
+    }
+  ]
+}
+```
+
+**应答包参数说明** (同25.1)
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+</br>
+<h3>25.7 更新检查状态
+
+```
+请求地址：/examinationTriage/ExaminationTriageUpdate
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	order_status: 10
+	items:[{
+	    examination_patient_id
+	}]
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| order_status | String | ✅ | 状态 10-待检测 20-检查中 30-已检查 | |
+| examination\_patient_id | String | ✅ | 检查记录id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": 
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+
+</br>
+<h3>25.8 患者历史检查记录
+
+```
+请求地址：/examinationTriage/ExaminationTriagePatientRecordList
+```
+
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	patient_id: 1
+	offset: 1
+	limit: 1
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| patient_id | String | ✅ | 患者id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_examination_name": "胸部正位+侧位，胸部正位",
+      "clinic_name": "龙华诊所",
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 97,
+      "department_name": "牙科",
+      "order_doctor_name": "胡一天",
+      "order_time": "2018-07-27T17:36:02.235297+08:00",
+      "patient_id": 3
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 3
+  }
+}
+```
+
+**应答包参数说明** （同25.1）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+
+26 检验报告模板
+--------
+
+</br>
+<h3>26.1 获取检验列表
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageList
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	order_status: 0
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊记录id | |
+| order_status |number | ✅ |  状态 （10-待检验 20-检验中 30-已检验） | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "checking_time": "2018-06-03T23:34:24.423962+08:00",
+      "clinic_laboratory_id": 1,
+      "clinic_laboratory_name": "血常规",
+      "clinic_triage_patient_id": 31,
+      "laboratory_patient_id": 104,
+      "laboratory_patient_record_id": null,
+      "laboratory_sample": "全血",
+      "remark": null,
+      "report_doctor_name": null,
+      "report_time": null
+    }
+  ]
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| checking_time | String | ✅ | 检验时间 | |
+| clinic\_laboratory_id | String | ✅ | 检验项目id | |
+| clinic\_laboratory_name | String | ✅ | 检验项目名称 | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id| |
+| laboratory\_patient_id | String | ✅ | 检验记录id | |
+| laboratory\_patient\_record_id | String | ✅ | 检验报告id | |
+| laboratory_sample | String | ✅ | 检验物 | |
+| remark | String | ✅ | 备注 | |
+| report\_doctor_name | String | ✅ | 报告医生 | |
+| report_time | String | ✅ | 报告时间 | |
+
+</br>
+<h3>26.2 获取检验详情
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageDetail
+```
+**请求包示例**
+
+```
+{
+	laboratory_patient_id: 1
+	clinic_laboratory_id: 1
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| laboratory\_patient_id |number | ✅ |  检验记录id | |
+| clinic\_laboratory_id | number | ✅ |  检验id | |
+
+**应答包示例**
+
+```
+{
+  "associationsData": [
+    {
+      "clinic_laboratory_item_id": 2,
+      "name": "血小板",
+      "en_name": "xuexiaoban",
+      "unit_name": "/L",
+      "status": true,
+      "is_special": false,
+      "data_type": 2,
+      "instrument_code": null,
+      "is_delivery": null,
+      "result_inspection": null,
+      "default_result": "100",
+      "clinical_significance": null,
+      "references": [
+        {
+          "reference_sex": "通用",
+          "reference_max": "20",
+          "reference_min": "10",
+          "reference_value": null,
+          "isPregnancy": false,
+          "stomach_status": "false"
+        }
+      ]
+    }
+  ],
+  "code": "200",
+  "resultsData": null
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_laboratory\_item_id | String | ✅ | 子项id | |
+| name | String | ✅ | 检查项名称 | |
+| en_name | String | ✅ | 英文名称 | |
+| unit_name | String | ✅ | 单位 | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| status | String | ✅ |  是否启用 | |
+| is_special | String | ✅ | 参考值是否特殊 | |
+| result_inspection | String | ✅ |  检验结果 | |
+| default_result | String | ✅ |  默认结果 | |
+| clinical_significance | String | ✅ |  临床意义 | |
+| references.reference_sex | String | ✅ |  参考值性别 男、女、通用 | |
+| references.reference_max | String | ✅ |  参考最大值 | |
+| references.reference_min | String | ✅ |  参考最小值 | |
+| references.reference_value | String | ✅ |  定性参考值 | |
+| references.isPregnancy |boolean | ✅ |  是否妊娠期 | |
+| references.stomach_status | boolean | ✅ |  时候空腹 | |
+
+
+</br>
+<h3>26.3 获取待检验的分诊记录
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageWaiting
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "allergic_history": "134",
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 80,
+      "department_name": "牙科",
+      "diagnosis": "皮肤干燥性皮炎",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-12T20:33:51.259219+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "187015",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-07-19T21:00:26.796976+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:51:49.416355+08:00",
+      "visit_date": "2018-07-19T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 14
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| allergic_history | String | ✅ | 过敏史 | |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检验的项目 | |
+| checking\_total_count | String | ✅ | 检验中的项目 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| diagnosis | String | ✅ | 诊断 | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者姓名 | |
+| phone | String | ✅ | 手机号 | |
+| register\_personnel_name | String | ✅ | 登记人员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型：1预约，2线下分诊 3快速接诊 | |
+| sex | String | ✅ | 患者性别 |
+| status | String | ✅ | 接诊状态 0:登记，20：分诊(换诊)，30：接诊，40：已就诊， 100：取消|
+| updated_time | String | ✅ | 更新时间 |
+| visit_date | String | ✅ | 接诊日期 |
+| waiting\_total_count | String | ✅ | 待检验的数量 |
+
+
+</br>
+<h3>26.4 获取已检验的分诊记录
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageChecked
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "allergic_history": "134",
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 80,
+      "department_name": "牙科",
+      "diagnosis": "皮肤干燥性皮炎",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-12T20:33:51.259219+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "187015",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-07-19T21:00:26.796976+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:51:49.416355+08:00",
+      "visit_date": "2018-07-19T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 14
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| allergic_history | String | ✅ | 过敏史 | |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检验的项目 | |
+| checking\_total_count | String | ✅ | 检验中的项目 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| diagnosis | String | ✅ | 诊断 | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者姓名 | |
+| phone | String | ✅ | 手机号 | |
+| register\_personnel_name | String | ✅ | 登记人员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型：1预约，2线下分诊 3快速接诊 | |
+| sex | String | ✅ | 患者性别 |
+| status | String | ✅ | 接诊状态 0:登记，20：分诊(换诊)，30：接诊，40：已就诊， 100：取消|
+| updated_time | String | ✅ | 更新时间 |
+| visit_date | String | ✅ | 接诊日期 |
+| waiting\_total_count | String | ✅ | 待检验的数量 |
+
+
+</br>
+<h3>26.5 获取检验中的分诊记录
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageChecking
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "allergic_history": "134",
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 80,
+      "department_name": "牙科",
+      "diagnosis": "皮肤干燥性皮炎",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-12T20:33:51.259219+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "187015",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-07-19T21:00:26.796976+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:51:49.416355+08:00",
+      "visit_date": "2018-07-19T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 14
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| allergic_history | String | ✅ | 过敏史 | |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检验的项目 | |
+| checking\_total_count | String | ✅ | 检验中的项目 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| diagnosis | String | ✅ | 诊断 | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者姓名 | |
+| phone | String | ✅ | 手机号 | |
+| register\_personnel_name | String | ✅ | 登记人员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型：1预约，2线下分诊 3快速接诊 | |
+| sex | String | ✅ | 患者性别 |
+| status | String | ✅ | 接诊状态 0:登记，20：分诊(换诊)，30：接诊，40：已就诊， 100：取消|
+| updated_time | String | ✅ | 更新时间 |
+| visit_date | String | ✅ | 接诊日期 |
+| waiting\_total_count | String | ✅ | 待检验的数量 |
+
+
+</br>
+<h3>26.6 创建检验记录
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageRecordCreate
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	laboratory_patient_id: 1
+	operation_id: 1
+	remark: ‘’
+	item: [{
+	    clinic_laboratory_item_id: 1
+	    result_inspection: 1
+	    reference_max: 1
+	    reference_min: 1
+	    reference_value: 1
+	    data_type: 1
+	    is_normal: 1
+	}]
+}
+```
+**请求包参数说明** （同 26.2）
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": “”
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+</br>
+<h3>26.7 查询检验记录
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageRecordList
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+}
+```
+**请求包参数说明** （同 26.1）
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_laboratory_name": "血常规",
+      "created_time": "2018-07-24T00:58:52.265271+08:00",
+      "doctor_name": "胡一天",
+      "laboratory_patient_record_id": 7,
+      "opration_name": "超级管理员",
+      "remark": "正常",
+      "visit_date": "2018-07-20T00:00:00Z"
+    }
+  ]
+}
+```
+
+**应答包参数说明** (同26.1)
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+</br>
+<h3>26.8 查询检验详情
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageRecordDetail
+```
+
+**请求包示例**
+
+```
+{
+	laboratory_patient_record_id: 1
+	offset: 1
+	limit: 10
+}
+```
+**请求包参数说明** （同 26.1）
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_laboratory_item_id": 5,
+      "name": "白细胞计数",
+      "en_name": "WBC",
+      "unit_name": "个/L",
+      "status": true,
+      "is_special": true,
+      "data_type": 2,
+      "instrument_code": null,
+      "is_delivery": null,
+      "result_inspection": "12",
+      "default_result": null,
+      "clinical_significance": null,
+      "references": [
+        {
+          "reference_sex": "通用",
+          "reference_max": "15",
+          "reference_min": "10",
+          "reference_value": null,
+          "isPregnancy": null,
+          "stomach_status": null
+        }
+      ]
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0"
+  }
+}
+```
+
+**应答包参数说明** (同26.2)
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| 
+
+</br>
+<h3>26.9 更新检查状态
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriageUpdate
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	order_status: 10
+	items:[{
+	    laboratory_patient_id
+	}]
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| order_status | String | ✅ | 状态 10-待检测 20-检查中 30-已检查 | |
+| laboratory\_patient_id | String | ✅ | 检验记录id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": 
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+
+</br>
+<h3>26.10 患者历史检验记录
+
+```
+请求地址：/laboratoryTriage/LaboratoryTriagePatientRecordList
+```
+
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	patient_id: 1
+	offset: 1
+	limit: 1
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| patient_id | String | ✅ | 患者id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_laboratory_name": "尿常规，血常规",
+      "clinic_name": "龙华诊所",
+      "clinic_patient_id": 16,
+      "clinic_triage_patient_id": 81,
+      "department_name": "牙科",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-07-24T00:48:06.748606+08:00",
+      "patient_id": 20
+    }patient_id": 20
+    }
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 2
+  }
+}
+```
+
+**应答包参数说明** （同26.1）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+
+27 治疗模板
+--------
+
+</br>
+<h3>25.1 获取治疗列表
+
+```
+请求地址：/treatmentTriage/TreatmentTriageList
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	order_status: 0
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id |number | ✅ |  分诊记录id | |
+| order_status |number | ✅ |  状态 （10-待检查 20-检查中 30-已检查） | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_treatment_id": 12,
+      "clinic_treatment_name": "输液治疗",
+      "clinic_triage_patient_id": 31,
+      "illustration": "法法",
+      "left_times": 2,
+      "price": 10000,
+      "remark": null,
+      "report_doctor_name": null,
+      "report_time": null,
+      "total_times": 2,
+      "treatment_patient_id": 7,
+      "treatment_patient_record_id": null,
+      "unit_name": "次"
+    }
+  ]
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_treatment_id | String | ✅ | 治疗项目id | |
+| clinic\_treatment_name | String | ✅ | 治疗项目名称 | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊记录id | |
+| illustration | String | ✅ | 说明 | |
+| left_times | String | ✅ | 剩余次数 | |
+| price | String | ✅ | 价格 | |
+| remark | String | ✅ | 备注 | |
+| picture_examination | String | ✅ | 检查图片 | |
+| report\_doctor_name | String | ✅ | 报告医生 | |
+| report_time | String | ✅ | 报告时间 | |
+| total_times | String | ✅ | 总次数 | |
+| treatment\_patient_id | String | ✅ | 治疗记录id | |
+| treatment\_patient\_record_id | String | ✅ | 治疗报告id | |
+| unit_name | String | ✅ | 单位 | |
+
+</br>
+<h3>27.2 获取待治疗的分诊记录
+
+```
+请求地址：/treatmentTriage/TreatmentTriageWaiting
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 117,
+      "department_name": "牙科",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-05T23:19:32.854022+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "18701676735",
+      "register_personnel_name": null,
+      "register_time": "2018-07-31T23:53:56.924887+08:00",
+      "register_type": 3,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:56:54.922227+08:00",
+      "visit_date": "2018-07-31T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 8
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检查数量 | |
+| checking\_total_count | String | ✅ | 检查中的数量 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间| |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者名称 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 登记操作员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 挂号记录状态 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 接诊日期 | |
+| waiting\_total_count | String | ✅ | 待检查数量 | |
+
+</br>
+<h3>27.3 获取已治疗的分诊记录
+
+```
+请求地址：/treatmentTriage/TreatmentTriageChecked
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 80,
+      "department_name": "牙科",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-12T20:34:17.270198+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "187011735",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-07-19T21:00:26.796976+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:51:49.416355+08:00",
+      "visit_date": "2018-07-19T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 8
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检查数量 | |
+| checking\_total_count | String | ✅ | 检查中的数量 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间| |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者名称 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 登记操作员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 挂号记录状态 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 接诊日期 | |
+| waiting\_total_count | String | ✅ | 待检查数量 | |
+
+
+</br>
+<h3>27.4 获取治疗中的分诊记录
+
+```
+请求地址：/treatmentTriage/TreatmentTriageChecking
+```
+**请求包示例**
+
+```
+{
+	keyword: '关键词'
+	clinic_id: 1
+	start_date: '2018-01-01'
+	end_date: '2018-02-02'
+	offset: 0
+	limit: 10
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id |number | ✅ |  诊所id | |
+| keyword | string | ❌ |  关键词 | |
+| start_date | string | ✅ |  开始时间 | |
+| end_date | string | ✅ |  结束时间 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "birthday": "19920706",
+      "checked_total_count": 0,
+      "checking_total_count": 0,
+      "clinic_patient_id": 2,
+      "clinic_triage_patient_id": 80,
+      "department_name": "牙科",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-08-12T20:34:17.270198+08:00",
+      "patient_id": 3,
+      "patient_name": "查康",
+      "phone": "187011735",
+      "register_personnel_name": "超级管理员",
+      "register_time": "2018-07-19T21:00:26.796976+08:00",
+      "register_type": 2,
+      "sex": 1,
+      "status": 40,
+      "updated_time": "2018-08-12T22:51:49.416355+08:00",
+      "visit_date": "2018-07-19T00:00:00Z",
+      "waiting_total_count": 2
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 8
+  }
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| birthday | String | ✅ | 患者生日 | |
+| checked\_total_count | String | ✅ | 已检查数量 | |
+| checking\_total_count | String | ✅ | 检查中的数量 | |
+| clinic\_patient_id | String | ✅ | 诊所患者id | |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| department_name | String | ✅ | 科室名称 | |
+| order\_doctor_name | String | ✅ | 开单医生 | |
+| order_time | String | ✅ | 开单时间| |
+| patient_id | String | ✅ | 患者id | |
+| patient_name | String | ✅ | 患者名称 | |
+| phone | String | ✅ | 患者手机号 | |
+| register\_personnel_name | String | ✅ | 登记操作员 | |
+| register_time | String | ✅ | 登记时间 | |
+| register_type | String | ✅ | 登记类型 | |
+| sex | String | ✅ | 患者性别 | |
+| status | String | ✅ | 挂号记录状态 | |
+| updated_time | String | ✅ | 更新时间 | |
+| visit_date | String | ✅ | 接诊日期 | |
+| waiting\_total_count | String | ✅ | 待检查数量 | |
+
+</br>
+<h3>27.5 创建治疗记录
+
+```
+请求地址：/treatmentTriage/TreatmentTriageRecordCreate
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	operation_id: 1
+	items : [{
+	    treatment_patient_id: 1
+	    times: 1
+	    remark: ''
+	}]
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id | String | ✅ |分诊记录id | |
+| operation_id | String | ✅ | 操作员 | |
+| treatment\_patient_id | String | ✅ | 治疗记录id | |
+| times | String | ✅ | 次数| |
+| remark | String | ✅ | 备注| |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": “”
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+</br>
+<h3>27.6 查询治疗记录
+
+```
+请求地址：/treatmentTriage/TreatmentTriageRecordList
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+}
+```
+**请求包参数说明** （同 27.1）
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_treatment_name": "针灸",
+      "created_time": "2018-06-29T00:14:27.139161+08:00",
+      "doctor_name": "华佗",
+      "left_times": 0,
+      "opration_name": "超级管理员",
+      "price": 9000,
+      "remark": "",
+      "times": 3,
+      "total_times": 3,
+      "treatment_patient_record_id": 1,
+      "unit_name": "次",
+      "visit_date": "2018-06-26T00:00:00Z"
+    }
+  ]
+}
+```
+
+**应答包参数说明** (同27.1)
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+</br>
+<h3>27.7 更新治疗状态
+
+```
+请求地址：/treatmentTriage/TreatmentTriageUpdate
+```
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	order_status: 10
+	items:[{
+	    treatment_patient_id
+	}]
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| order_status | String | ✅ | 状态 10-待检测 20-检查中 30-已检查 | |
+| treatment\_patient_id | String | ✅ | 治疗记录id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": 
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+
+</br>
+<h3>27.8 患者历史治疗记录
+
+```
+请求地址：/treatmentTriage/TreatmentTriagePatientRecordList
+```
+
+**请求包示例**
+
+```
+{
+	clinic_triage_patient_id: 1
+	patient_id: 1
+	offset: 1
+	limit: 1
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic\_triage\_patient_id | String | ✅ | 分诊id | |
+| patient_id | String | ✅ | 患者id | |
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_name": "龙华诊所",
+      "clinic_patient_id": 6,
+      "clinic_treatment_name": "打针，针灸",
+      "clinic_triage_patient_id": 54,
+      "department_name": "眼科",
+      "order_doctor_name": "超级管理员",
+      "order_time": "2018-06-28T22:26:37.055847+08:00",
+      "patient_id": 10
+    }
+  ],
+  "page_info": {
+    "limit": "1",
+    "offset": "0",
+    "total": 1
+  }
+}
+```
+
+**应答包参数说明** （同27.1）
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+
+</br>
+<h3>27.9 删除治疗医嘱模板
+
+```
+请求地址：/treatmentTriage/TreatmentPatientModelDelete
+```
+
+**请求包示例**
+
+```
+{
+	treatment_patient_model_id: 1
+}
+```
+**请求包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| treatment\_patient\_model_id | String | ✅ | 治疗医嘱模板 | ||
+
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": “ok”
+}
+```
+
+**应答包参数说明** 
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| data | String | ✅ | 200 成功 | |
+
+
 29 财务分析、运营分析模块
 --------
 
