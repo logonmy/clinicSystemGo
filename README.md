@@ -18027,6 +18027,420 @@
 | data.page_info.total | Int | ✅ |  分页使用、总数量| |
 --
 
+29 财务分析、运营分析模块
+--------
+
+</br>
+<h3>29.1 收费日报表按支付方式
+
+```
+请求地址：/financialAnalysis/ChargeDayReportByPayWay
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	start_date:2018-07-01
+	end_date:2018-08-05
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ❌ |  诊所id| 
+| start_date | String | ✅ | 开始日期| |
+| end_date | String | ✅ |  结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "alipay": 0,
+      "balance_money": 30895921,
+      "bank": 0,
+      "bonus_points_money": 0,
+      "cash": 30895919,
+      "clinic_id": 1,
+      "clinic_name": "龙华诊所",
+      "derate_money": 0,
+      "discount_money": 0,
+      "medical_money": 0,
+      "on_credit_money": 0,
+      "total_money": 30895921,
+      "voucher_money": 0,
+      "wechat": 2
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.alipay | Int | ✅ |  支付宝当面付| |
+| data.items.balance_money | Int | ✅ |  实收金额| |
+| data.items.bank | Int | ✅ |  银行卡| |
+| data.items.bonus_points_money | Int | ✅ | 积分抵扣| |
+| data.items.cash| Int | ✅ | 现金| |
+| data.items.clinic_id | Int | ✅ | 诊所id| |
+| data.items.clinic_name | Int | ✅ | 诊所名称| |
+| data.items.derate_money| Int | ✅ | 减免| |
+| data.items.discount_money | Int | ✅ |折后金额| |
+| data.items.medical_money | Int | ✅ | 医保支付| |
+| data.items.on_credit_money | Int | ✅ | 挂账| |
+| data.items.total_money | Int | ✅ | 费用合计| |
+| data.items.voucher_money | Int | ✅ | 卡卷| |
+| data.items.wechat | Int | ✅ | 微信当面付| |
+--
+
+</br>
+<h3>29.2 收费日报表按业务类型
+
+```
+请求地址：/financialAnalysis/ChargeDayReportByBusiness
+```
+**请求包示例**
+
+```
+{
+	clinic_id:1
+	start_date:2018-07-01
+	end_date:2018-08-05
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ❌ |  诊所id| 
+| start_date | String | ✅ | 开始日期| |
+| end_date | String | ✅ |  结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "clinic_id": 1,
+      "clinic_name": "龙华诊所",
+      "diagnosis_treatment_fee": 16000,
+      "discount_money": 0,
+      "examination_fee": 577000,
+      "labortory_fee": 384500,
+      "material_fee": 8022003,
+      "other_fee": 8003,
+      "retail_fee": 14404,
+      "total_money": 30895921,
+      "traditional_medical_fee": 21425000,
+      "treatment_fee": 97000,
+      "western_medicine_fee": 352011
+    }
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.clinic_id | Int | ✅ | 诊所id| |
+| data.items.clinic_name | Int | ✅ | 诊所名称| |
+| data.items.diagnosis_treatment_fee| Int | ✅ | 挂号费| |
+| data.items.discount_money | Int | ✅ |折后金额| |
+| data.items.examination_fee | Int | ✅ | 检查费| |
+| data.items.labortory_fee | Int | ✅ |检验费| |
+| data.items.material_fee | Int | ✅ | 材料费| |
+| data.items.other_fee | Int | ✅ | 其他费用| |
+| data.items.retail_fee | Int | ✅ | 药品零售| |
+| data.items.total_money | Int | ✅ | 费用合计| |
+| data.items.traditional_medical_fee | Int | ✅ | 中药费| |
+| data.items.treatment_fee | Int | ✅ | 治疗费| |
+| data.items.western_medicine_fee | Int | ✅ | 西药费| |
+--
+
+</br>
+<h3>29.3 收费月报表按支付方式
+
+```
+请求地址：/financialAnalysis/ChargeMonthReportByPayWay
+```
+**请求包示例**
+
+```
+{
+	start_date:2018-07
+	end_date:2018-08
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| start_date | String | ✅ | 开始日期| |
+| end_date | String | ✅ |  结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "alipay": 0,
+      "balance_money": -14408,
+      "bank": 0,
+      "bonus_points_money": 0,
+      "business_month": "2018-08",
+      "cash": -14408,
+      "clinic_id": 2,
+      "clinic_name": "最牛诊所",
+      "derate_money": 0,
+      "discount_money": 0,
+      "medical_money": 0,
+      "on_credit_money": 0,
+      "total_money": -14408,
+      "voucher_money": 0,
+      "wechat": 0
+    },
+    {
+      "alipay": 0,
+      "balance_money": 12746003,
+      "bank": 0,
+      "bonus_points_money": 0,
+      "business_month": "2018-07",
+      "cash": 12746001,
+      "clinic_id": 1,
+      "clinic_name": "龙华诊所",
+      "derate_money": 0,
+      "discount_money": 0,
+      "medical_money": 0,
+      "on_credit_money": 0,
+      "total_money": 12746003,
+      "voucher_money": 0,
+      "wechat": 2
+    },
+    {
+      "alipay": 0,
+      "balance_money": 22316663,
+      "bank": 0,
+      "bonus_points_money": 0,
+      "business_month": "2018-08",
+      "cash": 22316663,
+      "clinic_id": 1,
+      "clinic_name": "龙华诊所",
+      "derate_money": 0,
+      "discount_money": 0,
+      "medical_money": 0,
+      "on_credit_money": 0,
+      "total_money": 22316663,
+      "voucher_money": 0,
+      "wechat": 0
+    },
+	...
+  ]
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ❌ |  返回信息 | |
+| data.items.alipay | Int | ✅ |  支付宝当面付| |
+| data.items.balance_money | Int | ✅ |  实收金额| |
+| data.items.bank | Int | ✅ |  银行卡| |
+| data.items.bonus_points_money | Int | ✅ | 积分抵扣| |
+| data.items.cash| Int | ✅ | 现金| |
+| data.items.clinic_id | Int | ✅ | 诊所id| |
+| data.items.clinic_name | Int | ✅ | 诊所名称| |
+| data.items.derate_money| Int | ✅ | 减免| |
+| data.items.discount_money | Int | ✅ |折后金额| |
+| data.items.medical_money | Int | ✅ | 医保支付| |
+| data.items.on_credit_money | Int | ✅ | 挂账| |
+| data.items.total_money | Int | ✅ | 费用合计| |
+| data.items.voucher_money | Int | ✅ | 卡卷| |
+| data.items.wechat | Int | ✅ | 微信当面付| |
+--
+
+</br>
+<h3>29.4 利润报表
+
+```
+请求地址：/financialAnalysis/ProfitReport
+```
+**请求包示例**
+
+```
+{
+	clinic_id:
+	start_date:2018-07-01
+	end_date:2018-08-05
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| clinic_id | Int | ❌  | 开始日期| |
+| start_date | String | ✅ | 开始日期| |
+| end_date | String | ✅ |  结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": {
+    "total_diagnosis_treatment_cost": 0,
+    "total_diagnosis_treatment_fee": 17500,
+    "total_examination_cost": 10000,
+    "total_examination_fee": 577000,
+    "total_labortory_cost": 200,
+    "total_labortory_fee": 384500,
+    "total_material_cost": 4200,
+    "total_material_fee": 9022103,
+    "total_other_cost": 2400,
+    "total_other_fee": 10003,
+    "total_retail_cost": 102,
+    "total_retail_fee": 14404,
+    "total_traditional_medical_cost": 900000,
+    "total_traditional_medical_fee": 24375000,
+    "total_treatment_cost": 3000,
+    "total_treatment_fee": 124000,
+    "total_western_medicine_cost": 79,
+    "total_western_medicine_fee": 408011
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Object | ✅ |  返回信息 | |
+| data.total_diagnosis_treatment_cost | Int | ✅ |  诊疗费成本价| |
+| data.total_diagnosis_treatment_fee | Int | ✅ |  诊疗费| |
+| data.total_examination_cost | Int | ✅ |  检查费成本价| |
+| data.total_examination_fee | Int | ✅ | 检查费| |
+| data.total_labortory_cost| Int | ✅ | 检验费成本价| |
+| data.total_labortory_fee | Int | ✅ | 检验费| |
+| data.total_material_cost | Int | ✅ | 材料费成本价| |
+| data.total_material_fee| Int | ✅ | 材料费| |
+| data.total_other_cost | Int | ✅ |其他费用成本价| |
+| data.total_other_fee | Int | ✅ | 其他费用| |
+| data.total_retail_cost | Int | ✅ | 零售费成本价| |
+| data.total_retail_fee | Int | ✅ | 零售费用| |
+| data.total_traditional_medical_cost | Int | ✅ | 中药费成本价| |
+| data.total_traditional_medical_fee | Int | ✅ | 中药费| |
+| data.total_treatment_cost | Int | ✅ | 治疗费成本价| |
+| data.total_treatment_fee | Int | ✅ | 治疗费| |
+| data.total_western_medicine_cost | Int | ✅ |西/成药费成本价| |
+| data.total_western_medicine_fee | Int | ✅ | 西/成药费| |
+--
+
+30 平台交易总额模块
+--------
+</br>
+<h3>30.1 交易总额
+
+```
+请求地址：/invoicingStatistics/DrugInvoicingStatistics
+```
+**请求包示例**
+
+```
+{
+	start_date:2018-07-01
+	end_date:2018-08-05
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| start_date | String | ✅  | 统计开始日期| |
+| end_date | String | ✅  |  统计结束日期 | |
+
+**应答包示例**
+
+```
+{
+  "clinic": [
+    {
+      "id": 1,
+      "name": "龙华诊所"
+    },
+    {
+      "id": 2,
+      "name": "最牛诊所"
+    }
+  ],
+  "code": "200",
+  "data": [
+    {
+      "balance_money": 129000,
+      "clinic_id": 1,
+      "created_time": "2018-07-26",
+      "name": "龙华诊所"
+    },
+    {
+      "balance_money": 4036600,
+      "clinic_id": 2,
+      "created_time": "2018-07-26",
+      "name": "最牛诊所"
+    },
+    {
+      "balance_money": 220000,
+      "clinic_id": 1,
+      "created_time": "2018-07-27",
+      "name": "龙华诊所"
+    },
+    {
+      "balance_money": 12108000,
+      "clinic_id": 1,
+      "created_time": "2018-07-28",
+      "name": "龙华诊所"
+    },
+	...
+  ],
+  "total": {
+    "total_money": 20845608
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| data | Array | ✅ |  返回信息 | |
+| data.items.balance_money | FLOAT | ❌ | 交易金额| |
+| data.items.clinic_id | Date | ✅ |  诊所id| |
+| data.items.created_time | Date | ✅ |  创建日期| |
+| data.items.name | String | ✅ | 诊所名称| |
+| clinic | Array | ✅ |  诊所信息| |
+| clinic.items.id | Int | ✅ |  诊所id| |
+| clinic.items.name | String |✅ | 诊所名称| |
+| total | Object | ✅ |  合计信息| |
+| total.total_money | FLOAT | ✅ |  合计金额| |
+
+--
+
 31 医用报表模块
 --------
 
