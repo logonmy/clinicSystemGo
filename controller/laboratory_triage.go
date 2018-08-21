@@ -315,7 +315,7 @@ func LaboratoryTriageRecordList(ctx iris.Context) {
 	querysql := `select ctp.visit_date,lpc.id as laboratory_patient_record_id,
 	doc.name as doctor_name,
 	op.name as opration_name,
-	lpc.created_time,lpc.remark
+	lpc.created_time,lpc.remark,
 	cl.name as clinic_laboratory_name from laboratory_patient_record lpc 
 	left join clinic_triage_patient ctp on ctp.id = lpc.clinic_triage_patient_id 
 	left join personnel doc on doc.id = ctp.doctor_id 
