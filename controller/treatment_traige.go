@@ -299,10 +299,13 @@ func TreatmentTriageRecordList(ctx iris.Context) {
 	querysql := `select ctp.visit_date,epc.id as treatment_patient_record_id,
 	doc.name as doctor_name,
 	op.name as opration_name,
+	ep.times as total_times,
+	ep.left_times,
 	epc.created_time,
-	epc.picture_treatment,
-	epc.result_treatment,
-	epc.conclusion_treatment,
+	epc.remark,
+	epc.times,
+	ce.unit_name,
+	ce.price,
 	ce.name as clinic_treatment_name 
 	from treatment_patient_record epc 
 	left join clinic_triage_patient ctp on ctp.id = epc.clinic_triage_patient_id 
