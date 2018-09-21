@@ -64,7 +64,7 @@ func DrugInstockStatistics(ctx iris.Context) {
 			left join personnel p on p.id = dir.instock_operation_id
 			where dir.verify_status='02'
 			UNION all
-			select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_trade_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
+			select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_refund_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
 			p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
 			dr.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
 			from drug_retail dr
@@ -72,7 +72,7 @@ func DrugInstockStatistics(ctx iris.Context) {
 			left join clinic_drug cd on cd.id = ds.clinic_drug_id
 			left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
 			left join personnel p on p.id = drpr.operation_id
-			where dr.amount>0
+			where dr.amount<0
 			UNION all
 			select to_char(ddd.created_time,'yyyy-mm-dd') as instock_date,
 			'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊退药' as instock_way_name,ds.supplier_name,
@@ -98,7 +98,7 @@ func DrugInstockStatistics(ctx iris.Context) {
 		left join personnel p on p.id = dir.instock_operation_id
 		where dir.verify_status='02'
     UNION all
-    select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_trade_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
+    select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_refund_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
     p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
     dr.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
     from drug_retail dr
@@ -106,7 +106,7 @@ func DrugInstockStatistics(ctx iris.Context) {
 		left join clinic_drug cd on cd.id = ds.clinic_drug_id
 		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
 		left join personnel p on p.id = drpr.operation_id
-		where dr.amount>0
+		where dr.amount<0
 		UNION all
     select to_char(ddd.created_time,'yyyy-mm-dd') as instock_date,
     'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊退药' as instock_way_name,ds.supplier_name,
@@ -132,7 +132,7 @@ func DrugInstockStatistics(ctx iris.Context) {
 		left join personnel p on p.id = dir.instock_operation_id
 		where dir.verify_status='02'
     UNION all
-    select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_trade_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
+    select to_char(dr.created_time,'yyyy-mm-dd') as instock_date,dr.out_refund_no as order_number,'零售退药' as instock_way_name,ds.supplier_name,
     p.name as instock_operation_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
     dr.amount as instock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
     from drug_retail dr
@@ -140,7 +140,7 @@ func DrugInstockStatistics(ctx iris.Context) {
 		left join clinic_drug cd on cd.id = ds.clinic_drug_id
 		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
 		left join personnel p on p.id = drpr.operation_id
-		where dr.amount>0
+		where dr.amount<0
 		UNION all
     select to_char(ddd.created_time,'yyyy-mm-dd') as instock_date,
     'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊退药' as instock_way_name,ds.supplier_name,
@@ -289,7 +289,7 @@ func DrugOutstockStatistics(ctx iris.Context) {
 		left join personnel doc on doc.id = dir.personnel_id
 		where dir.verify_status='02'
 		UNION all
-		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_refund_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
+		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_trade_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
 		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
 		dr.amount as outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
 		from drug_retail dr
@@ -297,7 +297,7 @@ func DrugOutstockStatistics(ctx iris.Context) {
 		left join clinic_drug cd on cd.id = ds.clinic_drug_id
 		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
 		left join personnel p on p.id = drpr.operation_id
-		where dr.amount<0
+		where dr.amount>0
 		UNION all
 		select to_char(ddd.created_time,'yyyy-mm-dd') as outstock_date,
 		'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊发药' as outstock_way_name,ds.supplier_name,
@@ -328,7 +328,7 @@ func DrugOutstockStatistics(ctx iris.Context) {
 		left join personnel doc on doc.id = dir.personnel_id
 		where dir.verify_status='02'
 		UNION all
-		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_refund_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
+		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_trade_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
 		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
 		dr.amount as outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
 		from drug_retail dr
@@ -336,7 +336,7 @@ func DrugOutstockStatistics(ctx iris.Context) {
 		left join clinic_drug cd on cd.id = ds.clinic_drug_id
 		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
 		left join personnel p on p.id = drpr.operation_id
-		where dr.amount<0
+		where dr.amount>0
 		UNION all
 		select to_char(ddd.created_time,'yyyy-mm-dd') as outstock_date,
 		'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊发药' as outstock_way_name,ds.supplier_name,
@@ -369,7 +369,7 @@ func DrugOutstockStatistics(ctx iris.Context) {
 		left join personnel doc on doc.id = dir.personnel_id
 		where dir.verify_status='02'
 		UNION all
-		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_refund_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
+		select to_char(dr.created_time,'yyyy-mm-dd') as outstock_date,dr.out_trade_no as order_number,'零售发药' as outstock_way_name,ds.supplier_name,
 		p.name as outstock_operation_name,p.name as personnel_name,cd.barcode,cd.name as drug_name,cd.specification,cd.manu_factory_name,
 		dr.amount as outstock_amount,cd.packing_unit_name,cd.ret_price,cd.type,ds.buy_price,ds.serial,ds.eff_date,p.clinic_id
 		from drug_retail dr
@@ -377,7 +377,7 @@ func DrugOutstockStatistics(ctx iris.Context) {
 		left join clinic_drug cd on cd.id = ds.clinic_drug_id
 		left join drug_retail_pay_record drpr on drpr.out_trade_no = dr.out_trade_no
 		left join personnel p on p.id = drpr.operation_id
-		where dr.amount<0
+		where dr.amount>0
 		UNION all
 		select to_char(ddd.created_time,'yyyy-mm-dd') as outstock_date,
 		'MZ' || to_char(ddd.created_time, 'YYYYMMDDHH24MISS') as order_number,'门诊发药' as outstock_way_name,ds.supplier_name,
@@ -552,7 +552,7 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 		select dr.amount as instock_amount,dr.created_time as verify_time,ds.serial,ds.eff_date,ds.supplier_name 
 		from drug_retail dr
 		left join drug_stock ds on ds.id = dr.drug_stock_id
-		where dr.amount>0
+		where dr.amount<0
 		UNION all
 		select ddd.amount as instock_amount,ddd.created_time as verify_time,ds.serial,ds.eff_date,ds.supplier_name 
 		from drug_delivery_detail ddd
@@ -570,7 +570,7 @@ func DrugInvoicingStatistics(ctx iris.Context) {
 		where dor.verify_status='02'
 		UNION all
 		select amount as outstock_amount,created_time as verify_time,drug_stock_id from drug_retail
-		where amount<0
+		where amount>0
 		UNION all
 		select amount as outstock_amount,created_time as verify_time,drug_stock_id from drug_delivery_detail
 		where amount>0
