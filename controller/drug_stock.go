@@ -1234,7 +1234,7 @@ func DrugStockList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, err := model.DB.NamedQuery(selectSQL+" order by ds.eff_date asc offset :offset limit :limit", queryOption)
 	if err != nil {
 		fmt.Println("err ====", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -1850,7 +1850,7 @@ func DrugStockInventoryList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, err := model.DB.NamedQuery(selectSQL+" order by ds.eff_date asc offset :offset limit :limit", queryOption)
 	if err != nil {
 		fmt.Println("err ====", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})

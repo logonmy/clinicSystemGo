@@ -193,7 +193,7 @@ func MaterialInstockRecord(ctx iris.Context) {
 		from material_instock_record ir
 		left join personnel p on ir.instock_operation_id = p.id
 		left join personnel vp on ir.verify_operation_id = vp.id
-		where storehouse_id=:storehouse_id`
+		where ir.storehouse_id=:storehouse_id`
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
@@ -231,7 +231,7 @@ func MaterialInstockRecord(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, _ := model.DB.NamedQuery(selectSQL+" order by ir.instock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
@@ -776,7 +776,7 @@ func MaterialOutstockRecord(ctx iris.Context) {
 		left join personnel p on outr.personnel_id = p.id
 		left join personnel op on outr.outstock_operation_id = op.id
 		left join personnel vp on outr.verify_operation_id = vp.id
-		where storehouse_id=:storehouse_id`
+		where outr.storehouse_id=:storehouse_id`
 
 	if startDate != "" && endDate != "" {
 		if startDate > endDate {
@@ -815,7 +815,7 @@ func MaterialOutstockRecord(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, _ := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, _ := model.DB.NamedQuery(selectSQL+" order by outr.outstock_date desc offset :offset limit :limit", queryOption)
 	results = FormatSQLRowsToMapArray(rows)
 
 	ctx.JSON(iris.Map{"code": "200", "data": results, "page_info": pageInfo})
@@ -1229,7 +1229,7 @@ func MaterialStockList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, err := model.DB.NamedQuery(selectSQL+" order by ms.eff_date asc offset :offset limit :limit", queryOption)
 	if err != nil {
 		fmt.Println("err ====", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
@@ -1843,7 +1843,7 @@ func MaterialStockInventoryList(ctx iris.Context) {
 	pageInfo["limit"] = limit
 
 	var results []map[string]interface{}
-	rows, err := model.DB.NamedQuery(selectSQL+" offset :offset limit :limit", queryOption)
+	rows, err := model.DB.NamedQuery(selectSQL+" order by ms.eff_date asc offset :offset limit :limit", queryOption)
 	if err != nil {
 		fmt.Println("err ====", err)
 		ctx.JSON(iris.Map{"code": "-1", "msg": err.Error()})
