@@ -1838,7 +1838,7 @@
 <h3>3.9 修改账号生效状态
 
 ```
-请求地址：/clinic/UpdatePersonnelStatus
+请求地址：/personnel/UpdatePersonnelStatus
 ```
 **请求包示例**
 
@@ -1875,7 +1875,7 @@
 <h3>3.10 修改用户名密码
 
 ```
-请求地址：/clinic/UpdatePersonnelUsername
+请求地址：/personnel/UpdatePersonnelUsername
 ```
 **请求包示例**
 

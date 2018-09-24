@@ -50,6 +50,10 @@ func PersonnelLogin(ctx iris.Context) {
 		}
 		result := FormatSQLRowToMap(row)
 		if _, ok := result["id"]; ok {
+			status := result["status"].(bool)
+			if !status {
+				ctx.JSON(iris.Map{"code": "-1", "msg": "该账号未启用"})
+			}
 			personnelID := result["id"]
 			_ = model.DB.MustExec("INSERT INTO personnel_login_record (personnel_id, ip) VALUES ($1, $2) RETURNING id", personnelID, IP)
 			countRow := model.DB.QueryRowx("select count(*) as count from personnel_login_record where personnel_id = $1", personnelID)
