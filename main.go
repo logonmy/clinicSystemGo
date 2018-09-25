@@ -357,7 +357,7 @@ func main() {
 		medicalRecord.Post("/model/delete", controller.MedicalRecordModelDelete)
 		medicalRecord.Post("/listByPid", controller.MedicalRecordListByPID)
 		medicalRecord.Post("/model/list", controller.MedicalRecordModelList)
-		// medicalRecord.Post("/model/listByOperation", controller.MedicalRecordModelListByOperation)
+		medicalRecord.Post("/model/listByOperation", controller.MedicalRecordModelListByOperation)
 	}
 
 	examination := app.Party("/examination", crs).AllowMethods(iris.MethodOptions)
