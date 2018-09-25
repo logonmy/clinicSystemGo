@@ -1177,7 +1177,7 @@ func BusinessTransaction(ctx iris.Context) {
 	where cd.created_time BETWEEN :startDate and :endDate `
 
 	if patientName != "" {
-		sql += ` and pa.name ~:patientName `
+		sql += ` and (pa.name ~:patientName or pa.id =:patientName) `
 	}
 
 	if oprationName != "" {
