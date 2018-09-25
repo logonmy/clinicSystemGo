@@ -416,6 +416,8 @@
 >>16.9 获取患者病历列表
 >>
 >>16.10 查询模板列表
+>>
+>>16.11 通过医生id查询模板列表
 
 >17 检查缴费项目模块
 >>17.1 创建检查缴费项目
@@ -13023,7 +13025,107 @@
 | is_common | Boolean | ❌ |  是否通用 | |
 | operation_id | int | ❌ |  创建人员id | |
 | offset | int | ❌ |  开始条数 | |
-| limit | int | ❌ |  条数 | |
+| limit | int | ❌ |  每页限制条数 | |
+
+**应答包示例**
+
+```
+{
+  "code": "200",
+  "data": [
+    {
+      "allergic_history": "鸡蛋、西红柿、海鲜、money",
+      "allergic_reaction": "皮肤瘙痒、红肿",
+      "body_examination": "体温36.5℃脉搏100次/分呼吸18次/分血压190/90mmHg发育正常",
+      "chief_complaint": "出生并长于原籍，居住及生活环境良好。无酗酒、吸烟、吸毒等不良嗜好。否认到过传染病、地方病流行地区。",
+      "created_time": "2018-08-01T10:01:31.853529+08:00",
+      "cure_suggestion": "建议最好带宝宝到医院检查，根据病情，确定治疗方案，同时给宝宝暂停母乳，多喝水，并注意观察黄疸值变化。",
+      "deleted_time": null,
+      "diagnosis": "扁桃体和腺样体肥大",
+      "family_medical_history": "家中无遗传病病史。",
+      "history_of_past_illness": "糖尿病 高血压 青光眼 颜值癌",
+      "history_of_present_illness": "糖尿病 高血压 青光眼 颜值癌",
+      "id": 12,
+      "immunizations": "天花",
+      "is_common": true,
+      "model_name": "8月1日模板",
+      "operation_id": 20,
+      "operation_name": "胡一天",
+      "personal_medical_history": "生长于香港。文盲。否认外地长期居住史。无疫区、疫水接触史。否认工业毒物、粉尘及放射性物质接触史。否认牧区、矿山、高氟区、低碘区居住史。平日生活规律，否认吸毒史。否认吸烟嗜好。否认饮酒嗜好。否认冶游史。第N+1次\n",
+      "remark": "第N +1次就诊",
+      "updated_time": "2018-08-01T10:01:31.853529+08:00"
+    },
+	...
+  ],
+  "page_info": {
+    "limit": "10",
+    "offset": "0",
+    "total": 7
+  }
+}
+```
+
+**应答包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| code | String | ✅ |  返回码， 200 成功| |
+| msg | String |  ❌ |  错误信息,code不为200时返回 | |
+| data | Array | ✅ |   | |
+| data.clinic_triage_patient_id | Int | ✅ |  就诊id| |
+| data.id | Int | ✅ |  病历id| |
+| data.chief_complaint | String | ✅ | 主诉 | |
+| data.operation_id | Int |  ✅  |  操作人id | |
+| data.operation_name | String |  ✅  |  操作人名称 | |
+| data.morbidity_date | String | ❌  |  国际编码 | |
+| data.personal_medical_history | String | ❌  |  个人病史 | |
+| data.history_of_present_illness | String | ❌  | 现病史 | |
+| data.history_of_past_illness | String | ❌  |  既往史 | |
+| data.family_medical_history | String | ❌  |  家族史 | |
+| data.allergic_history | String | ❌  | 过敏史 | |
+| data.allergic_reaction | String | ❌  |  过敏反应 | |
+| data.immunizations | String | ❌  |  疫苗接种史 | |
+| data.body_examination | String | ❌  |  体格检查 | |
+| data.diagnosis | String | ❌  |  诊断 | |
+| data.cure_suggestion | String | ❌  |  治疗建议 | |
+| data.remark | String | ❌  |  备注| |
+| data.files | String | ❌  |  上传的文件 | |
+| data.is_default | Boolean | ✅  |  是否是主病历 | |
+| data.updated_time | time | ✅ | 修改时间 | |
+| data.created_time | time | ✅ | 创建时间 | |
+| data.deleted_time | time |  ❌ | 删除时间 | |
+| data.page_info | Object | ✅ |  返回的页码和总数| |
+| data.page_info.offset | Int | ✅ |  分页使用、跳过的数量| |
+| data.page_info.limit | Int | ✅ |  分页使用、每页数量| |
+| data.page_info.total | Int | ✅ |  分页使用、总数量| |
+--
+
+</br>
+<h3>16.11 通过医生id查询模板列表
+
+```
+请求地址：/medicalRecord/model/listByOperation
+```
+**请求包示例**
+
+```
+{
+	keyword:
+	is_common:
+	operation_id:1
+	offset:
+	limit:
+}
+```
+**请求包参数说明**
+
+| 参数名称 | 参数类型 | 是否必须 | 说明 | 默认值 |
+| :-: | :-: | :-:  | :--: | :--: |
+| keyword | String | ❌ |  关键字 | |
+| is_common | Boolean | ❌ |  是否通用 | |
+| operation_id | int | ✅ |  创建人员id | |
+| offset | int | ❌ |  开始条数 | |
+| limit | int | ❌ |  每页限制条数 | |
 
 **应答包示例**
 
