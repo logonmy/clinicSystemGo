@@ -53,6 +53,7 @@ func PersonnelLogin(ctx iris.Context) {
 			status := result["status"].(bool)
 			if !status {
 				ctx.JSON(iris.Map{"code": "-1", "msg": "该账号未启用"})
+				return
 			}
 			personnelID := result["id"]
 			_ = model.DB.MustExec("INSERT INTO personnel_login_record (personnel_id, ip) VALUES ($1, $2) RETURNING id", personnelID, IP)
