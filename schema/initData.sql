@@ -29,41 +29,6 @@ insert into examination_organ (name) values
 ('残余尿'),
 ('胃窗（口服造影剂）');
 
-insert into storehouse (name,clinic_id) VALUES ('专业药房',1);
-
-insert into parent_function_menu (url,ascription,name) VALUES 
-('/treatment','01','就诊流程'),
-('/clinic','01','诊所管理'),
-('/finance','01','财务管理'),
-('/setting','01','设置管理'),
-('/platform','01','平台管理')
-
-insert into children_function_menu (parent_function_menu_id,url,name) VALUES
-(1,'/treatment/registration','就诊人登记'), 
-(1,'/treatment/triage/triage','预约分诊'), 
-(1,'/treatment/admission','医生接诊'),
-(1,'/treatment/charge','收费管理'),
-(1,'/treatment/drugdelivery','门诊发药'),
-(1,'/treatment/exam','检查'),
-(1,'/treatment/inspect','检验'),
-(1,'/treatment/treat','治疗'),
-(1,'/treatment/drugretail','药品零售'),
-(2,'/clinic','科室管理'),
-(2,'/clinic/doctor','医生管理'),
-(2,'/clinic/schedule','排班管理'),
-(2,'/clinic/pharmacy','药房管理'),
-(2,'/clinic/consumable','耗材管理'),
-(2,'/clinic/patient','患者管理'),
-(3,'/finance','费用报表'),
-(3,'/finance/template','医用报表'),
-(4,'/setting/chargeItemSetting/wMedicinePrescription','西/成药处方'),
-(4,'/setting/chargeItemSetting/cMedicinePrescription','中药处方'),
-(4,'/setting/chargeItemSetting/inspectionPhysician','检验医嘱'),
-(4,'/setting/chargeItemSetting/testItems','检验项目'),
-(4,'/setting/chargeItemSetting/checkAdvice','检查医嘱'),
-(5,'/platform','诊所管理'),
-(5,'/platform/business','业务管理');
-
 insert into chief_complaint (name) values 
 ('发热'),('头痛'),('头晕'),('鼻塞'),('流涕'),('声嘶'),('咽痛'),('咽充血'),('咳嗽'),('咳喘'),('咳痰'),('呼吸困难'),
 ('恶心'),('乏力'),('反酸'),('腹痛'),('腹胀'),('便秘'),('胸闷'),('腹泻'),('胸痛'),('心悸'),('腰痛'),('腰背痛'),('关节痛'),('尿频'),('尿急'),('尿痛'),('多尿'),
