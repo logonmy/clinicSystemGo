@@ -57,7 +57,11 @@ INSERT INTO public.function_menu (id, level, parent_function_menu_id, url, icon,
 INSERT INTO public.function_menu (id, level, parent_function_menu_id, url, icon, name, status, weight, created_time, updated_time, deleted_time, ascription) VALUES (49, 1, 5, '/platform/operation/totalAmount', '/static/icons/business.svg', '运营分析', true, 3, '2018-08-04 15:53:25.718066+08', '2018-08-04 15:53:25.718066+08', NULL, '02');
 INSERT INTO public.function_menu (id, level, parent_function_menu_id, url, icon, name, status, weight, created_time, updated_time, deleted_time, ascription) VALUES (50, 1, 5, '/platform/account/add', '/static/icons/business.svg', '账号设置', true, 4, '2018-08-04 15:53:42.589096+08', '2018-08-04 15:53:42.589096+08', NULL, '02');
 
-
+update public.function_menu set name = '业务管理' where id = 30;
+update public.function_menu set name = '财务分析' where id = 48;
+update public.function_menu set name = '诊所管理' where id = 29;
+update public.function_menu set name = '运营分析' where id = 49;
+update public.function_menu set name = '账号设置' where id = 50;
 
 --
 -- PostgreSQL database dump complete
