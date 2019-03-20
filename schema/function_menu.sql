@@ -1,7 +1,7 @@
 --
 -- PostgreSQL database dump
 --
-delete from function_menu where id > 0;
+delete from public.function_menu where id > 0;
 
 --
 -- Data for Name: function_menu; Type: TABLE DATA; Schema: public; Owner: clinicdb
